@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import 'package:omi/backend/preferences.dart';
 import 'package:omi/flavors.dart';
 
 import 'environment_profile.dart';
@@ -40,6 +41,14 @@ abstract class Env {
   static String? get apiBaseUrl {
     if (_apiBaseUrlOverride != null) return _apiBaseUrlOverride;
     if (_apiBaseUrlFromDefine.isNotEmpty) return _apiBaseUrlFromDefine;
+    // Self-hosting: check SharedPreferences for user-configured custom URL first
+    try {
+      // ignore: depend_on_referenced_packages
+      final savedUrl = SharedPreferencesUtil().customApiBaseUrl;
+      if (savedUrl.isNotEmpty) return savedUrl;
+    } catch (_) {
+      // SharedPreferences not initialized yet; fall through to baked-in URL
+    }
     final configuredApiBaseUrl = _instance.apiBaseUrl;
     if (configuredApiBaseUrl != null && configuredApiBaseUrl.isNotEmpty) {
       return configuredApiBaseUrl;

@@ -1,0 +1,118 @@
+services:
+  omi-local:
+    image: omi-local:latest
+    build:
+      context: ./repo
+      dockerfile: omi-host/Dockerfile
+    container_name: omi-local
+    restart: unless-stopped
+    ports:
+      - "${BIND_IP:-0.0.0.0}:8000:8000"
+      - "${BIND_IP:-0.0.0.0}:9099:9099"
+      - "127.0.0.1:8085:8085"
+    environment:
+      PROVIDER_MODE: ${PROVIDER_MODE:-offline}
+      # Point Omi at the merge proxy — it auto-discovers models from ALL backends
+      OPENAI_BASE_URL: http://omi-proxy:4000/v1
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-local}
+      # Default models — overridden at runtime by the dashboard model picker (Redis).
+      # These must match tagged names from the merge proxy: llama/gemma-4-12b, or/openai/gpt-4o, etc.
+      OMI_LOCAL_MODEL: ${OMI_LOCAL_MODEL:-}
+      LOCAL_LLM_MODEL: ${LOCAL_LLM_MODEL:-}
+      DEEPGRAM_API_KEY: ${DEEPGRAM_API_KEY:-}
+      MODULATE_API_KEY: ${MODULATE_API_KEY:-}
+      HOSTED_PARAKEET_API_URL: ${HOSTED_PARAKEET_API_URL:-http://omi-audio:8790}
+      HOSTED_SPEAKER_EMBEDDING_API_URL: ${HOSTED_SPEAKER_EMBEDDING_API_URL:-http://omi-audio:8790}
+      TTS_LOCAL_BASE_URL: ${TTS_LOCAL_BASE_URL:-http://omi-audio:8790}
+      PUBLIC_URL: ${PUBLIC_URL:-http://${BIND_IP:-0.0.0.0}:8000}
+      # Local-first infrastructure (self-hosting defaults)
+      LOCAL_VECTOR_DB: ${LOCAL_VECTOR_DB:-chroma}
+      SEARXNG_URL: ${SEARXNG_URL:-http://omi-searxng:8080}
+      STORAGE_BACKEND: ${STORAGE_BACKEND:-local}
+      LOCAL_STORAGE_PATH: ${LOCAL_STORAGE_PATH:-/data/storage}
+      CHROMA_DATA_PATH: ${CHROMA_DATA_PATH:-/data/chroma/vector_db}
+    volumes:
+      - omi-data:/data
+    depends_on:
+      - omi-audio
+      - omi-proxy
+    logging:
+      driver: json-file
+      options: { max-size: "20m", max-file: "3" }
+
+  # ── Merge proxy — auto-discovers models from all configured backends ──
+  # Every backend in UPSTREAMS gets queried for /v1/models on startup.
+  # Set MODEL_ALLOW to curate which models appear (empty = show all).
+  #
+  # Examples:
+  #   MODEL_ALLOW=gemma-4-12b,qwen3-8b                    (llama.cpp only)
+  #   MODEL_ALLOW=gemma-4-12b,gpt-4*,claude-sonnet*,gemini*  (llama + OpenRouter)
+  #
+  # Add/remove models in llama.cpp or OpenRouter — the proxy picks them up.
+  # MODEL_ALLOW keeps the dashboard dropdown clean.
+  omi-proxy:
+    image: omi-proxy:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.proxy
+    container_name: omi-proxy
+    restart: unless-stopped
+    environment:
+      UPSTREAMS: ${UPSTREAMS:-{"llama":"http://${LLAMA_HOST:-172.19.0.4}:${LLAMA_PORT:-8081}/v1"}}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-local}
+      MODEL_ALLOW: ${MODEL_ALLOW:-}
+      MODEL_CACHE_TTL: "60"
+      MERGE_PORT: "4000"
+      # Shared Redis — allowlist syncs between dashboard and proxy
+      REDIS_DB_HOST: ${REDIS_DB_HOST:-redis}
+      REDIS_DB_PORT: ${REDIS_DB_PORT:-6380}
+      REDIS_DB_PASSWORD: ${REDIS_DB_PASSWORD:-}
+    logging:
+      driver: json-file
+      options: { max-size: "20m", max-file: "3" }
+
+  # Fully-offline CPU audio: faster-whisper STT + resemblyzer + Piper TTS
+  omi-audio:
+    image: omi-local-audio:latest
+    build:
+      context: ./repo/omi-host
+      dockerfile: Dockerfile.audio
+    container_name: omi-audio
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8790:8790"
+    environment:
+      PORT: "8790"
+      OMI_ASR_MODEL: ${OMI_ASR_MODEL:-Systran/faster-whisper-small}
+      OMI_ASR_COMPUTE: ${OMI_ASR_COMPUTE:-int8}
+      OMI_ASR_THREADS: ${OMI_ASR_THREADS:-8}
+      OMI_DISABLE_DIA: ${OMI_DISABLE_DIA:-0}
+      OMI_PIPER_VOICE: ${OMI_PIPER_VOICE:-/data/piper/voices/en_US-lessac-medium.onnx}
+      HF_HOME: /data/hf-cache
+    volumes:
+      - omi-data:/data
+    logging:
+      driver: json-file
+      options: { max-size: "20m", max-file: "3" }
+
+  # SearXNG — optional local metasearch engine
+  searxng:
+    image: searxng/searxng:latest
+    container_name: omi-searxng
+    profiles:
+      - searxng
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8181:8080"
+    environment:
+      SEARXNG_BASE_URL: ${PUBLIC_URL:-http://localhost:8000}/searxng/
+    volumes:
+      - searxng-data:/etc/searxng
+    logging:
+      driver: json-file
+      options: { max-size: "20m", max-file: "3" }
+
+volumes:
+  omi-data:
+  searxng-data:

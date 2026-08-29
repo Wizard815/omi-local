@@ -26,6 +26,7 @@ import 'package:talker_flutter/talker_flutter.dart';
 
 import 'package:omi/app_globals.dart';
 import 'package:omi/backend/http/shared.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:omi/backend/preferences.dart';
 import 'package:omi/coordinators/provider_capture_external_actions.dart';
 import 'package:omi/core/app_shell.dart';
@@ -177,8 +178,28 @@ Future _init() async {
   // Firebase
   await _ensureFirebaseApp();
 
+  // Auth emulator setup: deferred to login page for local_dev.
+  // The user enters their server URL at login and the emulator host
+  // is derived from it at sign-in time. This keeps the APK portable —
+  // no hardcoded IP, works for any self-hosted backend.
   if (Env.profile.usesFirebaseAuthEmulator) {
-    await FirebaseAuth.instance.useAuthEmulator(Env.firebaseAuthEmulatorHost, Env.firebaseAuthEmulatorPort);
+    // Only configure at startup if the user has a saved customApiBaseUrl
+    // from a previous session. Otherwise wait for the login page.
+    try {
+      final sp = await SharedPreferences.getInstance();
+      final savedUrl = sp.getString('customApiBaseUrl');
+      if (savedUrl != null && savedUrl.isNotEmpty) {
+        final uri = Uri.tryParse(savedUrl);
+        if (uri != null && uri.host.isNotEmpty) {
+          final host = uri.host;
+          final port = Env.firebaseAuthEmulatorPort;
+          await FirebaseAuth.instance.useAuthEmulator(host, port);
+          debugPrint('Auth emulator configured from saved URL: $host:$port');
+        }
+      }
+    } catch (_) {
+      // SharedPreferences not available yet — login page will configure later
+    }
   }
 
   await PlatformManager.initializeServices();

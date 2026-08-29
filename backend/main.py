@@ -29,6 +29,8 @@ install_firebase_auth_mutation_guard()
 
 from routers import (
     chat,
+    dashboard,
+    device_calendar,
     firmware,
     static_map,
     transcribe,
@@ -183,6 +185,10 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+
+# Dashboard — serves the web UI at /
+app.include_router(dashboard.router)
+app.include_router(device_calendar.router)
 
 app.include_router(transcribe.router)
 app.include_router(static_map.router)

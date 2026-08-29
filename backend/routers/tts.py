@@ -42,6 +42,20 @@ _TTS_REQUEST_CHAR_LIMIT = 5_000
 _ELEVENLABS_URL = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
 
 
+def _tts_upstream():
+    """Resolve the TTS upstream -> (is_local, url, headers).
+
+    Default: the ElevenLabs proxy (cloud, opt-in via ELEVENLABS_API_KEY).
+    Local:   set TTS_LOCAL_BASE_URL (e.g. http://omi-audio:8790) to use the
+    fully-offline Piper service instead. When local, ELEVENLABS_API_KEY is not
+    required and the ElevenLabs voice id is ignored (Piper uses its own voice).
+    """
+    local_base = (os.getenv('TTS_LOCAL_BASE_URL') or '').rstrip('/')
+    if local_base:
+        return True, local_base + '/v1/tts', {'Content-Type': 'application/json'}
+    return False, _ELEVENLABS_URL.format(voice_id='{voice_id}'), {}
+
+
 def _is_valid_voice_id(voice_id: str) -> bool:
     """Alphanumeric only, 1-128 chars. Prevents path traversal against the
     ElevenLabs URL template (e.g. `../../history` retargeting `xi-api-key`).
@@ -66,9 +80,12 @@ async def tts_synthesize(
         cast(Callable[..., str], _auth_module.with_rate_limit(auth.get_current_user_uid, "tts:synthesize"))
     ),
 ):
-    """Proxy a TTS request to ElevenLabs. Per-user rate limited."""
+    """Proxy TTS. ElevenLabs by default (cloud, opt-in); the fully-offline Piper
+    service when TTS_LOCAL_BASE_URL is set. Per-user rate limited either way."""
+    is_local, upstream_url, base_headers = _tts_upstream()
     api_key = os.getenv('ELEVENLABS_API_KEY')
-    if not api_key:
+
+    if not is_local and not api_key:
         logger.error("tts_synthesize: ELEVENLABS_API_KEY not configured")
         raise HTTPException(status_code=503, detail="TTS service not configured")
 
@@ -111,20 +128,27 @@ async def tts_synthesize(
         )
     # status == -1 (Redis error): fail-open intentionally — TTS is best-effort.
 
-    body: Dict[str, Any] = {
-        "text": text,
-        "model_id": req.model_id,
-        "output_format": req.output_format,
-    }
-    if req.voice_settings is not None:
-        body["voice_settings"] = req.voice_settings.model_dump(exclude_none=True)
-
-    url = _ELEVENLABS_URL.format(voice_id=req.voice_id)
-    headers = {
-        "Content-Type": "application/json",
-        "Accept": "audio/mpeg",
-        "xi-api-key": api_key,
-    }
+    if is_local:
+        # Local Piper service: it owns the voice; only the text crosses.
+        body: Dict[str, Any] = {"text": text}
+        url = upstream_url
+        headers: Dict[str, str] = dict(base_headers)
+        media_type = "audio/wav"  # Piper serves wav (mp3 when ffmpeg present)
+    else:
+        body = {
+            "text": text,
+            "model_id": req.model_id,
+            "output_format": req.output_format,
+        }
+        if req.voice_settings is not None:
+            body["voice_settings"] = req.voice_settings.model_dump(exclude_none=True)
+        url = upstream_url.format(voice_id=req.voice_id)
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "audio/mpeg",
+            "xi-api-key": api_key or "",
+        }
+        media_type = "audio/mpeg"
 
     client = get_tts_client()
     semaphore = get_tts_semaphore()
@@ -162,6 +186,12 @@ async def tts_synthesize(
         logger.error(f"tts_synthesize: pre-stream failure uid={uid}: {sanitize(str(e))}")
         raise HTTPException(status_code=502, detail="TTS upstream unavailable")
 
+    # Use the upstream's real content type (Piper may serve wav when ffmpeg is
+    # absent; ElevenLabs serves mpeg). Fall back to the expected default.
+    resp_media = resp.headers.get("content-type", "")
+    if not resp_media.startswith("audio/"):
+        resp_media = media_type
+
     async def audio_stream():
         try:
             async for chunk in resp.aiter_bytes():
@@ -176,4 +206,4 @@ async def tts_synthesize(
             except Exception:
                 pass
 
-    return StreamingResponse(audio_stream(), media_type="audio/mpeg")
+    return StreamingResponse(audio_stream(), media_type=resp_media)

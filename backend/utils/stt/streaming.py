@@ -542,6 +542,7 @@ def _requested_stt_language(
         and multi_lang_enabled
         and language
         and supports_live_multilingual_mode(language)
+        and os.getenv('MODULATE_API_KEY')
     ):
         return 'multi'
     return base_lang
@@ -618,6 +619,7 @@ def get_stt_service_for_language(
             if (
                 model == 'modulate-velma-2'
                 and provider_is_enabled(MODULATE_PROVIDER, surface)
+                and os.getenv('MODULATE_API_KEY')
                 and modulate_supports_language(requested_language)
             ):
                 return (STTService.modulate, requested_language, 'velma-2'), parakeet_fallback_reason

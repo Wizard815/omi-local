@@ -1,0 +1,40 @@
+# Omi local CPU audio service — fully offline STT (faster-whisper) + speaker
+# embedding (resemblyzer) + TTS (Piper). Drop-in for the backend's self-hosted
+# Parakeet protocol (HOSTED_PARAKEET_API_URL / HOSTED_SPEAKER_EMBEDDING_API_URL)
+# plus a local TTS endpoint.
+#
+# Base is the official pipecat image: it bundles CTranslate2 (faster-whisper's
+# engine) + onnxruntime with all native deps, so the audio stack installs clean.
+FROM pipecat-ai/pipecat:1
+
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl ca-certificates ffmpeg \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Whisper (CT2), Piper TTS, resemblyzer speaker embeddings, ASGI server.
+# setuptools<81 is required: resemblyzer->webrtcvad imports pkg_resources, which
+# was removed from setuptools 81+.
+RUN pip install --no-cache-dir \
+    'setuptools<81' \
+    faster-whisper \
+    piper-tts \
+    resemblyzer \
+    fastapi \
+    'uvicorn[standard]' \
+    numpy soundfile python-multipart
+
+COPY local_audio_service.py /app/local_audio_service.py
+
+# Voices + HF model cache live on the shared volume (see compose) so they
+# survive container rebuilds; download with omi-host/download-piper-voice.sh.
+ENV OMI_PIPER_VOICE=/data/piper/voices/en_US-lessac-medium.onnx \
+    HF_HOME=/data/hf-cache \
+    PORT=8790
+
+EXPOSE 8790
+HEALTHCHECK --interval=15s --timeout=5s --start-period=180s \
+    CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8790/health', timeout=4).status==200 else 1)"
+CMD ["python", "/app/local_audio_service.py"]

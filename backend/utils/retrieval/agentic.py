@@ -65,6 +65,7 @@ from utils.retrieval.tools.app_tools import load_app_tools, get_tool_status_mess
 from utils.retrieval.tools.conversation_jit_gate import (
     append_jit_conversation_retrieval_prompt,
 )
+from utils.retrieval.tools.device_calendar_tools import get_device_calendar_events_tool
 from utils.retrieval.tool_result_boundaries import preserve_chat_memory_tool_result_boundary
 from utils.retrieval.chat_scope import build_chat_scope
 from utils.retrieval.safety import (
@@ -142,12 +143,11 @@ async def _resolve_jit_conversation_retrieval(uid: str) -> bool:
 
 
 class _PerplexityWebSearchToolProxy:
-    """Lazy adapter for the gateway-only web-search function tool.
+    """Lazy adapter that routes web search to SearXNG (local) or Perplexity (cloud).
 
+    Uses SearXNG when SEARXNG_URL is set, falls back to Perplexity gateway.
     Agentic unit tests intentionally load this module with a minimal LangChain
-    stub. Avoid importing the optional Perplexity tool module at import time,
-    while retaining the real LangChain tool and gateway implementation when a
-    managed request actually executes it.
+    stub. Avoid importing the optional tool modules at import time.
     """
 
     name = 'perplexity_web_search_tool'
@@ -156,8 +156,10 @@ class _PerplexityWebSearchToolProxy:
     @property
     def args_schema(self):
         try:
+            if _use_searxng():
+                from utils.retrieval.tools.local_web_search_tool import local_web_search_tool
+                return local_web_search_tool.args_schema
             from utils.retrieval.tools.perplexity_tools import perplexity_web_search_tool
-
             return perplexity_web_search_tool.args_schema
         except ModuleNotFoundError as error:
             if error.name != 'langchain_core.tools':
@@ -174,12 +176,20 @@ class _PerplexityWebSearchToolProxy:
             return _FallbackArgsSchema
 
     async def ainvoke(self, tool_input, config=None):
+        if _use_searxng():
+            from utils.retrieval.tools.local_web_search_tool import local_web_search_tool
+            return await local_web_search_tool.ainvoke(tool_input, config=config)
         from utils.retrieval.tools.perplexity_tools import perplexity_web_search_tool
-
         return await perplexity_web_search_tool.ainvoke(tool_input, config=config)
 
 
 perplexity_web_search_tool = _PerplexityWebSearchToolProxy()
+
+
+def _use_searxng() -> bool:
+    """Check if GUEST SearXNG_URL is configured for local web search."""
+    import os
+    return bool(os.environ.get("SEARXNG_URL", "").strip())
 
 
 def _positive_timeout_from_env(name: str, default: float) -> float:
@@ -1453,7 +1463,14 @@ async def execute_agentic_chat_stream(
             if not jit_conversation_retrieval_enabled:
                 core_tools = [tool for tool in core_tools if tool.name not in JIT_ONLY_TOOL_NAMES]
 
-            # Dynamic app tools — exposed directly on the OpenAI/Luna chat-agent lane
+            # Self-hosting: add device calendar tool when in local mode
+            # (replaces Google Calendar dependency with Android CalendarContract)
+            if os.environ.get("OPENAI_BASE_URL") and os.environ.get("OMI_LOCAL_MODEL"):
+                from routers.device_calendar import has_device_calendar
+                if has_device_calendar(uid):
+                    core_tools.append(get_device_calendar_events_tool)
+
+            # Dynamic app tools — deferred for Anthropic; exposed directly in managed mode
             app_tools = []
             try:
                 app_tools = await run_blocking(db_executor, load_app_tools, uid)
