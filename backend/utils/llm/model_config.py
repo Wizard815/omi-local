@@ -3,12 +3,19 @@
 This module is the source of truth for feature → (model, provider) routing.
 Provider-specific client construction lives in ``providers.py``; callers should
 continue to use ``clients.get_llm(feature)``.
+
+Runtime model switching (self-hosting):
+  When OPENAI_BASE_URL is set, the Omi backend routes through LiteLLM.
+  The active model is resolved lazily at each call — first checking Redis
+  (set by the dashboard model picker), then falling back to the OMI_LOCAL_MODEL
+  / LOCAL_LLM_MODEL env vars. This means you can switch models via the
+  dashboard without restarting the container.
 """
 
 import logging
 import os
 from dataclasses import dataclass
-from typing import Dict, Tuple, Union
+from typing import Dict, Optional, Tuple, Union
 
 from utils.llm.gateway_client import is_auto_lane_id
 
@@ -30,6 +37,44 @@ class AutoLaneRouteRef:
 
 
 RouteRef = Union[ExplicitRouteRef, AutoLaneRouteRef]
+
+# ---------------------------------------------------------------------------
+# Runtime model overrides (self-hosting with LiteLLM).
+#
+# These are read LAZILY on every call — not at import time. This lets the
+# dashboard model picker change models at runtime via Redis, and the next LLM
+# call picks up the new model without restarting.
+#
+# Resolution order for the LOCAL model name:
+#   1. Redis key omi:model:primary  /  omi:model:chat_agent  (runtime overrides)
+#   2. Env var OMI_LOCAL_MODEL  /  LOCAL_LLM_MODEL  (container defaults)
+#   3. Empty string — local mode not active
+# ---------------------------------------------------------------------------
+
+
+def _redis_model(kind: str) -> Optional[str]:
+    """Read a runtime model override from Redis, returning None on any error."""
+    try:
+        from database.redis_db import get_runtime_model
+        return get_runtime_model(kind)
+    except Exception:
+        return None
+
+
+def _get_local_primary_model() -> str:
+    """Resolve the primary local model at call time (Redis → env → empty)."""
+    return (_redis_model('primary') or os.getenv('OMI_LOCAL_MODEL', '')).strip()
+
+
+def _get_local_chat_agent_model() -> str:
+    """Resolve the chat-agent local model at call time (Redis → env → empty)."""
+    return (_redis_model('chat_agent') or os.getenv('LOCAL_LLM_MODEL', '')).strip()
+
+
+def _is_local_mode() -> bool:
+    """Return True when a local LLM backend (LiteLLM) is configured."""
+    return bool(os.getenv('OPENAI_BASE_URL', '').strip() and _get_local_primary_model())
+
 
 # ---------------------------------------------------------------------------
 # Model QoS Profile System
@@ -133,25 +178,14 @@ _byok_profile = MODEL_QOS_PROFILES[_byok_profile_name]
 _ANTHROPIC_ONLY_FEATURES: set[str] = set()
 _PERPLEXITY_ONLY_FEATURES = {'web_search'}
 
-
 # Feature-specific client config (temperature, headers — orthogonal to model choice).
 # Only applied when a feature resolves to an OpenRouter model.
 _OPENROUTER_TEMPERATURES: Dict[str, float] = {
     'wrapped_analysis': 0.7,
 }
 
-# Prompt-cache capability detection.
-#
-# OpenAI prompt caching is a capability of whole model families, not of specific point
-# releases. Gating on exact model names silently breaks when a family member changes,
-# so we detect by family prefix.
-#
-#   prompt_cache_key             — prefix-cache request routing. Supported by the gpt-4o,
-#                                  gpt-4o, gpt-5.x and o-series families.
-#   prompt_cache_retention='24h' — extended (24h) cache retention. Supported by the
-#                                  gpt-5.x and o-series families, except gpt-5.6, which
-#                                  uses the explicit prompt_cache_options contract instead
-#                                  (see supports_cache_retention).
+# Prompt-cache capability detection — prefixed-based detection so model family
+# additions don't silently break caching.
 _CACHE_KEY_MODEL_PREFIXES = ('gpt-5', 'gpt-4o', 'o1', 'o3', 'o4')
 _CACHE_RETENTION_MODEL_PREFIXES = ('gpt-5', 'o1', 'o3', 'o4')
 
@@ -206,6 +240,12 @@ _FOREGROUND_TIMEOUT_FEATURES = frozenset(
 # traffic; existing direct LLM routing never consults this map.
 _AUTO_LANE_FEATURES: Dict[str, str] = {}
 
+# All cloud providers that can route through an OpenAI-compatible local server.
+# 'anthropic' is included so the chat_agent feature routes through LiteLLM
+# instead of going through local_llm_adapter.py — LiteLLM handles the
+# Anthropic → OpenAI conversion transparently.
+_LOCAL_REWRITABLE = frozenset({"openai", "gemini", "openrouter", "perplexity", "anthropic"})
+
 
 class UnknownLLMFeature(KeyError):
     """A feature has no explicit map entry. Fail closed; never fall through to luna."""
@@ -216,16 +256,34 @@ class UnknownLLMFeature(KeyError):
 
 
 def _get_model_config(feature: str) -> Tuple[str, str]:
-    """Get the (model, provider) tuple for a feature. Internal — used by get_llm/get_model/get_provider.
+    """Get the (model, provider) tuple for a feature.
 
-    Resolution order: pinned > active profile. Unknown features raise UnknownLLMFeature.
+    Resolution order:
+      1. Pinned features (never overridden)
+      2. Local mode — if OPENAI_BASE_URL is set, rewrite ALL rewritable
+         features to use the runtime-selected local model (Redis → env fallback).
+      3. Active profile entry
+
+    Unknown features raise UnknownLLMFeature. The local-mode check runs on
+    EVERY call, so dashboard model switches take effect immediately without
+    restarting.
     """
     if feature in _PINNED_FEATURES:
         return _PINNED_FEATURES[feature]
+
     try:
-        return _active_profile[feature]
+        base_model, base_provider = _active_profile[feature]
     except KeyError as exc:
         raise UnknownLLMFeature(feature) from exc
+
+    # --- Runtime local-mode rewrite ---
+    # chat_agent gets its own model; everything else uses the primary model.
+    if _is_local_mode() and base_provider in _LOCAL_REWRITABLE:
+        if feature == 'chat_agent':
+            return (_get_local_chat_agent_model(), 'openai')
+        return (_get_local_primary_model(), 'openai')
+
+    return base_model, base_provider
 
 
 def get_model_config(feature: str) -> Tuple[str, str]:
@@ -261,7 +319,6 @@ def get_provider(feature: str) -> str:
 
 def get_route_options(feature: str, model: str, provider: str) -> Dict[str, object]:
     """Return provider/model construction options for a resolved route."""
-
     options: Dict[str, object] = {}
     if supports_cache_retention(model):
         options['extra_body'] = {"prompt_cache_retention": "24h"}
@@ -270,8 +327,6 @@ def get_route_options(feature: str, model: str, provider: str) -> Dict[str, obje
         if temperature is not None:
             options['temperature'] = temperature
     if provider == 'gemini' and not is_structured_output_feature(feature):
-        # Structured-output features use .with_structured_output(), which routes through
-        # Completions.parse() and rejects thinking_budget (issue #7898).
         options['thinking_budget'] = 0
     return options
 
@@ -322,9 +377,6 @@ def supports_prompt_cache(model: str) -> bool:
 
 def supports_cache_retention(model: str) -> bool:
     """Whether a model supports 24h OpenAI prompt-cache retention (prompt_cache_retention='24h')."""
-    # GPT-5.6 uses the explicit cache contract (prompt_cache_options + a
-    # breakpoint) rather than the legacy prompt_cache_retention field. Sending
-    # both contracts in the same request is rejected by the provider.
     return bool(model) and not model.startswith('gpt-5.6') and model.startswith(_CACHE_RETENTION_MODEL_PREFIXES)
 
 

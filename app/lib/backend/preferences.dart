@@ -210,6 +210,12 @@ class SharedPreferencesUtil {
 
   String get uid => getString('uid');
 
+  //------------------------------- Custom Server URL (self-hosting) ----------
+
+  String get customApiBaseUrl => getString('customApiBaseUrl', defaultValue: '');
+
+  set customApiBaseUrl(String value) => saveString('customApiBaseUrl', value);
+
   //-------------------------------- Device ----------------------------------//
 
   set btDevice(BtDevice value) {

@@ -1728,3 +1728,59 @@ def store_screen_frame_adjudication_response(
     key = f'screen_frame:adjudication:{uid}:{purpose}:{attempt_id}'
     payload = _serialize_cache_value({'fingerprint': fingerprint, 'response': response})
     r.set(key, payload, ex=ttl)
+
+
+# ******************************************************
+# *************** RUNTIME MODEL SELECTION ***************
+# ******************************************************
+
+
+@try_catch_decorator
+def get_runtime_model(kind: str) -> str | None:
+    """Read a runtime-overridden model from Redis.
+
+    Args:
+        kind: 'primary' or 'chat_agent'
+
+    Returns the model name string (e.g. 'gemma-4-12b', 'omi-primary'),
+    or None when no override has been set.
+    """
+    raw = r.get(f'omi:model:{kind}')
+    return raw.decode('utf-8') if raw else None
+
+
+@try_catch_decorator
+def set_runtime_model(kind: str, model: str) -> None:
+    """Persist a runtime model override to Redis.
+
+    Args:
+        kind: 'primary' or 'chat_agent'
+        model: model name string (e.g. 'gemma-4-12b', 'omi-primary')
+    """
+    r.set(f'omi:model:{kind}', model)
+
+
+# ******************************************************
+# *************** MODEL ALLOWLIST (dashboard) ***********
+# ******************************************************
+
+
+@try_catch_decorator
+def get_model_allowlist() -> str | None:
+    """Read the curated model allowlist from Redis.
+
+    Returns the raw comma-separated string (e.g. 'gemma-4-12b,gpt-4*,claude*')
+    or None when no list has been saved via the dashboard.
+    """
+    raw = r.get('omi:model:allow')
+    return raw.decode('utf-8') if raw else None
+
+
+@try_catch_decorator
+def set_model_allowlist(allowlist: str) -> None:
+    """Persist the curated model allowlist to Redis.
+
+    Args:
+        allowlist: comma-separated model patterns (e.g. 'gemma-4-12b,gpt-4*,claude-sonnet*')
+    """
+    r.set('omi:model:allow', allowlist)

@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:omi/backend/http/api/apps.dart' as apps_api;
 import 'package:omi/backend/preferences.dart';
 import 'package:omi/env/env.dart';
+import 'package:omi/env/environment_profile.dart';
 import 'package:omi/app_globals.dart';
 import 'package:omi/providers/base_provider.dart';
 import 'package:omi/services/account_cutover/account_cutover_runtime.dart';
@@ -119,10 +120,54 @@ class AuthenticationProvider extends BaseProvider {
   }
 
   bool isSignedIn() {
+    // Local dev: anonymous Firebase emulator users are valid
+    if (Env.profile == AppEnvironmentProfile.localDev) {
+      return !_requiresReauthentication && _auth.currentUser != null;
+    }
     return !_requiresReauthentication && _auth.currentUser != null && !_auth.currentUser!.isAnonymous;
   }
 
   bool get _hasFirebaseUser => _auth.currentUser != null && !_auth.currentUser!.isAnonymous;
+
+  Future<void> signInLocalDev(String serverUrl, Function() onSignIn) async {
+    if (!loading) {
+      setLoadingState(true);
+      try {
+        // Save the server URL so backend calls + future sessions use it
+        if (serverUrl.isNotEmpty) {
+          SharedPreferencesUtil().customApiBaseUrl = serverUrl;
+        }
+
+        // Configure auth emulator to point at the user's server.
+        // useAuthEmulator must be called before any sign-in operation.
+        final uri = Uri.tryParse(SharedPreferencesUtil().customApiBaseUrl);
+        if (uri != null && uri.host.isNotEmpty) {
+          final host = uri.host;
+          final port = Env.firebaseAuthEmulatorPort;
+          try {
+            await _auth.useAuthEmulator(host, port);
+          } catch (e) {
+            // Already configured (from a previous session) — that's fine
+            Logger.debug('Auth emulator already configured: $e');
+          }
+        }
+
+        // Sign in anonymously with Firebase Auth emulator.
+        // The emulator accepts this with zero network calls.
+        await _auth.signInAnonymously();
+        if (_auth.currentUser != null) {
+          await _signIn(onSignIn);
+        }
+      } catch (e) {
+        Logger.debug('Local dev sign in error: $e');
+        AppSnackbar.showSnackbarError(
+          globalNavigatorKey.currentContext?.l10n.authenticationFailed ??
+              'Authentication failed. Please try again.',
+        );
+      }
+      setLoadingState(false);
+    }
+  }
 
   @override
   void dispose() {

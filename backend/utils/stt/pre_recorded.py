@@ -93,7 +93,8 @@ def get_prerecorded_service(language: Optional[str] = 'en') -> Tuple[str, Option
     def select(models: Sequence[str]) -> Optional[Tuple[str, Optional[str], str]]:
         for m in models:
             m = m.strip()
-            if m == 'modulate-velma-2' and provider_is_enabled(MODULATE_PROVIDER, STTServingSurface.PRERECORDED):
+            if m == 'modulate-velma-2' and provider_is_enabled(MODULATE_PROVIDER, STTServingSurface.PRERECORDED) \
+                    and os.getenv('MODULATE_API_KEY'):
                 if base_lang in {'en', 'es', 'fr', 'de', 'it', 'pt', 'nl', 'ja', 'ko', 'zh'}:
                     return PrerecordedSTTService.MODULATE, base_lang, 'velma-2'
                 continue
@@ -114,7 +115,7 @@ def get_prerecorded_service(language: Optional[str] = 'en') -> Tuple[str, Option
 
     # Velma's batch API detects the language itself — we never send a code — so it can
     # serve languages the capability maps omit, and values that are not codes at all.
-    if provider_is_enabled(MODULATE_PROVIDER, STTServingSurface.PRERECORDED):
+    if provider_is_enabled(MODULATE_PROVIDER, STTServingSurface.PRERECORDED) and os.getenv('MODULATE_API_KEY'):
         return PrerecordedSTTService.MODULATE, 'multi', 'velma-2'
 
     # Only reachable with every pre-recorded provider disabled, which no retry resolves.

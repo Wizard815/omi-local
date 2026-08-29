@@ -2,6 +2,7 @@ package com.friend.ios
 
 import android.content.Intent
 import com.friend.ios.ble.BleHostApiImpl
+import com.friend.ios.calendar.DeviceCalendarPlugin
 import com.friend.ios.phonecalls.PhoneCallsPlugin
 import com.friend.ios.ble.OmiBleForegroundService
 import com.friend.ios.ble.OmiBleManager
@@ -29,6 +30,9 @@ class MainActivity: FlutterActivity() {
 
         // Register Phone Calls Plugin
         PhoneCallsPlugin.registerWith(flutterEngine, this)
+
+        // Register Device Calendar Plugin (Android CalendarContract)
+        DeviceCalendarPlugin.registerWith(flutterEngine, this)
 
         // Register Native BLE Pigeon APIs
         OmiBleManager.initialize(application)

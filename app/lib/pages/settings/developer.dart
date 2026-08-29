@@ -29,6 +29,8 @@ import 'package:omi/pages/settings/widgets/mcp_api_key_list_item.dart';
 import 'package:omi/providers/device_provider.dart';
 import 'package:omi/providers/developer_mode_provider.dart';
 import 'package:omi/providers/mcp_provider.dart';
+import 'package:omi/services/device_calendar_service.dart';
+import 'package:omi/services/device_calendar_sync.dart';
 import 'package:omi/utils/alerts/app_snackbar.dart';
 import 'package:omi/utils/debug_log_manager.dart';
 import 'package:omi/utils/firmware_update_build_policy.dart';
@@ -253,6 +255,230 @@ class _DeveloperSettingsPageState extends State<_DeveloperSettingsPageView> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildServerUrlSection() {
+    final currentUrl = Env.apiBaseUrl ?? 'http://192.168.20.5:8000/';
+    final controller = TextEditingController(text: currentUrl);
+
+    return _buildSectionContainer(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Current: $currentUrl',
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      controller: controller,
+                      label: 'Server URL',
+                      hint: 'http://192.168.20.5:8000/',
+                      keyboardType: TextInputType.url,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  ElevatedButton(
+                    onPressed: () {
+                      final url = controller.text.trim();
+                      if (url.isNotEmpty) {
+                        Env.overrideApiBaseUrl(url);
+                        SharedPreferencesUtil().customApiBaseUrl = url;
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Server URL set to $url\nRestart the app for it to take full effect.'),
+                              backgroundColor: Colors.green.shade700,
+                              duration: const Duration(seconds: 4),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2C2C2E),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: const Text('Save'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDeviceCalendarSection() {
+    return _buildSectionContainer(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Sync your device calendar (Android CalendarContract) to Omi.\nWorks with DAVx5 (Nextcloud), Google, Exchange, and local calendars.\nNo cloud API needed — reads directly from your phone.',
+                style: TextStyle(color: Colors.grey.shade400, fontSize: 13, height: 1.4),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    final result = await DeviceCalendarSync.syncNow();
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(result['message'] ?? 'Sync complete'),
+                          backgroundColor: Colors.green.shade700,
+                        ),
+                      );
+                    }
+                  },
+                  icon: const FaIcon(FontAwesomeIcons.calendarCheck, size: 14),
+                  label: const Text('Sync Device Calendar Now'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2C2C2E),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    final calendars = await DeviceCalendarService.getCalendars();
+                    if (mounted) {
+                      final calNames = calendars.map((c) => '${c['name']} (${c['accountType']})').join('\n');
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          backgroundColor: const Color(0xFF1C1C1E),
+                          title: const Text('Calendars on Device', style: TextStyle(color: Colors.white)),
+                          content: Text(
+                            calNames.isNotEmpty ? calNames : 'No calendars found',
+                            style: const TextStyle(color: Colors.grey, fontFamily: 'Ubuntu Mono', fontSize: 13),
+                          ),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+                          ],
+                        ),
+                      );
+                    }
+                  },
+                  icon: const FaIcon(FontAwesomeIcons.list, size: 14),
+                  label: const Text('List Device Calendars'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2C2C2E),
+                    foregroundColor: Colors.white70,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildModelInfoSection() {
+    final baseUrl = Env.apiBaseUrl ?? 'http://192.168.20.5:8000';
+
+    return _buildSectionContainer(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Server models are configured server-side. Visit the dashboard to view and change them.',
+                      style: TextStyle(color: Colors.grey.shade400, fontSize: 13, height: 1.4),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    if (await canLaunchUrl(Uri.parse('$baseUrl/'))) {
+                      await launchUrl(Uri.parse('$baseUrl/'), mode: LaunchMode.externalApplication);
+                    }
+                  },
+                  icon: const FaIcon(FontAwesomeIcons.chartLine, size: 14),
+                  label: const Text('Open Server Dashboard'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2C2C2E),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    final url = '$baseUrl/dashboard/models';
+                    if (await canLaunchUrl(Uri.parse(url))) {
+                      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                    }
+                  },
+                  icon: const FaIcon(FontAwesomeIcons.gear, size: 14),
+                  label: const Text('View Model Config (JSON)'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2C2C2E),
+                    foregroundColor: Colors.white70,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Start server with:',
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0D0D0D),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFF2A2A2E)),
+                ),
+                child: Text(
+                  'OPENAI_BASE_URL=http://host:8081/v1\nOMI_LOCAL_MODEL=gemma-4-12b\nLOCAL_LLM_MODEL=gemma-4-12b\nbash run-omi-local-host.sh',
+                  style: TextStyle(color: Colors.grey.shade400, fontSize: 11, fontFamily: 'Ubuntu Mono', height: 1.5),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -498,6 +724,24 @@ class _DeveloperSettingsPageState extends State<_DeveloperSettingsPageView> {
                     onTap: () =>
                         Navigator.of(context).push(MaterialPageRoute(builder: (context) => const DataPrivacyPage())),
                   ),
+                  const SizedBox(height: 12),
+
+                  // Server URL Section (self-hosting)
+                  _buildSectionHeader('Server URL', subtitle: 'Change the backend server address for self-hosting.'),
+                  const SizedBox(height: 8),
+                  _buildServerUrlSection(),
+                  const SizedBox(height: 12),
+
+                  // Calendar Provider Section (self-hosting)
+                  _buildSectionHeader('Calendar Provider', subtitle: 'Use device calendar instead of Google Cloud. Syncs any calendar Android knows.'),
+                  const SizedBox(height: 8),
+                  _buildDeviceCalendarSection(),
+                  const SizedBox(height: 12),
+
+                  // Model Configuration Section (self-hosting)
+                  _buildSectionHeader('LLM Models', subtitle: 'View models configured on your self-hosted server.'),
+                  const SizedBox(height: 8),
+                  _buildModelInfoSection(),
                   const SizedBox(height: 12),
 
                   // Transcription Section

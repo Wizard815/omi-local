@@ -123,9 +123,27 @@ _pinecone_index_name: Optional[str] = os.getenv('PINECONE_INDEX_NAME')
 # warning-clean without per-call ignores.
 pc: Any = None
 index: Any = None
-if _pinecone_api_key and _pinecone_index_name:
+
+# ChromaDB local vector-store mode (self-hosting).
+# Set LOCAL_VECTOR_DB=chroma to replace Pinecone with local ChromaDB.
+# ChromaDB is already a dependency (used for RAG) — no new packages needed.
+_use_chroma = os.environ.get("LOCAL_VECTOR_DB", "").lower() == "chroma"
+if _use_chroma:
+    from database.chroma_vector import (
+        chroma_count,
+        chroma_delete,
+        chroma_upsert,
+        chroma_upsert_batch,
+        chroma_query,
+        is_chroma_enabled,
+    )
+    logger.info("Vector DB: ChromaDB (local). Set PINECONE_API_KEY to override.")
+elif _pinecone_api_key and _pinecone_index_name:
     pc = Pinecone(api_key=_pinecone_api_key)
     index = pc.Index(_pinecone_index_name)
+    logger.info("Vector DB: Pinecone (cloud)")
+else:
+    logger.info("Vector DB: none (no Pinecone key and LOCAL_VECTOR_DB not 'chroma')")
 
 
 def _get_data(uid: str, conversation_id: str, vector: List[float]) -> VectorRecordDoc:
@@ -141,8 +159,22 @@ def _get_data(uid: str, conversation_id: str, vector: List[float]) -> VectorReco
     }
 
 
+def upsert_vector(uid: str, conversation_id: str, vector: List[float]) -> None:
+    if _use_chroma:
+        chroma_upsert(f'{uid}-{conversation_id}', vector, {'uid': uid, 'conversation_id': conversation_id, 'created_at': int(datetime.now(timezone.utc).timestamp())})
+        return
+    if index is None:
+        return
+    res = index.upsert(vectors=[_get_data(uid, conversation_id, vector)], namespace="ns1")
+    logger.info(f'upsert_vector {res}')
+
+
 @_account_external_data_write
 def upsert_vector2(uid: str, conversation_id: str, vector: List[float], metadata: Dict[str, Any]) -> None:
+    if _use_chroma:
+        meta = {'uid': uid, 'conversation_id': conversation_id, 'created_at': int(datetime.now(timezone.utc).timestamp()), **metadata}
+        chroma_upsert(f'{uid}-{conversation_id}', vector, meta)
+        return
     if index is None:
         return
     data: VectorRecordDoc = _get_data(uid, conversation_id, vector)
@@ -160,6 +192,19 @@ def update_vector_metadata(uid: str, conversation_id: str, metadata: Dict[str, A
     metadata['memory_id'] = conversation_id
     result: Dict[str, Any] = index.update(f'{uid}-{conversation_id}', set_metadata=metadata, namespace="ns1")
     return result
+
+
+def upsert_vectors(uid: str, vectors: List[List[float]], conversation_ids: List[str]) -> None:
+    if _use_chroma:
+        ids = [f'{uid}-{cid}' for cid in conversation_ids]
+        metas = [{'uid': uid, 'conversation_id': cid, 'created_at': int(datetime.now(timezone.utc).timestamp())} for cid in conversation_ids]
+        chroma_upsert_batch(ids, vectors, metas)
+        return
+    if index is None:
+        return
+    data: List[VectorRecordDoc] = [_get_data(uid, cid, vector) for cid, vector in zip(conversation_ids, vectors)]
+    res = index.upsert(vectors=data, namespace="ns1")
+    logger.info(f'upsert_vectors {res}')
 
 
 def _created_at_filter(starts_at: Optional[int] = None, ends_at: Optional[int] = None) -> Optional[Dict[str, int]]:
@@ -184,6 +229,14 @@ def query_vectors(
     k: int = 5,
     query_vector: Optional[List[float]] = None,
 ) -> List[str]:
+    if _use_chroma:
+        xq = query_vector if query_vector is not None else embeddings.embed_query(query)
+        ids = chroma_query(
+            query_vector=xq, uid=uid, top_k=k,
+            filter_created_after=starts_at,
+            filter_created_before=ends_at,
+        )
+        return [item.replace(f'{uid}-', '') for item in ids]
     if index is None:
         return []
 
@@ -281,6 +334,9 @@ def delete_vector(uid: str, conversation_id: str) -> None:
 
     Note: Vectors are stored with ID format '{uid}-{conversation_id}'
     """
+    if _use_chroma:
+        chroma_delete([f'{uid}-{conversation_id}'])
+        return
     if index is None:
         logger.warning('Pinecone index not initialized, skipping conversation vector delete')
         return

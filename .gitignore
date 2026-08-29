@@ -285,3 +285,4 @@ htmlcov/
 # cannot quietly commit a second lockfile.
 pnpm-lock.yaml
 pnpm-workspace.yaml
+*.apk
