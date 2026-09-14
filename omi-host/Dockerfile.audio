@@ -1,20 +1,44 @@
-# Omi local CPU audio service — fully offline STT (faster-whisper) + speaker
-# embedding (resemblyzer) + TTS (Piper). Drop-in for the backend's self-hosted
-# Parakeet protocol (HOSTED_PARAKEET_API_URL / HOSTED_SPEAKER_EMBEDDING_API_URL)
-# plus a local TTS endpoint.
+# Omi local GPU audio service — STT via whisper.cpp (HIP/ROCm, gfx906) + speaker
+# embedding (resemblyzer, CPU) + TTS (Piper). Drop-in for the backend's
+# self-hosted Parakeet protocol (HOSTED_PARAKEET_API_URL /
+# HOSTED_SPEAKER_EMBEDDING_API_URL) plus a local TTS endpoint.
 #
-# Base is the official pipecat image: it bundles CTranslate2 (faster-whisper's
-# engine) + onnxruntime with all native deps, so the audio stack installs clean.
-FROM pipecat-ai/pipecat:1
+# Base is the same ROCm 6.4.4 image already proven to build gfx906 PyTorch
+# (see ../../whispercpp-transcriber) -- whatever HIP toolchain/device-libs
+# patches that image needed to target gfx906 at all (official ROCm dropped
+# gfx906 support) carry over for whisper.cpp's much smaller ggml-HIP backend.
+ARG BASE_IMAGE=docker.io/mixa3607/pytorch-gfx906:v2.8.0-rocm-6.4.4
+FROM ${BASE_IMAGE}
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl ca-certificates ffmpeg \
- && rm -rf /var/lib/apt/lists/*
+    curl ca-certificates ffmpeg git cmake build-essential python3 python3-pip \
+ && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# This is a pytorch RUNTIME image; it may or may not carry hipcc. Fail loudly
+# rather than silently produce a CPU-only whisper-server.
+RUN command -v hipcc >/dev/null 2>&1 || { \
+        echo "hipcc not found -- attempting to install rocm-dev ..."; \
+        apt-get update && apt-get install -y --no-install-recommends rocm-dev; \
+        apt-get clean && rm -rf /var/lib/apt/lists/*; \
+    }; \
+    command -v hipcc >/dev/null 2>&1 || { \
+        echo "ERROR: hipcc still not found -- this base image's ROCm apt repo may not"; \
+        echo "carry rocm-dev. whisper-server needs the HIP compiler to build for gfx906."; \
+        exit 1; \
+    }
+
+WORKDIR /app
+RUN git clone --depth 1 https://github.com/Wizard815/whisper.cpp-rocm10-gfx906.git whisper.cpp
+
+WORKDIR /app/whisper.cpp
+RUN cmake -B build -DGGML_HIP=1 -DAMDGPU_TARGETS=gfx906 -DCMAKE_BUILD_TYPE=Release \
+    && cmake --build build --target whisper-server -j"$(nproc)"
 
 WORKDIR /app
 
-# Whisper (CT2), Piper TTS, resemblyzer speaker embeddings, ASGI server.
+# Piper TTS, resemblyzer speaker embeddings, ASGI server, and faster-whisper
+# kept only as the OMI_ASR_ENGINE=fasterwhisper CPU fallback.
 # setuptools<81 is required: resemblyzer->webrtcvad imports pkg_resources, which
 # was removed from setuptools 81+.
 RUN pip install --no-cache-dir \
@@ -24,17 +48,24 @@ RUN pip install --no-cache-dir \
     resemblyzer \
     fastapi \
     'uvicorn[standard]' \
+    requests \
     numpy soundfile python-multipart
 
-COPY local_audio_service.py /app/local_audio_service.py
+COPY local_audio_service.py entrypoint-audio.sh /app/
+RUN chmod +x /app/entrypoint-audio.sh
 
-# Voices + HF model cache live on the shared volume (see compose) so they
-# survive container rebuilds; download with omi-host/download-piper-voice.sh.
+# Voices + HF model cache + the whisper.cpp ggml model cache live on the shared
+# volume (see compose) so they survive container rebuilds.
 ENV OMI_PIPER_VOICE=/data/piper/voices/en_US-lessac-medium.onnx \
     HF_HOME=/data/hf-cache \
+    OMI_ASR_ENGINE=whispercpp \
+    WHISPER_MODEL=large-v3-turbo \
+    WHISPER_CPP_MODELS_DIR=/data/whispercpp/models \
+    WHISPER_CPP_SERVER_URL=http://127.0.0.1:8081 \
+    OMI_ASR_IDLE_UNLOAD_S=300 \
     PORT=8790
 
 EXPOSE 8790
-HEALTHCHECK --interval=15s --timeout=5s --start-period=180s \
-    CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8790/health', timeout=4).status==200 else 1)"
-CMD ["python", "/app/local_audio_service.py"]
+HEALTHCHECK --interval=15s --timeout=5s --start-period=300s \
+    CMD python3 -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8790/health', timeout=4).status==200 else 1)"
+ENTRYPOINT ["/app/entrypoint-audio.sh"]

@@ -18,16 +18,20 @@ with ZERO backend code changes:
   * POST /v1/tts           {"text"} -> audio/mpeg (local Piper TTS)
       (routers/tts.py — pointed here via the TTS_LOCAL_BASE_URL env added to that router)
 
-Everything runs on CPU. No cloud calls, ever.
+No cloud calls, ever. ASR runs on the MI50 (gfx906) by default; everything else is CPU.
 
-  ASR            faster-whisper (CTranslate2) — default "small" int8 (≈5.4× realtime
-                 on 2× Xeon Gold 6152). Set OMI_ASR_MODEL for other sizes.
+  ASR            whisper.cpp (HIP/ROCm, gfx906), OMI_ASR_ENGINE=whispercpp (default).
+                 A whisper-server process (started by entrypoint-audio.sh) loads the
+                 ggml model once on the GPU; this file just POSTs to its /inference
+                 endpoint per utterance. Set OMI_ASR_ENGINE=fasterwhisper to fall back
+                 to the original CPU path (faster-whisper/CTranslate2, OMI_ASR_MODEL).
   Endpointing    pure-numpy energy VAD with AGC (signal-relative threshold + hysteresis).
                  Robust; no torchscript dependency.
   Diarization    resemblyzer ECAPA embeddings + greedy online speaker clustering.
-                 Optional: if OMI_DISABLE_DIA=1 (or the model fails to load) all
-                 segments are labelled SPEAKER_00 and /v2/embedding returns 503 — the
-                 backend degrades gracefully to a single speaker in both cases.
+                 Still CPU (unrelated to the ASR engine choice above). Optional: if
+                 OMI_DISABLE_DIA=1 (or the model fails to load) all segments are
+                 labelled SPEAKER_00 and /v2/embedding returns 503 — the backend
+                 degrades gracefully to a single speaker in both cases.
   TTS            Piper (rhasspy) — OMI_PIPER_VOICE path. Serves mp3 when ffmpeg exists.
 """
 
@@ -37,16 +41,25 @@ import logging
 import os
 import shutil
 import tempfile
+import threading
 import time
 import wave
 from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
+import requests
 from fastapi import FastAPI, File, Form, Request, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse, Response
 
 # --------------------------------------------------------------------------- config
+OMI_ASR_ENGINE = os.getenv("OMI_ASR_ENGINE", "whispercpp").strip().lower()
+WHISPER_CPP_SERVER_URL = os.getenv("WHISPER_CPP_SERVER_URL", "http://127.0.0.1:8081").rstrip("/")
+# Free the GPU model after this many idle seconds (0 disables). The next
+# /inference call auto-reloads it (whisper-server's own behavior) -- one
+# slower first request, in exchange for not holding VRAM/host RAM while idle.
+WHISPER_CPP_IDLE_UNLOAD_S = float(os.getenv("OMI_ASR_IDLE_UNLOAD_S", "300"))
+# faster-whisper fallback path (OMI_ASR_ENGINE=fasterwhisper) — unused on the GPU path.
 WHISPER_MODEL = os.getenv("OMI_ASR_MODEL", "Systran/faster-whisper-small")
 WHISPER_DEVICE = os.getenv("OMI_ASR_DEVICE", "cpu")
 WHISPER_COMPUTE = os.getenv("OMI_ASR_COMPUTE", "int8")
@@ -230,12 +243,16 @@ class Models:
         self.ready = False
 
     def load(self) -> None:
-        log.info("Loading whisper %s (compute=%s threads=%d) ...", WHISPER_MODEL, WHISPER_COMPUTE, WHISPER_THREADS)
-        from faster_whisper import WhisperModel
-        t0 = time.time()
-        self.whisper = WhisperModel(WHISPER_MODEL, device=WHISPER_DEVICE,
-                                    compute_type=WHISPER_COMPUTE, cpu_threads=WHISPER_THREADS)
-        log.info("whisper ready in %.1fs", time.time() - t0)
+        if OMI_ASR_ENGINE == "whispercpp":
+            log.info("ASR engine: whisper.cpp (HIP/ROCm gfx906) at %s", WHISPER_CPP_SERVER_URL)
+            _wait_for_whisper_cpp_server()
+        else:
+            log.info("Loading whisper %s (compute=%s threads=%d) ...", WHISPER_MODEL, WHISPER_COMPUTE, WHISPER_THREADS)
+            from faster_whisper import WhisperModel
+            t0 = time.time()
+            self.whisper = WhisperModel(WHISPER_MODEL, device=WHISPER_DEVICE,
+                                        compute_type=WHISPER_COMPUTE, cpu_threads=WHISPER_THREADS)
+            log.info("whisper ready in %.1fs", time.time() - t0)
         if DIA_ON:
             try:
                 from resemblyzer import VoiceEncoder
@@ -250,6 +267,22 @@ class Models:
         log.info("all models ready (diarize=%s)", self.diarize)
 
 
+def _wait_for_whisper_cpp_server(timeout_s: float = 240.0) -> None:
+    """Block until whisper-server's own model load (started by entrypoint-audio.sh)
+    reports ready. It owns GPU init + ggml load; we just poll its /health."""
+    t0 = time.time()
+    while time.time() - t0 < timeout_s:
+        try:
+            r = requests.get(f"{WHISPER_CPP_SERVER_URL}/health", timeout=3)
+            if r.status_code == 200:
+                log.info("whisper-server ready in %.1fs", time.time() - t0)
+                return
+        except Exception:  # noqa: BLE001
+            pass
+        time.sleep(2)
+    raise RuntimeError(f"whisper-server at {WHISPER_CPP_SERVER_URL} did not become ready within {timeout_s:.0f}s")
+
+
 MODELS = Models()
 
 
@@ -257,7 +290,57 @@ MODELS = Models()
 async def lifespan(_app: FastAPI):
     loop = asyncio.get_running_loop()
     await loop.run_in_executor(None, MODELS.load)
+    unload_task = None
+    if OMI_ASR_ENGINE == "whispercpp" and WHISPER_CPP_IDLE_UNLOAD_S > 0:
+        unload_task = asyncio.create_task(_whisper_cpp_idle_unloader())
+        log.info("whisper-server idle-unload armed: %.0fs", WHISPER_CPP_IDLE_UNLOAD_S)
     yield
+    if unload_task is not None:
+        unload_task.cancel()
+
+
+# --------------------------------------------------------------------------- idle unload
+# whisper-server loads its --model at its own startup, so this starts True; it only
+# goes False after our own /unload call below (never touched on the fasterwhisper path).
+_whisper_cpp_lock = threading.Lock()
+_whisper_cpp_last_used = time.time()
+_whisper_cpp_in_flight = 0
+_whisper_cpp_loaded = True
+
+
+def _whisper_cpp_touch(start: bool) -> None:
+    global _whisper_cpp_last_used, _whisper_cpp_in_flight
+    with _whisper_cpp_lock:
+        if start:
+            _whisper_cpp_in_flight += 1
+        else:
+            _whisper_cpp_in_flight = max(0, _whisper_cpp_in_flight - 1)
+            _whisper_cpp_last_used = time.time()
+
+
+async def _whisper_cpp_idle_unloader() -> None:
+    """Background loop: unload the ggml model off the GPU after WHISPER_CPP_IDLE_UNLOAD_S
+    of no ASR calls. Skips while a request is in flight; the next call after an unload
+    just eats whisper-server's own reload time on that one request."""
+    global _whisper_cpp_loaded
+    check_every = max(10.0, min(30.0, WHISPER_CPP_IDLE_UNLOAD_S / 4))
+    while True:
+        await asyncio.sleep(check_every)
+        with _whisper_cpp_lock:
+            idle_for = time.time() - _whisper_cpp_last_used
+            in_flight = _whisper_cpp_in_flight
+            loaded = _whisper_cpp_loaded
+        if not loaded or in_flight > 0 or idle_for < WHISPER_CPP_IDLE_UNLOAD_S:
+            continue
+        try:
+            r = requests.post(f"{WHISPER_CPP_SERVER_URL}/unload", timeout=10)
+            if r.status_code == 200:
+                _whisper_cpp_loaded = False
+                log.info("whisper-server model unloaded after %.0fs idle (GPU/host RAM freed).", idle_for)
+            else:
+                log.warning("whisper-server /unload returned %s: %s", r.status_code, r.text[:200])
+        except Exception as e:  # noqa: BLE001
+            log.warning("whisper-server /unload request failed: %s", e)
 
 
 app = FastAPI(lifespan=lifespan)
@@ -268,6 +351,8 @@ def transcribe(audio16: np.ndarray, language: str = "en") -> List[Dict[str, Any]
     """Return [{text,start,end}] in seconds for 16k float audio."""
     if len(audio16) < 1600:
         return []
+    if OMI_ASR_ENGINE == "whispercpp":
+        return _transcribe_whispercpp(audio16, language)
     seg_iter, _info = MODELS.whisper.transcribe(
         audio16, language=language, vad_filter=False,
         beam_size=1, condition_on_previous_text=False)
@@ -276,6 +361,43 @@ def transcribe(audio16: np.ndarray, language: str = "en") -> List[Dict[str, Any]
         t = (s.text or "").strip()
         if t:
             out.append({"text": t, "start": round(float(s.start), 3), "end": round(float(s.end), 3)})
+    return out
+
+
+def _transcribe_whispercpp(audio16: np.ndarray, language: str) -> List[Dict[str, Any]]:
+    """POST to the persistent whisper-server process (loaded once, on the MI50)
+    and translate its verbose_json segments into the same {text,start,end} shape
+    the faster-whisper path returns, so callers (WS stream + batch v1/v2) don't
+    need to know which engine served the request."""
+    global _whisper_cpp_loaded
+    wav = wav_bytes(float_to_pcm16(audio16), 16000)
+    _whisper_cpp_touch(True)
+    try:
+        resp = requests.post(
+            f"{WHISPER_CPP_SERVER_URL}/inference",
+            files={"file": ("audio.wav", wav, "audio/wav")},
+            data={"response_format": "verbose_json", "language": language or "auto"},
+            # Idle-unload means the first request after a long silence pays
+            # whisper-server's own reload time on top of inference — give it room.
+            timeout=180,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        _whisper_cpp_loaded = True
+    except Exception as e:  # noqa: BLE001
+        log.error("whisper-server request failed: %s", e)
+        return []
+    finally:
+        _whisper_cpp_touch(False)
+    out: List[Dict[str, Any]] = []
+    for seg in data.get("segments", []):
+        t = (seg.get("text") or "").strip()
+        if t:
+            out.append({
+                "text": t,
+                "start": round(float(seg.get("start", 0.0)), 3),
+                "end": round(float(seg.get("end", 0.0)), 3),
+            })
     return out
 
 
