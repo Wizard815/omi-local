@@ -1,0 +1,37 @@
+# Copy to docker-compose.override.yml (same directory) for changes that a
+# .env variable can't express — port bindings, extra volumes, device paths,
+# restart policy, etc. run-omi-local-host.sh picks this up automatically if
+# it exists (see COMPOSE_FILES in that script); leave it deleted/absent to
+# run with the plain docker-compose.yml defaults.
+#
+# Compose merges this on top of docker-compose.yml service-by-service —
+# you only need to list the keys you're actually changing, not whole services.
+
+services:
+  # Example: expose the audio service on the LAN instead of localhost-only,
+  # e.g. to hit http://<host-ip>:8790/health from another machine for debugging.
+  # omi-audio:
+  #   ports:
+  #     - "0.0.0.0:8790:8790"
+
+  # Example: different render/video group ids than the .env RENDER_GID/VIDEO_GID
+  # defaults, or a second GPU's device nodes.
+  # omi-audio:
+  #   devices:
+  #     - /dev/kfd
+  #     - /dev/dri/renderD129
+  #   group_add:
+  #     - "106"
+  #     - "45"
+
+  # Example: mount an extra host path into the backend container, e.g. to read
+  # exported recordings from elsewhere on the NAS.
+  # omi-local:
+  #   volumes:
+  #     - omi-data:/data
+  #     - /mnt/user/exports:/exports:ro
+
+  # Example: always start SearXNG with the main stack instead of only when
+  # SEARXNG_ENABLED=1 is set (this removes the `profiles: [searxng]` gate).
+  # searxng:
+  #   profiles: []

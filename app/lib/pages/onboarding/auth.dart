@@ -24,6 +24,8 @@ class AuthComponent extends StatefulWidget {
 
 class _AuthComponentState extends State<AuthComponent> {
   final _serverUrlController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   @override
   void initState() {
@@ -38,6 +40,8 @@ class _AuthComponentState extends State<AuthComponent> {
   @override
   void dispose() {
     _serverUrlController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -163,18 +167,94 @@ class _AuthComponentState extends State<AuthComponent> {
                         const SizedBox(height: 16),
                       ],
 
-                      // Local dev: skip Google/Apple OAuth, use emulator anonymous sign-in
+                      // Local dev: skip Google/Apple OAuth, sign in with the
+                      // username/password provisioned on the server (see
+                      // backend/scripts/seed_local_account.py) — not anonymous,
+                      // so the same account is reachable from any device and
+                      // survives an app relaunch.
                       if (Env.profile == AppEnvironmentProfile.localDev) ...[
+                        TextField(
+                          controller: _usernameController,
+                          style: const TextStyle(color: Colors.white, fontSize: 14, fontFamily: 'Manrope'),
+                          decoration: InputDecoration(
+                            hintText: 'Username',
+                            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.35), fontSize: 14),
+                            labelText: 'Username',
+                            labelStyle: const TextStyle(color: Color(0xFF64D2FF), fontSize: 13),
+                            prefixIcon: const Icon(Icons.person, color: Color(0xFF64D2FF), size: 20),
+                            filled: true,
+                            fillColor: const Color(0x1AFFFFFF),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(color: Color(0x33FFFFFF)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(color: Color(0x33FFFFFF)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(color: Color(0xFF64D2FF)),
+                            ),
+                          ),
+                          autocorrect: false,
+                          onChanged: (_) => setState(() {}),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _passwordController,
+                          style: const TextStyle(color: Colors.white, fontSize: 14, fontFamily: 'Manrope'),
+                          decoration: InputDecoration(
+                            hintText: 'Password',
+                            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.35), fontSize: 14),
+                            labelText: 'Password',
+                            labelStyle: const TextStyle(color: Color(0xFF64D2FF), fontSize: 13),
+                            prefixIcon: const Icon(Icons.lock, color: Color(0xFF64D2FF), size: 20),
+                            filled: true,
+                            fillColor: const Color(0x1AFFFFFF),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(color: Color(0x33FFFFFF)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(color: Color(0x33FFFFFF)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(color: Color(0xFF64D2FF)),
+                            ),
+                          ),
+                          obscureText: true,
+                          autocorrect: false,
+                          onChanged: (_) => setState(() {}),
+                          onSubmitted: (_) {
+                            if (_usernameController.text.trim().isEmpty || _passwordController.text.isEmpty) return;
+                            provider.signInLocalAccount(
+                              _serverUrlController.text.trim(),
+                              _usernameController.text.trim(),
+                              _passwordController.text,
+                              widget.onSignIn,
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 12),
                         SizedBox(
                           width: double.infinity,
                           height: 56,
                           child: ElevatedButton(
-                            onPressed: _serverUrlController.text.trim().isEmpty
+                            onPressed: (_usernameController.text.trim().isEmpty || _passwordController.text.isEmpty)
                                 ? null
                                 : () {
                                     HapticFeedback.mediumImpact();
-                                    final url = _serverUrlController.text.trim();
-                                    provider.signInLocalDev(url, widget.onSignIn);
+                                    provider.signInLocalAccount(
+                                      _serverUrlController.text.trim(),
+                                      _usernameController.text.trim(),
+                                      _passwordController.text,
+                                      widget.onSignIn,
+                                    );
                                   },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF64D2FF),
@@ -187,7 +267,7 @@ class _AuthComponentState extends State<AuthComponent> {
                                 Icon(Icons.developer_mode, size: 22),
                                 SizedBox(width: 8),
                                 Text(
-                                  'Use Local Account',
+                                  'Log In',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w600,

@@ -21,7 +21,6 @@ import 'package:omi/pages/settings/conversation_display_settings.dart';
 import 'package:omi/pages/settings/conversation_timeout_dialog.dart';
 import 'package:omi/pages/settings/data_privacy_page.dart';
 import 'package:omi/pages/settings/import_history_page.dart';
-import 'package:omi/pages/payments/payments_page.dart';
 import 'package:omi/pages/settings/transcription_settings_page.dart';
 import 'package:omi/pages/settings/widgets/create_mcp_api_key_dialog.dart';
 import 'package:omi/pages/settings/widgets/developer_api_keys_section.dart';
@@ -698,15 +697,6 @@ class _DeveloperSettingsPageState extends State<_DeveloperSettingsPageView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Payment Methods
-                  _buildNavItem(
-                    icon: FontAwesomeIcons.solidCreditCard,
-                    title: context.l10n.paymentMethods,
-                    onTap: () =>
-                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => const PaymentsPage())),
-                  ),
-                  const SizedBox(height: 12),
-
                   // Conversation Display
                   _buildNavItem(
                     icon: FontAwesomeIcons.list,

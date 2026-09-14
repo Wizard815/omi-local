@@ -1170,6 +1170,10 @@ def enforce_chat_quota(
     if uid == RELEASE_PROBE_UID:
         return
 
+    # Self-hosted offline deployments have no billing plane to enforce against.
+    if os.getenv('PROVIDER_MODE', '').strip().lower() == 'offline':
+        return
+
     # Paywall test override — bypass BYOK + plan checks so the same 402
     # surfaces that a free user past 30 questions would hit. Desktop only;
     # mobile callers continue down the normal plan path.
