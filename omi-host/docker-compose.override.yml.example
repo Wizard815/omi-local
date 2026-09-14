@@ -7,7 +7,14 @@
 # Compose merges this on top of docker-compose.yml service-by-service —
 # you only need to list the keys you're actually changing, not whole services.
 
+# `omi-local: {}` below is a harmless no-op override (merging an empty object
+# onto a real service changes nothing) — it exists only so this file is valid
+# YAML if you copy it as-is with nothing else uncommented. Leave it in place
+# even after uncommenting other examples; it doesn't conflict with them.
+
 services:
+  omi-local: {}
+
   # Example: expose the audio service on the LAN instead of localhost-only,
   # e.g. to hit http://<host-ip>:8790/health from another machine for debugging.
   # omi-audio:
