@@ -75,6 +75,9 @@ VAD_MIN_SIL_MS = int(os.getenv("OMI_VAD_MIN_SILENCE_MS", "1000"))
 VAD_MIN_SPEECH_MS = int(os.getenv("OMI_VAD_MIN_SPEECH_MS", "300"))
 VAD_MAX_UT_S = int(os.getenv("OMI_VAD_MAX_UTTERANCE_S", "20"))
 DIA_ON = os.getenv("OMI_DISABLE_DIA", "0") != "1"
+# "cuda" is correct under ROCm/HIP too -- torch's device string, not a CUDA-specific
+# claim. Falls back to cpu at load time if the GPU isn't actually available.
+DIA_DEVICE = os.getenv("OMI_DIA_DEVICE", "cuda")
 SPEAKER_MATCH_THRESHOLD = float(os.getenv("OMI_SPK_MATCH", "0.75"))
 EMBED_MIN_S = 0.6
 PIPER_VOICE = os.getenv("OMI_PIPER_VOICE", "/data/piper/voices/en_US-lessac-medium.onnx")
@@ -239,6 +242,7 @@ class Models:
     def __init__(self) -> None:
         self.whisper: Any = None
         self.encoder: Any = None
+        self.dia_device = "cpu"
         self.diarize = DIA_ON
         self.ready = False
 
@@ -255,10 +259,20 @@ class Models:
             log.info("whisper ready in %.1fs", time.time() - t0)
         if DIA_ON:
             try:
+                import torch
                 from resemblyzer import VoiceEncoder
+                device = DIA_DEVICE
+                if device != "cpu" and not torch.cuda.is_available():
+                    log.warning("OMI_DIA_DEVICE=%s requested but torch.cuda.is_available() is False "
+                                "(GPU passthrough missing/ROCm not seeing the device) -> falling back to cpu.", device)
+                    device = "cpu"
                 t0 = time.time()
-                self.encoder = VoiceEncoder("cpu")
-                log.info("resemblyzer encoder ready in %.1fs", time.time() - t0)
+                self.encoder = VoiceEncoder(device)
+                self.dia_device = device
+                if device != "cpu":
+                    log.info("resemblyzer encoder ready in %.1fs on GPU: %s", time.time() - t0, torch.cuda.get_device_name(0))
+                else:
+                    log.info("resemblyzer encoder ready in %.1fs on cpu", time.time() - t0)
             except Exception as e:  # noqa: BLE001
                 self.encoder = None
                 self.diarize = False
@@ -405,7 +419,16 @@ def embed(audio16: np.ndarray) -> Optional[np.ndarray]:
     if MODELS.encoder is None or len(audio16) < EMBED_MIN_S * 16000:
         return None
     try:
-        return np.asarray(MODELS.encoder.embed_utterance(audio16), dtype=np.float32)
+        if MODELS.dia_device != "cpu":
+            # gfx906 has no bf16 hardware -- fp16 autocast is the real speedup path
+            # on this card (see gfx906_runtime_env.sh). "cuda" here is torch's device
+            # type string; ROCm's build of torch maps it to HIP, not a typo.
+            import torch
+            with torch.autocast(device_type="cuda", dtype=torch.float16):
+                out = MODELS.encoder.embed_utterance(audio16)
+        else:
+            out = MODELS.encoder.embed_utterance(audio16)
+        return np.asarray(out, dtype=np.float32)
     except Exception as e:  # noqa: BLE001
         log.warning("embed failed: %s", e)
         return None

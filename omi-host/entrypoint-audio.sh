@@ -10,6 +10,11 @@
 # model itself in that case).
 set -euo pipefail
 
+# MIOpen's kernel find-db (resemblyzer/torch GPU diarization) needs this to
+# exist before the first conv runs, so the one-time benchmarking pass
+# (MIOPEN_FIND_ENFORCE=3) has somewhere to persist its results across restarts.
+mkdir -p "${MIOPEN_USER_DB_PATH:-/data/miopen/gfx906}"
+
 if [ "${OMI_ASR_ENGINE:-whispercpp}" = "whispercpp" ]; then
     WHISPER_MODEL="${WHISPER_MODEL:-large-v3-turbo}"
     MODEL_DIR="${WHISPER_CPP_MODELS_DIR:-/data/whispercpp/models}"
