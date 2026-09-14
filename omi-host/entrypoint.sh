@@ -92,7 +92,7 @@ export PUBLIC_URL="${PUBLIC_URL:-http://0.0.0.0:8000}"
 if [ "${PROVIDER_MODE:-offline}" = "offline" ]; then
   export OPENAI_API_KEY="${OPENAI_API_KEY:-sk-omi-local-harness-offline-openai-not-real}"
   export GEMINI_API_KEY="${GEMINI_API_KEY:-omi-local-harness-offline-gemini-not-real}"
-  export ANTHROPIC_API_KEY="${ANTHR…key}"
+  export ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-omi-local-harness-offline-anthropic-not-real}"
   # Fully-local audio (default): point STT/diarization/TTS at the omi-audio
   # sibling container. DEEPGRAM_API_KEY and MODULATE_API_KEY are intentionally
   # LEFT UNSET so the provider policy never selects a cloud engine — selection
