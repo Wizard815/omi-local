@@ -33,12 +33,54 @@ services:
 
   # Example: mount an extra host path into the backend container, e.g. to read
   # exported recordings from elsewhere on the NAS.
+  # NOTE: Compose REPLACES a service's whole `volumes:` list on override, it
+  # doesn't append — repeat the entries you want to keep alongside new ones.
   # omi-local:
   #   volumes:
   #     - omi-data:/data
   #     - /mnt/user/exports:/exports:ro
 
+  # Example: put ALL of omi-data's contents (recordings, Chroma vectors, Piper
+  # voices, HF model cache) at a specific host path instead of Docker's managed
+  # volume storage — e.g. a NAS share you back up separately. Bind-mount the
+  # host path directly on every service that currently uses the named volume,
+  # instead of declaring `omi-data` itself (see the top-level `volumes:` note
+  # at the bottom of this file for why that path doesn't work as well).
+  # omi-local:
+  #   volumes:
+  #     - /mnt/user/appdata/omi-local-data:/data
+  # omi-audio:
+  #   volumes:
+  #     - /mnt/user/appdata/omi-local-data:/data
+
   # Example: always start SearXNG with the main stack instead of only when
   # SEARXNG_ENABLED=1 is set (this removes the `profiles: [searxng]` gate).
   # searxng:
   #   profiles: []
+
+  # Example: attach every service to an existing Docker network instead of
+  # the one Compose creates for this project — e.g. to reach another stack's
+  # containers by name, or because a network named "omi" already exists from
+  # something else on this host and Compose refuses to reuse it ("network
+  # with name omi exists but was not created by compose"). Requires the
+  # top-level `networks:` block below to be uncommented too.
+  # omi-local:
+  #   networks: [omi]
+  # omi-proxy:
+  #   networks: [omi]
+  # omi-audio:
+  #   networks: [omi]
+
+# Uncomment alongside the `networks: [omi]` service entries above.
+# external: true tells Compose "this network already exists, don't manage
+# it" — required when the network wasn't created by this compose project.
+# networks:
+#   omi:
+#     external: true
+
+# A named volume itself (as opposed to what mounts it) can't be redirected to
+# an arbitrary host path from an override file — `driver_opts`/`device` on a
+# `local` driver volume only accepts real mount options (e.g. an already-
+# mounted NFS/CIFS share), not a plain directory path. For a plain local
+# directory, bind-mount it per-service instead (see the omi-data example
+# above) rather than trying to override the volume's own definition here.
