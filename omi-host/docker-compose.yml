@@ -72,7 +72,9 @@ services:
       driver: json-file
       options: { max-size: "20m", max-file: "3" }
 
-  # Fully-offline CPU audio: faster-whisper STT + resemblyzer + Piper TTS
+  # Fully-offline audio: whisper.cpp STT on the MI50 (gfx906) + resemblyzer
+  # (CPU) + Piper TTS. Set OMI_ASR_ENGINE=fasterwhisper to fall back to the
+  # original CPU-only faster-whisper path instead.
   omi-audio:
     image: omi-local-audio:latest
     build:
@@ -84,6 +86,15 @@ services:
       - "127.0.0.1:8790:8790"
     environment:
       PORT: "8790"
+      OMI_ASR_ENGINE: ${OMI_ASR_ENGINE:-whispercpp}
+      WHISPER_MODEL: ${WHISPER_MODEL:-large-v3-turbo}
+      WHISPER_CPP_MODELS_DIR: /data/whispercpp/models
+      WHISPER_CPP_SERVER_URL: http://127.0.0.1:8081
+      # Unload the ggml model off the GPU after this many idle seconds (0 = never).
+      OMI_ASR_IDLE_UNLOAD_S: ${OMI_ASR_IDLE_UNLOAD_S:-300}
+      HIP_VISIBLE_DEVICES: "0"
+      THREADS: ${THREADS:-8}
+      # faster-whisper fallback path only (OMI_ASR_ENGINE=fasterwhisper).
       OMI_ASR_MODEL: ${OMI_ASR_MODEL:-Systran/faster-whisper-small}
       OMI_ASR_COMPUTE: ${OMI_ASR_COMPUTE:-int8}
       OMI_ASR_THREADS: ${OMI_ASR_THREADS:-8}
@@ -92,6 +103,21 @@ services:
       HF_HOME: /data/hf-cache
     volumes:
       - omi-data:/data
+    # ROCm GPU passthrough -- same device/group setup as whispercpp-transcriber.
+    devices:
+      - /dev/kfd
+      - /dev/dri
+    # Numeric host group ids that own /dev/dri/renderD128 and /dev/kfd.
+    # On Unraid find them with:  getent group render video
+    group_add:
+      - ${RENDER_GID:-105}
+      - ${VIDEO_GID:-44}
+    ipc: host
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp=unconfined
+    shm_size: "2gb"
     logging:
       driver: json-file
       options: { max-size: "20m", max-file: "3" }
