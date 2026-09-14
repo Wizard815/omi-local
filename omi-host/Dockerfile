@@ -5,7 +5,7 @@ FROM node:22-bookworm-slim
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl ca-certificates ffmpeg libopus-dev build-essential procps redis-server \
+    curl ca-certificates git ffmpeg libopus-dev build-essential procps redis-server \
  && rm -rf /var/lib/apt/lists/*
 
 # uv + pinned python 3.11.15 (backend/.python-version)
