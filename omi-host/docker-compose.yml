@@ -72,9 +72,9 @@ services:
       driver: json-file
       options: { max-size: "20m", max-file: "3" }
 
-  # Fully-offline audio: whisper.cpp STT on the MI50 (gfx906) + resemblyzer
-  # (CPU) + Piper TTS. Set OMI_ASR_ENGINE=fasterwhisper to fall back to the
-  # original CPU-only faster-whisper path instead.
+  # Fully-offline audio, both STT and diarization on the MI50 (gfx906) + Piper
+  # TTS. Set OMI_ASR_ENGINE=fasterwhisper / OMI_DIA_DEVICE=cpu to fall back to
+  # the original CPU-only paths instead.
   omi-audio:
     image: omi-local-audio:latest
     build:
@@ -94,6 +94,20 @@ services:
       OMI_ASR_IDLE_UNLOAD_S: ${OMI_ASR_IDLE_UNLOAD_S:-300}
       HIP_VISIBLE_DEVICES: "0"
       THREADS: ${THREADS:-8}
+      # Diarization (resemblyzer) on the GPU. Set OMI_DIA_DEVICE=cpu to force CPU
+      # (e.g. GPU passthrough not working) instead of relying on the auto-fallback.
+      OMI_DIA_DEVICE: ${OMI_DIA_DEVICE:-cuda}
+      # gfx906 has no bf16 hardware -- fp16 autocast is the real speedup path (see
+      # gfx906_runtime_env.sh). MIOpen find-db persists on the shared volume so the
+      # one-time kernel benchmarking (FIND_ENFORCE=3) survives container restarts.
+      PYTORCH_ROCM_ARCH: gfx906
+      MIOPEN_USER_DB_PATH: /data/miopen/gfx906
+      MIOPEN_FIND_MODE: "1"
+      MIOPEN_FIND_ENFORCE: "3"
+      MIOPEN_DEBUG_CONV_WINOGRAD: "1"
+      ROCBLAS_LAYER: "0"
+      OMP_NUM_THREADS: "4"
+      MKL_NUM_THREADS: "4"
       # faster-whisper fallback path only (OMI_ASR_ENGINE=fasterwhisper).
       OMI_ASR_MODEL: ${OMI_ASR_MODEL:-Systran/faster-whisper-small}
       OMI_ASR_COMPUTE: ${OMI_ASR_COMPUTE:-int8}
