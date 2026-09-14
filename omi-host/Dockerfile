@@ -24,6 +24,7 @@ ENV PATH="/opt/jre21/bin:$PATH"
 RUN npm install -g firebase-tools@15.28.2
 
 WORKDIR /app
+COPY .github/scripts/desktop_release_manifest.py ./backend/desktop_release_manifest_contract.py
 COPY backend/ ./backend/
 COPY firebase.json firestore.rules firestore.indexes.json ./
 RUN cd backend && uv venv --python 3.11.15 .venv \
