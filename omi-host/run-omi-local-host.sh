@@ -29,6 +29,17 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$HERE/repo"
 
+# Persistent overrides: copy .env.example -> .env and edit it. Anything set
+# there behaves exactly like exporting it before running this script (every
+# ${VAR:-default} below, and the values handed to `docker compose up`, both
+# see it) — no need to retype env vars on the command line every time.
+if [ -f "$HERE/.env" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "$HERE/.env"
+  set +a
+fi
+
 if [ -n "${BIND_IP:-}" ]; then
   BIND_IP="${BIND_IP}"
 else
@@ -73,6 +84,13 @@ fi
 # 3. Start the stack
 cd "$HERE"
 echo "=== Starting stack ==="
+# Passing -f explicitly (needed for the base file) disables compose's automatic
+# docker-compose.override.yml merge, so re-add it by hand when present.
+COMPOSE_FILES=(-f docker-compose.yml)
+if [ -f "$HERE/docker-compose.override.yml" ]; then
+  echo "Applying docker-compose.override.yml"
+  COMPOSE_FILES+=(-f docker-compose.override.yml)
+fi
 BIND_IP="$BIND_IP" \
 PROVIDER_MODE="${PROVIDER_MODE:-offline}" \
 LLAMA_HOST="${_llama_host}" \
@@ -89,11 +107,11 @@ SEARXNG_URL="${SEARXNG_URL:-}" \
 STORAGE_BACKEND="${STORAGE_BACKEND:-local}" \
 LOCAL_STORAGE_PATH="${LOCAL_STORAGE_PATH:-/data/storage}" \
 CHROMA_DATA_PATH="${CHROMA_DATA_PATH:-/data/chroma/vector_db}" \
-docker compose -f docker-compose.yml up -d
+docker compose "${COMPOSE_FILES[@]}" up -d
 
 if [ "${SEARXNG_ENABLED:-0}" = "1" ]; then
   echo "=== Starting SearXNG (local web search) ==="
-  docker compose -f docker-compose.yml --profile searxng up -d searxng
+  docker compose "${COMPOSE_FILES[@]}" --profile searxng up -d searxng
 fi
 
 # 4. Wait for health
@@ -146,7 +164,9 @@ echo "Startup example with OpenRouter:"
 echo "  LLAMA_HOST=172.19.0.4 OPENROUTER_API_KEY=sk-or-... bash run-omi-local-host.sh"
 echo
 echo "Phone setup:"
-echo "  Install omi-dev-local.apk → Sign in with Google"
-echo "  Settings > Developer > Server URL → http://${BIND_IP}:8000/"
+echo "  1. Seed your login account (once):"
+echo "     docker exec -it omi-local python backend/scripts/seed_local_account.py --username you"
+echo "  2. Install the local-only APK build → Log in with:"
+echo "     Server IP: ${BIND_IP}   Username/password: whatever you just seeded"
 echo "  Settings > Transcription → 'Omi Parakeet' (server) or 'On-device Whisper' (phone)"
 echo "  Speaker diarization & voice training work with both — server handles embeddings"

@@ -129,44 +129,48 @@ class AuthenticationProvider extends BaseProvider {
 
   bool get _hasFirebaseUser => _auth.currentUser != null && !_auth.currentUser!.isAnonymous;
 
-  Future<void> signInLocalDev(String serverUrl, Function() onSignIn) async {
-    if (!loading) {
-      setLoadingState(true);
-      try {
-        // Save the server URL so backend calls + future sessions use it
-        if (serverUrl.isNotEmpty) {
-          SharedPreferencesUtil().customApiBaseUrl = serverUrl;
-        }
+  /// Self-hosted login: server URL + username + password, provisioned once
+  /// on the server (see backend/scripts/seed_local_account.py) rather than
+  /// created in-app. Unlike [signInLocalDev]'s anonymous sign-in, this is a
+  /// real Firebase user — the same username/password reaches the same
+  /// account from any device, and it satisfies AuthService.isSignedIn()
+  /// (which never treats anonymous sessions as signed in) so a relaunch
+  /// doesn't bounce back to the login screen.
+  Future<void> signInLocalAccount(String serverUrl, String username, String password, Function() onSignIn) async {
+    if (loading) return;
+    setLoadingState(true);
+    try {
+      if (serverUrl.isNotEmpty) {
+        SharedPreferencesUtil().customApiBaseUrl = serverUrl;
+      }
 
-        // Configure auth emulator to point at the user's server.
-        // useAuthEmulator must be called before any sign-in operation.
-        final uri = Uri.tryParse(SharedPreferencesUtil().customApiBaseUrl);
-        if (uri != null && uri.host.isNotEmpty) {
-          final host = uri.host;
-          final port = Env.firebaseAuthEmulatorPort;
-          try {
-            await _auth.useAuthEmulator(host, port);
-          } catch (e) {
-            // Already configured (from a previous session) — that's fine
-            Logger.debug('Auth emulator already configured: $e');
-          }
+      final uri = Uri.tryParse(SharedPreferencesUtil().customApiBaseUrl);
+      if (uri != null && uri.host.isNotEmpty) {
+        try {
+          await _auth.useAuthEmulator(uri.host, Env.firebaseAuthEmulatorPort);
+        } catch (e) {
+          Logger.debug('Auth emulator already configured: $e');
         }
+      }
 
-        // Sign in anonymously with Firebase Auth emulator.
-        // The emulator accepts this with zero network calls.
-        await _auth.signInAnonymously();
-        if (_auth.currentUser != null) {
-          await _signIn(onSignIn);
-        }
-      } catch (e) {
-        Logger.debug('Local dev sign in error: $e');
+      final credential = await AuthService.instance.signInWithLocalUsername(username, password);
+      if (credential != null && _hasFirebaseUser) {
+        await _signIn(onSignIn);
+      } else {
         AppSnackbar.showSnackbarError(
-          globalNavigatorKey.currentContext?.l10n.authenticationFailed ??
-              'Authentication failed. Please try again.',
+          globalNavigatorKey.currentContext?.l10n.authenticationFailed ?? 'Authentication failed. Please try again.',
         );
       }
-      setLoadingState(false);
+    } on FirebaseAuthException catch (e) {
+      Logger.debug('Local account sign in error: ${e.code}');
+      AppSnackbar.showSnackbarError(e.message ?? 'Sign in failed. Please try again.');
+    } catch (e) {
+      Logger.debug('Local account sign in error: $e');
+      AppSnackbar.showSnackbarError(
+        globalNavigatorKey.currentContext?.l10n.authenticationFailed ?? 'Authentication failed. Please try again.',
+      );
     }
+    setLoadingState(false);
   }
 
   @override

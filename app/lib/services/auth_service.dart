@@ -265,6 +265,21 @@ class AuthService {
     }
   }
 
+  /// Self-hosted local-account sign-in. The UI collects a plain username
+  /// (no email), which we map to a synthetic address here since Firebase
+  /// Auth's password provider requires an email-shaped identifier — this
+  /// stays an internal implementation detail, never shown to the user.
+  static String usernameToLocalEmail(String username) => '${username.trim().toLowerCase()}@local.omi';
+
+  Future<UserCredential?> signInWithLocalUsername(String username, String password) async {
+    final result = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: usernameToLocalEmail(username),
+      password: password,
+    );
+    await _updateUserPreferences(result, 'local');
+    return result;
+  }
+
   Future<void> signOut() async {
     _invalidateRefreshes();
     _clearCachedIdentityAndAuth();

@@ -7,6 +7,8 @@
 !.env.prod.template
 !.env.offline.template
 !.envrc.example
+docker-compose.override.yml
+!docker-compose.override.yml.example
 .personal_configs/
 *__pycache__/
 *venv/
