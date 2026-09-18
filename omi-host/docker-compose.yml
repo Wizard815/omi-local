@@ -7,7 +7,12 @@ services:
     container_name: omi-local
     restart: unless-stopped
     ports:
-      - "${BIND_IP:-0.0.0.0}:8000:8000"
+      # Host-side port is configurable (BACKEND_PORT) for when 8000 is
+      # already taken by something else on the host — the container always
+      # listens on 8000 internally regardless, so this has no effect on
+      # container-to-container traffic (e.g. a cloudflared connector on the
+      # same Docker network reaches it at http://omi-local:8000 either way).
+      - "${BIND_IP:-0.0.0.0}:${BACKEND_PORT:-8000}:8000"
       - "${BIND_IP:-0.0.0.0}:9099:9099"
       - "127.0.0.1:8085:8085"
     environment:
@@ -24,7 +29,7 @@ services:
       HOSTED_PARAKEET_API_URL: ${HOSTED_PARAKEET_API_URL:-http://omi-audio:8790}
       HOSTED_SPEAKER_EMBEDDING_API_URL: ${HOSTED_SPEAKER_EMBEDDING_API_URL:-http://omi-audio:8790}
       TTS_LOCAL_BASE_URL: ${TTS_LOCAL_BASE_URL:-http://omi-audio:8790}
-      PUBLIC_URL: ${PUBLIC_URL:-http://${BIND_IP:-0.0.0.0}:8000}
+      PUBLIC_URL: ${PUBLIC_URL:-http://${BIND_IP:-0.0.0.0}:${BACKEND_PORT:-8000}}
       # Local-first infrastructure (self-hosting defaults)
       LOCAL_VECTOR_DB: ${LOCAL_VECTOR_DB:-chroma}
       SEARXNG_URL: ${SEARXNG_URL:-http://omi-searxng:8080}
