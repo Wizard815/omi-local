@@ -216,6 +216,15 @@ class SharedPreferencesUtil {
 
   set customApiBaseUrl(String value) => saveString('customApiBaseUrl', value);
 
+  /// True when the current session came from /v1/auth/local-login (a
+  /// self-signed backend session token, see AuthService.establishRemoteSession)
+  /// rather than Firebase. Distinguishes which validity check applies to the
+  /// token already stored in authToken/uid, since both session kinds share
+  /// those same two fields.
+  bool get isLocalRemoteSession => getBool('isLocalRemoteSession');
+
+  set isLocalRemoteSession(bool value) => saveBool('isLocalRemoteSession', value);
+
   //-------------------------------- Device ----------------------------------//
 
   set btDevice(BtDevice value) {

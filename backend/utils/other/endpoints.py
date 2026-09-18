@@ -128,6 +128,17 @@ def verify_token(token: str) -> str:
             logger.warning('ADMIN_KEY auth used to impersonate uid=%s', impersonated_uid)
             return impersonated_uid
 
+    # Self-hosted remote-login session (see utils/local_auth.py) — a token
+    # this backend minted and signed itself, entirely separate from Firebase.
+    # Tried before Firebase verification since it's a cheap local HS256 check;
+    # a real Firebase ID token is RS256-signed and simply fails this decode,
+    # falling through to the Firebase path below unaffected.
+    from utils.local_auth import decode_local_session_token
+
+    local_uid = decode_local_session_token(token)
+    if local_uid is not None:
+        return local_uid
+
     # Verify Firebase token
     try:
         decoded_token = cast(Any, auth.verify_id_token(token))  # type: ignore[reportUnknownMemberType]  # firebase_admin auth untyped

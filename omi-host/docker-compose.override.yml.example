@@ -58,6 +58,25 @@ services:
   # searxng:
   #   profiles: []
 
+  # Example: run cloudflared as part of this same compose project so it can
+  # reach services by container name (http://omi-local:8000) — a cloudflared
+  # process running anywhere else (bare host, another compose project) can't
+  # resolve that name, since Docker's per-project DNS only works between
+  # containers on the same network, which adding it here does automatically.
+  # Only port 8000 (the backend) ever needs to be reachable from the internet
+  # — the LLM (omi-proxy), STT/diarization (omi-audio), and the Firestore/Auth
+  # emulator are only ever reached by omi-local itself, never directly by the
+  # phone. Map the actual public hostname -> "http://omi-local:8000" in the
+  # Cloudflare Zero Trust dashboard's Public Hostname settings for this
+  # tunnel; get TUNNEL_TOKEN from that same dashboard (Networks > Tunnels).
+  # cloudflared:
+  #   image: cloudflare/cloudflared:latest
+  #   container_name: omi-cloudflared
+  #   restart: unless-stopped
+  #   command: tunnel run --token ${TUNNEL_TOKEN}
+  #   depends_on:
+  #     - omi-local
+
   # Example: attach every service to an existing Docker network instead of
   # the one Compose creates for this project — e.g. to reach another stack's
   # containers by name, or because a network named "omi" already exists from

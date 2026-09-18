@@ -1,25 +1,33 @@
 #!/usr/bin/env python3
 """Create (or update the password of) the single login account for a
-self-hosted OMI deployment, in the Firebase Auth emulator.
+self-hosted OMI deployment: the LAN-only Firebase Auth emulator account, and
+(unless --lan-only) the internet-reachable credential used by /v1/auth/local-login.
 
-This is the server-side counterpart to the app's login screen (server IP +
-username + password) — there is no in-app account-creation flow. Run this
-once against your running dev-harness / self-hosted stack:
+There is no in-app account-creation flow — this is the server-side
+counterpart to both the app's LAN login screen (server IP + username +
+password, talks to the Auth emulator directly) and the remote login flow
+(server URL + username + password, talks to /v1/auth/local-login, see
+utils/local_auth.py for why that second path exists). Run inside the backend
+container so both firebase_admin/Firestore (for the remote credential) and
+this script's own emulator REST calls are available:
 
-    python backend/scripts/seed_local_account.py --username you
+    docker exec -it omi-local python backend/scripts/seed_local_account.py --username you
 
-The username is mapped to a synthetic "<username>@local.omi" address, the
-same transform the app applies (see AuthService.usernameToLocalEmail in
-app/lib/services/auth_service.dart) — Firebase Auth's password provider
-requires an email-shaped identifier, but nothing about it is ever shown to
-the user or treated as a real email.
+The username is mapped to a synthetic "<username>@local.omi" address for the
+emulator account — the same transform the app applies (see
+AuthService.usernameToLocalEmail in app/lib/services/auth_service.dart) —
+Firebase Auth's password provider requires an email-shaped identifier, but
+nothing about it is ever shown to the user or treated as a real email.
 
-The account is created directly against the Auth emulator's Identity Toolkit
-REST API (the same mechanism scripts/dev-harness/dev_harness/memory_scenarios.py
-uses for seeded test users), so it needs no real Firebase project or network
-access. Re-running with the same username updates the password instead of
-failing, so this doubles as a password-reset tool. Nothing here talks to any
-Omi-operated service.
+The emulator account is created directly against the Auth emulator's
+Identity Toolkit REST API (the same mechanism
+scripts/dev-harness/dev_harness/memory_scenarios.py uses for seeded test
+users). Re-running with the same username updates the password on both
+accounts instead of failing, so this doubles as a password-reset tool.
+Nothing here talks to any Omi-operated service; the remote credential's
+password hash never leaves this machine either — only a short-lived token is
+minted per login, by /v1/auth/local-login, against a real Firebase project
+you configure separately (REMOTE_AUTH_SERVICE_ACCOUNT_JSON).
 """
 
 import argparse
@@ -86,13 +94,28 @@ def main() -> None:
     )
     parser.add_argument("--auth-host", default="127.0.0.1", help="Firebase Auth emulator host (default: 127.0.0.1)")
     parser.add_argument("--auth-port", type=int, default=DEFAULT_AUTH_PORT, help=f"default: {DEFAULT_AUTH_PORT}")
+    parser.add_argument(
+        "--lan-only",
+        action="store_true",
+        help="Skip the remote-login credential (Firestore + argon2 hash) — only seed the LAN emulator account.",
+    )
     args = parser.parse_args()
 
     password = args.password or getpass.getpass("Password: ")
     if len(password) < 8:
         raise SystemExit("Password must be at least 8 characters (Firebase Auth's minimum).")
 
-    seed_account(args.auth_host, args.auth_port, args.username, password)
+    uid = seed_account(args.auth_host, args.auth_port, args.username, password)
+
+    if not args.lan_only:
+        # Imported here, not at module level: these pull in the backend's full
+        # dependency set (firebase_admin, google-cloud-firestore), so running
+        # this script with --lan-only stays usable outside the container too.
+        from utils.local_auth import set_local_account
+
+        set_local_account(args.username, uid, password)
+        print(f"Remote-login credential stored for '{args.username}' (uid={uid}).")
+
     print(f"On the phone: Server IP = this machine's LAN IP, Username = {args.username}.")
 
 
