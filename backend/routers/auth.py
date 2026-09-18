@@ -13,12 +13,14 @@ from jwt.algorithms import RSAAlgorithm
 from fastapi import APIRouter, Request, HTTPException, Form
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel, Field
 import pathlib
 import firebase_admin.auth
 from database.referrals import claim_referral_trial
 from database.redis_db import set_auth_session, get_auth_session, set_auth_code, get_auth_code, delete_auth_code
 from utils.executors import critical_executor, db_executor, run_blocking
 from utils.http_client import get_auth_client
+from utils.local_auth import authenticate_local_account
 from utils.log_sanitizer import sanitize
 from utils.metrics import AUTH_FLOW_DURATION_SECONDS, AUTH_FLOW_EVENTS
 from utils.observability.fallback import record_fallback
@@ -1235,3 +1237,33 @@ async def _verify_apple_id_token(id_token: str, client_id: str) -> Dict[str, Any
     except Exception as e:
         logger.error(f"Error verifying Apple ID token: {e}")
         raise HTTPException(status_code=400, detail="Invalid Apple ID token")
+
+
+class LocalLoginRequest(BaseModel):
+    """Self-hosted username/password login — see utils/local_auth.py for the
+    full design rationale. This is the one endpoint on this backend meant to
+    be reachable directly from the open internet with no prior
+    authentication, so responses stay generic by design: never reveal
+    whether a username exists, never surface internal error detail."""
+
+    username: str = Field(min_length=1, max_length=64)
+    password: str = Field(min_length=1, max_length=256)
+
+
+class LocalLoginResponse(BaseModel):
+    # Not a Firebase custom_token (see _generate_custom_token above, a
+    # different mechanism for the OAuth flow) — this is a session token this
+    # backend signed itself. See utils/local_auth.py.
+    session_token: str
+
+
+@router.post('/local-login', response_model=LocalLoginResponse)
+async def local_login(payload: LocalLoginRequest, request: Request) -> LocalLoginResponse:
+    client_ip = request.client.host if request.client else 'unknown'
+    try:
+        token = authenticate_local_account(payload.username, payload.password, client_ip=client_ip)
+    except HTTPException as e:
+        logger.warning('local_login failed: status=%s ip=%s', e.status_code, client_ip)
+        raise
+    logger.info('local_login succeeded: ip=%s', client_ip)
+    return LocalLoginResponse(session_token=token)

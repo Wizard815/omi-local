@@ -17,6 +17,7 @@ import 'package:omi/backend/preferences.dart';
 import 'package:omi/env/env.dart';
 import 'package:omi/flavors.dart';
 import 'package:omi/services/auth/auth_token_result.dart';
+import 'package:omi/utils/jwt_expiry.dart';
 import 'package:omi/utils/logger.dart';
 import 'package:omi/utils/platform/platform_manager.dart';
 
@@ -149,7 +150,9 @@ class AuthService {
         'release_channel': Env.isTestFlight ? 'testflight' : (F.env == Environment.prod ? 'app_store' : 'dev'),
       };
 
-  bool isSignedIn() => FirebaseAuth.instance.currentUser != null && !FirebaseAuth.instance.currentUser!.isAnonymous;
+  bool isSignedIn() =>
+      _isLocalRemoteSessionValid() ||
+      (FirebaseAuth.instance.currentUser != null && !FirebaseAuth.instance.currentUser!.isAnonymous);
 
   static const _pkceCodeVerifierLength = 64;
   static const _pkceCharset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
@@ -280,9 +283,87 @@ class AuthService {
     return result;
   }
 
+  /// Remote (internet-facing) counterpart to [signInWithLocalUsername]: hits
+  /// the backend's own /v1/auth/local-login instead of the Auth emulator
+  /// directly, since a raw emulator connection on :9099 can't be reached
+  /// through a standard Cloudflare-Tunnel-style HTTPS reverse proxy. No
+  /// Firebase/Google is involved at any point — the backend checks the
+  /// password itself and returns a session token it signed itself (see
+  /// backend/utils/local_auth.py), which [establishRemoteSession] stores
+  /// directly as this app's session, bypassing FirebaseAuth entirely.
+  ///
+  /// Returns the account's uid on success (null on failure — callers should
+  /// treat any thrown exception as authentication failure, its message is
+  /// already user-facing).
+  Future<String?> signInWithRemoteAccount(String serverUrl, String username, String password) async {
+    final base = serverUrl.endsWith('/') ? serverUrl : '$serverUrl/';
+    final response = await http.post(
+      Uri.parse('${base}v1/auth/local-login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'username': username, 'password': password}),
+    );
+
+    if (response.statusCode == 429) {
+      throw Exception('Too many attempts. Try again later.');
+    }
+    if (response.statusCode != 200) {
+      throw Exception('Invalid username or password');
+    }
+
+    final sessionToken = (jsonDecode(response.body) as Map<String, dynamic>)['session_token'] as String?;
+    if (sessionToken == null || sessionToken.isEmpty) {
+      throw Exception('Server did not return a login token');
+    }
+
+    final uid = _uidFromSessionToken(sessionToken);
+    if (uid == null) {
+      throw Exception('Server returned an unreadable login token');
+    }
+
+    establishRemoteSession(uid, sessionToken);
+    return uid;
+  }
+
+  /// Reads the `uid` claim out of our own session token client-side (no
+  /// signature verification needed here — the backend already verified the
+  /// password before minting it; this is purely "what account is this for",
+  /// the same trust model [jwtExpiry] already uses for the `exp` claim).
+  String? _uidFromSessionToken(String token) {
+    final segments = token.split('.');
+    if (segments.length < 2) return null;
+    try {
+      final payload = jsonDecode(utf8.decode(base64Url.decode(base64Url.normalize(segments[1]))));
+      final uid = payload is Map ? payload['uid'] : null;
+      return uid is String && uid.isNotEmpty ? uid : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Stores a self-hosted remote-login session (see [signInWithRemoteAccount])
+  /// as this app's active session. Deliberately does not touch FirebaseAuth —
+  /// [isSignedIn] and [refreshIdToken] both check [SharedPreferencesUtil.isLocalRemoteSession]
+  /// first and short-circuit before ever consulting Firebase for a session
+  /// established this way.
+  void establishRemoteSession(String uid, String sessionToken) {
+    SharedPreferencesUtil().uid = uid;
+    SharedPreferencesUtil().authToken = sessionToken;
+    SharedPreferencesUtil().isLocalRemoteSession = true;
+    markAuthenticatedUser(uid);
+  }
+
+  bool _isLocalRemoteSessionValid() {
+    if (!SharedPreferencesUtil().isLocalRemoteSession) return false;
+    final token = SharedPreferencesUtil().authToken;
+    if (token.isEmpty) return false;
+    final expiry = jwtExpiry(token);
+    return expiry != null && expiry.isAfter(DateTime.now());
+  }
+
   Future<void> signOut() async {
     _invalidateRefreshes();
     _clearCachedIdentityAndAuth();
+    SharedPreferencesUtil().isLocalRemoteSession = false;
     await _tokenGateway.signOut();
   }
 
@@ -339,6 +420,21 @@ class AuthService {
     if (_sessionExpired) {
       return Future<AuthTokenResult>.value(const AuthTokenMissingUser());
     }
+
+    // Self-hosted remote-login session (see establishRemoteSession) — never
+    // touches FirebaseAuth/_tokenGateway at all. No refresh endpoint yet: a
+    // still-valid token is returned as-is, an expired one requires re-login
+    // (AuthTokenMissingUser, same as no session at all) rather than silently
+    // refreshing.
+    if (SharedPreferencesUtil().isLocalRemoteSession) {
+      final storedToken = SharedPreferencesUtil().authToken;
+      return Future<AuthTokenResult>.value(
+        _isLocalRemoteSessionValid()
+            ? AuthTokenSuccess(token: storedToken, expirationTime: jwtExpiry(storedToken))
+            : const AuthTokenMissingUser(),
+      );
+    }
+
     final currentUid = _tokenGateway.currentUser?.uid;
     if (_refreshUserUid != currentUid) {
       _refreshUserUid = currentUid;

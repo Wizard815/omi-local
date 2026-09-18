@@ -31,6 +31,11 @@ services:
       STORAGE_BACKEND: ${STORAGE_BACKEND:-local}
       LOCAL_STORAGE_PATH: ${LOCAL_STORAGE_PATH:-/data/storage}
       CHROMA_DATA_PATH: ${CHROMA_DATA_PATH:-/data/chroma/vector_db}
+      # Only needed for the internet-facing /v1/auth/local-login path (see
+      # backend/utils/local_auth.py) — signs this backend's own session
+      # tokens for that endpoint. No Firebase/Google involved at all; LAN-only
+      # deployments via the Auth emulator (port 9099) don't need this.
+      LOCAL_AUTH_JWT_SECRET: ${LOCAL_AUTH_JWT_SECRET:-}
     volumes:
       - omi-data:/data
     depends_on:

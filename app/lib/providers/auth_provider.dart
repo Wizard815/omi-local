@@ -129,13 +129,15 @@ class AuthenticationProvider extends BaseProvider {
 
   bool get _hasFirebaseUser => _auth.currentUser != null && !_auth.currentUser!.isAnonymous;
 
-  /// Self-hosted login: server URL + username + password, provisioned once
-  /// on the server (see backend/scripts/seed_local_account.py) rather than
-  /// created in-app. Unlike [signInLocalDev]'s anonymous sign-in, this is a
-  /// real Firebase user — the same username/password reaches the same
-  /// account from any device, and it satisfies AuthService.isSignedIn()
-  /// (which never treats anonymous sessions as signed in) so a relaunch
-  /// doesn't bounce back to the login screen.
+  /// Self-hosted LAN login: server URL + username + password, provisioned
+  /// once on the server (see backend/scripts/seed_local_account.py) rather
+  /// than created in-app. Talks to the Auth emulator directly on its own
+  /// port — works on a LAN, but can't be reached through a standard
+  /// Cloudflare-Tunnel-style HTTPS proxy (see [signInRemoteAccount] for that
+  /// case). A real Firebase user either way — the same username/password
+  /// reaches the same account from any device, and it satisfies
+  /// AuthService.isSignedIn() (which never treats anonymous sessions as
+  /// signed in) so a relaunch doesn't bounce back to the login screen.
   Future<void> signInLocalAccount(String serverUrl, String username, String password, Function() onSignIn) async {
     if (loading) return;
     setLoadingState(true);
@@ -155,7 +157,7 @@ class AuthenticationProvider extends BaseProvider {
 
       final credential = await AuthService.instance.signInWithLocalUsername(username, password);
       if (credential != null && _hasFirebaseUser) {
-        await _signIn(onSignIn);
+        await _signIn(onSignIn, credential: credential, authProvider: 'local');
       } else {
         AppSnackbar.showSnackbarError(
           globalNavigatorKey.currentContext?.l10n.authenticationFailed ?? 'Authentication failed. Please try again.',
@@ -171,6 +173,56 @@ class AuthenticationProvider extends BaseProvider {
       );
     }
     setLoadingState(false);
+  }
+
+  /// Remote (internet-facing) counterpart to [signInLocalAccount] — same
+  /// server URL + username + password, but routed through the backend's own
+  /// /v1/auth/local-login instead of talking to the Auth emulator's port
+  /// directly, and never touching FirebaseAuth at all (see
+  /// AuthService.signInWithRemoteAccount / establishRemoteSession — the
+  /// session token this backend signs itself, no Firebase/Google
+  /// involvement). Uses [_completeRemoteSignIn] instead of [_signIn], which
+  /// requires a real Firebase UserCredential this path never has.
+  Future<void> signInRemoteAccount(String serverUrl, String username, String password, Function() onSignIn) async {
+    if (loading) return;
+    setLoadingState(true);
+    try {
+      if (serverUrl.isNotEmpty) {
+        SharedPreferencesUtil().customApiBaseUrl = serverUrl;
+      }
+
+      final uid = await AuthService.instance.signInWithRemoteAccount(
+        SharedPreferencesUtil().customApiBaseUrl,
+        username,
+        password,
+      );
+      if (uid != null) {
+        _completeRemoteSignIn(onSignIn);
+      } else {
+        AppSnackbar.showSnackbarError(
+          globalNavigatorKey.currentContext?.l10n.authenticationFailed ?? 'Authentication failed. Please try again.',
+        );
+      }
+    } catch (e) {
+      Logger.debug('Remote account sign in error: $e');
+      AppSnackbar.showSnackbarError('$e'.replaceFirst('Exception: ', ''));
+    }
+    setLoadingState(false);
+  }
+
+  /// Post-sign-in bookkeeping for the remote-login path — the counterpart to
+  /// [_signIn] for a session that has no Firebase UserCredential/User object
+  /// at all (AuthService.establishRemoteSession already wrote uid/authToken
+  /// to SharedPreferences before this is called). [user] intentionally stays
+  /// null for this session kind: any UI reading provider.user for profile
+  /// display (name/email/photo) won't have that for a remote-login session,
+  /// same as it wouldn't for a token obtained any other non-Firebase way.
+  void _completeRemoteSignIn(Function() onSignIn) {
+    authToken = SharedPreferencesUtil().authToken;
+    _requiresReauthentication = false;
+    PlatformManager.instance.analytics.identify(authMethod: 'local_remote', userCreatedAt: null);
+    notifyListeners();
+    onSignIn();
   }
 
   @override
