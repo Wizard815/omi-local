@@ -7,9 +7,11 @@ with ZERO backend code changes:
       - on connect the server MUST first send {"type":"ready"}
       - client streams binary PCM16 mono frames, then sends the text "finalize"
       - server sends JSON messages; ANY dict with a non-empty "text" key is a
-        transcript segment: {"text","start","end","speaker","type":"utterance"}
-        (start/end are seconds from stream start — the backend requires exactly
-        these two field names, matching /v1/transcribe's segment shape below)
+        transcript segment: {"text","start","end","speaker","is_user","person_id",
+        "type":"utterance"} (start/end are seconds from stream start; is_user/
+        person_id have no pydantic default on TranscriptSegment and are required
+        even though this bridge never has a real value for either — matching
+        /v1/transcribe's segment shape below)
       - server closes cleanly after the final segment
   * POST /v1/transcribe    (multipart file=audio.wav)  -> {"text","segments":[...]}
   * POST /v2/transcribe    (multipart file=audio.wav, diarize=true) -> same + speaker labels
@@ -483,6 +485,10 @@ async def ws_stream(ws: WebSocket, sample_rate: int = 16000):
             "start": round(a / 16000, 3),
             "end": round(b / 16000, 3),
             "speaker": speaker_label(spk),
+            # Required by TranscriptSegment (no default) — matches the REST
+            # /v1/transcribe segment shape in utils/stt/streaming.py.
+            "is_user": False,
+            "person_id": None,
             "type": "utterance",
         })
         emitted_until = max(emitted_until, b)
