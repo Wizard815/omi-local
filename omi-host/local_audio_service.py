@@ -7,7 +7,9 @@ with ZERO backend code changes:
       - on connect the server MUST first send {"type":"ready"}
       - client streams binary PCM16 mono frames, then sends the text "finalize"
       - server sends JSON messages; ANY dict with a non-empty "text" key is a
-        transcript segment: {"text","start_ms","duration_ms","speaker","type":"utterance"}
+        transcript segment: {"text","start","end","speaker","type":"utterance"}
+        (start/end are seconds from stream start — the backend requires exactly
+        these two field names, matching /v1/transcribe's segment shape below)
       - server closes cleanly after the final segment
   * POST /v1/transcribe    (multipart file=audio.wav)  -> {"text","segments":[...]}
   * POST /v2/transcribe    (multipart file=audio.wav, diarize=true) -> same + speaker labels
@@ -478,8 +480,8 @@ async def ws_stream(ws: WebSocket, sample_rate: int = 16000):
                  a / 16000, b / 16000, text[:40], len(segs), time.time() - t0)
         await ws.send_json({
             "text": text,
-            "start_ms": int(a / 16000 * 1000),
-            "duration_ms": int((b - a) / 16000 * 1000),
+            "start": round(a / 16000, 3),
+            "end": round(b / 16000, 3),
             "speaker": speaker_label(spk),
             "type": "utterance",
         })
