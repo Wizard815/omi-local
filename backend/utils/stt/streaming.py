@@ -1790,8 +1790,15 @@ class ParakeetWebSocketSocket(STTSocket):
                         loaded: object = json.loads(msg)
                         if isinstance(loaded, dict):
                             seg: Dict[str, Any] = cast(Dict[str, Any], loaded)
-                            if seg.get("text"):
+                            # A provider frame with text but no start/end crashes the
+                            # whole listen session downstream (TranscriptSegment requires
+                            # both, and the process_loop indexes raw_segments[0]['start']
+                            # unchecked) — drop the malformed frame instead of taking the
+                            # session down with it.
+                            if seg.get("text") and "start" in seg and "end" in seg:
                                 self._stream_transcript([seg])
+                            elif seg.get("text"):
+                                logger.warning('Parakeet WS frame missing start/end, dropped: %s', seg)
                     except json.JSONDecodeError:
                         pass
             # A clean async-for exhaustion means the provider closed the upstream
