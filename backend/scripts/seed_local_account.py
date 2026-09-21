@@ -24,18 +24,30 @@ Identity Toolkit REST API (the same mechanism
 scripts/dev-harness/dev_harness/memory_scenarios.py uses for seeded test
 users). Re-running with the same username updates the password on both
 accounts instead of failing, so this doubles as a password-reset tool.
-Nothing here talks to any Omi-operated service; the remote credential's
-password hash never leaves this machine either — only a short-lived token is
-minted per login, by /v1/auth/local-login, against a real Firebase project
-you configure separately (REMOTE_AUTH_SERVICE_ACCOUNT_JSON).
+Nothing here talks to any Omi-operated service, or Firebase's/Google's real
+servers — the remote credential is a session token this backend signs itself
+(see utils/local_auth.py, LOCAL_AUTH_JWT_SECRET), not a Firebase custom token.
 """
 
 import argparse
 import getpass
 import json
+import os
 import sys
 import urllib.error
 import urllib.request
+
+# entrypoint.sh exports these at runtime inside its own shell process, so
+# they're set for the backend it launches — but NOT for a fresh `docker exec`
+# session, which doesn't inherit a sibling process's runtime exports (only
+# the image's/compose's actual configured environment). setdefault() so a
+# plain `docker exec -it omi-local python backend/scripts/seed_local_account.py`
+# just works without needing those exported by hand first.
+os.environ.setdefault('FIRESTORE_EMULATOR_HOST', '127.0.0.1:8085')
+os.environ.setdefault('FIREBASE_AUTH_EMULATOR_HOST', '127.0.0.1:9099')
+os.environ.setdefault('FIREBASE_AUTH_PROJECT_ID', 'demo-omi-local')
+os.environ.setdefault('FIREBASE_PROJECT_ID', 'demo-omi-local')
+os.environ.setdefault('FIRESTORE_DATABASE_ID', 'default')
 
 DEFAULT_AUTH_PORT = 9099
 
