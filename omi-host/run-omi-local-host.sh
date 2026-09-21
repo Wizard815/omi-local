@@ -114,6 +114,11 @@ if [ "${SEARXNG_ENABLED:-0}" = "1" ]; then
   docker compose "${COMPOSE_FILES[@]}" --profile searxng up -d searxng
 fi
 
+if [ "${FIRESTORE_UI_ENABLED:-0}" = "1" ]; then
+  echo "=== Starting Firestore Emulator UI proxy (HTTP Basic Auth) ==="
+  docker compose "${COMPOSE_FILES[@]}" --profile firestore-ui up -d firestore-ui-proxy
+fi
+
 # 4. Wait for health
 echo "=== Waiting for merge proxy ==="
 for i in $(seq 1 30); do

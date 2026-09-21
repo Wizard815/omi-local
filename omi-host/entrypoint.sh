@@ -14,11 +14,12 @@ echo "=== Omi local host container ==="
 echo "provider mode: ${PROVIDER_MODE:-offline}"
 
 # ---- Redis ----
-# AOF persistence: the dashboard's model picker (and other runtime settings)
-# live only in Redis, no Firestore backing. --save ""  --appendonly no
-# discarded all of that on every restart — same class of bug as the Firebase
-# emulator's lost export-on-exit above, just silent since there's no login
-# error to notice it by, only a stale/empty model selection routing nowhere.
+# AOF persistence, pointed at the already-mounted /data volume: the
+# dashboard's model picker (and other runtime settings) live only in Redis,
+# no Firestore backing. --save "" --appendonly no discarded all of that on
+# every restart — same class of bug as the Firebase emulator's lost
+# export-on-exit below, just silent since there's no login error to notice
+# it by, only a stale/empty model selection routing nowhere.
 redis-server --bind 0.0.0.0 --port 6380 --dir "$STATE/redis" --appendonly yes --appendfsync everysec \
   > "$STATE/logs/redis.log" 2>&1 &
 REDIS_PID=$!
@@ -29,14 +30,23 @@ echo "redis: pid $REDIS_PID"
 # container the published :9099/:8085 ports DNAT to the container's eth0, not its
 # loopback. Rewrite hosts to 0.0.0.0 into a container-local config so the phone
 # can reach the auth emulator through the published port.
+#
+# Also adds a "ui" block here rather than in the shared repo-root firebase.json
+# (which scripts/dev-harness and others also read) — the Emulator UI (Firestore
+# data browser) was never actually enabled, so the dashboard's "Firestore
+# Emulator UI" link has never worked. It binds to 0.0.0.0:4000 like the other
+# emulators, but that port is deliberately NOT published in docker-compose.yml —
+# it has no auth of its own, so it's only reachable via the optional
+# firestore-ui-proxy sidecar (HTTP Basic Auth, FIRESTORE_UI_ENABLED=1).
 python - <<'PY'
 import json
 cfg = json.load(open('/app/firebase.json'))
 for name, emu in cfg.get('emulators', {}).items():
     emu['host'] = '0.0.0.0'
+cfg.setdefault('emulators', {})['ui'] = {'enabled': True, 'host': '0.0.0.0', 'port': 4000}
 json.dump(cfg, open('/app/firebase.docker.json', 'w'), indent=2)
 PY
-firebase emulators:start --config /app/firebase.docker.json --only firestore,auth --project demo-omi-local \
+firebase emulators:start --config /app/firebase.docker.json --only firestore,auth,ui --project demo-omi-local \
   --import "$STATE/firebase-export" --export-on-exit "$STATE/firebase-export" \
   > "$STATE/logs/firebase-emulators.log" 2>&1 &
 FIREBASE_PID=$!
@@ -46,7 +56,12 @@ echo "firebase emulators: pid $FIREBASE_PID"
 # script used to `exec` straight into uvicorn, which replaces PID 1 and
 # permanently severs any chance of forwarding Docker's stop signal to this
 # backgrounded emulator — every `docker stop`/`restart` silently lost all
-# local accounts. Stay PID 1 and forward the signal instead.
+# local accounts. Stay PID 1 and forward the signal instead, sequentially:
+# wait for the export to fully finish before touching anything else, so a
+# slow flush can't race a simultaneous kill of the backend/redis. SIGINT
+# (not TERM) for firebase specifically — the Node CLI is built and tested
+# against Ctrl-C far more than SIGTERM, and empirically this is what
+# actually triggers the export reliably.
 shutdown() {
   echo "shutting down: signaling firebase emulators (pid $FIREBASE_PID) to export..."
   kill -INT "$FIREBASE_PID" 2>/dev/null
@@ -54,6 +69,7 @@ shutdown() {
   echo "firebase emulators exited, export complete"
   [ -n "${BACKEND_PID:-}" ] && kill -TERM "$BACKEND_PID" 2>/dev/null
   kill -TERM "$REDIS_PID" 2>/dev/null
+  [ -n "${LLM_ADAPTER_PID:-}" ] && kill -TERM "$LLM_ADAPTER_PID" 2>/dev/null
   exit 0
 }
 trap shutdown TERM INT
@@ -104,7 +120,8 @@ if [ -n "${OPENAI_BASE_URL:-}" ]; then
   # tool calls) to the OpenAI-compatible server, so that path is local too.
   # The backend's anthropic SDK picks up ANTHROPIC_BASE_URL from the env.
   python /app/omi-host/local_llm_adapter.py > "$STATE/logs/llm-adapter.log" 2>&1 &
-  echo "llm-adapter: pid $! (Anthropic API on :${LLM_ADAPTER_PORT:-8788})"
+  LLM_ADAPTER_PID=$!
+  echo "llm-adapter: pid $LLM_ADAPTER_PID (Anthropic API on :${LLM_ADAPTER_PORT:-8788})"
   export ANTHROPIC_BASE_URL="http://127.0.0.1:${LLM_ADAPTER_PORT:-8788}"
   export ANTHROPIC_API_KEY="omi-local-llm-adapter-no-auth"
 fi
