@@ -216,7 +216,11 @@ STRUCTURED_OUTPUT_FEATURES = _STRUCTURED_OUTPUT_FEATURES
 # 412 app-selected POST /v1/conversations/{id}/reprocess calls (31%) with
 # `httpcore.ReadTimeout` -> `Error executing app: Request timed out.` A new call site for one of
 # these features now inherits the deadline instead of having to remember it.
-FOREGROUND_REQUEST_TIMEOUT_SECONDS = 60.0
+# Env-overridable (default unchanged) for self-hosted local LLM backends where
+# a cold model load (e.g. llama-swap loading a model for the first request
+# since idle-unload) can plausibly take longer than 60s — raising this only
+# affects deployments that explicitly set FOREGROUND_REQUEST_TIMEOUT_SECONDS.
+FOREGROUND_REQUEST_TIMEOUT_SECONDS = float(os.environ.get('FOREGROUND_REQUEST_TIMEOUT_SECONDS') or 60.0)
 _FOREGROUND_TIMEOUT_FEATURES = frozenset(
     {
         'conv_structure',

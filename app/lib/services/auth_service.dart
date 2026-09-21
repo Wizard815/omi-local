@@ -320,7 +320,7 @@ class AuthService {
       throw Exception('Server returned an unreadable login token');
     }
 
-    establishRemoteSession(uid, sessionToken);
+    await establishRemoteSession(uid, sessionToken);
     return uid;
   }
 
@@ -345,10 +345,17 @@ class AuthService {
   /// [isSignedIn] and [refreshIdToken] both check [SharedPreferencesUtil.isLocalRemoteSession]
   /// first and short-circuit before ever consulting Firebase for a session
   /// established this way.
-  void establishRemoteSession(String uid, String sessionToken) {
-    SharedPreferencesUtil().uid = uid;
+  ///
+  /// Awaits the uid/isLocalRemoteSession writes explicitly rather than going
+  /// through their fire-and-forget property setters: unlike [authToken]
+  /// (which has a synchronous in-memory cache backing reads, so its own
+  /// fire-and-forget disk write is already safe against an immediate reread),
+  /// these two are read straight from disk with no cache — a relaunch shortly
+  /// after login could otherwise observe isLocalRemoteSession as still false.
+  Future<void> establishRemoteSession(String uid, String sessionToken) async {
+    await SharedPreferencesUtil().saveString('uid', uid);
     SharedPreferencesUtil().authToken = sessionToken;
-    SharedPreferencesUtil().isLocalRemoteSession = true;
+    await SharedPreferencesUtil().saveBool('isLocalRemoteSession', true);
     markAuthenticatedUser(uid);
   }
 
