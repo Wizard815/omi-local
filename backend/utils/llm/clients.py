@@ -90,7 +90,12 @@ except ImportError as exc:
     if exc.name != 'utils.llm.gateway_client':
         raise
 
-    BACKGROUND_CHAT_EXTRACTION_TIMEOUT_SECONDS = 35.0
+    # Env-overridable (default unchanged) — see the matching override on
+    # FOREGROUND_REQUEST_TIMEOUT_SECONDS in model_config.py for why: a cold
+    # local-LLM model load can plausibly outlast the production-tuned default.
+    BACKGROUND_CHAT_EXTRACTION_TIMEOUT_SECONDS = float(
+        os.environ.get('BACKGROUND_CHAT_EXTRACTION_TIMEOUT_SECONDS') or 35.0
+    )
     CHAT_STRUCTURED_AUTO_LANE_ID = 'omi:auto:chat-structured'
 
     def feature_auto_lane_id(feature: str) -> str:

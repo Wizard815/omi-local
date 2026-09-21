@@ -14,26 +14,41 @@ echo "=== Omi local host container ==="
 echo "provider mode: ${PROVIDER_MODE:-offline}"
 
 # ---- Redis ----
-redis-server --bind 0.0.0.0 --port 6380 --dir "$STATE/redis" --save "" --appendonly no \
+# AOF persistence, pointed at the already-mounted /data volume: without this,
+# every container recreate (e.g. every `./run-omi-local-host.sh` after a
+# backend rebuild) wipes the dashboard's selected model, the allowlist, and
+# anything else that lived only in Redis.
+redis-server --bind 0.0.0.0 --port 6380 --dir "$STATE/redis" --appendonly yes --appendfsync everysec \
   > "$STATE/logs/redis.log" 2>&1 &
-echo "redis: pid $!"
+REDIS_PID=$!
+echo "redis: pid $REDIS_PID"
 
 # ---- Firebase emulators (firestore + auth) ----
 # firebase.json binds emulators to 127.0.0.1 — fine bare-metal, but inside this
 # container the published :9099/:8085 ports DNAT to the container's eth0, not its
 # loopback. Rewrite hosts to 0.0.0.0 into a container-local config so the phone
 # can reach the auth emulator through the published port.
+#
+# Also adds a "ui" block here rather than in the shared repo-root firebase.json
+# (which scripts/dev-harness and others also read) — the Emulator UI (Firestore
+# data browser) was never actually enabled, so the dashboard's "Firestore
+# Emulator UI" link has never worked. It binds to 0.0.0.0:4000 like the other
+# emulators, but that port is deliberately NOT published in docker-compose.yml —
+# it has no auth of its own, so it's only reachable via the optional
+# firestore-ui-proxy sidecar (HTTP Basic Auth, FIRESTORE_UI_ENABLED=1).
 python - <<'PY'
 import json
 cfg = json.load(open('/app/firebase.json'))
 for name, emu in cfg.get('emulators', {}).items():
     emu['host'] = '0.0.0.0'
+cfg.setdefault('emulators', {})['ui'] = {'enabled': True, 'host': '0.0.0.0', 'port': 4000}
 json.dump(cfg, open('/app/firebase.docker.json', 'w'), indent=2)
 PY
-firebase emulators:start --config /app/firebase.docker.json --only firestore,auth --project demo-omi-local \
+firebase emulators:start --config /app/firebase.docker.json --only firestore,auth,ui --project demo-omi-local \
   --import "$STATE/firebase-export" --export-on-exit "$STATE/firebase-export" \
   > "$STATE/logs/firebase-emulators.log" 2>&1 &
-echo "firebase emulators: pid $!"
+FIREBASE_PID=$!
+echo "firebase emulators: pid $FIREBASE_PID"
 
 # wait for auth emulator
 for i in $(seq 1 90); do
@@ -81,7 +96,8 @@ if [ -n "${OPENAI_BASE_URL:-}" ]; then
   # tool calls) to the OpenAI-compatible server, so that path is local too.
   # The backend's anthropic SDK picks up ANTHROPIC_BASE_URL from the env.
   python /app/omi-host/local_llm_adapter.py > "$STATE/logs/llm-adapter.log" 2>&1 &
-  echo "llm-adapter: pid $! (Anthropic API on :${LLM_ADAPTER_PORT:-8788})"
+  LLM_ADAPTER_PID=$!
+  echo "llm-adapter: pid $LLM_ADAPTER_PID (Anthropic API on :${LLM_ADAPTER_PORT:-8788})"
   export ANTHROPIC_BASE_URL="http://127.0.0.1:${LLM_ADAPTER_PORT:-8788}"
   export ANTHROPIC_API_KEY="omi-local-llm-adapter-no-auth"
 fi
@@ -105,5 +121,23 @@ if [ "${PROVIDER_MODE:-offline}" = "offline" ]; then
   echo "NOTE: offline mode — no cloud AI keys. LLM via OPENAI_BASE_URL (llama.cpp)."
 fi
 
-echo "backend: starting (pid $$ will exec)"
-exec uvicorn main:app --host 0.0.0.0 --port 8000
+echo "backend: starting"
+uvicorn main:app --host 0.0.0.0 --port 8000 &
+BACKEND_PID=$!
+
+# Forward shutdown signals to every background service instead of `exec`ing
+# into uvicorn (which used to replace this script as PID 1 entirely — Docker's
+# SIGTERM on stop/recreate then only ever reached uvicorn, so the Firebase
+# emulator's --export-on-exit never ran and every container restart silently
+# lost all Firestore/Auth data, including seeded login accounts). Waiting on
+# the emulator specifically (not just signaling it) gives it time to finish
+# writing the export before this script — and so the container — exits.
+_shutdown() {
+  echo "shutting down — waiting for Firebase emulator export..."
+  kill -TERM "$BACKEND_PID" "$REDIS_PID" "$FIREBASE_PID" ${LLM_ADAPTER_PID:+"$LLM_ADAPTER_PID"} 2>/dev/null || true
+  wait "$FIREBASE_PID" 2>/dev/null
+  echo "export complete"
+}
+trap _shutdown TERM INT
+
+wait "$BACKEND_PID"
