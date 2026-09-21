@@ -337,6 +337,16 @@ async def dashboard(request: Request):
   </div>
 
   <div class="card">
+    <h2>🔁 Conversations Needing Retry</h2>
+    <p style="font-size: 13px; color: #AAA; line-height: 1.6; margin-bottom: 12px;">
+      Conversations stuck on <code>in_progress</code> with a transcript — usually an LLM call
+      that timed out or hit a routing error. Nothing is ever deleted on a failed process; retry
+      picks the same transcript back up.
+    </p>
+    <div id="retry-list">Loading…</div>
+  </div>
+
+  <div class="card">
     <h2>📱 Phone Setup</h2>
     <p style="font-size: 13px; color: #AAA; line-height: 1.6;">
       1. Install <code>omi-dev-local.apk</code> on your Android phone<br>
@@ -464,8 +474,52 @@ async def dashboard(request: Request):
       document.getElementById("all-models-popup").style.display = "none";
     }}
 
+    async function loadRetryList() {{
+      const el = document.getElementById("retry-list");
+      try {{
+        const resp = await fetch("/dashboard/conversations");
+        const data = await resp.json();
+        if (!data.conversations || data.conversations.length === 0) {{
+          el.innerHTML = '<p style="font-size: 13px; color: #666;">Nothing stuck — all caught up.</p>';
+          return;
+        }}
+        el.innerHTML = data.conversations.map(c => `
+          <div style="padding: 12px 0; border-bottom: 1px solid #2A2A2E; display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 13px; color: #F5F5F5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${{c.title || c.preview || '(no transcript preview)'}}</div>
+              <div style="font-size: 11px; color: #666; margin-top: 2px;">${{c.segment_count}} segments · ${{c.created_at}}</div>
+            </div>
+            <button class="save-btn" style="margin-top: 0; white-space: nowrap;" onclick="retryConversation('${{c.id}}', '${{c.uid}}', this)">Retry</button>
+          </div>
+        `).join("");
+      }} catch (e) {{
+        el.innerHTML = '<p style="font-size: 13px; color: #FF453A;">Error loading: ' + e.message + '</p>';
+      }}
+    }}
+
+    async function retryConversation(id, uid, btn) {{
+      btn.disabled = true;
+      btn.textContent = "Retrying…";
+      try {{
+        const resp = await fetch(`/dashboard/conversations/${{id}}/retry?uid=${{encodeURIComponent(uid)}}`, {{ method: "POST" }});
+        const data = await resp.json();
+        if (data.ok) {{
+          btn.textContent = "✓ Done";
+          setTimeout(loadRetryList, 1000);
+        }} else {{
+          btn.textContent = "✗ Failed";
+          btn.title = data.error || "unknown error";
+          btn.disabled = false;
+        }}
+      }} catch (e) {{
+        btn.textContent = "✗ Failed";
+        btn.disabled = false;
+      }}
+    }}
+
     loadModels();
     loadAllowlist();
+    loadRetryList();
   </script>
 
   <p style="text-align: center; color: #444; font-size: 11px; margin-top: 32px;">
@@ -696,3 +750,71 @@ async def model_config():
         "discovered_models": discovered_models,
         "note": "Use /dashboard/models/available for the full list, /dashboard/models/select to switch, /dashboard/models/current for active state.",
     }
+
+
+# ── conversation history / retry ────────────────────────────────────────
+#
+# The dashboard has no per-request session, so these list/retry across every
+# local account via a collection_group query rather than a single uid — fine
+# for this single-operator self-hosted deployment, not a multi-tenant admin
+# panel. A conversation stuck on "in_progress" with a transcript but no
+# structured summary is exactly the shape a failed LLM call (timeout, routing
+# 404) leaves behind — see utils/conversations/lifecycle.py's
+# rollback_processing_admission, which reverts to in_progress instead of
+# deleting on failure. This surface just makes that already-safe state visible
+# and retryable without a manual curl + reprocess call.
+
+
+@router.get("/dashboard/conversations", response_class=JSONResponse)
+async def dashboard_conversations(limit: int = 20):
+    """List recent in-progress conversations (with a transcript) across all local accounts."""
+    from database._client import get_firestore_client
+
+    db = get_firestore_client()
+    query = (
+        db.collection_group('conversations')
+        .where('status', '==', 'in_progress')
+        .order_by('created_at', direction='DESCENDING')
+        .limit(limit)
+    )
+    items = []
+    for doc in query.stream():
+        data = doc.to_dict() or {}
+        segments = data.get('transcript_segments') or []
+        if not segments:
+            continue
+        uid = doc.reference.parent.parent.id
+        preview = " ".join(s.get('text', '') for s in segments[:3]).strip()
+        items.append(
+            {
+                "id": doc.id,
+                "uid": uid,
+                "created_at": str(data.get('created_at', '')),
+                "segment_count": len(segments),
+                "preview": (preview[:140] + "…") if len(preview) > 140 else preview,
+                "title": (data.get('structured') or {}).get('title', ''),
+            }
+        )
+    return {"conversations": items, "count": len(items)}
+
+
+@router.post("/dashboard/conversations/{conversation_id}/retry", response_class=JSONResponse)
+async def dashboard_retry_conversation(conversation_id: str, uid: str):
+    """Force-reprocess a stuck in-progress conversation for the given uid.
+
+    Calls the same reprocess_conversation logic the app's retry button uses
+    (routers/conversations.py) directly, bypassing its auth Depends since the
+    dashboard already resolved uid via the collection_group listing above.
+    """
+    from routers.conversations import reprocess_conversation
+
+    try:
+        conversation = reprocess_conversation(conversation_id, uid=uid)
+        status = conversation.status
+        return {
+            "ok": True,
+            "conversation_id": conversation_id,
+            "status": status.value if hasattr(status, "value") else status,
+        }
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"ok": False, "error": str(e)})
