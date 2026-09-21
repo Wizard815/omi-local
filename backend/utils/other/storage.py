@@ -58,16 +58,30 @@ OPUS_FRAME_SIZE = OPUS_SAMPLE_RATE * OPUS_FRAME_DURATION_MS // 1000  # 320 sampl
 PRIVATE_CLOUD_EXTENSIONS = ['.batch.enc', '.batch.bin', '.opus.enc', '.opus', '.enc', '.bin']
 
 storage_client = None
+_storage_client_init_error: Optional[Exception] = None
 _storage_client_lock = threading.Lock()
 
 
 def _get_storage_client() -> Any:
-    """Return the GCS client lazily so importing this module never probes ADC/GCE metadata."""
-    global storage_client
-    if storage_client is None:
+    """Return the GCS client lazily so importing this module never probes ADC/GCE metadata.
+
+    Caches init failure too, not just success: a self-hosted/local-storage
+    deployment has no GCS credentials at all, so create_storage_client()
+    fails every time it's called — without this, every caller (e.g. the
+    private-cloud-sync cleanup on every conversation deletion) re-pays the
+    full ADC/GCE-metadata-server timeout probe (~3 attempts) and re-raises
+    the same error on every single call instead of once per process.
+    """
+    global storage_client, _storage_client_init_error
+    if storage_client is None and _storage_client_init_error is None:
         with _storage_client_lock:
-            if storage_client is None:
-                storage_client = create_storage_client()
+            if storage_client is None and _storage_client_init_error is None:
+                try:
+                    storage_client = create_storage_client()
+                except Exception as e:
+                    _storage_client_init_error = e
+    if _storage_client_init_error is not None:
+        raise _storage_client_init_error
     return storage_client
 
 
