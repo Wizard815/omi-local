@@ -837,7 +837,12 @@ async def dashboard_conversations(limit: int = 20):
         if not segments:
             continue
         uid = doc.reference.parent.parent.id
-        preview = " ".join(s.get('text', '') for s in segments[:3]).strip()
+        # transcript_segments is normally a list of dicts, but at least one
+        # legacy/malformed conversation had plain strings instead — don't let
+        # one bad record 500 the whole retry list.
+        preview = " ".join(
+            (s.get('text', '') if isinstance(s, dict) else str(s)) for s in segments[:3]
+        ).strip()
         items.append(
             {
                 "id": doc.id,
