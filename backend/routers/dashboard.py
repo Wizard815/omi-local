@@ -7,6 +7,7 @@ import os
 import socket
 import time
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 import httpx
 from fastapi import APIRouter, Request
@@ -171,6 +172,24 @@ async def dashboard(request: Request):
 
     public_base = public_url.rstrip("/")
 
+    # Firestore Emulator UI has no auth of its own — only linked when the
+    # firestore-ui-proxy sidecar (HTTP Basic Auth) is actually enabled. The
+    # link needs the *viewer's* host (public_base's), not the raw emulator
+    # port, which is intentionally unpublished — see entrypoint.sh.
+    if os.getenv("FIRESTORE_UI_ENABLED", "").strip() == "1":
+        _viewer_host = urlparse(public_base).hostname or "localhost"
+        _firestore_ui_port = os.getenv("FIRESTORE_UI_PORT", "8086")
+        firestore_ui_link = (
+            f'<a href="http://{_viewer_host}:{_firestore_ui_port}" class="link-btn" target="_blank">'
+            f"Firestore Emulator UI</a>"
+        )
+    else:
+        firestore_ui_link = (
+            '<span class="link-btn" style="opacity:0.5;cursor:default" '
+            'title="Set FIRESTORE_UI_ENABLED=1 and FIRESTORE_UI_USERNAME/PASSWORD in .env to enable">'
+            "Firestore Emulator UI (disabled)</span>"
+        )
+
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -268,7 +287,7 @@ async def dashboard(request: Request):
       <a href="/health" class="link-btn" target="_blank">Health Endpoint</a>
       <a href="/docs" class="link-btn" target="_blank">API Docs (Swagger)</a>
       <a href="{public_base}/v1/mcp/sse" class="link-btn" target="_blank">MCP Server</a>
-      <a href="http://localhost:8085" class="link-btn" target="_blank">Firestore Emulator UI</a>
+      {firestore_ui_link}
       <a href="/dashboard/models/available" class="link-btn" target="_blank">Model List (JSON)</a>
     </div>
   </div>

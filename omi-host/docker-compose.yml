@@ -36,6 +36,12 @@ services:
       STORAGE_BACKEND: ${STORAGE_BACKEND:-local}
       LOCAL_STORAGE_PATH: ${LOCAL_STORAGE_PATH:-/data/storage}
       CHROMA_DATA_PATH: ${CHROMA_DATA_PATH:-/data/chroma/vector_db}
+      # Raise these if conversation processing/chat times out waiting on a
+      # cold local-LLM model load (e.g. llama-swap loading a model for the
+      # first request after idle-unload). Defaults match upstream's
+      # production-tuned values — see model_config.py/clients.py for why.
+      FOREGROUND_REQUEST_TIMEOUT_SECONDS: ${FOREGROUND_REQUEST_TIMEOUT_SECONDS:-}
+      BACKGROUND_CHAT_EXTRACTION_TIMEOUT_SECONDS: ${BACKGROUND_CHAT_EXTRACTION_TIMEOUT_SECONDS:-}
       # Only needed for the internet-facing /v1/auth/local-login path (see
       # backend/utils/local_auth.py) — signs this backend's own session
       # tokens for that endpoint. No Firebase/Google involved at all; LAN-only
@@ -159,6 +165,31 @@ services:
       SEARXNG_BASE_URL: ${PUBLIC_URL:-http://localhost:8000}/searxng/
     volumes:
       - searxng-data:/etc/searxng
+    logging:
+      driver: json-file
+      options: { max-size: "20m", max-file: "3" }
+
+  # HTTP Basic Auth gate for the Firestore Emulator UI (see entrypoint.sh —
+  # the UI itself has no auth). Optional: enable with FIRESTORE_UI_ENABLED=1
+  # and set FIRESTORE_UI_USERNAME/PASSWORD in .env, or the container refuses
+  # to start rather than serve the data browser unauthenticated. Reachable at
+  # http://<BIND_IP>:${FIRESTORE_UI_PORT:-8086} once enabled — LAN-only by
+  # default, same as the rest of this stack.
+  firestore-ui-proxy:
+    image: omi-firestore-ui-proxy:latest
+    build:
+      context: ./firestore-ui-proxy
+    container_name: omi-firestore-ui-proxy
+    profiles:
+      - firestore-ui
+    restart: unless-stopped
+    ports:
+      - "${BIND_IP:-0.0.0.0}:${FIRESTORE_UI_PORT:-8086}:80"
+    environment:
+      FIRESTORE_UI_USERNAME: ${FIRESTORE_UI_USERNAME:-}
+      FIRESTORE_UI_PASSWORD: ${FIRESTORE_UI_PASSWORD:-}
+    depends_on:
+      - omi-local
     logging:
       driver: json-file
       options: { max-size: "20m", max-file: "3" }
