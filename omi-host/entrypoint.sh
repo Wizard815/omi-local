@@ -33,7 +33,23 @@ PY
 firebase emulators:start --config /app/firebase.docker.json --only firestore,auth --project demo-omi-local \
   --import "$STATE/firebase-export" --export-on-exit "$STATE/firebase-export" \
   > "$STATE/logs/firebase-emulators.log" 2>&1 &
-echo "firebase emulators: pid $!"
+FIREBASE_PID=$!
+echo "firebase emulators: pid $FIREBASE_PID"
+
+# --export-on-exit only fires on the emulator's own graceful shutdown. This
+# script used to `exec` straight into uvicorn, which replaces PID 1 and
+# permanently severs any chance of forwarding Docker's stop signal to this
+# backgrounded emulator — every `docker stop`/`restart` silently lost all
+# local accounts. Stay PID 1 and forward the signal instead.
+shutdown() {
+  echo "shutting down: signaling firebase emulators (pid $FIREBASE_PID) to export..."
+  kill -INT "$FIREBASE_PID" 2>/dev/null
+  wait "$FIREBASE_PID" 2>/dev/null
+  echo "firebase emulators exited, export complete"
+  [ -n "${BACKEND_PID:-}" ] && kill -TERM "$BACKEND_PID" 2>/dev/null
+  exit 0
+}
+trap shutdown TERM INT
 
 # wait for auth emulator
 for i in $(seq 1 90); do
@@ -105,5 +121,7 @@ if [ "${PROVIDER_MODE:-offline}" = "offline" ]; then
   echo "NOTE: offline mode — no cloud AI keys. LLM via OPENAI_BASE_URL (llama.cpp)."
 fi
 
-echo "backend: starting (pid $$ will exec)"
-exec uvicorn main:app --host 0.0.0.0 --port 8000
+echo "backend: starting"
+uvicorn main:app --host 0.0.0.0 --port 8000 &
+BACKEND_PID=$!
+wait "$BACKEND_PID"
