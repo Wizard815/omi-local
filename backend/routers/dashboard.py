@@ -24,6 +24,7 @@ STARTED_AT = time.time()
 class ModelSelectRequest(BaseModel):
     primary: str = Field(default="", description="Primary model (memories, summaries, features)")
     chat_agent: str = Field(default="", description="Chat agent model (conversations, tool use)")
+    embedding: str = Field(default="", description="Embedding model (memory/vector search)")
 
 
 class ModelAllowRequest(BaseModel):
@@ -154,9 +155,14 @@ async def dashboard(request: Request):
     env_stage = os.getenv("OMI_ENV_STAGE", "unknown")
 
     # Resolve current models (Redis → env)
-    from utils.llm.model_config import _get_local_primary_model, _get_local_chat_agent_model
+    from utils.llm.model_config import (
+        _get_local_primary_model,
+        _get_local_chat_agent_model,
+        _get_local_embedding_model,
+    )
     primary_model = _get_local_primary_model() or "-"
     chat_agent_model = _get_local_chat_agent_model() or "(pass-through)"
+    embedding_model = _get_local_embedding_model() or "-"
 
     component_rows = ""
     for name, info in sorted(components.items()):
@@ -316,6 +322,12 @@ async def dashboard(request: Request):
         <option value="">Loading models...</option>
       </select>
     </div>
+    <div class="model-row">
+      <label>Embedding model <span style="color: #666;">(memory/vector search)</span></label>
+      <select id="embedding-select" class="model-select">
+        <option value="">Loading models...</option>
+      </select>
+    </div>
     <button class="save-btn" onclick="saveModels()">Save & Apply</button>
     <span id="save-feedback" class="save-feedback">✓ Saved!</span>
   </div>
@@ -346,6 +358,7 @@ async def dashboard(request: Request):
       <tr><td>OPENAI_BASE_URL</td><td>{os.getenv('OPENAI_BASE_URL', '-')}</td></tr>
       <tr><td>OMI_LOCAL_MODEL</td><td>{os.getenv('OMI_LOCAL_MODEL', '-')} → <b>{primary_model}</b> (active)</td></tr>
       <tr><td>LOCAL_LLM_MODEL</td><td>{os.getenv('LOCAL_LLM_MODEL', '-')} → <b>{chat_agent_model}</b> (active)</td></tr>
+      <tr><td>LOCAL_EMBEDDING_MODEL</td><td>{os.getenv('LOCAL_EMBEDDING_MODEL', '-')} → <b>{embedding_model}</b> (active)</td></tr>
       <tr><td>HOSTED_PARAKEET_API_URL</td><td>{os.getenv('HOSTED_PARAKEET_API_URL', '-')}</td></tr>
       <tr><td>TTS_LOCAL_BASE_URL</td><td>{os.getenv('TTS_LOCAL_BASE_URL', '-')}</td></tr>
       <tr><td>OMI_ASR_MODEL</td><td>{os.getenv('OMI_ASR_MODEL', '-')}</td></tr>
@@ -393,24 +406,28 @@ async def dashboard(request: Request):
         if (!options) options = '<option value="">No models found</option>';
         document.getElementById("primary-select").innerHTML = options;
         document.getElementById("chat-agent-select").innerHTML = options;
+        document.getElementById("embedding-select").innerHTML = options;
         // Pre-select current models
         const current = await fetch("/dashboard/models/current").then(r => r.json());
         document.getElementById("primary-select").value = current.primary_model || "";
         document.getElementById("chat-agent-select").value = current.chat_agent_model || "";
+        document.getElementById("embedding-select").value = current.embedding_model || "";
       }} catch (e) {{
         document.getElementById("primary-select").innerHTML = '<option value="">Error loading models</option>';
         document.getElementById("chat-agent-select").innerHTML = '<option value="">Error loading models</option>';
+        document.getElementById("embedding-select").innerHTML = '<option value="">Error loading models</option>';
       }}
     }}
 
     async function saveModels() {{
       const primary = document.getElementById("primary-select").value;
       const chatAgent = document.getElementById("chat-agent-select").value;
+      const embedding = document.getElementById("embedding-select").value;
       try {{
         const resp = await fetch("/dashboard/models/select", {{
           method: "POST",
           headers: {{ "Content-Type": "application/json" }},
-          body: JSON.stringify({{ primary: primary, chat_agent: chatAgent }})
+          body: JSON.stringify({{ primary: primary, chat_agent: chatAgent, embedding: embedding }})
         }});
         const data = await resp.json();
         const fb = document.getElementById("save-feedback");
@@ -676,21 +693,29 @@ async def models_allow_set(req: ModelAllowRequest):
 @router.get("/dashboard/models/current", response_class=JSONResponse)
 async def models_current():
     """Return the currently active models (Redis → env fallback)."""
-    from utils.llm.model_config import _get_local_primary_model, _get_local_chat_agent_model
+    from utils.llm.model_config import (
+        _get_local_primary_model,
+        _get_local_chat_agent_model,
+        _get_local_embedding_model,
+    )
 
     primary = _get_local_primary_model() or ""
     chat_agent = _get_local_chat_agent_model() or ""
+    embedding = _get_local_embedding_model() or ""
     openai_base = os.getenv("OPENAI_BASE_URL", "")
 
     # Check if overrides are from Redis or env
     primary_source = "env"
     chat_source = "env"
+    embedding_source = "env"
     try:
         from database.redis_db import get_runtime_model
         if get_runtime_model("primary"):
             primary_source = "redis"
         if get_runtime_model("chat_agent"):
             chat_source = "redis"
+        if get_runtime_model("embedding"):
+            embedding_source = "redis"
     except Exception:
         pass
 
@@ -698,10 +723,12 @@ async def models_current():
         "local_mode": bool(openai_base and primary),
         "primary_model": primary or "none (cloud)",
         "chat_agent_model": chat_agent or "(pass-through)",
+        "embedding_model": embedding or "(default)",
         "openai_base_url": openai_base or "not set",
         "provider_mode": os.getenv("PROVIDER_MODE", "offline"),
         "primary_source": primary_source,
         "chat_agent_source": chat_source,
+        "embedding_source": embedding_source,
     }
 
 
@@ -724,14 +751,21 @@ async def models_select(req: ModelSelectRequest):
         set_runtime_model("primary", req.primary)
     if req.chat_agent:
         set_runtime_model("chat_agent", req.chat_agent)
+    if req.embedding:
+        set_runtime_model("embedding", req.embedding)
 
     # Report back what's now active
-    from utils.llm.model_config import _get_local_primary_model, _get_local_chat_agent_model
+    from utils.llm.model_config import (
+        _get_local_primary_model,
+        _get_local_chat_agent_model,
+        _get_local_embedding_model,
+    )
 
     return {
         "ok": True,
         "primary": _get_local_primary_model() or "",
         "chat_agent": _get_local_chat_agent_model() or "",
+        "embedding": _get_local_embedding_model() or "",
         "note": "Models applied. Next LLM call will use the new selection.",
     }
 

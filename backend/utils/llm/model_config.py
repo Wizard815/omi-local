@@ -71,6 +71,24 @@ def _get_local_chat_agent_model() -> str:
     return (_redis_model('chat_agent') or os.getenv('LOCAL_LLM_MODEL', '')).strip()
 
 
+# The only OpenAI embedding model name this backend ever sends (see
+# clients.py) — self-hosted backends need a model actually answering to this
+# exact alias (e.g. in llama-swap's config), since the code never asks for
+# anything else.
+DEFAULT_EMBEDDING_MODEL = 'text-embedding-3-large'
+
+
+def _get_local_embedding_model() -> str:
+    """Resolve the embedding model at call time (Redis → env → hardcoded
+    default) — same dashboard-switchable pattern as primary/chat_agent, but
+    defaulting to DEFAULT_EMBEDDING_MODEL instead of empty so existing
+    (non-self-hosted) deployments keep working unchanged without picking
+    anything in the dashboard."""
+    return (
+        _redis_model('embedding') or os.getenv('LOCAL_EMBEDDING_MODEL', '') or DEFAULT_EMBEDDING_MODEL
+    ).strip()
+
+
 def _is_local_mode() -> bool:
     """Return True when a local LLM backend (LiteLLM) is configured."""
     return bool(os.getenv('OPENAI_BASE_URL', '').strip() and _get_local_primary_model())
