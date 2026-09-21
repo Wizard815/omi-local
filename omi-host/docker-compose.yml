@@ -52,6 +52,12 @@ services:
       # tokens for that endpoint. No Firebase/Google involved at all; LAN-only
       # deployments via the Auth emulator (port 9099) don't need this.
       LOCAL_AUTH_JWT_SECRET: ${LOCAL_AUTH_JWT_SECRET:-}
+      # The dashboard (served by this container) reads these to decide
+      # whether to render a working Firestore Emulator UI link — the actual
+      # credentials for that link's Basic Auth gate live on the
+      # firestore-ui-proxy service below, not here.
+      FIRESTORE_UI_ENABLED: ${FIRESTORE_UI_ENABLED:-}
+      FIRESTORE_UI_PORT: ${FIRESTORE_UI_PORT:-8086}
     volumes:
       - omi-data:/data
     depends_on:
