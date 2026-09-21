@@ -72,10 +72,20 @@ def seed_account(auth_host: str, auth_port: int, username: str, password: str) -
     base = f"http://{auth_host}:{auth_port}/identitytoolkit.googleapis.com/v1/accounts"
     key = "local-dev-harness"  # the emulator does not validate this key
 
-    sign_up = _post(
-        f"{base}:signUp?key={key}",
-        {"email": email, "password": password, "returnSecureToken": True},
-    )
+    # EMAIL_EXISTS is an expected outcome on a re-run (this doubles as a
+    # password-reset tool, per the module docstring), not a fatal error —
+    # _post() raises SystemExit on any non-2xx response, so it can't be used
+    # here directly; catch the emulator's 400 and fall through to sign-in.
+    try:
+        sign_up = _post(
+            f"{base}:signUp?key={key}",
+            {"email": email, "password": password, "returnSecureToken": True},
+        )
+    except SystemExit as exc:
+        if "EMAIL_EXISTS" not in str(exc):
+            raise
+        sign_up = {}
+
     if "idToken" in sign_up:
         uid = sign_up["localId"]
         _post(
