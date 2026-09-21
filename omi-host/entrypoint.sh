@@ -14,9 +14,15 @@ echo "=== Omi local host container ==="
 echo "provider mode: ${PROVIDER_MODE:-offline}"
 
 # ---- Redis ----
-redis-server --bind 0.0.0.0 --port 6380 --dir "$STATE/redis" --save "" --appendonly no \
+# AOF persistence: the dashboard's model picker (and other runtime settings)
+# live only in Redis, no Firestore backing. --save ""  --appendonly no
+# discarded all of that on every restart — same class of bug as the Firebase
+# emulator's lost export-on-exit above, just silent since there's no login
+# error to notice it by, only a stale/empty model selection routing nowhere.
+redis-server --bind 0.0.0.0 --port 6380 --dir "$STATE/redis" --appendonly yes --appendfsync everysec \
   > "$STATE/logs/redis.log" 2>&1 &
-echo "redis: pid $!"
+REDIS_PID=$!
+echo "redis: pid $REDIS_PID"
 
 # ---- Firebase emulators (firestore + auth) ----
 # firebase.json binds emulators to 127.0.0.1 — fine bare-metal, but inside this
@@ -47,6 +53,7 @@ shutdown() {
   wait "$FIREBASE_PID" 2>/dev/null
   echo "firebase emulators exited, export complete"
   [ -n "${BACKEND_PID:-}" ] && kill -TERM "$BACKEND_PID" 2>/dev/null
+  kill -TERM "$REDIS_PID" 2>/dev/null
   exit 0
 }
 trap shutdown TERM INT
