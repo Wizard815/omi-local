@@ -406,6 +406,14 @@ def get_available_plans_endpoint(
     x_app_version: Optional[str] = Header(None, alias='X-App-Version'),
 ):
     """Get available subscription plans with their price IDs and billing intervals."""
+    # Self-hosted deployments have no Stripe account configured — every
+    # stripe.Price.retrieve() below would fail individually (caught and
+    # logged per-plan), leaving pricing_options empty and always 500ing.
+    # Report no purchasable plans instead of failing the request outright,
+    # since this endpoint must stay reachable even for accounts with no
+    # paid plan (see get_current_user_uid_no_byok_validation above).
+    if not stripe.api_key:
+        return AvailablePlansResponse(plans=[])
     try:
         # Get user's current subscription to determine which plan is active
         current_subscription = users_db.get_user_subscription(uid)
