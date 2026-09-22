@@ -67,13 +67,25 @@ async def get_current_user_id(
 ) -> str:
     if not credentials:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    try:
-        id_token = credentials.credentials
-        decoded_token = await run_blocking(critical_executor, auth.verify_id_token, id_token)
-    except Exception as e:
-        logger.error(f"Error verifying Firebase ID token: {e}")
-        raise HTTPException(status_code=401, detail="Invalid authentication credentials")
-    uid = decoded_token["uid"]
+    id_token = credentials.credentials
+
+    # Self-hosted remote-login session (see utils/local_auth.py) — this
+    # dependency is a separate auth path from utils/other/endpoints.py's
+    # verify_token(), which already recognizes these tokens; this one didn't,
+    # so any request through it (e.g. /v1/dev/keys, /v1/mcp/keys) 401'd for a
+    # perfectly valid local session. The client treats a persistent 401 as a
+    # dead session and force-signs-out, so this one dependency's gap broke
+    # the whole app's session, not just these two endpoints' own features.
+    from utils.local_auth import decode_local_session_token
+
+    uid = decode_local_session_token(id_token)
+    if uid is None:
+        try:
+            decoded_token = await run_blocking(critical_executor, auth.verify_id_token, id_token)
+        except Exception as e:
+            logger.error(f"Error verifying Firebase ID token: {e}")
+            raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+        uid = decoded_token["uid"]
     _enforce_jit_qa_http_access(uid)
     await _enforce_account_deletion_access(uid)
     await _enforce_cutover_access(uid, request)
