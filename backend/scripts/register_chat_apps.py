@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""Register the self-hosted chat-tool apps (omi-host/docker-compose.yml's
-OMI_APPS_ENABLED services) in this deployment's local Firestore, so they
-show up in the app browser without going through Omi's real cloud approval
-pipeline.
+"""Register a self-hosted chat-tool app in this deployment's local
+Firestore, so it shows up in the app browser without going through Omi's
+real cloud approval pipeline.
 
 Bypasses POST /v1/apps intentionally rather than calling it: that endpoint
 requires a multipart image upload and rejects an app with neither
@@ -17,11 +16,25 @@ Run inside the backend container, same as seed_local_account.py:
 
     docker exec -it omi-local python backend/scripts/register_chat_apps.py
 
+With no arguments, registers the built-in default list (the four
+gateway-mounted apps plus the Hermes Agent bridge). To register ONE new app
+without editing this file — e.g. after adding it to OMI_APPS_LIST and
+restarting omi-apps-gateway (see docker-compose.yml) — pass it directly:
+
+    docker exec -it omi-local python backend/scripts/register_chat_apps.py \\
+        --slug local-newapp --name "New App" --category utilities \\
+        --description "What it does." --mount newapp
+
+--mount assumes the app is gateway-mounted (http://omi-apps-gateway:8080/<mount>);
+for a standalone container instead (like Hermes Agent), pass --base-url
+directly (e.g. http://omi-app-something:8000) instead of --mount.
+
 Idempotent: re-running overwrites each app's document in place (upsert_app_to_db
 uses Firestore .set(), not .add()), so it doubles as a "re-fetch manifests"
 tool after you change/redeploy one of these services.
 """
 
+import argparse
 import os
 
 # See seed_local_account.py for why these need setdefault() rather than a
@@ -33,44 +46,44 @@ os.environ.setdefault('FIREBASE_AUTH_PROJECT_ID', 'demo-omi-local')
 os.environ.setdefault('FIREBASE_PROJECT_ID', 'demo-omi-local')
 os.environ.setdefault('FIRESTORE_DATABASE_ID', 'default')
 
-# base_url must be reachable from the omi-local container. The four
-# gateway-mounted apps share one container (omi-apps-gateway, see
-# omi-host/apps-gateway/) and are distinguished only by mount path; Hermes
-# Agent is its own separate container. Either way, this relies on Compose's
-# per-network DNS (same container name as the compose service), so these
-# only resolve once omi-local and these app services share a network (see
+# base_url must be reachable from the omi-local container. The gateway-mounted
+# apps share one container (omi-apps-gateway, see omi-host/apps-gateway/) and
+# are distinguished only by mount path; Hermes Agent is its own separate
+# container. Either way, this relies on Compose's per-network DNS (same
+# container name as the compose service), so these only resolve once
+# omi-local and these app services share a network (see
 # docker-compose.override.yml.example's omi-apps section — a service not on
 # the same network can't be reached by name even though it's running).
-_GATEWAY = 'http://omi-apps-gateway:8080'
+GATEWAY = 'http://omi-apps-gateway:8080'
 
-APPS = [
+DEFAULT_APPS = [
     {
         'slug': 'local-wikipedia',
         'name': 'Wikipedia',
         'description': 'Search Wikipedia articles and fetch summaries during a conversation.',
         'category': 'utilities',
-        'base_url': f'{_GATEWAY}/wikipedia',
+        'base_url': f'{GATEWAY}/wikipedia',
     },
     {
         'slug': 'local-open-library',
         'name': 'Open Library',
         'description': 'Search books, fetch metadata, and browse subject recommendations.',
         'category': 'utilities',
-        'base_url': f'{_GATEWAY}/open-library',
+        'base_url': f'{GATEWAY}/open-library',
     },
     {
         'slug': 'local-open-meteo',
         'name': 'Weather (Open-Meteo)',
         'description': 'Current weather, short forecasts, and air-quality readings.',
         'category': 'utilities',
-        'base_url': f'{_GATEWAY}/open-meteo',
+        'base_url': f'{GATEWAY}/open-meteo',
     },
     {
         'slug': 'local-openfoodfacts',
         'name': 'Open Food Facts',
         'description': 'Look up packaged food nutrition, ingredients, and allergens by name or barcode.',
         'category': 'health-and-fitness',
-        'base_url': f'{_GATEWAY}/openfoodfacts',
+        'base_url': f'{GATEWAY}/openfoodfacts',
     },
     {
         'slug': 'local-hermes-agent',
@@ -82,7 +95,7 @@ APPS = [
 ]
 
 
-def main() -> None:
+def register_app(app: dict) -> None:
     # Imported here, not at module level: pulls in the backend's full
     # dependency set (firebase_admin, google-cloud-firestore, httpx), same
     # reasoning as seed_local_account.py's local_auth import.
@@ -90,46 +103,82 @@ def main() -> None:
     from models.app import AppCreate
     from routers.apps import _process_chat_tools_manifest
 
-    for app in APPS:
-        app_home_url = app['base_url']
-        manifest_url = f"{app_home_url}/.well-known/omi-tools.json"
+    app_home_url = app['base_url']
+    manifest_url = f"{app_home_url}/.well-known/omi-tools.json"
 
-        data = {
-            'id': app['slug'],
-            'name': app['name'],
-            'uid': None,
-            'private': False,
-            'approved': True,
-            'status': 'approved',
-            'category': app['category'],
-            'author': 'Self-hosted',
-            'description': app['description'],
-            'image': '',
-            'capabilities': {'chat'},
-            'external_integration': {
-                'chat_tools_manifest_url': manifest_url,
-                'app_home_url': app_home_url,
-            },
+    data = {
+        'id': app['slug'],
+        'name': app['name'],
+        'uid': None,
+        'private': False,
+        'approved': True,
+        'status': 'approved',
+        'category': app['category'],
+        'author': 'Self-hosted',
+        'description': app['description'],
+        'image': '',
+        'capabilities': {'chat'},
+        'external_integration': {
+            'chat_tools_manifest_url': manifest_url,
+            'app_home_url': app_home_url,
+        },
+    }
+
+    try:
+        validated = AppCreate.model_validate(data)
+    except Exception as e:
+        print(f"SKIP {app['name']}: failed validation: {e}")
+        return
+
+    app_dict = validated.model_dump(exclude_unset=True)
+    app_dict = _process_chat_tools_manifest(data['external_integration'], app_dict)
+
+    tool_count = len(app_dict.get('chat_tools') or [])
+    if tool_count == 0:
+        print(
+            f"WARNING {app['name']}: manifest fetch returned no tools "
+            f"({manifest_url}) — is the container up and on the same network as omi-local?"
+        )
+
+    upsert_app_to_db(app_dict)
+    print(f"Registered '{app['name']}' (id={app['slug']}, {tool_count} chat tools)")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('--slug', help='Firestore doc id for this app, e.g. local-myapp')
+    parser.add_argument('--name', help='Display name shown in the app browser')
+    parser.add_argument('--description', help='Shown in the app browser')
+    parser.add_argument('--category', default='utilities', help='Default: utilities')
+    parser.add_argument(
+        '--mount', help='Gateway mount path, e.g. "myapp" for http://omi-apps-gateway:8080/myapp'
+    )
+    parser.add_argument(
+        '--base-url', help='Full base URL instead of --mount, for an app not on the shared gateway'
+    )
+    args = parser.parse_args()
+
+    single_app_args = [args.slug, args.name, args.description]
+    if any(single_app_args) and not all(single_app_args):
+        parser.error('--slug, --name, and --description must all be given together')
+    if not any(single_app_args):
+        for app in DEFAULT_APPS:
+            register_app(app)
+        return
+
+    if bool(args.mount) == bool(args.base_url):
+        parser.error('give exactly one of --mount or --base-url')
+    base_url = args.base_url or f'{GATEWAY}/{args.mount}'
+
+    register_app(
+        {
+            'slug': args.slug,
+            'name': args.name,
+            'description': args.description,
+            'category': args.category,
+            'base_url': base_url,
         }
-
-        try:
-            validated = AppCreate.model_validate(data)
-        except Exception as e:
-            print(f"SKIP {app['name']}: failed validation: {e}")
-            continue
-
-        app_dict = validated.model_dump(exclude_unset=True)
-        app_dict = _process_chat_tools_manifest(data['external_integration'], app_dict)
-
-        tool_count = len(app_dict.get('chat_tools') or [])
-        if tool_count == 0:
-            print(
-                f"WARNING {app['name']}: manifest fetch returned no tools "
-                f"({manifest_url}) — is the container up and on the same network as omi-local?"
-            )
-
-        upsert_app_to_db(app_dict)
-        print(f"Registered '{app['name']}' (id={app['slug']}, {tool_count} chat tools)")
+    )
 
 
 if __name__ == '__main__':
