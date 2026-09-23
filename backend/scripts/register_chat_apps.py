@@ -12,18 +12,24 @@ reuses its actual manifest-fetch logic (routers.apps._process_chat_tools_manifes
 instead of reimplementing it, so tool definitions are populated the same way
 a real app creation would.
 
-Run inside the backend container, same as seed_local_account.py:
+Run inside the backend container, same as seed_local_account.py — from
+/app/backend with PYTHONPATH set, not the repo root: a plain
+`docker exec -it omi-local python backend/scripts/register_chat_apps.py`
+run from /app fails with `ModuleNotFoundError: No module named 'database'`,
+because Python's sys.path[0] becomes the SCRIPT's own directory
+(backend/scripts), not /app/backend, so the `database`/`models`/`routers`
+packages this script imports aren't on the path:
 
-    docker exec -it omi-local python backend/scripts/register_chat_apps.py
+    docker exec -it omi-local bash -c "cd /app/backend && PYTHONPATH=/app/backend python scripts/register_chat_apps.py"
 
 With no arguments, registers the built-in default list (the four
 gateway-mounted apps plus the Hermes Agent bridge). To register ONE new app
 without editing this file — e.g. after adding it to OMI_APPS_LIST and
 restarting omi-apps-gateway (see docker-compose.yml) — pass it directly:
 
-    docker exec -it omi-local python backend/scripts/register_chat_apps.py \\
-        --slug local-newapp --name "New App" --category utilities \\
-        --description "What it does." --mount newapp
+    docker exec -it omi-local bash -c "cd /app/backend && PYTHONPATH=/app/backend python scripts/register_chat_apps.py \\
+        --slug local-newapp --name 'New App' --category utilities \\
+        --description 'What it does.' --mount newapp"
 
 --mount assumes the app is gateway-mounted (http://omi-apps-gateway:8080/<mount>);
 for a standalone container instead (like Hermes Agent), pass --base-url

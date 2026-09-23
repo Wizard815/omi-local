@@ -180,7 +180,7 @@ echo "  LLAMA_HOST=172.19.0.4 OPENROUTER_API_KEY=sk-or-... bash run-omi-local-ho
 echo
 echo "Phone setup:"
 echo "  1. Seed your login account (once):"
-echo "     docker exec -it omi-local python backend/scripts/seed_local_account.py --username you"
+echo "     docker exec -it omi-local bash -c \"cd /app/backend && PYTHONPATH=/app/backend python scripts/seed_local_account.py --username you\""
 echo "  2. Install the local-only APK build → Log in with:"
 echo "     Server IP: ${BIND_IP}   Username/password: whatever you just seeded"
 echo "  Settings > Transcription → 'Omi Parakeet' (server) or 'On-device Whisper' (phone)"
