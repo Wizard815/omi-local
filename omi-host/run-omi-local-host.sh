@@ -119,6 +119,16 @@ if [ "${FIRESTORE_UI_ENABLED:-0}" = "1" ]; then
   docker compose "${COMPOSE_FILES[@]}" --profile firestore-ui up -d firestore-ui-proxy
 fi
 
+if [ "${OMI_APPS_ENABLED:-0}" = "1" ]; then
+  echo "=== Starting chat-tool apps (Wikipedia, Open Library, Open-Meteo, Open Food Facts, Hermes Agent bridge) ==="
+  HERMES_API_URL="${HERMES_API_URL:-}" \
+  HERMES_API_KEY="${HERMES_API_KEY:-}" \
+  OMI_ALLOWED_UIDS="${OMI_ALLOWED_UIDS:-}" \
+  OMI_ALLOWED_APP_IDS="${OMI_ALLOWED_APP_IDS:-}" \
+  docker compose "${COMPOSE_FILES[@]}" --profile omi-apps up -d \
+    omi-app-wikipedia omi-app-open-library omi-app-open-meteo omi-app-openfoodfacts omi-app-hermes-agent
+fi
+
 # 4. Wait for health
 echo "=== Waiting for merge proxy ==="
 for i in $(seq 1 30); do

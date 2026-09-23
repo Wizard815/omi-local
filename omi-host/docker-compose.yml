@@ -212,6 +212,87 @@ services:
       driver: json-file
       options: { max-size: "20m", max-file: "3" }
 
+  # ── Chat-tool apps (plugins/omi-*-app) ──────────────────────────────
+  # Standalone FastAPI bridges omi-local's backend calls when the LLM invokes
+  # a chat tool. Each serves its own /.well-known/omi-tools.json manifest and
+  # /health — register them as "apps" via the dashboard/Firestore once
+  # running (see backend/scripts/register_chat_apps.py), pointing the app's Chat Tools
+  # Manifest URL at http://<service-name>:8080/.well-known/omi-tools.json
+  # (reachable from omi-local over this compose network by container name;
+  # never published to the host — nothing outside this network calls these
+  # directly). Opt-in: enable with OMI_APPS_ENABLED=1.
+  omi-app-wikipedia:
+    image: omi-app-wikipedia:latest
+    build:
+      context: ./repo/plugins/omi-wikipedia-app
+    container_name: omi-app-wikipedia
+    profiles:
+      - omi-apps
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  omi-app-open-library:
+    image: omi-app-open-library:latest
+    build:
+      context: ./repo/plugins/omi-open-library-app
+    container_name: omi-app-open-library
+    profiles:
+      - omi-apps
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  omi-app-open-meteo:
+    image: omi-app-open-meteo:latest
+    build:
+      context: ./repo/plugins/omi-open-meteo-app
+    container_name: omi-app-open-meteo
+    profiles:
+      - omi-apps
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  omi-app-openfoodfacts:
+    image: omi-app-openfoodfacts:latest
+    build:
+      context: ./repo/plugins/omi-openfoodfacts-app
+    container_name: omi-app-openfoodfacts
+    profiles:
+      - omi-apps
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  # Bridges Omi chat tools to a self-hosted Hermes Agent instance — on a
+  # SEPARATE machine (your Intel NUC), not this Unraid box, so unlike the
+  # four apps above this one needs a real network address, not just a
+  # container name. HERMES_API_URL must reach the NUC's Hermes Agent API
+  # server (see plugins/omi-hermes-agent-app/README.md — enable
+  # API_SERVER_ENABLED=true there first, and bind it to something other than
+  # 127.0.0.1 so this container, on a different machine, can reach it).
+  omi-app-hermes-agent:
+    image: omi-app-hermes-agent:latest
+    build:
+      context: ./repo/plugins/omi-hermes-agent-app
+    container_name: omi-app-hermes-agent
+    profiles:
+      - omi-apps
+    restart: unless-stopped
+    environment:
+      HERMES_API_URL: ${HERMES_API_URL:-http://CHANGE-ME-NUC-IP:8642}
+      HERMES_API_KEY: ${HERMES_API_KEY:-}
+      OMI_ALLOWED_UIDS: ${OMI_ALLOWED_UIDS:-}
+      OMI_ALLOWED_APP_IDS: ${OMI_ALLOWED_APP_IDS:-}
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
 volumes:
   omi-data:
   searxng-data:
