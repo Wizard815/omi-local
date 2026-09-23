@@ -156,13 +156,26 @@ def main() -> None:
     parser.add_argument(
         '--base-url', help='Full base URL instead of --mount, for an app not on the shared gateway'
     )
+    parser.add_argument(
+        '--skip',
+        default='',
+        help=(
+            'Comma-separated substrings to exclude from the default bulk run '
+            '(e.g. --skip hermes to leave out Hermes Agent until that container is actually up) — '
+            'matched against each default app\'s slug, so a bare "hermes" is enough.'
+        ),
+    )
     args = parser.parse_args()
 
     single_app_args = [args.slug, args.name, args.description]
     if any(single_app_args) and not all(single_app_args):
         parser.error('--slug, --name, and --description must all be given together')
     if not any(single_app_args):
+        skip_terms = [s.strip() for s in args.skip.split(',') if s.strip()]
         for app in DEFAULT_APPS:
+            if any(term in app['slug'] for term in skip_terms):
+                print(f"Skipping '{app['name']}' (matched --skip {args.skip!r})")
+                continue
             register_app(app)
         return
 
