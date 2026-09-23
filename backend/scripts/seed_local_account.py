@@ -8,10 +8,14 @@ counterpart to both the app's LAN login screen (server IP + username +
 password, talks to the Auth emulator directly) and the remote login flow
 (server URL + username + password, talks to /v1/auth/local-login, see
 utils/local_auth.py for why that second path exists). Run inside the backend
-container so both firebase_admin/Firestore (for the remote credential) and
-this script's own emulator REST calls are available:
+container, from /app/backend with PYTHONPATH set, not the repo root — a
+plain `docker exec -it omi-local python backend/scripts/seed_local_account.py`
+run from /app fails with `ModuleNotFoundError: No module named 'utils'`
+once it reaches the deferred set_local_account import below, because
+Python's sys.path[0] becomes the SCRIPT's own directory (backend/scripts),
+not /app/backend:
 
-    docker exec -it omi-local python backend/scripts/seed_local_account.py --username you
+    docker exec -it omi-local bash -c "cd /app/backend && PYTHONPATH=/app/backend python scripts/seed_local_account.py --username you"
 
 The username is mapped to a synthetic "<username>@local.omi" address for the
 emulator account — the same transform the app applies (see
