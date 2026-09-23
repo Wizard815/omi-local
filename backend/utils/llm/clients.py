@@ -38,6 +38,7 @@ from utils.llm.model_config import (
     _active_profile_name,
     _byok_profile,
     _byok_profile_name,
+    _get_local_embedding_model,
     feature_request_timeout,
     get_active_profile,
     get_active_profile_name,
@@ -292,11 +293,17 @@ class _OpenAIEmbeddingsProxy:
         object.__setattr__(self, '_ctor_kwargs', ctor_kwargs)
 
     def _default_client(self) -> OpenAIEmbeddings:
-        default = self._default
-        if default is None:
-            default = OpenAIEmbeddings(model=self._model, **self._ctor_kwargs)
-            object.__setattr__(self, '_default', default)
-        return default
+        # Re-resolved on every call (Redis dashboard selection → env → the
+        # model this proxy was constructed with) rather than fixed once at
+        # startup, so a self-hosted deployment can swap embedding models from
+        # the dashboard the same way it already swaps chat models — without a
+        # restart. Cheap: a Redis GET, and the client is only rebuilt when the
+        # resolved name actually changes.
+        current_model = _get_local_embedding_model() or self._model
+        if self._default is None or current_model != self._model:
+            object.__setattr__(self, '_model', current_model)
+            object.__setattr__(self, '_default', OpenAIEmbeddings(model=current_model, **self._ctor_kwargs))
+        return self._default
 
     def _resolve(self) -> OpenAIEmbeddings:
         byok = get_byok_key('openai')

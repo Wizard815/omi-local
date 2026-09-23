@@ -303,6 +303,48 @@ async def chat_completions(request: Request):
         )
 
 
+@app.post("/v1/embeddings")
+async def embeddings(request: Request):
+    # Same tag-strip-and-route logic as /v1/chat/completions above — added
+    # because this route didn't exist at all before, so any embedding model
+    # picked from the local embedding-model dashboard (OPENAI_BASE_URL ->
+    # this proxy) 404'd outright rather than reaching any backend.
+    body = await request.body()
+    try:
+        payload = json.loads(body)
+    except json.JSONDecodeError:
+        return JSONResponse({"error": "invalid JSON"}, status_code=400)
+
+    model_name = payload.get("model", "")
+    tag, raw_model = _untag(model_name)
+    base_url = _upstreams.get(tag)
+    if not base_url:
+        return JSONResponse(
+            {"error": f"unknown model '{model_name}' — no backend for tag '{tag}'"},
+            status_code=400,
+        )
+
+    payload["model"] = raw_model
+
+    headers: dict[str, str] = {"Content-Type": "application/json"}
+    if tag == "or" and _or_key:
+        headers["Authorization"] = f"Bearer {_or_key}"
+    else:
+        headers["Authorization"] = f"Bearer {DEFAULT_KEY}"
+
+    async with httpx.AsyncClient(timeout=600.0) as client:
+        resp = await client.post(
+            f"{base_url.rstrip('/')}/embeddings",
+            json=payload,
+            headers=headers,
+        )
+        content = resp.content
+        return JSONResponse(
+            content=json.loads(content) if content else {},
+            status_code=resp.status_code,
+        )
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=PORT)
