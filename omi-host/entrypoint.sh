@@ -14,10 +14,12 @@ echo "=== Omi local host container ==="
 echo "provider mode: ${PROVIDER_MODE:-offline}"
 
 # ---- Redis ----
-# AOF persistence, pointed at the already-mounted /data volume: without this,
-# every container recreate (e.g. every `./run-omi-local-host.sh` after a
-# backend rebuild) wipes the dashboard's selected model, the allowlist, and
-# anything else that lived only in Redis.
+# AOF persistence, pointed at the already-mounted /data volume: the
+# dashboard's model picker (and other runtime settings) live only in Redis,
+# no Firestore backing. --save "" --appendonly no discarded all of that on
+# every restart — same class of bug as the Firebase emulator's lost
+# export-on-exit below, just silent since there's no login error to notice
+# it by, only a stale/empty model selection routing nowhere.
 redis-server --bind 0.0.0.0 --port 6380 --dir "$STATE/redis" --appendonly yes --appendfsync everysec \
   > "$STATE/logs/redis.log" 2>&1 &
 REDIS_PID=$!
@@ -49,6 +51,28 @@ firebase emulators:start --config /app/firebase.docker.json --only firestore,aut
   > "$STATE/logs/firebase-emulators.log" 2>&1 &
 FIREBASE_PID=$!
 echo "firebase emulators: pid $FIREBASE_PID"
+
+# --export-on-exit only fires on the emulator's own graceful shutdown. This
+# script used to `exec` straight into uvicorn, which replaces PID 1 and
+# permanently severs any chance of forwarding Docker's stop signal to this
+# backgrounded emulator — every `docker stop`/`restart` silently lost all
+# local accounts. Stay PID 1 and forward the signal instead, sequentially:
+# wait for the export to fully finish before touching anything else, so a
+# slow flush can't race a simultaneous kill of the backend/redis. SIGINT
+# (not TERM) for firebase specifically — the Node CLI is built and tested
+# against Ctrl-C far more than SIGTERM, and empirically this is what
+# actually triggers the export reliably.
+shutdown() {
+  echo "shutting down: signaling firebase emulators (pid $FIREBASE_PID) to export..."
+  kill -INT "$FIREBASE_PID" 2>/dev/null
+  wait "$FIREBASE_PID" 2>/dev/null
+  echo "firebase emulators exited, export complete"
+  [ -n "${BACKEND_PID:-}" ] && kill -TERM "$BACKEND_PID" 2>/dev/null
+  kill -TERM "$REDIS_PID" 2>/dev/null
+  [ -n "${LLM_ADAPTER_PID:-}" ] && kill -TERM "$LLM_ADAPTER_PID" 2>/dev/null
+  exit 0
+}
+trap shutdown TERM INT
 
 # wait for auth emulator
 for i in $(seq 1 90); do
@@ -124,20 +148,4 @@ fi
 echo "backend: starting"
 uvicorn main:app --host 0.0.0.0 --port 8000 &
 BACKEND_PID=$!
-
-# Forward shutdown signals to every background service instead of `exec`ing
-# into uvicorn (which used to replace this script as PID 1 entirely — Docker's
-# SIGTERM on stop/recreate then only ever reached uvicorn, so the Firebase
-# emulator's --export-on-exit never ran and every container restart silently
-# lost all Firestore/Auth data, including seeded login accounts). Waiting on
-# the emulator specifically (not just signaling it) gives it time to finish
-# writing the export before this script — and so the container — exits.
-_shutdown() {
-  echo "shutting down — waiting for Firebase emulator export..."
-  kill -TERM "$BACKEND_PID" "$REDIS_PID" "$FIREBASE_PID" ${LLM_ADAPTER_PID:+"$LLM_ADAPTER_PID"} 2>/dev/null || true
-  wait "$FIREBASE_PID" 2>/dev/null
-  echo "export complete"
-}
-trap _shutdown TERM INT
-
 wait "$BACKEND_PID"

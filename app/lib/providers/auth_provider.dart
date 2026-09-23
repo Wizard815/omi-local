@@ -120,11 +120,19 @@ class AuthenticationProvider extends BaseProvider {
   }
 
   bool isSignedIn() {
+    if (_requiresReauthentication) return false;
     // Local dev: anonymous Firebase emulator users are valid
-    if (Env.profile == AppEnvironmentProfile.localDev) {
-      return !_requiresReauthentication && _auth.currentUser != null;
+    if (Env.profile == AppEnvironmentProfile.localDev && _auth.currentUser != null) {
+      return true;
     }
-    return !_requiresReauthentication && _auth.currentUser != null && !_auth.currentUser!.isAnonymous;
+    // AuthService.instance.isSignedIn() also covers a self-hosted remote-login
+    // session (see establishRemoteSession) — that path deliberately never
+    // touches FirebaseAuth, so checking only _auth.currentUser here (as this
+    // method used to) meant a remote session was NEVER recognized as signed
+    // in, even with a perfectly valid, persisted session token: every cold
+    // start (app relaunch after being killed) bounced straight back to the
+    // login screen instead of reading the stored session.
+    return AuthService.instance.isSignedIn();
   }
 
   bool get _hasFirebaseUser => _auth.currentUser != null && !_auth.currentUser!.isAnonymous;

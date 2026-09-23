@@ -24,6 +24,7 @@ STARTED_AT = time.time()
 class ModelSelectRequest(BaseModel):
     primary: str = Field(default="", description="Primary model (memories, summaries, features)")
     chat_agent: str = Field(default="", description="Chat agent model (conversations, tool use)")
+    embedding: str = Field(default="", description="Embedding model (memory/vector search)")
 
 
 class ModelAllowRequest(BaseModel):
@@ -154,9 +155,14 @@ async def dashboard(request: Request):
     env_stage = os.getenv("OMI_ENV_STAGE", "unknown")
 
     # Resolve current models (Redis → env)
-    from utils.llm.model_config import _get_local_primary_model, _get_local_chat_agent_model
+    from utils.llm.model_config import (
+        _get_local_primary_model,
+        _get_local_chat_agent_model,
+        _get_local_embedding_model,
+    )
     primary_model = _get_local_primary_model() or "-"
     chat_agent_model = _get_local_chat_agent_model() or "(pass-through)"
+    embedding_model = _get_local_embedding_model() or "-"
 
     component_rows = ""
     for name, info in sorted(components.items()):
@@ -316,6 +322,12 @@ async def dashboard(request: Request):
         <option value="">Loading models...</option>
       </select>
     </div>
+    <div class="model-row">
+      <label>Embedding model <span style="color: #666;">(memory/vector search)</span></label>
+      <select id="embedding-select" class="model-select">
+        <option value="">Loading models...</option>
+      </select>
+    </div>
     <button class="save-btn" onclick="saveModels()">Save & Apply</button>
     <span id="save-feedback" class="save-feedback">✓ Saved!</span>
   </div>
@@ -346,6 +358,7 @@ async def dashboard(request: Request):
       <tr><td>OPENAI_BASE_URL</td><td>{os.getenv('OPENAI_BASE_URL', '-')}</td></tr>
       <tr><td>OMI_LOCAL_MODEL</td><td>{os.getenv('OMI_LOCAL_MODEL', '-')} → <b>{primary_model}</b> (active)</td></tr>
       <tr><td>LOCAL_LLM_MODEL</td><td>{os.getenv('LOCAL_LLM_MODEL', '-')} → <b>{chat_agent_model}</b> (active)</td></tr>
+      <tr><td>LOCAL_EMBEDDING_MODEL</td><td>{os.getenv('LOCAL_EMBEDDING_MODEL', '-')} → <b>{embedding_model}</b> (active)</td></tr>
       <tr><td>HOSTED_PARAKEET_API_URL</td><td>{os.getenv('HOSTED_PARAKEET_API_URL', '-')}</td></tr>
       <tr><td>TTS_LOCAL_BASE_URL</td><td>{os.getenv('TTS_LOCAL_BASE_URL', '-')}</td></tr>
       <tr><td>OMI_ASR_MODEL</td><td>{os.getenv('OMI_ASR_MODEL', '-')}</td></tr>
@@ -353,6 +366,16 @@ async def dashboard(request: Request):
       <tr><td>FIRESTORE_EMULATOR_HOST</td><td>{os.getenv('FIRESTORE_EMULATOR_HOST', '-')}</td></tr>
       <tr><td>FIREBASE_AUTH_PROJECT_ID</td><td>{os.getenv('FIREBASE_AUTH_PROJECT_ID', '-')}</td></tr>
     </table>
+  </div>
+
+  <div class="card">
+    <h2>🔁 Conversations Needing Retry</h2>
+    <p style="font-size: 13px; color: #AAA; line-height: 1.6; margin-bottom: 12px;">
+      Conversations stuck on <code>in_progress</code> with a transcript — usually an LLM call
+      that timed out or hit a routing error. Nothing is ever deleted on a failed process; retry
+      picks the same transcript back up.
+    </p>
+    <div id="retry-list">Loading…</div>
   </div>
 
   <div class="card">
@@ -383,24 +406,28 @@ async def dashboard(request: Request):
         if (!options) options = '<option value="">No models found</option>';
         document.getElementById("primary-select").innerHTML = options;
         document.getElementById("chat-agent-select").innerHTML = options;
+        document.getElementById("embedding-select").innerHTML = options;
         // Pre-select current models
         const current = await fetch("/dashboard/models/current").then(r => r.json());
         document.getElementById("primary-select").value = current.primary_model || "";
         document.getElementById("chat-agent-select").value = current.chat_agent_model || "";
+        document.getElementById("embedding-select").value = current.embedding_model || "";
       }} catch (e) {{
         document.getElementById("primary-select").innerHTML = '<option value="">Error loading models</option>';
         document.getElementById("chat-agent-select").innerHTML = '<option value="">Error loading models</option>';
+        document.getElementById("embedding-select").innerHTML = '<option value="">Error loading models</option>';
       }}
     }}
 
     async function saveModels() {{
       const primary = document.getElementById("primary-select").value;
       const chatAgent = document.getElementById("chat-agent-select").value;
+      const embedding = document.getElementById("embedding-select").value;
       try {{
         const resp = await fetch("/dashboard/models/select", {{
           method: "POST",
           headers: {{ "Content-Type": "application/json" }},
-          body: JSON.stringify({{ primary: primary, chat_agent: chatAgent }})
+          body: JSON.stringify({{ primary: primary, chat_agent: chatAgent, embedding: embedding }})
         }});
         const data = await resp.json();
         const fb = document.getElementById("save-feedback");
@@ -483,8 +510,52 @@ async def dashboard(request: Request):
       document.getElementById("all-models-popup").style.display = "none";
     }}
 
+    async function loadRetryList() {{
+      const el = document.getElementById("retry-list");
+      try {{
+        const resp = await fetch("/dashboard/conversations");
+        const data = await resp.json();
+        if (!data.conversations || data.conversations.length === 0) {{
+          el.innerHTML = '<p style="font-size: 13px; color: #666;">Nothing stuck — all caught up.</p>';
+          return;
+        }}
+        el.innerHTML = data.conversations.map(c => `
+          <div style="padding: 12px 0; border-bottom: 1px solid #2A2A2E; display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 13px; color: #F5F5F5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${{c.title || c.preview || '(no transcript preview)'}}</div>
+              <div style="font-size: 11px; color: #666; margin-top: 2px;">${{c.segment_count}} segments · ${{c.created_at}}</div>
+            </div>
+            <button class="save-btn" style="margin-top: 0; white-space: nowrap;" onclick="retryConversation('${{c.id}}', '${{c.uid}}', this)">Retry</button>
+          </div>
+        `).join("");
+      }} catch (e) {{
+        el.innerHTML = '<p style="font-size: 13px; color: #FF453A;">Error loading: ' + e.message + '</p>';
+      }}
+    }}
+
+    async function retryConversation(id, uid, btn) {{
+      btn.disabled = true;
+      btn.textContent = "Retrying…";
+      try {{
+        const resp = await fetch(`/dashboard/conversations/${{id}}/retry?uid=${{encodeURIComponent(uid)}}`, {{ method: "POST" }});
+        const data = await resp.json();
+        if (data.ok) {{
+          btn.textContent = "✓ Done";
+          setTimeout(loadRetryList, 1000);
+        }} else {{
+          btn.textContent = "✗ Failed";
+          btn.title = data.error || "unknown error";
+          btn.disabled = false;
+        }}
+      }} catch (e) {{
+        btn.textContent = "✗ Failed";
+        btn.disabled = false;
+      }}
+    }}
+
     loadModels();
     loadAllowlist();
+    loadRetryList();
   </script>
 
   <p style="text-align: center; color: #444; font-size: 11px; margin-top: 32px;">
@@ -622,21 +693,29 @@ async def models_allow_set(req: ModelAllowRequest):
 @router.get("/dashboard/models/current", response_class=JSONResponse)
 async def models_current():
     """Return the currently active models (Redis → env fallback)."""
-    from utils.llm.model_config import _get_local_primary_model, _get_local_chat_agent_model
+    from utils.llm.model_config import (
+        _get_local_primary_model,
+        _get_local_chat_agent_model,
+        _get_local_embedding_model,
+    )
 
     primary = _get_local_primary_model() or ""
     chat_agent = _get_local_chat_agent_model() or ""
+    embedding = _get_local_embedding_model() or ""
     openai_base = os.getenv("OPENAI_BASE_URL", "")
 
     # Check if overrides are from Redis or env
     primary_source = "env"
     chat_source = "env"
+    embedding_source = "env"
     try:
         from database.redis_db import get_runtime_model
         if get_runtime_model("primary"):
             primary_source = "redis"
         if get_runtime_model("chat_agent"):
             chat_source = "redis"
+        if get_runtime_model("embedding"):
+            embedding_source = "redis"
     except Exception:
         pass
 
@@ -644,10 +723,12 @@ async def models_current():
         "local_mode": bool(openai_base and primary),
         "primary_model": primary or "none (cloud)",
         "chat_agent_model": chat_agent or "(pass-through)",
+        "embedding_model": embedding or "(default)",
         "openai_base_url": openai_base or "not set",
         "provider_mode": os.getenv("PROVIDER_MODE", "offline"),
         "primary_source": primary_source,
         "chat_agent_source": chat_source,
+        "embedding_source": embedding_source,
     }
 
 
@@ -670,14 +751,21 @@ async def models_select(req: ModelSelectRequest):
         set_runtime_model("primary", req.primary)
     if req.chat_agent:
         set_runtime_model("chat_agent", req.chat_agent)
+    if req.embedding:
+        set_runtime_model("embedding", req.embedding)
 
     # Report back what's now active
-    from utils.llm.model_config import _get_local_primary_model, _get_local_chat_agent_model
+    from utils.llm.model_config import (
+        _get_local_primary_model,
+        _get_local_chat_agent_model,
+        _get_local_embedding_model,
+    )
 
     return {
         "ok": True,
         "primary": _get_local_primary_model() or "",
         "chat_agent": _get_local_chat_agent_model() or "",
+        "embedding": _get_local_embedding_model() or "",
         "note": "Models applied. Next LLM call will use the new selection.",
     }
 
@@ -715,3 +803,76 @@ async def model_config():
         "discovered_models": discovered_models,
         "note": "Use /dashboard/models/available for the full list, /dashboard/models/select to switch, /dashboard/models/current for active state.",
     }
+
+
+# ── conversation history / retry ────────────────────────────────────────
+#
+# The dashboard has no per-request session, so these list/retry across every
+# local account via a collection_group query rather than a single uid — fine
+# for this single-operator self-hosted deployment, not a multi-tenant admin
+# panel. A conversation stuck on "in_progress" with a transcript but no
+# structured summary is exactly the shape a failed LLM call (timeout, routing
+# 404) leaves behind — see utils/conversations/lifecycle.py's
+# rollback_processing_admission, which reverts to in_progress instead of
+# deleting on failure. This surface just makes that already-safe state visible
+# and retryable without a manual curl + reprocess call.
+
+
+@router.get("/dashboard/conversations", response_class=JSONResponse)
+async def dashboard_conversations(limit: int = 20):
+    """List recent in-progress conversations (with a transcript) across all local accounts."""
+    from database._client import get_firestore_client
+
+    db = get_firestore_client()
+    query = (
+        db.collection_group('conversations')
+        .where('status', '==', 'in_progress')
+        .order_by('created_at', direction='DESCENDING')
+        .limit(limit)
+    )
+    items = []
+    for doc in query.stream():
+        data = doc.to_dict() or {}
+        segments = data.get('transcript_segments') or []
+        if not segments:
+            continue
+        uid = doc.reference.parent.parent.id
+        # transcript_segments is normally a list of dicts, but at least one
+        # legacy/malformed conversation had plain strings instead — don't let
+        # one bad record 500 the whole retry list.
+        preview = " ".join(
+            (s.get('text', '') if isinstance(s, dict) else str(s)) for s in segments[:3]
+        ).strip()
+        items.append(
+            {
+                "id": doc.id,
+                "uid": uid,
+                "created_at": str(data.get('created_at', '')),
+                "segment_count": len(segments),
+                "preview": (preview[:140] + "…") if len(preview) > 140 else preview,
+                "title": (data.get('structured') or {}).get('title', ''),
+            }
+        )
+    return {"conversations": items, "count": len(items)}
+
+
+@router.post("/dashboard/conversations/{conversation_id}/retry", response_class=JSONResponse)
+async def dashboard_retry_conversation(conversation_id: str, uid: str):
+    """Force-reprocess a stuck in-progress conversation for the given uid.
+
+    Calls the same reprocess_conversation logic the app's retry button uses
+    (routers/conversations.py) directly, bypassing its auth Depends since the
+    dashboard already resolved uid via the collection_group listing above.
+    """
+    from routers.conversations import reprocess_conversation
+
+    try:
+        conversation = reprocess_conversation(conversation_id, uid=uid)
+        status = conversation.status
+        return {
+            "ok": True,
+            "conversation_id": conversation_id,
+            "status": status.value if hasattr(status, "value") else status,
+        }
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"ok": False, "error": str(e)})

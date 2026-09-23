@@ -6,6 +6,11 @@ services:
       dockerfile: omi-host/Dockerfile
     container_name: omi-local
     restart: unless-stopped
+    # The Firebase Auth/Firestore emulator only flushes --export-on-exit on a
+    # graceful shutdown, which needs a few seconds beyond Docker's 10s default
+    # (see entrypoint.sh's shutdown trap) — without this, `docker stop`/`restart`
+    # SIGKILLs it mid-export and every local account is silently lost.
+    stop_grace_period: 30s
     ports:
       # Host-side port is configurable (BACKEND_PORT) for when 8000 is
       # already taken by something else on the host — the container always
@@ -47,6 +52,12 @@ services:
       # tokens for that endpoint. No Firebase/Google involved at all; LAN-only
       # deployments via the Auth emulator (port 9099) don't need this.
       LOCAL_AUTH_JWT_SECRET: ${LOCAL_AUTH_JWT_SECRET:-}
+      # The dashboard (served by this container) reads these to decide
+      # whether to render a working Firestore Emulator UI link — the actual
+      # credentials for that link's Basic Auth gate live on the
+      # firestore-ui-proxy service below, not here.
+      FIRESTORE_UI_ENABLED: ${FIRESTORE_UI_ENABLED:-}
+      FIRESTORE_UI_PORT: ${FIRESTORE_UI_PORT:-8086}
     volumes:
       - omi-data:/data
     depends_on:
@@ -108,6 +119,13 @@ services:
       WHISPER_CPP_SERVER_URL: http://127.0.0.1:8081
       # Unload the ggml model off the GPU after this many idle seconds (0 = never).
       OMI_ASR_IDLE_UNLOAD_S: ${OMI_ASR_IDLE_UNLOAD_S:-300}
+      # VAD endpointing: how much silence (ms) must follow speech before an
+      # utterance is considered finished/cut — raise this to keep listening
+      # longer after the speaker pauses (e.g. 2000 = wait 1s longer than the
+      # 1000ms default). And how loud audio must be, relative to the recent
+      # peak, to count as voice — lower this to pick up quieter speech.
+      OMI_VAD_MIN_SILENCE_MS: ${OMI_VAD_MIN_SILENCE_MS:-1000}
+      OMI_VAD_THRESH_REL: ${OMI_VAD_THRESH_REL:-0.12}
       HIP_VISIBLE_DEVICES: "0"
       THREADS: ${THREADS:-8}
       # Diarization (resemblyzer) on the GPU. Set OMI_DIA_DEVICE=cpu to force CPU

@@ -456,7 +456,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       builder: (context, child) {
         return WithForegroundTask(
           child: MaterialApp(
-            debugShowCheckedModeBanner: F.env == Environment.dev,
+            debugShowCheckedModeBanner: false,
             title: F.title,
             navigatorKey: MyApp.navigatorKey,
             locale: context.watch<LocaleProvider>().locale,
