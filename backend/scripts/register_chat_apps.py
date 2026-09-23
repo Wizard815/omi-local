@@ -33,55 +33,51 @@ os.environ.setdefault('FIREBASE_AUTH_PROJECT_ID', 'demo-omi-local')
 os.environ.setdefault('FIREBASE_PROJECT_ID', 'demo-omi-local')
 os.environ.setdefault('FIRESTORE_DATABASE_ID', 'default')
 
-# Each entry maps to one omi-host/docker-compose.yml service under the
-# omi-apps profile. host:port must be reachable from the omi-local
-# container — the four "container" entries rely on Compose's per-network
-# DNS (same container name as the compose service), so they only work once
-# omi-local and these app services share a network (see
-# docker-compose.override.yml.example's omi-apps section, and the
-# firestore-ui-proxy note in README-DEPLOY.md-style docs about why that
-# matters — a service not on the same network can't be reached by name even
-# though it's running).
+# base_url must be reachable from the omi-local container. The four
+# gateway-mounted apps share one container (omi-apps-gateway, see
+# omi-host/apps-gateway/) and are distinguished only by mount path; Hermes
+# Agent is its own separate container. Either way, this relies on Compose's
+# per-network DNS (same container name as the compose service), so these
+# only resolve once omi-local and these app services share a network (see
+# docker-compose.override.yml.example's omi-apps section — a service not on
+# the same network can't be reached by name even though it's running).
+_GATEWAY = 'http://omi-apps-gateway:8080'
+
 APPS = [
     {
         'slug': 'local-wikipedia',
         'name': 'Wikipedia',
         'description': 'Search Wikipedia articles and fetch summaries during a conversation.',
         'category': 'utilities',
-        'host': 'omi-app-wikipedia',
-        'port': 8080,
+        'base_url': f'{_GATEWAY}/wikipedia',
     },
     {
         'slug': 'local-open-library',
         'name': 'Open Library',
         'description': 'Search books, fetch metadata, and browse subject recommendations.',
         'category': 'utilities',
-        'host': 'omi-app-open-library',
-        'port': 8080,
+        'base_url': f'{_GATEWAY}/open-library',
     },
     {
         'slug': 'local-open-meteo',
         'name': 'Weather (Open-Meteo)',
         'description': 'Current weather, short forecasts, and air-quality readings.',
         'category': 'utilities',
-        'host': 'omi-app-open-meteo',
-        'port': 8080,
+        'base_url': f'{_GATEWAY}/open-meteo',
     },
     {
         'slug': 'local-openfoodfacts',
         'name': 'Open Food Facts',
         'description': 'Look up packaged food nutrition, ingredients, and allergens by name or barcode.',
         'category': 'health-and-fitness',
-        'host': 'omi-app-openfoodfacts',
-        'port': 8080,
+        'base_url': f'{_GATEWAY}/openfoodfacts',
     },
     {
         'slug': 'local-hermes-agent',
         'name': 'Hermes Agent',
         'description': 'Ask Hermes Agent (self-hosted, on a separate machine) a question from Omi chat.',
         'category': 'productivity-and-organization',
-        'host': 'omi-app-hermes-agent',
-        'port': 8000,
+        'base_url': 'http://omi-app-hermes-agent:8000',
     },
 ]
 
@@ -95,8 +91,8 @@ def main() -> None:
     from routers.apps import _process_chat_tools_manifest
 
     for app in APPS:
-        manifest_url = f"http://{app['host']}:{app['port']}/.well-known/omi-tools.json"
-        app_home_url = f"http://{app['host']}:{app['port']}"
+        app_home_url = app['base_url']
+        manifest_url = f"{app_home_url}/.well-known/omi-tools.json"
 
         data = {
             'id': app['slug'],
