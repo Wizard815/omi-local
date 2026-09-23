@@ -90,6 +90,24 @@ services:
   # omi-audio:
   #   networks: [omi]
 
+  # If you've attached omi-local to an external network this way (RaidLab
+  # does — see the real docker-compose.override.yml, not this template),
+  # every chat-tool app service ALSO needs the same attachment, or omi-local
+  # can't reach them by container name — the exact bug that broke
+  # firestore-ui-proxy earlier (it defaulted to Compose's own network while
+  # omi-local had moved to an external one). Add one entry per enabled
+  # omi-app-* service:
+  # omi-app-wikipedia:
+  #   networks: [omi]
+  # omi-app-open-library:
+  #   networks: [omi]
+  # omi-app-open-meteo:
+  #   networks: [omi]
+  # omi-app-openfoodfacts:
+  #   networks: [omi]
+  # omi-app-hermes-agent:
+  #   networks: [omi]
+
 # Uncomment alongside the `networks: [omi]` service entries above.
 # external: true tells Compose "this network already exists, don't manage
 # it" — required when the network wasn't created by this compose project.
