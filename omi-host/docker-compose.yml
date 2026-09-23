@@ -216,10 +216,12 @@ services:
   # One container mounting all the small no-auth chat-tool apps
   # (plugins/omi-*-app) under their own path prefix, instead of one
   # container per app — they're stateless read-only API wrappers with no
-  # shared state, so this uses one image/one process instead of N. Adding
-  # an app means editing omi-host/apps-gateway/{Dockerfile,gateway_main.py}
-  # and rebuilding this one service, not adding a new compose service or
-  # wiring a new container onto the network.
+  # shared state, so this uses one image/one process instead of N.
+  # plugins/ is bind-mounted (below), and which apps actually get mounted
+  # is read from OMI_APPS_LIST at container start (see gateway_main.py) —
+  # so enabling one more already-present app is a .env edit + restart, not
+  # a rebuild. Only a genuinely new Python dependency (not already in
+  # apps-gateway/requirements.txt) needs one.
   #
   # Register each mounted app as a Firestore "app" via
   # backend/scripts/register_chat_apps.py once this is running — its Chat
@@ -236,6 +238,15 @@ services:
     profiles:
       - omi-apps
     restart: unless-stopped
+    environment:
+      # Comma-separated slugs, each matching a plugins/omi-<slug>-app
+      # directory (see gateway_main.py). Add a new one and
+      # `docker compose --profile omi-apps up -d omi-apps-gateway`
+      # (equivalently, restart it) — no rebuild, since plugins/ below is
+      # bind-mounted, not baked into the image.
+      OMI_APPS_LIST: ${OMI_APPS_LIST:-wikipedia,open-library,open-meteo,openfoodfacts}
+    volumes:
+      - ./repo/plugins:/app/plugins:ro
     logging:
       driver: json-file
       options: { max-size: "10m", max-file: "3" }
