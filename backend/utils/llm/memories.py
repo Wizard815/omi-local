@@ -175,7 +175,7 @@ def extract_canonical_l1_memory_candidates(
         persist_route_outcomes=False,
         strict=strict,
         prompt_prefix=prompt_prefix,
-        prompt_cache_enabled=bool(prompt_prefix and shared_conversation_cache_supported()),
+        prompt_cache_enabled=shared_conversation_cache_supported(),
         rejected_memory_examples=tuple(rejected_memory_examples),
     )
     return [
