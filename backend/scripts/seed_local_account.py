@@ -36,22 +36,16 @@ servers — the remote credential is a session token this backend signs itself
 import argparse
 import getpass
 import json
-import os
-import sys
 import urllib.error
 import urllib.request
 
-# entrypoint.sh exports these at runtime inside its own shell process, so
-# they're set for the backend it launches — but NOT for a fresh `docker exec`
-# session, which doesn't inherit a sibling process's runtime exports (only
-# the image's/compose's actual configured environment). setdefault() so a
-# plain `docker exec -it omi-local python backend/scripts/seed_local_account.py`
-# just works without needing those exported by hand first.
-os.environ.setdefault('FIRESTORE_EMULATOR_HOST', '127.0.0.1:8085')
-os.environ.setdefault('FIREBASE_AUTH_EMULATOR_HOST', '127.0.0.1:9099')
-os.environ.setdefault('FIREBASE_AUTH_PROJECT_ID', 'demo-omi-local')
-os.environ.setdefault('FIREBASE_PROJECT_ID', 'demo-omi-local')
-os.environ.setdefault('FIRESTORE_DATABASE_ID', 'default')
+# entrypoint.sh (PID 1 in the container) exports these at runtime, but a
+# fresh `docker exec` session doesn't inherit a sibling process's exports —
+# see _container_env.py for why reading them from /proc/1/environ beats
+# hardcoding a copy of entrypoint.sh's list here.
+from _container_env import inherit_pid1_env
+
+inherit_pid1_env()
 
 DEFAULT_AUTH_PORT = 9099
 

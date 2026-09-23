@@ -41,16 +41,17 @@ tool after you change/redeploy one of these services.
 """
 
 import argparse
-import os
 
-# See seed_local_account.py for why these need setdefault() rather than a
-# plain os.environ[...] — entrypoint.sh exports them for the backend process
-# it launches, but a fresh `docker exec` session doesn't inherit those.
-os.environ.setdefault('FIRESTORE_EMULATOR_HOST', '127.0.0.1:8085')
-os.environ.setdefault('FIREBASE_AUTH_EMULATOR_HOST', '127.0.0.1:9099')
-os.environ.setdefault('FIREBASE_AUTH_PROJECT_ID', 'demo-omi-local')
-os.environ.setdefault('FIREBASE_PROJECT_ID', 'demo-omi-local')
-os.environ.setdefault('FIRESTORE_DATABASE_ID', 'default')
+# entrypoint.sh (PID 1 in the container) exports these at runtime, but a
+# fresh `docker exec` session doesn't inherit a sibling process's exports —
+# see _container_env.py for why reading them from /proc/1/environ beats
+# hardcoding a copy of entrypoint.sh's list here. This script's import chain
+# is deep (routers.apps -> ... -> database.conversations -> utils.encryption,
+# which hard-fails at import time without ENCRYPTION_SECRET), so it needs
+# more of entrypoint.sh's exports than just the Firestore/Auth ones.
+from _container_env import inherit_pid1_env
+
+inherit_pid1_env()
 
 # base_url must be reachable from the omi-local container. The gateway-mounted
 # apps share one container (omi-apps-gateway, see omi-host/apps-gateway/) and
