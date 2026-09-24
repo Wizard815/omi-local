@@ -30,6 +30,15 @@ HALF_LIFE_DAYS_BY_CLASS: Mapping[str, Optional[float]] = {
 CURRENT_BAND_MIN = 0.5
 FADING_BAND_MIN = 0.25
 
+# Backported from upstream: utils.retrieval.tools.memory_tools and
+# utils.retrieval.tool_services.memories were cherry-picked from upstream
+# (commit a8428f08ef, "preserve complete claims in memory tool responses")
+# and import these three names, but this fork is otherwise too far behind
+# upstream's memory-platform work to pull the rest of it in — porting only
+# the specific functions the cherry-picked callers actually need, not the
+# whole feature those names originally shipped with.
+TEMPORAL_READ_VIEWS = frozenset({"released", "useful_now", "history", "all"})
+
 
 class CurrencyBand(str, Enum):
     current = "current"
@@ -49,6 +58,25 @@ class BeliefView:
 def belief_model_enabled() -> bool:
     """Deployment-wide flag. Unset and any value other than true fail closed to off."""
     return os.getenv(MEMORY_BELIEF_MODEL_ENABLED_ENV, "false").lower() == "true"
+
+
+def normalize_temporal_read_view(value: Optional[str]) -> str:
+    """Normalize the additive list view selector.
+
+    ``released`` is deliberately the default so older clients and callers
+    retain the shipped list contract when they omit the new query parameter.
+    """
+    normalized = (value or "released").strip().lower()
+    if normalized not in TEMPORAL_READ_VIEWS:
+        raise ValueError(f"unsupported memory read view: {value}")
+    return normalized
+
+
+def memory_use_suppressed(item: object) -> bool:
+    """Read the canonical owner-use suppression without interpreting confidence."""
+    arguments = getattr(item, "arguments", None)
+    use = arguments.get("memory_use") if isinstance(arguments, Mapping) else None
+    return isinstance(use, Mapping) and use.get("suppressed") is True
 
 
 def _coerce_aware_utc(value: datetime) -> datetime:
