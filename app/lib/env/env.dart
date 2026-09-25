@@ -133,6 +133,15 @@ abstract class Env {
 
   static void requireProductionRouting() => validateStartupRouting(productionFamily: true);
 
+  // A self-hosted local_dev deployment reached through a public tunnel
+  // domain (e.g. Cloudflare Tunnel) has no loopback/private address at all —
+  // the whole point is reaching it from off-LAN. Rather than loosen the
+  // private-network check for every local_dev build, the build declares
+  // exactly one trusted public host via this dart-define (set from
+  // OMI_LOCAL_API_BASE_URL's host in setup.sh), so an unrelated public API
+  // base URL still fails validateStartupRouting as intended.
+  static const _trustedPublicDevHost = String.fromEnvironment('OMI_LOCAL_DEV_TRUSTED_HOST');
+
   static bool _isLocalDevelopmentApi(String base) {
     final uri = Uri.tryParse(base);
     if (uri == null || uri.host.isEmpty || (uri.scheme != 'http' && uri.scheme != 'https')) {
@@ -140,6 +149,9 @@ abstract class Env {
     }
     final host = uri.host.toLowerCase();
     if (host == 'localhost' || host == 'host.docker.internal' || host == '::1') {
+      return true;
+    }
+    if (_trustedPublicDevHost.isNotEmpty && host == _trustedPublicDevHost.toLowerCase()) {
       return true;
     }
     final octets = host.split('.').map(int.tryParse).toList();
