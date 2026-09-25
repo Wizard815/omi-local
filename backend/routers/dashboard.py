@@ -414,11 +414,16 @@ async def dashboard(request: Request):
   <div class="card">
     <h2>📱 Phone Setup</h2>
     <p style="font-size: 13px; color: #AAA; line-height: 1.6;">
-      1. Install <code>omi-dev-local.apk</code> on your Android phone<br>
-      2. Open <strong>Omi Dev</strong> → Sign in with any Google account<br>
-      3. Settings → Developer → Server URL → <code>{public_base}/</code><br>
-      4. Settings → Transcription → <strong>Omi Parakeet</strong> (routes to local CPU ASR)<br>
-      5. To change the server IP without reinstalling: tap the Server URL field in Developer Settings.
+      1. Install <strong>Omi Local</strong> on your Android phone (no Google account needed — Google Sign-In has been removed)<br>
+      2. On the login screen: LAN → <code>http://{'{BIND_IP}'}:{'{BACKEND_PORT}'}/</code> from the same network as this server,
+         or Remote → this server's public URL (e.g. a Cloudflare Tunnel domain), with the username/password
+         from <code>backend/scripts/seed_local_account.py</code><br>
+      3. Transcription routes through the <strong>Omi Parakeet</strong> slot automatically — that name is
+         just an internal label reused to point at this deployment's own local STT engine
+         (<code>OMI_ASR_ENGINE={os.getenv('OMI_ASR_ENGINE', 'whispercpp')}</code>, GPU-accelerated
+         when set to <code>whispercpp</code>), not Nvidia's cloud model. Nothing to select manually.<br>
+      4. To change the server URL without reinstalling: Settings → Developer → Server URL (only visible
+         on a local_dev-profile build).
     </p>
   </div>
 
