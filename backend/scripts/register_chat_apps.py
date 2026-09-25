@@ -109,6 +109,7 @@ def register_app(app: dict) -> None:
     from database.apps import upsert_app_to_db
     from models.app import AppCreate
     from routers.apps import _process_chat_tools_manifest
+    from utils.apps import invalidate_approved_apps_cache, invalidate_popular_apps_cache
 
     app_home_url = app['base_url']
     manifest_url = f"{app_home_url}/.well-known/omi-tools.json"
@@ -148,6 +149,12 @@ def register_app(app: dict) -> None:
         )
 
     upsert_app_to_db(app_dict)
+    # POST /v1/apps (the normal create flow) invalidates this same cache
+    # after writing — writing straight to Firestore here skips that, so the
+    # public app-browser response (/v2/apps, 10-minute TTL) would otherwise
+    # keep serving a stale list without this app for up to 10 minutes.
+    invalidate_approved_apps_cache()
+    invalidate_popular_apps_cache()
     print(f"Registered '{app['name']}' (id={app['slug']}, {tool_count} chat tools)")
 
 
