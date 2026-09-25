@@ -148,7 +148,13 @@ async def _get_async_components() -> dict:
     searxng_url = os.getenv("SEARXNG_URL", "")
     if searxng_url:
         try:
-            async with httpx.AsyncClient(timeout=3.0) as client:
+            # 3.0s used to flap this to "down" on a genuinely healthy
+            # instance — SearXNG fans a query out to multiple search engines
+            # per request, so response time varies well past 3s under real
+            # (not necessarily heavy) load. Confirmed live: 2 of 5 sampled
+            # requests to a shared SearXNG instance took ~3.1s, the rest
+            # ~0.4s — all 200s, just slow sometimes.
+            async with httpx.AsyncClient(timeout=8.0) as client:
                 resp = await client.get(f"{searxng_url.rstrip('/')}/search?q=test&format=json")
                 results["web_search"] = {
                     "status": "up" if resp.status_code == 200 else "down",
