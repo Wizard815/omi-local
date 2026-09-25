@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 import firebase_admin
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
 
@@ -187,7 +187,7 @@ app.add_middleware(
 )
 
 # Dashboard — serves the web UI at /
-app.include_router(dashboard.router)
+app.include_router(dashboard.router, dependencies=[Depends(dashboard.require_dashboard_auth)])
 app.include_router(device_calendar.router)
 
 app.include_router(transcribe.router)
