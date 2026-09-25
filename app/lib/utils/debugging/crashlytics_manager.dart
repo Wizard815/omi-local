@@ -1,8 +1,13 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-
+/// No-op stub. This app is self-hosted with zero Google/cloud crash
+/// reporting — every method here used to call FirebaseCrashlytics, which
+/// always talks to real Google servers with no local/emulator equivalent
+/// and no way to point it at a self-hosted endpoint. The class keeps its
+/// original public API (rather than being deleted) so every existing call
+/// site (main.dart's FlutterError.onError/PlatformDispatcher.onError hooks,
+/// shared.dart's error logging, etc.) needs no changes — they just log
+/// nowhere instead of to Google.
 class CrashlyticsManager {
   static final CrashlyticsManager _instance = CrashlyticsManager._internal();
   static CrashlyticsManager get instance => _instance;
@@ -13,69 +18,33 @@ class CrashlyticsManager {
     return _instance;
   }
 
-  static Future<void> init() async {
-    // Disable Crashlytics collection in debug mode
-    if (kDebugMode) {
-      await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
-    } else {
-      await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
-    }
-  }
+  static Future<void> init() async {}
 
-  void identifyUser(String email, String name, String userId) {
-    FirebaseCrashlytics.instance.setUserIdentifier(userId);
-    if (email.isNotEmpty) {
-      FirebaseCrashlytics.instance.setCustomKey('user_email', email);
-    }
-    if (name.isNotEmpty) {
-      FirebaseCrashlytics.instance.setCustomKey('user_name', name);
-    }
-  }
+  void identifyUser(String email, String name, String userId) {}
 
-  void logInfo(String message) {
-    FirebaseCrashlytics.instance.log(message);
-  }
+  void logInfo(String message) {}
 
-  void logError(String message) {
-    FirebaseCrashlytics.instance.log('ERROR: $message');
-  }
+  void logError(String message) {}
 
-  void logWarn(String message) {
-    FirebaseCrashlytics.instance.log('WARN: $message');
-  }
+  void logWarn(String message) {}
 
-  void logDebug(String message) {
-    FirebaseCrashlytics.instance.log('DEBUG: $message');
-  }
+  void logDebug(String message) {}
 
-  void logVerbose(String message) {
-    FirebaseCrashlytics.instance.log('VERBOSE: $message');
-  }
+  void logVerbose(String message) {}
 
-  void setUserAttribute(String key, String value) {
-    FirebaseCrashlytics.instance.setCustomKey(key, value);
-  }
+  void setUserAttribute(String key, String value) {}
 
-  void setEnabled(bool isEnabled) {
-    FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(isEnabled);
-  }
+  void setEnabled(bool isEnabled) {}
 
   Future<void> reportCrash(
     Object exception,
     StackTrace stackTrace, {
     Map<String, String>? userAttributes,
-  }) async {
-    if (userAttributes != null) {
-      for (final entry in userAttributes.entries) {
-        await FirebaseCrashlytics.instance.setCustomKey(entry.key, entry.value);
-      }
-    }
-    await FirebaseCrashlytics.instance.recordError(exception, stackTrace);
-  }
+  }) async {}
 
   NavigatorObserver? getNavigatorObserver() {
     return null;
   }
 
-  bool get isSupported => true;
+  bool get isSupported => false;
 }

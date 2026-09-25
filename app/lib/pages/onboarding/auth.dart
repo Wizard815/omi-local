@@ -309,36 +309,6 @@ class _AuthComponentState extends State<AuthComponent> {
                         const SizedBox(height: 16),
                       ],
 
-                      // Google sign in button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            HapticFeedback.mediumImpact();
-                            provider.onGoogleSignIn(widget.onSignIn);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.black,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const FaIcon(FontAwesomeIcons.google, size: 20),
-                              const SizedBox(width: 8),
-                              Text(
-                                context.l10n.signInWithGoogle,
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, fontFamily: 'Manrope'),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
                       // Privacy policy text
                       RichText(
                         textAlign: TextAlign.center,

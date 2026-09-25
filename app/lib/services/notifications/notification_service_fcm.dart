@@ -146,31 +146,14 @@ class _FCMNotificationService implements NotificationInterface {
     }
   }
 
+  // No-op: this app is self-hosted with no Google push infrastructure on
+  // either end (no FCM server key on this backend, nothing to deliver a push
+  // to this token anyway), so registering one with Google is pure telemetry
+  // with no product benefit. Local notifications (awesome_notifications,
+  // used for in-app reminders/alerts) are unaffected — this only stops the
+  // FCM device-token round trip to Google.
   @override
-  void saveNotificationToken() async {
-    try {
-      if (Platform.isIOS) {
-        String? apnsToken;
-        for (int i = 0; i < 10; i++) {
-          apnsToken = await _firebaseMessaging.getAPNSToken();
-          if (apnsToken != null) break;
-          await Future.delayed(const Duration(seconds: 1));
-        }
-
-        if (apnsToken == null) {
-          Logger.debug('APNS token not available yet, will retry on refresh');
-          return;
-        }
-      }
-
-      String? token = await _firebaseMessaging.getToken();
-      await saveFcmToken(token);
-    } catch (e) {
-      Logger.debug('Failed to save notification token: $e');
-    } finally {
-      _firebaseMessaging.onTokenRefresh.listen(saveFcmToken);
-    }
-  }
+  void saveNotificationToken() {}
 
   @override
   Future<bool> hasNotificationPermissions() async {
