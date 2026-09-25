@@ -317,6 +317,19 @@ function run_build_android() {
   if [[ -n "$emulator_host" ]]; then
     flutter_args+=("--dart-define=OMI_FIREBASE_AUTH_EMULATOR_HOST=$emulator_host")
   fi
+  # local_dev normally requires a loopback/private-network API host (see
+  # Env._isLocalDevelopmentApi) — a self-hosted deployment reached through a
+  # public tunnel domain has no such address at all. Declaring api_base_url's
+  # host as the one trusted public host is a no-op when it's already
+  # loopback/private (that check short-circuits first), so this is safe to
+  # pass unconditionally rather than trying to pre-filter it here.
+  if [[ "$flavor" == "dev" ]]; then
+    local api_host
+    api_host=$(printf '%s' "$api_base_url" | sed -E 's#^[a-zA-Z]+://##; s#[/:].*##')
+    if [[ -n "$api_host" ]]; then
+      flutter_args+=("--dart-define=OMI_LOCAL_DEV_TRUSTED_HOST=$api_host")
+    fi
+  fi
   if [[ -n "$mode_flag" ]]; then
     flutter_args+=("$mode_flag")
   fi

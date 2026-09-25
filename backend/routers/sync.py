@@ -1092,10 +1092,15 @@ async def sync_local_files_v2(
         owned_paths = list(paths)
         paths = []  # Prevent finally cleanup of files now owned by bg task
 
-        if lane_decision.lane == SyncLane.BACKFILL and not cloud_task_eligible:
+        if lane_decision.lane == SyncLane.BACKFILL and not cloud_task_eligible and byok_enabled:
             # Fail closed: backfill may run only on the dedicated queue/service.
             # BYOK cannot be serialized into Cloud Tasks, so it is retained on
-            # device until an isolated BYOK path exists.
+            # device until an isolated BYOK path exists. This is specifically
+            # about BYOK, not about Cloud Tasks dispatch being unavailable —
+            # a self-hosted deployment with cloud_tasks_dispatch_enabled=False
+            # and no BYOK keys has no such serialization concern, so it falls
+            # through to the same inline pipeline other lanes already use
+            # when cloud_task_eligible is False (see `if not dispatched:` below).
             await run_blocking(sync_executor, _cleanup_files, owned_paths)
             await _finalize_sync_job_failure(
                 job_id=job_id,
