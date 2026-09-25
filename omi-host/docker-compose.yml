@@ -52,6 +52,12 @@ services:
       # tokens for that endpoint. No Firebase/Google involved at all; LAN-only
       # deployments via the Auth emulator (port 9099) don't need this.
       LOCAL_AUTH_JWT_SECRET: ${LOCAL_AUTH_JWT_SECRET:-}
+      # Gates the dashboard (/, model picker, conversation retry) behind
+      # HTTP Basic Auth — it has no auth of its own otherwise, and this same
+      # backend is what a public Cloudflare Tunnel exposes. Left unset stays
+      # open, for LAN-only deployments.
+      DASHBOARD_USERNAME: ${DASHBOARD_USERNAME:-}
+      DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD:-}
       # The dashboard (served by this container) reads these to decide
       # whether to render a working Firestore Emulator UI link — the actual
       # credentials for that link's Basic Auth gate live on the

@@ -4,19 +4,46 @@ Serves a health/telemetry page at /, component status, and
 a runtime model picker powered by LiteLLM.
 """
 import os
+import secrets
 import socket
 import time
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 
 import httpx
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel, Field
 
 router = APIRouter()
 
 STARTED_AT = time.time()
+
+_dashboard_basic_auth = HTTPBasic(auto_error=False)
+
+
+def require_dashboard_auth(credentials: HTTPBasicCredentials = Depends(_dashboard_basic_auth)) -> None:
+    """Gate every route on this router behind HTTP Basic Auth, when configured.
+
+    This dashboard was built LAN-only (model picker, conversation retry,
+    environment info) and has no auth of its own otherwise — fine for a
+    deployment that never leaves the LAN, but this same FastAPI app is also
+    what a Cloudflare Tunnel exposes publicly for the mobile app's remote
+    login. Left open by default (empty DASHBOARD_USERNAME/PASSWORD) so a
+    LAN-only deployment isn't broken by this; any internet-facing deployment
+    should set both — see omi-host/.env.example.
+    """
+    expected_user = os.getenv('DASHBOARD_USERNAME', '')
+    expected_pass = os.getenv('DASHBOARD_PASSWORD', '')
+    if not expected_user or not expected_pass:
+        return  # not configured — stay open, matching this feature's original LAN-only design
+
+    valid = credentials is not None and secrets.compare_digest(
+        credentials.username, expected_user
+    ) and secrets.compare_digest(credentials.password, expected_pass)
+    if not valid:
+        raise HTTPException(status_code=401, detail='Unauthorized', headers={'WWW-Authenticate': 'Basic'})
 
 # ── model selection request body ──────────────────────────────────────
 
