@@ -40,6 +40,17 @@ services:
       SEARXNG_URL: ${SEARXNG_URL:-http://omi-searxng:8080}
       STORAGE_BACKEND: ${STORAGE_BACKEND:-local}
       LOCAL_STORAGE_PATH: ${LOCAL_STORAGE_PATH:-/data/storage}
+      # Actually wires local-disk storage into backend/utils/other/storage.py's
+      # _get_storage_client() (see local_storage.py) — without these two,
+      # STORAGE_BACKEND/LOCAL_STORAGE_PATH above only affected dashboard
+      # display text, and every bucket-backed path (speech profiles, private
+      # cloud sync cleanup, chat files, etc.) fell through to a real
+      # google.cloud.storage.Client() and failed against storage.googleapis.com.
+      # Gated in local_storage.py to require FIREBASE_PROJECT_ID starting with
+      # "demo-" and FIRESTORE_EMULATOR_HOST set (see entrypoint.sh) — both
+      # true for this local-emulator deployment.
+      OMI_HARNESS_STATE_ROOT: /data
+      OMI_LOCAL_STORAGE_ROOT: ${LOCAL_STORAGE_PATH:-/data/storage}
       CHROMA_DATA_PATH: ${CHROMA_DATA_PATH:-/data/chroma/vector_db}
       # Raise these if conversation processing/chat times out waiting on a
       # cold local-LLM model load (e.g. llama-swap loading a model for the

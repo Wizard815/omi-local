@@ -11,7 +11,6 @@ import 'package:marionette_flutter/marionette_flutter.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:omi/gen/pigeon_communicator.g.dart';
 import 'package:omi/services/bridges/ble_bridge.dart';
@@ -257,11 +256,11 @@ Future _init() async {
     );
   }
   FlutterError.onError = (FlutterErrorDetails details) {
-    FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+    FlutterError.presentError(details);
   };
 
   PlatformDispatcher.instance.onError = (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    debugPrint('Uncaught platform error: $error\n$stack');
     return true;
   };
 
@@ -287,9 +286,7 @@ void main() {
         // profile/release builds. A misconfigured OMI_API_BASE_URL cost about a
         // day of investigation for exactly this reason — the app looked hung
         // when it had in fact thrown a precise, actionable StateError.
-        if (Firebase.apps.isNotEmpty) {
-          FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-        }
+        debugPrint('Startup failed: $error\n$stack');
         runApp(StartupFailureApp(error: error, stack: stack));
         return;
       }
@@ -297,9 +294,6 @@ void main() {
     },
     (error, stack) {
       debugPrint('Uncaught error: $error\n$stack');
-      if (Firebase.apps.isNotEmpty) {
-        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-      }
     },
   );
 }

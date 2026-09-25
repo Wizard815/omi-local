@@ -1,24 +1,20 @@
 import 'package:flutter/material.dart';
 
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:intercom_flutter/intercom_flutter.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
 import 'package:omi/utils/debug_log_manager.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 
+/// No-op — this app is self-hosted with no cloud crash reporting.
 class CrashlyticsTalkerObserver extends TalkerObserver {
   CrashlyticsTalkerObserver();
 
   @override
-  void onError(err) {
-    FirebaseCrashlytics.instance.recordError(err.error, err.stackTrace, reason: err.message);
-  }
+  void onError(err) {}
 
   @override
-  void onException(err) {
-    FirebaseCrashlytics.instance.recordError(err.exception, err.stackTrace, reason: err.message);
-  }
+  void onException(err) {}
 }
 
 class Logger {

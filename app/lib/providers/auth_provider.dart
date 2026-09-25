@@ -83,6 +83,20 @@ class AuthenticationProvider extends BaseProvider {
       _idTokenSubscription = _auth.idTokenChanges().distinct((p, n) => p?.uid == n?.uid).listen((User? user) async {
         AuthService.instance.handleAuthUserChanged(user?.uid);
         if (user == null) {
+          // A self-hosted remote-login session (see AuthService.signInWithRemoteAccount)
+          // never creates a Firebase user by design — no Firebase/Google is
+          // involved at all, only this backend's own signed session token.
+          // Firebase's idTokenChanges() therefore correctly reports user=null
+          // on every single app start for that session kind, which — before
+          // this guard — wiped the valid stored session token here every
+          // time, forcing a re-login on every cold start even though the
+          // session itself was never expired. isSignedIn() and
+          // refreshIdToken() already treat isLocalRemoteSession as
+          // authoritative and independent of Firebase; this listener must
+          // not fight that by clearing the token it relies on.
+          if (SharedPreferencesUtil().isLocalRemoteSession) {
+            return;
+          }
           Logger.debug('User is currently signed out or the token has been revoked!');
           SharedPreferencesUtil().authToken = '';
           SharedPreferencesUtil().tokenExpirationTime = 0;
