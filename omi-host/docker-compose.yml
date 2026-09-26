@@ -51,6 +51,15 @@ services:
       # true for this local-emulator deployment.
       OMI_HARNESS_STATE_ROOT: /data
       OMI_LOCAL_STORAGE_ROOT: ${LOCAL_STORAGE_PATH:-/data/storage}
+      # Base URL local_storage.py's generate_signed_url() serves blobs from
+      # (backend/main.py mounts them at /_local/storage) — without this,
+      # every signed-URL call (sync transcription, speech profiles, private
+      # cloud audio) raises RuntimeError instead of returning a fetchable URL.
+      # Defaults to the container-internal name, not PUBLIC_URL: the main
+      # consumer (omi-audio's Parakeet, fetching sync audio) is another
+      # container on this Docker network, same as HOSTED_PARAKEET_API_URL
+      # above uses http://omi-audio:8790 rather than a host-facing address.
+      OMI_LOCAL_STORAGE_BASE_URL: ${OMI_LOCAL_STORAGE_BASE_URL:-http://omi-local:8000/_local/storage}
       CHROMA_DATA_PATH: ${CHROMA_DATA_PATH:-/data/chroma/vector_db}
       # Raise these if conversation processing/chat times out waiting on a
       # cold local-LLM model load (e.g. llama-swap loading a model for the

@@ -78,6 +78,26 @@ def test_local_storage_supports_streaming_copy_and_listing(monkeypatch: pytest.M
     assert [blob.name for blob in destination_bucket.list_blobs(prefix='user/')] == ['user/archive/chunk.bin']
 
 
+def test_local_storage_blob_accepts_absolute_local_path_as_name(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The sync pipeline uses a caller's absolute filesystem path directly as a
+    blob name (see pipeline._stage_files_to_gcs's "blob name = local path").
+    That's a harmless key on real GCS, but previously raised ValueError here,
+    surfacing as a permanent stt_invalid_input on every sync upload under the
+    local storage backend (never reaching the STT provider)."""
+    _configure(monkeypatch, tmp_path)
+    client = LocalStorageClient.from_env()
+    assert client is not None
+    bucket = client.bucket('sync-temporal')
+
+    blob = bucket.blob('/tmp/omi-sync/uid/chunk.bin')
+
+    assert blob.name == 'tmp/omi-sync/uid/chunk.bin'
+    blob.upload_from_string(b'chunk-bytes')
+    assert blob.download_as_bytes() == b'chunk-bytes'
+
+
 def test_local_storage_rejects_non_harness_and_traversal_paths(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     storage_root = _configure(monkeypatch, tmp_path)
     monkeypatch.setenv('OMI_LOCAL_STORAGE_ROOT', str(tmp_path / 'outside'))

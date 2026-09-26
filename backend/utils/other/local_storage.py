@@ -44,7 +44,16 @@ def local_storage_root_from_env() -> Path | None:
     return _contained_path(state_root, raw_root, label=LOCAL_STORAGE_ROOT_ENV)
 
 
-def _safe_relative_path(value: str, *, label: str) -> PurePosixPath:
+def _safe_relative_path(value: str, *, label: str, allow_absolute: bool = False) -> PurePosixPath:
+    # The sync pipeline uses a caller's local absolute filesystem path directly
+    # as a blob name (see pipeline._stage_files_to_gcs's "blob name = local
+    # path"), which is a harmless key on real GCS but fails PurePosixPath's
+    # absolute check here. Rather than special-case every caller, treat an
+    # absolute path as relative to this store's root (strip the leading '/')
+    # when the caller opts in — traversal segments are still rejected below,
+    # so this widens what a valid key looks like, not what it can reach.
+    if allow_absolute and value.startswith('/'):
+        value = value.lstrip('/')
     path = PurePosixPath(value)
     if not value or path.is_absolute() or any(part in {'', '.', '..'} for part in path.parts):
         raise ValueError(f'Unsafe local storage {label}: {value!r}')
@@ -54,7 +63,7 @@ def _safe_relative_path(value: str, *, label: str) -> PurePosixPath:
 class LocalBlob:
     def __init__(self, bucket: 'LocalBucket', name: str):
         self.bucket = bucket
-        self.name = _safe_relative_path(name, label='blob name').as_posix()
+        self.name = _safe_relative_path(name, label='blob name', allow_absolute=True).as_posix()
         self.metadata = None
         self.cache_control = None
         self.content_type = None
