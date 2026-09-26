@@ -63,6 +63,15 @@ WHISPER_CPP_SERVER_URL = os.getenv("WHISPER_CPP_SERVER_URL", "http://127.0.0.1:8
 # /inference call auto-reloads it (whisper-server's own behavior) -- one
 # slower first request, in exchange for not holding VRAM/host RAM while idle.
 WHISPER_CPP_IDLE_UNLOAD_S = float(os.getenv("OMI_ASR_IDLE_UNLOAD_S", "300"))
+# whisper-server accepts these per-request (examples/server/server.cpp's
+# get_req_parameters), so tuning them doesn't need a container restart of the
+# server process itself -- only of this service, which reads the env once at
+# startup. Beam search (beam_size > 1) trades decode latency for materially
+# fewer missed/garbled words than the server's own default (greedy, best_of=2)
+# -- worth it here since even a 20s chunk decodes in ~1-2s on this GPU. Set
+# either to 1 to fall back to the server's plain greedy decode.
+WHISPER_CPP_BEAM_SIZE = int(os.getenv("OMI_ASR_BEAM_SIZE", "5"))
+WHISPER_CPP_BEST_OF = int(os.getenv("OMI_ASR_BEST_OF", "5"))
 # faster-whisper fallback path (OMI_ASR_ENGINE=fasterwhisper) — unused on the GPU path.
 WHISPER_MODEL = os.getenv("OMI_ASR_MODEL", "Systran/faster-whisper-small")
 WHISPER_DEVICE = os.getenv("OMI_ASR_DEVICE", "cpu")
@@ -394,7 +403,12 @@ def _transcribe_whispercpp(audio16: np.ndarray, language: str) -> List[Dict[str,
         resp = requests.post(
             f"{WHISPER_CPP_SERVER_URL}/inference",
             files={"file": ("audio.wav", wav, "audio/wav")},
-            data={"response_format": "verbose_json", "language": language or "auto"},
+            data={
+                "response_format": "verbose_json",
+                "language": language or "auto",
+                "beam_size": str(WHISPER_CPP_BEAM_SIZE),
+                "best_of": str(WHISPER_CPP_BEST_OF),
+            },
             # Idle-unload means the first request after a long silence pays
             # whisper-server's own reload time on top of inference — give it room.
             timeout=180,
