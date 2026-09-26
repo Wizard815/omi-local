@@ -1,3 +1,4 @@
+import importlib
 from pathlib import Path
 
 import pytest
@@ -96,6 +97,22 @@ def test_local_storage_blob_accepts_absolute_local_path_as_name(
     assert blob.name == 'tmp/omi-sync/uid/chunk.bin'
     blob.upload_from_string(b'chunk-bytes')
     assert blob.download_as_bytes() == b'chunk-bytes'
+
+
+def test_syncing_local_bucket_defaults_when_unset(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A self-hosted deployment (omi-host/docker-compose.yml) never sets
+    BUCKET_TEMPORAL_SYNC_LOCAL. Unlike the optional buckets above (None checked
+    and no-op'd at each call site), sync is core to every deployment, and an
+    unset value here used to reach LocalBucket(name=None) -- PurePosixPath(None)
+    raises TypeError, surfacing as a permanent stt_invalid_input on every sync
+    upload before the STT provider was even selected."""
+    monkeypatch.delenv('BUCKET_TEMPORAL_SYNC_LOCAL', raising=False)
+    reloaded = importlib.reload(storage_helpers)
+    try:
+        assert reloaded.syncing_local_bucket
+        assert isinstance(reloaded.syncing_local_bucket, str)
+    finally:
+        importlib.reload(storage_helpers)
 
 
 def test_local_storage_rejects_non_harness_and_traversal_paths(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
