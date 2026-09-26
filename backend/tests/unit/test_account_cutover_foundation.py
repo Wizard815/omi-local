@@ -474,6 +474,65 @@ def test_control_endpoint_projects_legacy_default(monkeypatch):
     assert body['migration']['destination_backend_bound'] is False
 
 
+def test_control_endpoint_offline_bypasses_malformed_doc_fence(monkeypatch):
+    """SELF_HOSTING_ROADMAP.md #2: a self-hosted Firestore-emulator hiccup must not
+    black-screen the whole app behind a migration fence with no escape — there is no
+    real whole-account cutover running on an offline deployment. Same PROVIDER_MODE
+    bypass shape as utils/subscription.py's resolve_transcription_allowance."""
+    monkeypatch.setenv('PROVIDER_MODE', 'offline')
+    app = FastAPI()
+    app.include_router(account_cutover_router.router)
+    app.dependency_overrides[auth.get_current_user_uid] = lambda: 'uid-offline'
+
+    def _boom(uid, firestore_client=None):
+        raise MalformedDocError(
+            document_path=f'users/{uid}/account_cutover/state', error_types=('enum',), error_fields=('state',)
+        )
+
+    monkeypatch.setattr(account_cutover_db, 'get_account_cutover_record', _boom)
+
+    async def _immediate(executor, fn, *args, **kwargs):
+        return fn(*args, **kwargs)
+
+    monkeypatch.setattr(account_cutover_router, 'run_blocking', _immediate)
+    client = TestClient(app)
+    response = client.get(
+        '/v1/account/cutover/control',
+        headers={'X-App-Platform': 'macos', 'X-App-Build': '12000'},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body['state'] == 'legacy'
+    assert body['product_traffic_allowed'] is True
+    assert body['client_action'] == 'none'
+
+
+def test_control_endpoint_still_fences_malformed_doc_when_not_offline(monkeypatch):
+    """The bypass above must not weaken the real hosted backend's fail-closed behavior."""
+    app = FastAPI()
+    app.include_router(account_cutover_router.router)
+    app.dependency_overrides[auth.get_current_user_uid] = lambda: 'uid-hosted'
+
+    def _boom(uid, firestore_client=None):
+        raise MalformedDocError(
+            document_path=f'users/{uid}/account_cutover/state', error_types=('enum',), error_fields=('state',)
+        )
+
+    monkeypatch.setattr(account_cutover_db, 'get_account_cutover_record', _boom)
+
+    async def _immediate(executor, fn, *args, **kwargs):
+        return fn(*args, **kwargs)
+
+    monkeypatch.setattr(account_cutover_router, 'run_blocking', _immediate)
+    client = TestClient(app)
+    response = client.get(
+        '/v1/account/cutover/control',
+        headers={'X-App-Platform': 'macos', 'X-App-Build': '12000'},
+    )
+    assert response.status_code == 503
+    assert response.json()['detail']['code'] == 'account_cutover_state_unavailable'
+
+
 def test_direct_auth_call_api_preserved(monkeypatch):
     monkeypatch.setattr(auth, 'verify_token', lambda _token: 'direct-uid')
     monkeypatch.setattr(auth, 'get_user_deletion_wipe_status', lambda _uid: None)
