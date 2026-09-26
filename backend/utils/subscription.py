@@ -1699,6 +1699,10 @@ def resolve_transcription_allowance(
     the free local path rather than a billed socket.
     """
     try:
+        # Self-hosted offline deployments have no billing plane to enforce
+        # against, same bypass as enforce_chat_quota.
+        if os.getenv('PROVIDER_MODE', '').strip().lower() == 'offline':
+            return TranscriptionAllowance(TRANSCRIPTION_MODE_MANAGED, None, 'provider_mode_offline')
         # The reviewer identities the subscription snapshot already treats as
         # unlimited; resolved first so the paywall cannot contradict that snapshot.
         if is_marketplace_reviewer(uid):
