@@ -14,7 +14,6 @@ import 'package:omi/pages/settings/profile.dart';
 import 'package:omi/pages/memories/page.dart';
 import 'package:omi/pages/settings/integrations_page.dart';
 import 'package:omi/pages/settings/usage_page.dart';
-import 'package:omi/pages/referral/referral_page.dart';
 import 'package:omi/providers/device_provider.dart';
 import 'package:omi/providers/usage_provider.dart';
 import 'package:omi/utils/auth/clear_user_state.dart';
@@ -405,12 +404,6 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
           ChangelogSheet.showWithLoading(context, () => getAppChangelogs(limit: 5));
         },
       ),
-      // --- Referral ---
-      _SearchableItem(
-        title: context.l10n.referralProgram,
-        icon: const FaIcon(FontAwesomeIcons.gift, color: Color(0xFF8E8E93), size: 20),
-        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ReferralPage())),
-      ),
       // --- Sign Out ---
       _SearchableItem(
         title: context.l10n.signOut,
@@ -643,15 +636,6 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                   onTap: () {
                     PlatformManager.instance.analytics.whatsNewOpened();
                     ChangelogSheet.showWithLoading(context, () => getAppChangelogs(limit: 5));
-                  },
-                ),
-                const Divider(height: 1, color: Color(0xFF3C3C43)),
-                _buildSettingsItem(
-                  title: context.l10n.referralProgram,
-                  icon: const FaIcon(FontAwesomeIcons.gift, color: Color(0xFF8E8E93), size: 20),
-                  showNewTag: true,
-                  onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ReferralPage()));
                   },
                 ),
               ],
