@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "id": "FC-offline-mode-bypass-not-propagated",
+  "violated_contract": "Every gate that assumes a real billing, subscription, or whole-account migration plane is running must carry the same PROVIDER_MODE=='offline' self-hosted bypass as its sibling gates, not just the first one that got it.",
+  "canonical_prevention": "When adding a PROVIDER_MODE=='offline' bypass to one gate in a family (billing, migration, cutover), audit sibling gates making the same real-plane assumption in the same request/response family and add the bypass to all of them in the same change.",
+  "canonical_prevention_artifact": [
+    "backend/utils/subscription.py",
+    "backend/routers/account_cutover.py"
+  ],
+  "evidence_prs": [],
+  "scope_hints": ["backend/**"],
+  "status": "open"
+}
