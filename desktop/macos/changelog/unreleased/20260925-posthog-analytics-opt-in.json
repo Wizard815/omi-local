@@ -1,0 +1,3 @@
+{
+  "change": "PostHog analytics is now off by default (set OMI_POSTHOG_ENABLED=1 to opt back in)"
+}
