@@ -60,6 +60,15 @@ services:
       # container on this Docker network, same as HOSTED_PARAKEET_API_URL
       # above uses http://omi-audio:8790 rather than a host-facing address.
       OMI_LOCAL_STORAGE_BASE_URL: ${OMI_LOCAL_STORAGE_BASE_URL:-http://omi-local:8000/_local/storage}
+      # Named buckets storage.py treats as optional-if-unset (BUCKET_TEMPORAL_SYNC_LOCAL
+      # already defaults in storage.py itself, since sync has no opt-out path;
+      # these two do have one, e.g. get_user_has_speech_profile()'s bucket=None
+      # check — but that also means an unset value here isn't "feature off",
+      # it's a hard RuntimeError the moment something calls the write path
+      # (upload_profile_audio, upload_conversation_recording). Self-hosting
+      # wants both on, so name them rather than leave them unset.
+      BUCKET_SPEECH_PROFILES: ${BUCKET_SPEECH_PROFILES:-omi-speech-profiles}
+      BUCKET_MEMORIES_RECORDINGS: ${BUCKET_MEMORIES_RECORDINGS:-omi-memories-recordings}
       CHROMA_DATA_PATH: ${CHROMA_DATA_PATH:-/data/chroma/vector_db}
       # Raise these if conversation processing/chat times out waiting on a
       # cold local-LLM model load (e.g. llama-swap loading a model for the
