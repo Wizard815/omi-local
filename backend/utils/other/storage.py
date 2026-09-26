@@ -89,7 +89,14 @@ speech_profiles_bucket = (os.getenv('BUCKET_SPEECH_PROFILES') or '').strip() or 
 postprocessing_audio_bucket = os.getenv('BUCKET_POSTPROCESSING')
 memories_recordings_bucket = (os.getenv('BUCKET_MEMORIES_RECORDINGS') or '').strip() or None
 private_cloud_sync_bucket = os.getenv('BUCKET_PRIVATE_CLOUD_SYNC', 'omi-private-cloud-sync')
-syncing_local_bucket = os.getenv('BUCKET_TEMPORAL_SYNC_LOCAL')
+# Unlike the buckets below (optional features that check for a None bucket
+# and no-op), sync is core to every deployment including self-hosted ones,
+# which never set BUCKET_TEMPORAL_SYNC_LOCAL — an unset value here isn't a
+# disabled feature, it's a bucket() call with name=None, which raises
+# (TypeError on the local storage backend, since PurePosixPath(None) fails)
+# before the STT provider is even selected. Default it like
+# BUCKET_PRIVATE_CLOUD_SYNC above.
+syncing_local_bucket = os.getenv('BUCKET_TEMPORAL_SYNC_LOCAL', 'omi-syncing-local')
 omi_apps_bucket = os.getenv('BUCKET_PLUGINS_LOGOS')
 app_thumbnails_bucket = os.getenv('BUCKET_APP_THUMBNAILS')
 chat_files_bucket = os.getenv('BUCKET_CHAT_FILES')
