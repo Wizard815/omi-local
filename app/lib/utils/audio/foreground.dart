@@ -199,6 +199,23 @@ class ForegroundUtil {
     }
   }
 
+  /// Update the persistent foreground-service notification's body text to
+  /// reflect mute state, so double-tap mute/unmute (which never touches the
+  /// device's own LED — see omi/firmware) has *some* always-visible signal
+  /// besides the easy-to-miss in-app "Paused" indicator. A no-op if the
+  /// foreground service isn't running (e.g. app not yet capturing).
+  static Future<void> updateMuteState(bool muted) async {
+    try {
+      if (!await FlutterForegroundTask.isRunningService) return;
+      await FlutterForegroundTask.updateService(
+        notificationText:
+            muted ? 'Muted — not recording.' : 'Transcription service is running in the background.',
+      );
+    } catch (e) {
+      Logger.debug('ForegroundTask updateMuteState failed: $e');
+    }
+  }
+
   static Future<void> stopForegroundTask() async {
     Logger.debug('stopForegroundTask');
 

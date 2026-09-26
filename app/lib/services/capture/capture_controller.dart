@@ -228,6 +228,11 @@ class CaptureController extends ChangeNotifier
     if (!Platform.isAndroid) return;
     await ForegroundUtil.initializeForegroundService();
     await ForegroundUtil.startForegroundTask();
+    // The notification starts with its fixed "running" text regardless of a
+    // mute restored from a prior session (see _isPaused's init above) — sync
+    // it once. Static context (constructor initializer list caller), so read
+    // the same persisted flag directly rather than an instance field.
+    if (SharedPreferencesUtil().deviceMuted) await ForegroundUtil.updateMuteState(true);
   }
 
   // True while the audio session is interrupted (phone call, Siri, alarm).
@@ -2635,6 +2640,7 @@ class CaptureController extends ChangeNotifier
 
     // Write mute state first — before BLE cancel which may fire other events
     await BatteryWidgetService().updateMuteState(true);
+    await ForegroundUtil.updateMuteState(true);
     // Pause the BLE stream but keep the device connection
     await _bleBytesStream?.cancel();
     await SharedPreferencesUtil().saveBool('nativeBleForegroundReady', false);
@@ -2655,6 +2661,7 @@ class CaptureController extends ChangeNotifier
     SharedPreferencesUtil().deviceMuted = false;
     // Update widget immediately — don't wait for streaming setup
     BatteryWidgetService().updateMuteState(false);
+    ForegroundUtil.updateMuteState(false);
     // Resume streaming from the device
     await _initiateDeviceAudioStreaming();
 
