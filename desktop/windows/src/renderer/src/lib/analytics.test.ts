@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('./firebase', () => ({ auth: { currentUser: { uid: 'user-123' } } }))
 
@@ -11,8 +11,21 @@ describe('analytics capture contract', () => {
     vi.restoreAllMocks()
   })
 
-  it('sends PostHog identity and Windows enrichment inside properties', async () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it('is disabled by default and never calls PostHog', () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response())
+    trackEvent('App Launched', { feature: 'voice' })
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('sends PostHog identity and Windows enrichment inside properties when opted in', async () => {
+    vi.stubEnv('VITE_ANALYTICS_ENABLED', '1')
+    vi.resetModules()
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response())
+    const { trackEvent } = await import('./analytics')
 
     trackEvent('App Launched', { feature: 'voice' })
 
@@ -45,6 +58,7 @@ describe('analytics capture contract', () => {
   // the source text: a set override must not reach fetch.
   it('ignores a VITE_POSTHOG_HOST override and posts to the CSP-allowed origin', async () => {
     vi.stubEnv('VITE_POSTHOG_HOST', 'https://not-in-csp.example.com')
+    vi.stubEnv('VITE_ANALYTICS_ENABLED', '1')
     vi.resetModules()
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response())
 
@@ -52,6 +66,5 @@ describe('analytics capture contract', () => {
     trackWithOverride('App Launched')
 
     expect(fetchMock.mock.calls[0][0]).toBe('https://us.i.posthog.com/i/v0/e/')
-    vi.unstubAllEnvs()
   })
 })

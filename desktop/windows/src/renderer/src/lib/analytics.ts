@@ -10,7 +10,12 @@ const POSTHOG_HOST = 'https://us.i.posthog.com'
 const POSTHOG_KEY =
   (import.meta.env.VITE_POSTHOG_KEY as string) || 'phc_z3qUFhGUgYIOMYnfxVSrLmYISQvbgph8iREQv3sez3Y'
 
+// Off by default — this build has no self-hosted PostHog instance, and the fallback
+// key/host point at Based Hardware's own cloud project. VITE_ANALYTICS_ENABLED=1 opts in.
+const ANALYTICS_ENABLED = import.meta.env.VITE_ANALYTICS_ENABLED === '1'
+
 export function trackEvent(event: string, properties: Record<string, unknown> = {}): void {
+  if (!ANALYTICS_ENABLED) return
   const distinctId = auth.currentUser?.uid ?? 'anonymous'
   void fetch(`${POSTHOG_HOST}/i/v0/e/`, {
     method: 'POST',
