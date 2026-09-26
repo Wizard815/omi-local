@@ -152,6 +152,11 @@ services:
       # peak, to count as voice — lower this to pick up quieter speech.
       OMI_VAD_MIN_SILENCE_MS: ${OMI_VAD_MIN_SILENCE_MS:-1000}
       OMI_VAD_THRESH_REL: ${OMI_VAD_THRESH_REL:-0.12}
+      # Decode quality vs. latency: beam search (beam_size > 1) catches more
+      # words correctly than whisper-server's own default (greedy, best_of=2)
+      # at the cost of slower decode — set both to 1 to go back to greedy.
+      OMI_ASR_BEAM_SIZE: ${OMI_ASR_BEAM_SIZE:-5}
+      OMI_ASR_BEST_OF: ${OMI_ASR_BEST_OF:-5}
       HIP_VISIBLE_DEVICES: "0"
       THREADS: ${THREADS:-8}
       # Diarization (resemblyzer) on the GPU. Set OMI_DIA_DEVICE=cpu to force CPU
