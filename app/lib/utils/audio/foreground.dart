@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:geolocator/geolocator.dart';
 
+import 'package:omi/backend/preferences.dart';
 import 'package:omi/utils/logger.dart';
 import 'package:omi/utils/notification_channel_strings.dart';
 
@@ -189,6 +190,14 @@ class ForegroundUtil {
           callback: _startForegroundCallback,
         );
       }
+      // start/restartService() always resets the fixed text above, even for a
+      // service that was already running muted -- e.g. every normal app open
+      // via pages/home/page.dart's postFrameCallback, not just this file's own
+      // "newly granted location permission" caller. Applying the persisted
+      // mute here, once, covers every caller instead of relying on each one to
+      // remember it (see the SharedPreferencesUtil().deviceMuted restore in
+      // CaptureController's constructor for why this pref is the source of truth).
+      if (SharedPreferencesUtil().deviceMuted) await updateMuteState(true);
       Logger.debug('ForegroundTask started successfully');
       return result;
     } catch (e) {

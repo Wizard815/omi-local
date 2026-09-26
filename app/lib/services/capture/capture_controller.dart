@@ -227,12 +227,9 @@ class CaptureController extends ChangeNotifier
   static Future<void> _startAndroidLocationForegroundTask() async {
     if (!Platform.isAndroid) return;
     await ForegroundUtil.initializeForegroundService();
+    // Applies a persisted mute to the notification text itself -- see
+    // ForegroundUtil.startForegroundTask's own doc comment.
     await ForegroundUtil.startForegroundTask();
-    // The notification starts with its fixed "running" text regardless of a
-    // mute restored from a prior session (see _isPaused's init above) — sync
-    // it once. Static context (constructor initializer list caller), so read
-    // the same persisted flag directly rather than an instance field.
-    if (SharedPreferencesUtil().deviceMuted) await ForegroundUtil.updateMuteState(true);
   }
 
   // True while the audio session is interrupted (phone call, Siri, alarm).
