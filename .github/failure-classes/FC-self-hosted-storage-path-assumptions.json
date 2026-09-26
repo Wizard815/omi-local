@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "id": "FC-self-hosted-storage-path-assumptions",
+  "violated_contract": "Every code path that names a storage bucket or blob must work under the self-hosted LocalStorageClient backend (backend/utils/other/local_storage.py), not only under real GCS: a bucket-name env var with no Python-level default, a call site with no None guard, or a blob name shaped like a local filesystem path (not GCS's more permissive key namespace) will pass on GCS and crash the moment the same code runs against local storage.",
+  "canonical_prevention": "When adding or touching a storage.py bucket-backed path (a new BUCKET_* env var, a new .bucket()/.blob() call, or a blob name derived from a local path), exercise it against LocalStorageClient in a unit test (see backend/tests/unit/test_local_storage.py) before assuming GCS-only testing covers it. A bucket name with no sane default and no None-guard at every call site, or a blob name built from an absolute local path, are both instances of this class.",
+  "canonical_prevention_artifact": [
+    "backend/utils/other/local_storage.py",
+    "backend/utils/other/storage.py",
+    "backend/tests/unit/test_local_storage.py"
+  ],
+  "evidence_prs": [],
+  "scope_hints": ["backend/utils/other/local_storage.py", "backend/utils/other/storage.py", "backend/utils/sync/**", "omi-host/docker-compose.yml"],
+  "status": "open"
+}
