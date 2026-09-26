@@ -18,9 +18,16 @@ class PostHogManager {
 
   // MARK: - Initialization
 
-  /// Initialize PostHog with analytics
+  /// Initialize PostHog with analytics. Off by default — this build has no self-hosted
+  /// PostHog instance, and a hardcoded key/host pointed at Based Hardware's own cloud
+  /// PostHog project must never be the silent default for a self-hosted deployment.
+  /// Set OMI_POSTHOG_ENABLED=1 to opt back in.
   func initialize() {
     guard !isInitialized else { return }
+    guard ProcessInfo.processInfo.environment["OMI_POSTHOG_ENABLED"] == "1" else {
+      log("PostHog: Disabled (set OMI_POSTHOG_ENABLED=1 to opt in)")
+      return
+    }
 
     let config = PostHogConfig(projectToken: apiKey, host: host)
 
