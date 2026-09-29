@@ -340,6 +340,15 @@ class SharedPreferencesUtil {
 
   set deviceMuted(bool value) => saveBool('deviceMuted', value);
 
+  // The device's LED dim ratio (0-100) as it was the moment before a mute set
+  // it to 1% — read back on unmute so the LED returns to whatever the user
+  // actually had it set to, not a hardcoded default. -1 means "never captured"
+  // (e.g. muted before this feature existed, or the read failed); callers
+  // treat that as "leave the device's own default alone."
+  int get preMuteLedBrightness => getInt('preMuteLedBrightness', defaultValue: -1);
+
+  set preMuteLedBrightness(int value) => saveInt('preMuteLedBrightness', value);
+
   // Transcribe Later: one-shot flag — when set, the native writer finalizes the
   // current file and starts a fresh one (manual "New recording" cut), then clears it.
   bool get batchCutRequested => getBool('batchCutRequested');
