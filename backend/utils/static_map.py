@@ -7,25 +7,59 @@ pin set and size, so repeat renders of the same place (the home recap carousel
 re-renders often) cost one upstream call per distinct pin set. Swapping the
 provider means changing this module only.
 
+Two providers, chosen by whether ``GOOGLE_MAPS_API_KEY`` is configured — the
+same convention the audio pipeline uses for STT (Deepgram when keyed, local
+Parakeet when not): production stays on Google Static Maps unchanged; a
+self-hosted deployment with no Maps key (the common case — nobody wants to
+manage a billed Google key for a personal server) automatically gets a free
+OpenStreetMap-based render instead of a permanently-broken preview. Swapping
+either provider means changing this module only.
+
+The OSM path renders via the ``staticmap`` package against the standard
+OpenStreetMap tile server — no API key, nothing billed. Every actually-free
+dark-styled tile provider checked at the time this was written (CartoDB's
+"dark_all", Stadia's "alidade_smooth_dark") now gates its tiles behind a key,
+so this renders in OSM's stock light colors rather than matching the dark
+look the Google-backed path uses; revisit if a free dark tile source turns
+up. Unlike Google's single-URL fetch, ``staticmap`` composites the image
+itself from individual OSM tile requests, so that render runs on
+``sync_executor`` (blocking network + Pillow work) instead of through
+``get_maps_client()``.
+
 Coordinates are never logged — only counts and outcomes (see
 ``utils/conversations/location.py`` for the same rule).
 """
 
 import asyncio
 import hashlib
+import io
 import json
 import logging
 import os
 import time
 from typing import List, Optional, Tuple
 
+import staticmap as staticmap_lib
+
 from database.redis_db import r
-from utils.executors import db_executor, run_blocking
+from utils.executors import db_executor, run_blocking, sync_executor
 from utils.http_client import get_maps_client, get_maps_semaphore
 
 logger = logging.getLogger(__name__)
 
-# Google Static Maps accepts at most 640px per axis (1280 with scale=2).
+# Standard OpenStreetMap tile server -- free, no key, stock light colors (see
+# module docstring for why this isn't a dark tile source).
+_TILE_URL_TEMPLATE = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+# OSM tile usage policy requires an identifying User-Agent on every request.
+_TILE_USER_AGENT = 'omi-local-self-hosted-static-map/1.0'
+# White markers match the app's pin styling (and the brand's no-purple rule).
+_MARKER_COLOR = '#FFFFFF'
+_MARKER_OUTLINE_COLOR = '#000000'
+_MARKER_RADIUS_PX = 8
+_SINGLE_PIN_ZOOM = 15
+
+# staticmap tiles are 256px; images much larger than a handful of tiles per
+# axis cost proportionally more upstream tile fetches for a preview thumbnail.
 _MAX_AXIS_PX = 640
 # Quantize pins to ~11m so users recording at the same place share one cached
 # image; the offset is invisible at the zooms these previews render at.
@@ -42,9 +76,11 @@ _RENDER_LOCK_TTL_SECONDS = 30
 _RENDER_POLL_INTERVAL_SECONDS = 0.25
 _RENDER_WAIT_TIMEOUT_SECONDS = 15.0
 
-# Dark styling shared by every preview. Mirrors the look the app shipped with
-# client-side Google Static Maps (conversation detail geolocation card).
-_DARK_STYLES = [
+# Dark styling shared by every preview when rendered via Google Static Maps
+# (the OSM path below matches the look through CartoDB's dark_all basemap
+# instead). Mirrors the look the app shipped with client-side Google Static
+# Maps (conversation detail geolocation card).
+_GOOGLE_DARK_STYLES = [
     'style=element:geometry%7Ccolor:0x1a1a1a',
     'style=element:labels.icon%7Cvisibility:off',
     'style=element:labels.text.fill%7Ccolor:0x4a4a4a',
@@ -119,8 +155,36 @@ def parse_pins(pins: str) -> List[Tuple[float, float]]:
     return parsed
 
 
+def _render_osm_png(pins: List[Tuple[float, float]], width: int, height: int) -> bytes:
+    """Render the quantized pin set to a dark OSM-based PNG. Blocking (network
+    tile fetches + Pillow compositing) — always call through ``sync_executor``.
+
+    One pin renders centered at street zoom; several pins let ``staticmap``
+    auto-fit zoom/center to its markers' bounding box, mirroring the old
+    provider's ``visible=`` auto-fit behavior.
+    """
+    m = staticmap_lib.StaticMap(
+        width, height, url_template=_TILE_URL_TEMPLATE, headers={'User-Agent': _TILE_USER_AGENT}
+    )
+    for latitude, longitude in pins:
+        m.add_marker(
+            staticmap_lib.CircleMarker((longitude, latitude), _MARKER_OUTLINE_COLOR, _MARKER_RADIUS_PX + 2)
+        )
+        m.add_marker(staticmap_lib.CircleMarker((longitude, latitude), _MARKER_COLOR, _MARKER_RADIUS_PX))
+
+    if len(pins) == 1:
+        latitude, longitude = pins[0]
+        image = m.render(zoom=_SINGLE_PIN_ZOOM, center=(longitude, latitude))
+    else:
+        image = m.render()
+
+    buffer = io.BytesIO()
+    image.save(buffer, format='PNG')
+    return buffer.getvalue()
+
+
 def build_static_map_url(pins: List[Tuple[float, float]], width: int, height: int, api_key: str) -> str:
-    """Build the provider URL for the quantized pin set and size.
+    """Build the Google Static Maps URL for the quantized pin set and size.
 
     One pin renders centered at street zoom; several pins use the provider's
     ``visible=`` auto-fit so every stop lands inside the frame.
@@ -142,7 +206,7 @@ def build_static_map_url(pins: List[Tuple[float, float]], width: int, height: in
     # White markers match the app's pin styling (and the brand's no-purple rule).
     markers = f'markers=color:0xFFFFFF%7C{locations}'
     framing = f'center={locations}&zoom=15' if len(pins) == 1 else f'visible={locations}'
-    styles = '&'.join(_DARK_STYLES)
+    styles = '&'.join(_GOOGLE_DARK_STYLES)
     return (
         f'https://maps.googleapis.com/maps/api/staticmap?{framing}&{size}&{scale}'
         f'&format=png&{markers}&{styles}&key={api_key}'
@@ -185,13 +249,8 @@ async def _write_cache(key: str, image: bytes) -> None:
         logger.warning('static map cache write failed error_type=%s', type(error).__name__)
 
 
-async def _render_from_provider(pins: List[Tuple[float, float]], width: int, height: int) -> Optional[bytes]:
-    """Fetch a fresh render from the provider. Failures return ``None`` and are never cached."""
-    api_key = os.getenv('GOOGLE_MAPS_API_KEY')
-    if not api_key:
-        logger.error('static map render unavailable: GOOGLE_MAPS_API_KEY is not set')
-        return None
-
+async def _render_from_google(pins: List[Tuple[float, float]], width: int, height: int, api_key: str) -> Optional[bytes]:
+    """Fetch a fresh render from Google Static Maps. Failures return ``None``."""
     url = build_static_map_url(pins, width, height, api_key)
     try:
         async with get_maps_semaphore():
@@ -209,6 +268,20 @@ async def _render_from_provider(pins: List[Tuple[float, float]], width: int, hei
         )
         return None
     return response.content
+
+
+async def _render_from_provider(pins: List[Tuple[float, float]], width: int, height: int) -> Optional[bytes]:
+    """Render a fresh image, from Google Static Maps if keyed, else free OSM
+    tiles (the self-hosted default with no Maps key configured). Failures
+    return ``None`` and are never cached."""
+    api_key = os.getenv('GOOGLE_MAPS_API_KEY')
+    if api_key:
+        return await _render_from_google(pins, width, height, api_key)
+    try:
+        return await run_blocking(sync_executor, _render_osm_png, pins, width, height)
+    except Exception as error:
+        logger.error('static map OSM render failed error_type=%s pin_count=%d', type(error).__name__, len(pins))
+        return None
 
 
 async def fetch_static_map(pins: List[Tuple[float, float]], width: int, height: int) -> Optional[bytes]:
