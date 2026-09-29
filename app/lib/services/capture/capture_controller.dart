@@ -2638,6 +2638,8 @@ class CaptureController extends ChangeNotifier
     // Write mute state first — before BLE cancel which may fire other events
     await BatteryWidgetService().updateMuteState(true);
     await ForegroundUtil.updateMuteState(true);
+    // Dim the device LED to 1% so it visibly signals "muted".
+    await _setLedDimRatio(1);
     // Pause the BLE stream but keep the device connection
     await _bleBytesStream?.cancel();
     await SharedPreferencesUtil().saveBool('nativeBleForegroundReady', false);
@@ -2651,11 +2653,21 @@ class CaptureController extends ChangeNotifier
     notifyListeners();
   }
 
+  /// Push the LED dim ratio onto the paired device (0–100). Mirrors the device
+  /// settings brightness slider: no-op when unpaired/uncapable (e.g. OmiGlass).
+  Future<void> _setLedDimRatio(int ratio) async {
+    if (_recordingDevice == null) return;
+    final connection = await ServiceManager.instance().device.ensureConnection(_recordingDevice!.id);
+    await connection?.setLedDimRatio(ratio);
+  }
+
   Future<void> resumeDeviceRecording() async {
     if (_recordingDevice == null) return;
     _isPaused = false;
     // Clear the persisted mute so we don't re-mute on the next restart.
     SharedPreferencesUtil().deviceMuted = false;
+    // Restore the device LED to the brightness the user set in settings.
+    await _setLedDimRatio(SharedPreferencesUtil().ledDimRatio);
     // Update widget immediately — don't wait for streaming setup
     BatteryWidgetService().updateMuteState(false);
     ForegroundUtil.updateMuteState(false);

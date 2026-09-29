@@ -340,6 +340,13 @@ class SharedPreferencesUtil {
 
   set deviceMuted(bool value) => saveBool('deviceMuted', value);
 
+  // LED brightness (0–100) the user picked in device settings, persisted so the
+  // mute/unmute pair in CaptureController can restore it — mute forces 1%, unmute
+  // puts this saved value back so the device's LED returns to the user's setting.
+  int get ledDimRatio => getInt('ledDimRatio', defaultValue: 100);
+
+  set ledDimRatio(int value) => saveInt('ledDimRatio', value);
+
   // Transcribe Later: one-shot flag — when set, the native writer finalizes the
   // current file and starts a fresh one (manual "New recording" cut), then clears it.
   bool get batchCutRequested => getBool('batchCutRequested');
