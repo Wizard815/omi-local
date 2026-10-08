@@ -114,6 +114,15 @@ void main() {
       Env.clearApiBaseUrlOverrideForTesting();
     });
 
+    test('normalizes a missing trailing slash so caller concatenation is safe', () {
+      // Every authenticated URL is `'${Env.apiBaseUrl}v1/...'`; without this a
+      // slash-less override/host became `hostv1/...` and every post-login call
+      // timed out while login (which normalizes separately) still succeeded.
+      Env.overrideApiBaseUrl('https://override.example.com');
+      expect(Env.apiBaseUrl, 'https://override.example.com/');
+      Env.clearApiBaseUrlOverrideForTesting();
+    });
+
     test('TestFlight production startup accepts the production API', () {
       validateApplicationStartupRouting(environment: Environment.prod, configuredApiBaseUrl: 'https://api.omi.me/');
     });
