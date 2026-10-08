@@ -39,6 +39,15 @@ Future<ProviderLinkResult?> completeProviderLinkAndMigrate({
 class AuthenticationProvider extends BaseProvider {
   FirebaseAuth get _auth => FirebaseAuth.instance;
 
+  /// A user-typed self-host server URL must end in '/' — every authenticated
+  /// request is built as `'${Env.apiBaseUrl}v1/...'`, so a missing slash turns
+  /// the host into `hostv1`. Normalized here AND re-normalized in
+  /// `Env.apiBaseUrl`, so both the login call and every later request agree.
+  static String _normalizeServerUrl(String url) {
+    final trimmed = url.trim();
+    return trimmed.endsWith('/') ? trimmed : '$trimmed/';
+  }
+
   User? user;
   String? authToken;
   bool _loading = false;
@@ -165,7 +174,9 @@ class AuthenticationProvider extends BaseProvider {
     setLoadingState(true);
     try {
       if (serverUrl.isNotEmpty) {
-        SharedPreferencesUtil().customApiBaseUrl = serverUrl;
+        final normalized = _normalizeServerUrl(serverUrl);
+        SharedPreferencesUtil().customApiBaseUrl = normalized;
+        Env.overrideApiBaseUrl(normalized);
       }
 
       final uri = Uri.tryParse(SharedPreferencesUtil().customApiBaseUrl);
@@ -210,7 +221,9 @@ class AuthenticationProvider extends BaseProvider {
     setLoadingState(true);
     try {
       if (serverUrl.isNotEmpty) {
-        SharedPreferencesUtil().customApiBaseUrl = serverUrl;
+        final normalized = _normalizeServerUrl(serverUrl);
+        SharedPreferencesUtil().customApiBaseUrl = normalized;
+        Env.overrideApiBaseUrl(normalized);
       }
 
       final uid = await AuthService.instance.signInWithRemoteAccount(
