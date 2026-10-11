@@ -4,7 +4,7 @@ Running log of what's been fixed toward a fully self-hosted, zero-Google/zero-cl
 deployment ("Omi Local"), and what's still open. Two audit passes fed this file —
 see git history on this file for how it grows over time.
 
-## Fixed this session
+## Fixed in the first passes (September 2026)
 
 - **Login not persisting across app restarts** — root cause: `app/lib/providers/auth_provider.dart`'s
   Firebase `idTokenChanges()` listener wiped the valid session token on every cold start,
@@ -40,49 +40,80 @@ see git history on this file for how it grows over time.
   (`backend/scripts/register_chat_apps.py`) — newly registered self-hosted apps (Wikipedia,
   Open Library, etc.) wouldn't show up in the Android app for up to 10 minutes.
 
+## Fixed in later passes (were open items)
+
+- **Transcription allowance capped at 0s offline** — `resolve_transcription_allowance` now has the
+  same `PROVIDER_MODE == 'offline'` bypass as `enforce_chat_quota` (e67325d).
+- **Account-cutover fence black-screening the app** — fails open on offline deployments (ce2d763).
+- **SaaS clutter** — referral page, store-rating nag removed; fair-use page reworded (72d463a).
+- **Desktop PostHog phoning home** — off by default on macOS and Windows (80a6248).
+
+## Fixed in the October 2026 audit
+
+Each item is its own commit with a regression test; see `git log` on the branch.
+
+- **Dashboard model allowlist never reached the merge proxy** (`omi-host/merge_proxy.py`,
+  `docker-compose.yml`) — the proxy looked for Redis at host `redis` (no such service; Redis runs
+  inside `omi-local:6380`) and pinged it once at import, before `omi-local` was even up, then gave
+  up for good. Now points at `omi-local`, connects lazily, falls back to `MODEL_ALLOW` per read.
+  Also: upstream 4xx/5xx on a streamed chat now keep their HTTP status instead of arriving as the
+  body of a 200 event stream (the backend's retry/fallback keys on the status).
+- **Ask Omi answered only with the canned apology when no separate chat model was picked** —
+  `chat_agent` resolved to `""` when the dashboard's chat model was unset; it now means "same as
+  primary".
+- **Device-calendar chat tool never found events** — the tool asked the *model* to supply the user
+  id; events lived in a dict wiped by every backend restart (now Redis, 7-day TTL); and the app
+  posted to `//v1/device-calendar/sync` (404) while reporting success. Also fixed the layering
+  violation (`utils` importing `routers`) that crashed 6 backend test files on import.
+- **No automatic daily recap, and recaps in UTC** — nothing ran upstream's hourly Cloud Scheduler
+  job here; the backend now runs it in-process (`OMI_LOCAL_SCHEDULER=1`, default on). And with FCM
+  registration disabled the app never told the backend its time zone; it now calls
+  `PUT /v1/users/time-zone` instead.
+- **"Open Server Dashboard" buttons 404'd** (`//` and `//dashboard/models`) — same double-slash
+  base-URL join as the calendar sync.
+- **Repo checks that were already failing on `main`** — the OpenAPI contract runner could not
+  import the app (`argon2` missing from `openapi-requirements.txt`); 12 self-hosting routes had no
+  `route_policy_manifest.yaml` entry; the app analyzer ratchet failed on
+  `device_calendar_sync.dart`; and the fair-use ARB edit was never regenerated into the Dart
+  localizations, so the app still showed the SaaS text.
+
 ## Open items, priority order
 
-### 1. Verify: transcription allowance may silently cap local STT at 0 seconds
-`backend/utils/subscription.py` (`resolve_transcription_allowance`) decides whether the app
-uses the local whisper.cpp/ROCm pipeline (wired in via the "Parakeet" provider slot) or falls
-back to weak on-device phone transcription. Unlike a similar chat-quota check elsewhere, this
-one has **no offline/self-hosted bypass** — since there's no Stripe subscription, it may report
-0 seconds of "managed" transcription remaining. Not confirmed to be on the live recording path,
-but check **Settings → Plan & Usage** in the app for a 0-seconds/subscription-required state.
-If it's there, add the same `PROVIDER_MODE == 'offline'` bypass `enforce_chat_quota` already has.
+### 1. `/_local/storage` serves files without authentication
+`backend/main.py` mounts the local blob store (`StaticFiles`) on the same port a Cloudflare Tunnel
+exposes, and `local_storage.py`'s `generate_signed_url()` returns plain, non-expiring paths. Paths
+contain random Firebase uids and conversation UUIDs (no directory listing), so this is
+capability-by-obscurity, not open browsing — but any leaked URL (logs, a shared screenshot) is a
+permanent link to a recording. Recommended fix: HMAC-sign `generate_signed_url()` with an expiry
+(`?exp=&sig=`, key from `ENCRYPTION_SECRET`) and verify it in a thin ASGI wrapper in front of
+`StaticFiles`, keeping `public_url` (stored long-term for app logos/thumbnails) unsigned for those
+buckets only. Not changed in this pass because URLs already stored in Firestore would break.
 
-### 2. Account-cutover gate can black-screen the whole app on a backend hiccup
-`app/lib/services/account_cutover/*.dart` + `backend/routers/account_cutover.py` — a leftover
-mechanism for migrating real Based Hardware users between backend generations. Safe today
-(absent cutover state or a pure network failure both fall back to "allow"), but it fails
-*closed* (full-screen "Migration in progress" blocker) on a malformed response or an explicit
-`unavailable` from the backend — plausible during a self-hosted DB restart. No permanent
-opt-out exists. Recommend hardcoding `allowProductTraffic = true` for this deployment, or
-stripping the gate entirely.
+### 2. Local-login lockout through the tunnel
+`utils/local_auth.py` keys its attempt budget on `request.client.host`. Behind cloudflared every
+internet request has the connector's IP, so five bad attempts from anyone lock *everyone* out for
+the lockout window (and the per-username axis lets anyone lock your account). Options: trust
+`CF-Connecting-IP` only when the TCP peer is the cloudflared container, or raise the window.
 
-### 3. Settings/UI clutter — safe to ignore, worth stripping eventually
-None of these send data anywhere by default or block functionality; they're leftover SaaS UI
-that makes no sense for a single self-hosted user:
-- Referral page (`app/lib/pages/referral/referral_page.dart`) — opens `affiliate.omi.me` when tapped.
-- App Store/Play Store rating nag (`app/lib/services/app_review_service.dart`).
-- Plan & Usage / Stripe billing UI (`usage_page.dart`, `plans_sheet.dart`, `payments_page.dart`,
-  `stripe_connect_setup.dart`, `cancel_subscription_sheet.dart`) — backend already blocks any
-  real Stripe call with no key configured, so these just open dead webviews.
-- "Fair Use Policy" usage-limit page (`fair_use_page.dart`) — the whole fair-use subsystem is
-  off by default (`FAIR_USE_ENABLED=false`), so this page can only ever show an empty state.
-- "Allow us to train on your recordings" consent dialog (`plans_sheet.dart`) — meaningless
-  when nobody but you has the data.
-- PostHog/Intercom UI entries (`settings_drawer.dart`) — already inert (no keys configured),
-  but worth pruning so a future accidental key doesn't quietly re-enable telemetry.
+### 3. Day review: rolled-up conversations and chat retrieval
+Rolled-up conversations are discarded (hidden, restorable via *Reopen day*). The day summary itself
+is not yet indexed for Ask Omi, so "what happened on Tuesday?" may not see it. Next step: index a
+finalized day summary like a conversation (or add a `get_day_review` chat tool).
 
-### 4. Firebase Crashlytics/FCM packages still compiled into the APK
-Neutered at the call-site level (item above), but `firebase_crashlytics`/`firebase_messaging`
-remain in `app/pubspec.yaml`. Fully removing them requires touching native Android manifest
-service declarations (FCM) — deferred pending a dedicated build/verify pass, since it wasn't
-low-risk enough to do inline with everything else this session.
+### 4. omi-host tests are not in any CI lane
+`omi-host/test_merge_proxy_stream.py` and `test_audio_idle_unload.py` only run by hand. Register
+them in `.github/checks-manifest.yaml` (local + ci lanes).
 
-### 5. Local analytics/crash reporting, if ever wanted
-Not needed for a single self-hosted user, but noted for reference:
+### 5. Remaining SaaS UI and Firebase packages
+Plan & Usage / Stripe pages and the PostHog/Intercom settings entries are still present (inert
+without keys). `firebase_crashlytics`/`firebase_messaging` are neutered at call sites but still in
+`app/pubspec.yaml`; removing them needs a native-manifest pass and a device build.
+
+### 6. Translations for new UI
+Day review, chat shortcuts and folder-tree strings exist in English only (`app_en.arb`); other
+locales fall back to English.
+
+### 7. Local analytics/crash reporting, if ever wanted
 - **Analytics**: self-hosted PostHog — the SDK is already wired in (`analytics_manager.dart`,
   `product_telemetry.py`), just point `POSTHOG_HOST` at your own instance.
 - **Crash reporting**: self-hosted Sentry — a real SDK swap (`sentry_flutter` instead of

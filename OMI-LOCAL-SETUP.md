@@ -174,3 +174,34 @@ Everything is CPU. Nothing is forced to the cloud: with no `MODULATE_API_KEY`,
 `DEEPGRAM_API_KEY`, or `ELEVENLABS_API_KEY` set, the provider policy selects the
 local audio service for every surface (verified). Set any of those keys and the
 corresponding cloud path becomes available again — that's the optional fallback.
+
+## Self-hosted extras (October 2026)
+
+### Chat model shortcuts — `/adult`
+Type `/` in **Ask Omi** to see every command. `/adult your question` answers just that message
+with a bigger model; `/adult toggle` keeps using it (a chip above the input shows it is on —
+tap it or send `/adult toggle` again to turn it off). Pick the model behind each shortcut with
+`/model` in the app or the dashboard's **Chat Model Shortcuts** card; add more shortcuts there
+(e.g. `/code`). Helper calls (classification, titles) stay on the base model. Other commands:
+`/review`, `/apps`, `/clear`, `/help`. Seed shortcuts with `OMI_CHAT_MODEL_SHORTCUTS` in
+`omi-host/.env`.
+
+### End-of-day review
+A "Review your day" card appears on the conversation list (for earlier unsorted days, and for
+today after 6 pm), or open it with `/review` or the book icon in **Daily Recaps**. Star the
+conversations you want to keep; everything else is rolled into one long day summary and leaves
+the list. In the summary, select text → **Correct** (attach what's right) or **Redact** (never
+shown again, never sent to the model again), and use **+ Add paragraph** to write whole
+paragraphs. **Apply corrections** rewrites the summary with them. **Reopen day** undoes it all.
+Tune `DAY_REVIEW_TIMEOUT_SECONDS` / `DAY_REVIEW_MAX_INPUT_CHARS` for slow or small-context models.
+
+### Folder tree
+Folders can be nested (up to 5 levels). Tabs show top-level folders; opening one shows a
+breadcrumb and its subfolders. The tree icon next to **+** opens the whole tree (new subfolder,
+move, edit); long-press a folder for **New subfolder**. AI folder assignment sees full paths
+("Work / Clients / Acme").
+
+### Daily recap
+The backend now runs the hourly recap job itself (`OMI_LOCAL_SCHEDULER=1`, default on) at your
+chosen local hour, and the app reports its time zone on start-up, so recaps and day reviews use
+your day, not UTC.
