@@ -19,7 +19,8 @@ import re
 from dataclasses import dataclass
 from typing import Optional
 
-import database.redis_db as redis_db
+import database.chat_model_shortcuts as shortcuts_db
+from utils.llm.model_config import is_local_mode
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +77,7 @@ def _env_shortcuts() -> dict[str, str]:
 def get_shortcuts() -> dict[str, str]:
     """Configured shortcuts: env seed overlaid by Redis (dashboard/app edits win)."""
     shortcuts = _env_shortcuts()
-    shortcuts.update({k: v for k, v in (redis_db.get_chat_model_shortcuts() or {}).items() if v})
+    shortcuts.update({k: v for k, v in (shortcuts_db.get_chat_model_shortcuts() or {}).items() if v})
     return shortcuts
 
 
@@ -99,13 +100,13 @@ def set_shortcut(name: str, model: str) -> str:
     model = (model or '').strip()
     if not model:
         raise ValueError('model is required')
-    redis_db.set_chat_model_shortcut(normalized, model)
+    shortcuts_db.set_chat_model_shortcut(normalized, model)
     return normalized
 
 
 def delete_shortcut(name: str) -> str:
     normalized = normalize_shortcut_name(name)
-    redis_db.delete_chat_model_shortcut(normalized)
+    shortcuts_db.delete_chat_model_shortcut(normalized)
     return normalized
 
 
@@ -171,3 +172,40 @@ def unconfigured_shortcut_reply(name: str) -> str:
         f"The /{name} model isn't set up yet, so I didn't answer with it. "
         "Type /model here (or open the server dashboard → Chat model shortcuts) to pick one, then send again."
     )
+
+
+@dataclass(frozen=True)
+class ChatTurnRouting:
+    """The answer model and messages for one chat turn (see route_chat_turn)."""
+
+    model: Optional[str]
+    messages: list
+    unconfigured_reply: Optional[str] = None
+
+
+def route_chat_turn(messages: list, model_shortcut: Optional[str]) -> ChatTurnRouting:
+    """Pick this turn's answer model from ``model_shortcut`` or a leading "/name" on the newest message.
+
+    Blocking (reads Redis) — call through run_blocking. Outside local-LLM mode
+    nothing changes. A typed "/adult " prefix is stripped from the text the
+    model sees; an unconfigured shortcut yields ``unconfigured_reply`` so the
+    caller can answer with that instead of silently using the base model.
+    """
+    routed = list(messages)
+    if not routed:
+        return ChatTurnRouting(None, routed)
+    if not is_local_mode():
+        if model_shortcut:
+            logger.info('ignoring model_shortcut outside local-LLM mode')
+        return ChatTurnRouting(None, routed)
+    last = routed[-1]
+    text = getattr(last, 'text', '') or '' if getattr(last, 'sender', None) == 'human' else ''
+    turn = resolve_turn_shortcut(text, model_shortcut)
+    if turn.name and not turn.model:
+        return ChatTurnRouting(None, routed, unconfigured_shortcut_reply(turn.name))
+    if not turn.model:
+        return ChatTurnRouting(None, routed)
+    logger.info('chat turn uses model shortcut /%s', turn.name)
+    if text and turn.text != text:
+        routed[-1] = last.model_copy(update={'text': turn.text})
+    return ChatTurnRouting(turn.model, routed)

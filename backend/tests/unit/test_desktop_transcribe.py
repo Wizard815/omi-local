@@ -375,9 +375,6 @@ def _desktop_transcribe_isolation():
             'utils.llm.usage_tracker',
             'utils.llm.gateway_client',
             'utils.llm.gateway_observability',
-            # routers.chat's self-hosted chat model shortcuts ("/adult …")
-            'utils.llm.model_config',
-            'utils.llm.chat_model_shortcuts',
             'utils.conversations.process_conversation',
             'utils.notifications',
             'utils.other.storage',
@@ -403,12 +400,8 @@ def _desktop_transcribe_isolation():
             'usage_tracker',
             'gateway_client',
             'gateway_observability',
-            'model_config',
-            'chat_model_shortcuts',
         ):
             setattr(_utils_llm, _llm_child, sys.modules[f'utils.llm.{_llm_child}'])
-        # Not a local-LLM deployment here: no per-turn model shortcut resolution.
-        sys.modules['utils.llm.model_config'].is_local_mode = MagicMock(return_value=False)
 
         _utils_conversations_pkg = ModuleType('utils.conversations')
         _utils_conversations_pkg.__path__ = []

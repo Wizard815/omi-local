@@ -65,7 +65,7 @@ from utils.retrieval.tools.app_tools import load_app_tools, get_tool_status_mess
 from utils.retrieval.tools.conversation_jit_gate import (
     append_jit_conversation_retrieval_prompt,
 )
-from utils.retrieval.tools.device_calendar_tools import get_device_calendar_events_tool
+from utils.retrieval.tools.device_calendar_tools import device_calendar_tools_for
 from utils.retrieval.tool_result_boundaries import preserve_chat_memory_tool_result_boundary
 from utils.retrieval.chat_scope import build_chat_scope
 from utils.retrieval.safety import (
@@ -81,7 +81,6 @@ from utils.retrieval.web_search_gate import WEB_SEARCH_TOOL, request_tools_after
 from utils.observability.fallback import record_fallback
 from utils.llm.byok_errors import handle_llm_error_async
 from utils.llm.clients import anthropic_client, ANTHROPIC_AGENT_MODEL, get_llm, num_tokens_from_string
-from utils.llm.model_config import is_local_mode
 from utils.llm.usage_tracker import reset_usage_context, set_usage_context
 from utils.llm.chat import _get_agentic_qa_prompt, get_current_datetime_block, get_user_timezone
 from utils.executors import run_blocking, db_executor
@@ -193,8 +192,6 @@ perplexity_web_search_tool = _PerplexityWebSearchToolProxy()
 
 def _use_searxng() -> bool:
     """Check if GUEST SearXNG_URL is configured for local web search."""
-    import os
-
     return bool(os.environ.get("SEARXNG_URL", "").strip())
 
 
@@ -1469,15 +1466,8 @@ async def execute_agentic_chat_stream(
             if not jit_conversation_retrieval_enabled:
                 core_tools = [tool for tool in core_tools if tool.name not in JIT_ONLY_TOOL_NAMES]
 
-            # Self-hosting: add device calendar tool when in local mode
-            # (replaces Google Calendar dependency with Android CalendarContract).
-            # is_local_mode() also counts a primary model picked in the dashboard;
-            # the OMI_LOCAL_MODEL env check alone hid the tool for those setups.
-            if await run_blocking(db_executor, is_local_mode):
-                import database.device_calendar as device_calendar_db
-
-                if await run_blocking(db_executor, device_calendar_db.has_events, uid):
-                    core_tools.append(get_device_calendar_events_tool)
+            # Self-hosting: Android device-calendar tool (local-LLM mode, calendar synced).
+            core_tools.extend(await device_calendar_tools_for(uid))
 
             # Dynamic app tools — deferred for Anthropic; exposed directly in managed mode
             app_tools = []
