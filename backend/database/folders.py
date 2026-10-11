@@ -143,8 +143,9 @@ def create_folder(
     description: Optional[str] = None,
     color: Optional[str] = None,
     icon: Optional[str] = None,
+    parent_id: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Create a new custom folder for a user."""
+    """Create a new custom folder for a user (inside ``parent_id`` when given)."""
     user_ref = db.collection('users').document(uid)
     folders_ref = user_ref.collection('folders')
 
@@ -168,6 +169,7 @@ def create_folder(
         'is_system': False,
         'category_mapping': None,
         'conversation_count': 0,
+        'parent_id': parent_id,
     }
 
     folders_ref.document(folder_id).set(folder_data)
@@ -193,6 +195,15 @@ def delete_folder(uid: str, folder_id: str, move_to_folder_id: Optional[str] = N
     """
     user_ref = db.collection('users').document(uid)
     folder_ref = user_ref.collection('folders').document(folder_id)
+
+    # Nested folders: subfolders move up one level (into the deleted folder's
+    # parent) rather than being orphaned under a parent that no longer exists.
+    folder_snapshot = folder_ref.get()
+    deleted_parent_id = (
+        _typed_doc(folder_snapshot).get('parent_id') if getattr(folder_snapshot, 'exists', False) else None
+    )
+    for child_doc in user_ref.collection('folders').where(filter=FieldFilter('parent_id', '==', folder_id)).stream():
+        child_doc.reference.update({'parent_id': deleted_parent_id, 'updated_at': datetime.now(timezone.utc)})
 
     # Find target folder
     target_folder_id: Optional[str] = move_to_folder_id

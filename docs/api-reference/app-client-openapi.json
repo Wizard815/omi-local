@@ -9566,6 +9566,18 @@
             "minLength": 1,
             "title": "Name",
             "type": "string"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Create inside this folder; omit for top level",
+            "title": "Parent Id"
           }
         },
         "required": [
@@ -13461,6 +13473,18 @@
             "default": 0,
             "title": "Order",
             "type": "integer"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Containing folder for nested folders; None means top level",
+            "title": "Parent Id"
           },
           "updated_at": {
             "format": "date-time",
@@ -27856,6 +27880,18 @@
               }
             ],
             "title": "Order"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Move into this folder; send null explicitly to move to the top level",
+            "title": "Parent Id"
           }
         },
         "title": "UpdateFolderRequest",
@@ -45344,7 +45380,7 @@
     },
     "/v1/folders/{folder_id}": {
       "delete": {
-        "description": "Delete a folder and move its conversations to another folder.",
+        "description": "Delete a folder: its conversations move to another folder, its subfolders move up one level.",
         "operationId": "delete_folder_v1_folders__folder_id__delete",
         "parameters": [
           {
