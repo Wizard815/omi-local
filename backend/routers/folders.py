@@ -18,6 +18,7 @@ from models.folder import (
 )
 from models.conversation import Conversation, ConversationMutationResponse
 from utils.conversations.render import redact_conversations_for_list
+from utils.folder_tree import FolderTreeError, validate_parent
 from utils.other import endpoints as auth
 
 logger = logging.getLogger(__name__)
@@ -45,6 +46,10 @@ def create_folder(request: CreateFolderRequest, uid: str = Depends(auth.get_curr
     custom_count = len([f for f in existing if not f.get('is_system')])
     if custom_count >= 50:
         raise HTTPException(status_code=400, detail="Maximum folder limit reached (50 custom folders)")
+    try:
+        validate_parent(existing, request.parent_id)
+    except FolderTreeError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     folder = folders_db.create_folder(
         uid,
@@ -52,6 +57,7 @@ def create_folder(request: CreateFolderRequest, uid: str = Depends(auth.get_curr
         description=request.description,
         color=request.color,
         icon=request.icon,
+        parent_id=request.parent_id,
     )
     return folder
 
@@ -73,6 +79,14 @@ def update_folder(folder_id: str, request: UpdateFolderRequest, uid: str = Depen
         raise HTTPException(status_code=404, detail="Folder not found")
 
     update_data = request.model_dump(exclude_unset=True)
+    if 'parent_id' in update_data and update_data['parent_id'] != folder.get('parent_id'):
+        if folder.get('is_system') and update_data['parent_id'] is not None:
+            # AI folder assignment routes categories to the system folders; keep them findable at the top.
+            raise HTTPException(status_code=400, detail="System folders stay at the top level")
+        try:
+            validate_parent(folders_db.get_folders(uid), update_data['parent_id'], moving_folder_id=folder_id)
+        except FolderTreeError as e:
+            raise HTTPException(status_code=400, detail=str(e))
     if update_data:
         folders_db.update_folder(uid, folder_id, update_data)
 
@@ -85,7 +99,7 @@ def delete_folder(
     move_to_folder_id: Optional[str] = Query(None, description="Target folder for conversations (defaults to 'Other')"),
     uid: str = Depends(auth.get_current_user_uid),
 ):
-    """Delete a folder and move its conversations to another folder."""
+    """Delete a folder: its conversations move to another folder, its subfolders move up one level."""
     folder = folders_db.get_folder(uid, folder_id)
     if not folder:
         raise HTTPException(status_code=404, detail="Folder not found")

@@ -732,6 +732,7 @@ class GeneratedFolder {
   final bool isSystem;
   final String name;
   final int order;
+  final String? parentId;
   final DateTime updatedAt;
 
   const GeneratedFolder({
@@ -746,6 +747,7 @@ class GeneratedFolder {
     this.isSystem = false,
     required this.name,
     this.order = 0,
+    this.parentId,
     required this.updatedAt,
   });
 
@@ -762,6 +764,7 @@ class GeneratedFolder {
       isSystem: _required(_readFieldValue<bool>(_readField(json, const ["is_system"]), "is_system", _readBool, requiredField: false, nullable: false, defaultValue: false), "is_system"),
       name: _required(_readFieldValue<String>(_readField(json, const ["name"]), "name", _readString, requiredField: true, nullable: false), "name"),
       order: _required(_readFieldValue<int>(_readField(json, const ["order"]), "order", _readInt, requiredField: false, nullable: false, defaultValue: 0), "order"),
+      parentId: _readFieldValue<String>(_readField(json, const ["parent_id"]), "parent_id", _readString, requiredField: false, nullable: true),
       updatedAt: _required(_readFieldValue<DateTime>(_readField(json, const ["updated_at"]), "updated_at", _readDateTime, requiredField: true, nullable: false), "updated_at"),
     );
   }
@@ -779,6 +782,7 @@ class GeneratedFolder {
       'is_system': isSystem,
       'name': name,
       'order': order,
+      'parent_id': parentId,
       'updated_at': updatedAt.toUtc().toIso8601String(),
     };
   }

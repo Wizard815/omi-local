@@ -15,6 +15,8 @@ from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
+from utils.folder_tree import path_names
+
 from .clients import get_llm
 
 logger = logging.getLogger(__name__)
@@ -64,10 +66,13 @@ def build_folders_context(folders: Sequence[FolderRecord]) -> str:
     if not folders:
         return "No folders available. Use default assignment."
 
+    # Nested folders are named by their full path ("Work / Clients / Acme") so
+    # the model can tell two same-named subfolders apart and sees the hierarchy.
+    paths = path_names(folders)
     lines: list[str] = []
     for folder in folders:
         folder_id = _str_or_empty(folder.get('id'))
-        name = _str_or_empty(folder.get('name'))
+        name = paths.get(folder_id) or _str_or_empty(folder.get('name'))
         description = _str_or_empty(folder.get('description'))
         is_default = _bool_or_false(folder.get('is_default'))
         category_mapping = folder.get('category_mapping')
