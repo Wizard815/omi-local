@@ -3024,3 +3024,121 @@ routes:
       deprecation:
         state: active
       owner: backend
+  - route_type: http
+    method: GET
+    path: /v1/chat/model-shortcuts
+    policy:
+      review_status: reviewed
+      auth:
+        mechanisms:
+          - firebase_id_token
+          - admin_key_uid_prefix
+        placement: dependency
+        scopes: []
+      byok: not_applicable
+      rate_limit:
+        policy_name: none
+        key_subject: none
+        enforcement: none
+        placement: none
+      timeout_class: default_method
+      surface: first_party_app
+      visibility: first_party
+      data_domain: chat
+      deprecation:
+        state: active
+      owner: backend
+  - route_type: http
+    method: PUT
+    path: /v1/chat/model-shortcuts/{name}
+    policy:
+      review_status: reviewed
+      auth:
+        mechanisms:
+          - firebase_id_token
+          - admin_key_uid_prefix
+        placement: dependency
+        scopes: []
+      byok: not_applicable
+      rate_limit:
+        policy_name: none
+        key_subject: none
+        enforcement: none
+        placement: none
+      timeout_class: default_method
+      surface: first_party_app
+      visibility: first_party
+      data_domain: chat
+      deprecation:
+        state: active
+      owner: backend
+  - route_type: http
+    method: DELETE
+    path: /v1/chat/model-shortcuts/{name}
+    policy:
+      review_status: reviewed
+      auth:
+        mechanisms:
+          - firebase_id_token
+          - admin_key_uid_prefix
+        placement: dependency
+        scopes: []
+      byok: not_applicable
+      rate_limit:
+        policy_name: none
+        key_subject: none
+        enforcement: none
+        placement: none
+      timeout_class: default_method
+      surface: first_party_app
+      visibility: first_party
+      data_domain: chat
+      deprecation:
+        state: active
+      owner: backend
+  - route_type: http
+    method: GET
+    path: /dashboard/models/shortcuts
+    policy:
+      review_status: reviewed
+      auth:
+        mechanisms:
+          - public
+        placement: dependency
+        scopes: []
+      byok: not_applicable
+      rate_limit:
+        policy_name: none
+        key_subject: none
+        enforcement: none
+        placement: none
+      timeout_class: default_method
+      surface: admin
+      visibility: admin
+      data_domain: chat
+      deprecation:
+        state: active
+      owner: backend
+  - route_type: http
+    method: POST
+    path: /dashboard/models/shortcuts
+    policy:
+      review_status: reviewed
+      auth:
+        mechanisms:
+          - public
+        placement: dependency
+        scopes: []
+      byok: not_applicable
+      rate_limit:
+        policy_name: none
+        key_subject: none
+        enforcement: none
+        placement: none
+      timeout_class: default_method
+      surface: admin
+      visibility: admin
+      data_domain: chat
+      deprecation:
+        state: active
+      owner: backend

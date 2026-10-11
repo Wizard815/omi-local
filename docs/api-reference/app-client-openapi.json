@@ -4336,6 +4336,24 @@
         "title": "AuthStep",
         "type": "object"
       },
+      "AvailableChatModel": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "owned_by": {
+            "default": "",
+            "title": "Owned By",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "AvailableChatModel",
+        "type": "object"
+      },
       "AvailableLanguage": {
         "properties": {
           "code": {
@@ -6496,6 +6514,63 @@
           "count"
         ],
         "title": "ChatMessageCountResponse",
+        "type": "object"
+      },
+      "ChatModelShortcut": {
+        "properties": {
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ChatModelShortcut",
+        "type": "object"
+      },
+      "ChatModelShortcutsResponse": {
+        "properties": {
+          "available_models": {
+            "items": {
+              "$ref": "#/components/schemas/AvailableChatModel"
+            },
+            "title": "Available Models",
+            "type": "array"
+          },
+          "base_model": {
+            "default": "",
+            "title": "Base Model",
+            "type": "string"
+          },
+          "enabled": {
+            "description": "False unless the backend runs in local-LLM mode (shortcuts need the merge proxy).",
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "shortcuts": {
+            "items": {
+              "$ref": "#/components/schemas/ChatModelShortcut"
+            },
+            "title": "Shortcuts",
+            "type": "array"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "ChatModelShortcutsResponse",
         "type": "object"
       },
       "ChatQuotaUnit": {
@@ -22922,6 +22997,18 @@
             "default": [],
             "title": "File Ids"
           },
+          "model_shortcut": {
+            "anyOf": [
+              {
+                "maxLength": 25,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Shortcut"
+          },
           "text": {
             "title": "Text",
             "type": "string"
@@ -22965,6 +23052,21 @@
           "sent_to"
         ],
         "title": "SendShareEmailResponse",
+        "type": "object"
+      },
+      "SetChatModelShortcutRequest": {
+        "properties": {
+          "model": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Model",
+            "type": "string"
+          }
+        },
+        "required": [
+          "model"
+        ],
+        "title": "SetChatModelShortcutRequest",
         "type": "object"
       },
       "SetConversationActionItemsStateRequest": {
@@ -37828,6 +37930,266 @@
         "summary": "Materialize Prompts V1",
         "tags": [
           "chat-first"
+        ]
+      }
+    },
+    "/v1/chat/model-shortcuts": {
+      "get": {
+        "operationId": "get_chat_model_shortcuts_v1_chat_model_shortcuts_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatModelShortcutsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Get Chat Model Shortcuts",
+        "tags": [
+          "chat"
+        ]
+      }
+    },
+    "/v1/chat/model-shortcuts/{name}": {
+      "delete": {
+        "operationId": "delete_chat_model_shortcut_v1_chat_model_shortcuts__name__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatModelShortcutsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Delete Chat Model Shortcut",
+        "tags": [
+          "chat"
+        ]
+      },
+      "put": {
+        "operationId": "put_chat_model_shortcut_v1_chat_model_shortcuts__name__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetChatModelShortcutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatModelShortcutsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Put Chat Model Shortcut",
+        "tags": [
+          "chat"
         ]
       }
     },
