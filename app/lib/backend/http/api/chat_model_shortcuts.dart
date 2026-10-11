@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:omi/backend/http/shared.dart';
+import 'package:omi/backend/schema/gen/self_hosted_wire.g.dart' as wire;
 import 'package:omi/env/env.dart';
 import 'package:omi/utils/logger.dart';
 
@@ -14,8 +15,8 @@ class ChatModelShortcut {
 
   bool get isConfigured => model != null && model!.isNotEmpty;
 
-  factory ChatModelShortcut.fromJson(Map<String, dynamic> json) =>
-      ChatModelShortcut(name: json['name'] as String, model: json['model'] as String?);
+  factory ChatModelShortcut.fromGenerated(wire.GeneratedChatModelShortcut g) =>
+      ChatModelShortcut(name: g.name, model: g.model);
 }
 
 class AvailableChatModel {
@@ -24,8 +25,8 @@ class AvailableChatModel {
 
   const AvailableChatModel({required this.id, this.ownedBy = ''});
 
-  factory AvailableChatModel.fromJson(Map<String, dynamic> json) =>
-      AvailableChatModel(id: json['id'] as String, ownedBy: (json['owned_by'] as String?) ?? '');
+  factory AvailableChatModel.fromGenerated(wire.GeneratedAvailableChatModel g) =>
+      AvailableChatModel(id: g.id, ownedBy: g.ownedBy);
 }
 
 class ChatModelShortcutsState {
@@ -44,15 +45,11 @@ class ChatModelShortcutsState {
 
   static const disabled = ChatModelShortcutsState(enabled: false);
 
-  factory ChatModelShortcutsState.fromJson(Map<String, dynamic> json) => ChatModelShortcutsState(
-        enabled: json['enabled'] as bool? ?? false,
-        baseModel: (json['base_model'] as String?) ?? '',
-        shortcuts: ((json['shortcuts'] as List?) ?? [])
-            .map((e) => ChatModelShortcut.fromJson(e as Map<String, dynamic>))
-            .toList(),
-        availableModels: ((json['available_models'] as List?) ?? [])
-            .map((e) => AvailableChatModel.fromJson(e as Map<String, dynamic>))
-            .toList(),
+  factory ChatModelShortcutsState.fromGenerated(wire.GeneratedChatModelShortcutsResponse g) => ChatModelShortcutsState(
+        enabled: g.enabled,
+        baseModel: g.baseModel,
+        shortcuts: (g.shortcuts ?? const []).map(ChatModelShortcut.fromGenerated).toList(),
+        availableModels: (g.availableModels ?? const []).map(AvailableChatModel.fromGenerated).toList(),
       );
 
   ChatModelShortcut? byName(String name) {
@@ -66,7 +63,10 @@ class ChatModelShortcutsState {
 ChatModelShortcutsState? _parse(dynamic response, String label) {
   if (response == null) return null;
   if (response.statusCode == 200) {
-    return ChatModelShortcutsState.fromJson(jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>);
+    return ChatModelShortcutsState.fromGenerated(
+      wire.GeneratedChatModelShortcutsResponse.fromJson(
+          jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>),
+    );
   }
   Logger.debug('$label failed: ${response.statusCode} ${response.body}');
   return null;
