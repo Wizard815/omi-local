@@ -88,7 +88,7 @@ def world(monkeypatch):
     monkeypatch.setattr(service.day_reviews_db, 'delete_day_review', lambda uid, d: reviews.pop(d, None))
     monkeypatch.setattr(service.day_reviews_db, 'list_day_reviews', lambda uid, limit=30: list(reviews.values()))
     monkeypatch.setattr(service.notification_db, 'get_user_time_zone', lambda uid: 'UTC')
-    monkeypatch.setattr(service, 'get_llm', lambda feature: llm)
+    monkeypatch.setattr(service, 'get_llm', lambda feature, request_timeout=None: llm)
     monkeypatch.setattr(service, 'track_usage', lambda uid, feature: contextlib.nullcontext())
     return convs, reviews, llm
 

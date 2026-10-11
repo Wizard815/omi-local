@@ -48,6 +48,14 @@ class DayReviewError(Exception):
         self.message = message
 
 
+def _request_timeout_seconds() -> float:
+    """A long day on a local model can take minutes; the shared foreground deadline (60s) is too tight."""
+    try:
+        return float(os.getenv('DAY_REVIEW_TIMEOUT_SECONDS') or 240.0)
+    except ValueError:
+        return 240.0
+
+
 def _max_input_chars() -> int:
     try:
         return int(os.getenv('DAY_REVIEW_MAX_INPUT_CHARS') or DEFAULT_MAX_INPUT_CHARS)
@@ -170,7 +178,7 @@ def generate_summary(
     )
     try:
         with track_usage(uid, Features.DAILY_SUMMARY):
-            response = get_llm('daily_summary').invoke(prompt)
+            response = get_llm('daily_summary', request_timeout=_request_timeout_seconds()).invoke(prompt)
     except Exception as e:
         raise DayReviewError(502, f'Could not write the day summary: {type(e).__name__}')
     content = getattr(response, 'content', response)
