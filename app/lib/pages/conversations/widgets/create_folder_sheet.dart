@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:omi/backend/schema/folder.dart';
 import 'package:omi/providers/folder_provider.dart';
 import 'package:omi/utils/folders/folder_icon_mapper.dart';
+import 'package:omi/utils/folders/folder_tree.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 import 'package:omi/utils/responsive/responsive_helper.dart';
 
@@ -32,7 +33,10 @@ const List<String> folderIcons = folderIconStrings;
 class CreateFolderBottomSheet extends StatefulWidget {
   final Folder? folderToEdit;
 
-  const CreateFolderBottomSheet({super.key, this.folderToEdit});
+  /// Pre-selected containing folder for a new folder (nested folders).
+  final String? parentId;
+
+  const CreateFolderBottomSheet({super.key, this.folderToEdit, this.parentId});
 
   @override
   State<CreateFolderBottomSheet> createState() => _CreateFolderBottomSheetState();
@@ -43,6 +47,7 @@ class _CreateFolderBottomSheetState extends State<CreateFolderBottomSheet> {
   late TextEditingController _descriptionController;
   Color _selectedColor = folderColors[0];
   String _selectedIcon = folderIcons[0];
+  String? _parentId;
   bool _isLoading = false;
 
   bool get isEditing => widget.folderToEdit != null;
@@ -57,6 +62,7 @@ class _CreateFolderBottomSheetState extends State<CreateFolderBottomSheet> {
       _selectedColor = widget.folderToEdit!.colorValue;
       _selectedIcon = widget.folderToEdit!.icon;
     }
+    _parentId = widget.folderToEdit?.parentId ?? widget.parentId;
   }
 
   @override
@@ -91,6 +97,9 @@ class _CreateFolderBottomSheetState extends State<CreateFolderBottomSheet> {
           icon: _selectedIcon,
         );
         success = result != null;
+        if (success && _parentId != widget.folderToEdit!.parentId) {
+          success = await folderProvider.moveFolder(widget.folderToEdit!.id, _parentId);
+        }
 
         if (success) {
           PlatformManager.instance.analytics.folderUpdated(folderId: widget.folderToEdit!.id, folderName: name);
@@ -101,6 +110,7 @@ class _CreateFolderBottomSheetState extends State<CreateFolderBottomSheet> {
           description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
           color: colorHex,
           icon: _selectedIcon,
+          parentId: _parentId,
         );
         success = result != null;
 
@@ -229,6 +239,10 @@ class _CreateFolderBottomSheetState extends State<CreateFolderBottomSheet> {
                 buildCounter: (context, {required currentLength, required isFocused, maxLength}) => null,
               ),
             ),
+            const SizedBox(height: 16),
+
+            // Containing folder (nested folders)
+            _buildParentPicker(context),
             const SizedBox(height: 20),
 
             // Icon selection
@@ -287,6 +301,44 @@ class _CreateFolderBottomSheetState extends State<CreateFolderBottomSheet> {
     );
   }
 
+  Widget _buildParentPicker(BuildContext context) {
+    final folders = Provider.of<FolderProvider>(context, listen: false).folders;
+    final editing = widget.folderToEdit;
+    // System folders stay at the top level (AI folder assignment routes to them).
+    if (editing != null && editing.isSystem) return const SizedBox.shrink();
+    final options = folderTreeOrder(folders).where((e) => canPlaceFolder(folders, editing?.id, e.folder.id)).toList();
+    final value = options.any((e) => e.folder.id == _parentId) ? _parentId : null;
+    return Row(
+      children: [
+        Text(
+          context.l10n.folderInside,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: ResponsiveHelper.textTertiary),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: DropdownButton<String?>(
+            isExpanded: true,
+            value: value,
+            dropdownColor: ResponsiveHelper.backgroundTertiary,
+            underline: const SizedBox.shrink(),
+            items: [
+              DropdownMenuItem<String?>(value: null, child: Text(context.l10n.folderTopLevel)),
+              for (final entry in options)
+                DropdownMenuItem<String?>(
+                  value: entry.folder.id,
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 14.0 * entry.depth),
+                    child: Text(entry.folder.name, overflow: TextOverflow.ellipsis),
+                  ),
+                ),
+            ],
+            onChanged: (id) => setState(() => _parentId = id),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildColorOption(Color color) {
     final isSelected = _selectedColor.toARGB32() == color.toARGB32();
     return GestureDetector(
@@ -309,13 +361,13 @@ class _CreateFolderBottomSheetState extends State<CreateFolderBottomSheet> {
   }
 }
 
-/// Show the create folder bottom sheet.
-Future<bool> showCreateFolderBottomSheet(BuildContext context, {Folder? folderToEdit}) async {
+/// Show the create folder bottom sheet ([parentId] pre-selects the containing folder).
+Future<bool> showCreateFolderBottomSheet(BuildContext context, {Folder? folderToEdit, String? parentId}) async {
   final result = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (context) => CreateFolderBottomSheet(folderToEdit: folderToEdit),
+    builder: (context) => CreateFolderBottomSheet(folderToEdit: folderToEdit, parentId: parentId),
   );
   return result ?? false;
 }

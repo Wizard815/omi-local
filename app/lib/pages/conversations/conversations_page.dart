@@ -785,6 +785,17 @@ class _ConversationsPageState extends State<ConversationsPage> with AutomaticKee
                     );
                   },
                 ),
+              // Nested folders: breadcrumb + subfolders of the open folder.
+              if (!convoProvider.showDailySummaries && convoProvider.selectedFolderId != null)
+                Consumer<FolderProvider>(
+                  builder: (context, folderProvider, _) => SliverToBoxAdapter(
+                    child: SubfolderBar(
+                      folders: folderProvider.folders,
+                      selectedFolderId: convoProvider.selectedFolderId!,
+                      onFolderSelected: convoProvider.filterByFolder,
+                    ),
+                  ),
+                ),
               // Show daily summaries list or conversations based on filter
               if (convoProvider.showDailySummaries)
                 const DailySummariesList()

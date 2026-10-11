@@ -10182,4 +10182,24 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatModelShortcutsSaveFailed => 'Couldn\'t save the shortcut';
+
+  @override
+  String get folderInside => 'Inside';
+
+  @override
+  String get folderTopLevel => 'Top level';
+
+  @override
+  String get newSubfolder => 'New subfolder';
+
+  @override
+  String get folderTreeTitle => 'Folders';
+
+  @override
+  String get moveFolder => 'Move…';
+
+  @override
+  String moveFolderTo(String name) {
+    return 'Move \"$name\" into…';
+  }
 }

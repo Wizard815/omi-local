@@ -12205,5 +12205,34 @@
     "chatModelShortcutsSaveFailed": "Couldn't save the shortcut",
     "@chatModelShortcutsSaveFailed": {
         "description": "Model shortcuts sheet: save error"
+    },
+    "folderInside": "Inside",
+    "@folderInside": {
+        "description": "Create folder sheet: parent folder picker label"
+    },
+    "folderTopLevel": "Top level",
+    "@folderTopLevel": {
+        "description": "Parent picker: no parent"
+    },
+    "newSubfolder": "New subfolder",
+    "@newSubfolder": {
+        "description": "Create a folder inside this one"
+    },
+    "folderTreeTitle": "Folders",
+    "@folderTreeTitle": {
+        "description": "Folder tree sheet title"
+    },
+    "moveFolder": "Move…",
+    "@moveFolder": {
+        "description": "Folder tree: move action"
+    },
+    "moveFolderTo": "Move \"{name}\" into…",
+    "@moveFolderTo": {
+        "description": "Move folder picker title",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
     }
 }
