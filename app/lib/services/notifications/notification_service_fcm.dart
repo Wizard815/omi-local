@@ -146,14 +146,26 @@ class _FCMNotificationService implements NotificationInterface {
     }
   }
 
-  // No-op: this app is self-hosted with no Google push infrastructure on
+  // No FCM token: this app is self-hosted with no Google push infrastructure on
   // either end (no FCM server key on this backend, nothing to deliver a push
   // to this token anyway), so registering one with Google is pure telemetry
   // with no product benefit. Local notifications (awesome_notifications,
   // used for in-app reminders/alerts) are unaffected — this only stops the
   // FCM device-token round trip to Google.
+  //
+  // The token registration was also the only call that told the backend the
+  // device's time zone, so send that on its own: daily recaps, day reviews and
+  // the chat's idea of "today" otherwise run in UTC.
   @override
-  void saveNotificationToken() {}
+  void saveNotificationToken() {
+    () async {
+      try {
+        await saveTimeZoneServer(await getTimeZone());
+      } catch (e) {
+        Logger.debug('saveTimeZoneServer failed: $e');
+      }
+    }();
+  }
 
   @override
   Future<bool> hasNotificationPermissions() async {
