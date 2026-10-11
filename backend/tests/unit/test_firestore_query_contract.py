@@ -21,6 +21,7 @@ from database.firestore_index_registry import (
     CONVERSATION_PHOTOS_NAME_RANGE_QUERY,
     CONVERSATION_SOURCE_MEMORY_QUERY,
     CONVERSATIONS_ACTIVE_ORDERED_QUERY,
+    DASHBOARD_IN_PROGRESS_CONVERSATIONS_QUERY,
     DUE_MEMORY_OUTBOX_QUERY,
     DAILY_SWEEP_ONBOARDING_CONVERSATIONS_QUERY,
     EXPIRED_SHORT_TERM_LIFECYCLE_QUERY,
@@ -293,6 +294,11 @@ def test_registered_attention_override_query_builds_the_real_filter_chain():
         ),
         (
             STALE_IN_PROGRESS_CONVERSATIONS_QUERY,
+            {"status": "in_progress"},
+            [("status", "==", "in_progress")],
+        ),
+        (
+            DASHBOARD_IN_PROGRESS_CONVERSATIONS_QUERY,
             {"status": "in_progress"},
             [("status", "==", "in_progress")],
         ),

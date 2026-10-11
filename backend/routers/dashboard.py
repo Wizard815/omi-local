@@ -966,12 +966,16 @@ async def model_config():
 @router.get("/dashboard/conversations", response_class=JSONResponse)
 def dashboard_conversations(limit: int = 20):
     """List recent in-progress conversations (with a transcript) across all local accounts."""
+    from google.cloud.firestore_v1 import FieldFilter
+
     from database._client import get_firestore_client
+    from database.firestore_index_registry import DASHBOARD_IN_PROGRESS_CONVERSATIONS_QUERY
 
     db = get_firestore_client()
     query = (
-        db.collection_group('conversations')
-        .where('status', '==', 'in_progress')
+        DASHBOARD_IN_PROGRESS_CONVERSATIONS_QUERY.build(
+            db.collection_group('conversations'), {'status': 'in_progress'}, field_filter_factory=FieldFilter
+        )
         .order_by('created_at', direction='DESCENDING')
         .limit(limit)
     )
