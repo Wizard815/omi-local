@@ -5,6 +5,20 @@ import 'package:omi/backend/schema/gen/misc_wire.g.dart' as wire;
 import 'package:omi/env/env.dart';
 import 'package:omi/utils/logger.dart';
 
+/// Tell the backend the device's IANA time zone without registering a push token.
+///
+/// Self-hosted builds never register FCM, which used to be the only way the
+/// backend learned the zone — so recaps, day reviews and "today" ran in UTC.
+Future<bool> saveTimeZoneServer(String timeZone) async {
+  final response = await makeApiCall(
+    url: '${Env.apiBaseUrl}v1/users/time-zone',
+    headers: {'Content-Type': 'application/json'},
+    method: 'PUT',
+    body: jsonEncode({'time_zone': timeZone}),
+  );
+  return response?.statusCode == 200;
+}
+
 Future<void> saveFcmTokenServer({required String token, required String timeZone}) async {
   var response = await makeApiCall(
     url: '${Env.apiBaseUrl}v1/users/fcm-token',
