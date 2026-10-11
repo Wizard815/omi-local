@@ -1,8 +1,8 @@
-/// End-of-day review (backend: /v1/users/day-reviews). Hand-written models:
-/// these routes are not in the generated wire groups.
+/// End-of-day review (backend: /v1/users/day-reviews). Domain models built
+/// from the generated wire DTOs (schema/gen/self_hosted_wire.g.dart).
 library;
 
-DateTime? _date(dynamic v) => v is String ? DateTime.tryParse(v)?.toLocal() : null;
+import 'package:omi/backend/schema/gen/self_hosted_wire.g.dart' as wire;
 
 enum DayReviewCorrectionType { paragraph, highlight, redaction }
 
@@ -31,16 +31,16 @@ class DayReviewCorrection {
 
   bool get isApplied => appliedAt != null;
 
-  factory DayReviewCorrection.fromJson(Map<String, dynamic> json) => DayReviewCorrection(
-        id: json['id'] as String,
-        type: DayReviewCorrectionType.values.byName(json['type'] as String),
-        quote: json['quote'] as String?,
-        start: json['start'] as int?,
-        end: json['end'] as int?,
-        text: json['text'] as String?,
-        afterParagraph: json['after_paragraph'] as int?,
-        createdAt: _date(json['created_at']),
-        appliedAt: _date(json['applied_at']),
+  factory DayReviewCorrection.fromGenerated(wire.GeneratedDayReviewCorrection g) => DayReviewCorrection(
+        id: g.id,
+        type: DayReviewCorrectionType.values.byName(g.type),
+        quote: g.quote,
+        start: g.start,
+        end: g.end,
+        text: g.text,
+        afterParagraph: g.afterParagraph,
+        createdAt: g.createdAt.toLocal(),
+        appliedAt: g.appliedAt?.toLocal(),
       );
 }
 
@@ -81,18 +81,16 @@ class DayReview {
         return !c.isApplied;
       }).length;
 
-  factory DayReview.fromJson(Map<String, dynamic> json) => DayReview(
-        date: json['date'] as String,
-        title: (json['title'] as String?) ?? '',
-        summaryText: (json['summary_text'] as String?) ?? '',
-        finalText: (json['final_text'] as String?) ?? '',
-        corrections: ((json['corrections'] as List?) ?? [])
-            .map((e) => DayReviewCorrection.fromJson(e as Map<String, dynamic>))
-            .toList(),
-        keptConversationIds: ((json['kept_conversation_ids'] as List?) ?? []).cast<String>(),
-        rolledUpConversationIds: ((json['rolled_up_conversation_ids'] as List?) ?? []).cast<String>(),
-        generatedAt: _date(json['generated_at']),
-        generationCount: (json['generation_count'] as int?) ?? 0,
+  factory DayReview.fromGenerated(wire.GeneratedDayReview g) => DayReview(
+        date: g.date,
+        title: g.title,
+        summaryText: g.summaryText,
+        finalText: g.finalText,
+        corrections: (g.corrections ?? const []).map(DayReviewCorrection.fromGenerated).toList(),
+        keptConversationIds: g.keptConversationIds ?? const [],
+        rolledUpConversationIds: g.rolledUpConversationIds ?? const [],
+        generatedAt: g.generatedAt?.toLocal(),
+        generationCount: g.generationCount,
       );
 }
 
@@ -117,15 +115,15 @@ class DayReviewConversation {
     required this.rolledUp,
   });
 
-  factory DayReviewConversation.fromJson(Map<String, dynamic> json) => DayReviewConversation(
-        id: json['id'] as String,
-        title: (json['title'] as String?) ?? '',
-        emoji: (json['emoji'] as String?) ?? '',
-        overview: (json['overview'] as String?) ?? '',
-        startedAt: _date(json['started_at']),
-        finishedAt: _date(json['finished_at']),
-        starred: json['starred'] as bool? ?? false,
-        rolledUp: json['rolled_up'] as bool? ?? false,
+  factory DayReviewConversation.fromGenerated(wire.GeneratedDayReviewConversation g) => DayReviewConversation(
+        id: g.id,
+        title: g.title,
+        emoji: g.emoji,
+        overview: g.overview,
+        startedAt: g.startedAt?.toLocal(),
+        finishedAt: g.finishedAt?.toLocal(),
+        starred: g.starred,
+        rolledUp: g.rolledUp,
       );
 }
 
@@ -137,12 +135,10 @@ class DayReviewDay {
 
   const DayReviewDay({required this.date, this.review, required this.conversations, this.processingCount = 0});
 
-  factory DayReviewDay.fromJson(Map<String, dynamic> json) => DayReviewDay(
-        date: json['date'] as String,
-        review: json['review'] == null ? null : DayReview.fromJson(json['review'] as Map<String, dynamic>),
-        conversations: ((json['conversations'] as List?) ?? [])
-            .map((e) => DayReviewConversation.fromJson(e as Map<String, dynamic>))
-            .toList(),
-        processingCount: (json['processing_count'] as int?) ?? 0,
+  factory DayReviewDay.fromGenerated(wire.GeneratedDayReviewDayResponse g) => DayReviewDay(
+        date: g.date,
+        review: g.review == null ? null : DayReview.fromGenerated(g.review!),
+        conversations: (g.conversations ?? const []).map(DayReviewConversation.fromGenerated).toList(),
+        processingCount: g.processingCount,
       );
 }
