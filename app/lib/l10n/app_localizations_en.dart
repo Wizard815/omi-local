@@ -8377,7 +8377,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fairUseAboutBody =>
-      'Omi is designed for personal conversations, meetings, and live interactions. Usage is measured by real speech time detected, not connection time. If usage significantly exceeds normal patterns for non-personal content, adjustments may apply.';
+      'This is a self-hosted build of Omi — fair-use limits don\'t apply here since you\'re running your own backend. Omi is open source under the MIT license: github.com/BasedHardware/omi';
 
   @override
   String fairUseCaseRefCopied(String caseRef) {
