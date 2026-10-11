@@ -9523,6 +9523,89 @@
         "title": "CreateDailySummaryRequest",
         "type": "object"
       },
+      "CreateDayReviewCorrectionRequest": {
+        "properties": {
+          "after_paragraph": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Insert a paragraph after this paragraph index (omit = at the end)",
+            "title": "After Paragraph"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Selection end offset in summary_text",
+            "title": "End"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Selected summary text (highlight/redaction)",
+            "title": "Quote"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Selection start offset in summary_text",
+            "title": "Start"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "maxLength": 8000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Paragraph body, or the highlight comment",
+            "title": "Text"
+          },
+          "type": {
+            "enum": [
+              "paragraph",
+              "highlight",
+              "redaction"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "title": "CreateDayReviewCorrectionRequest",
+        "type": "object"
+      },
       "CreateFolderRequest": {
         "description": "Request model for creating a new folder.",
         "properties": {
@@ -10630,6 +10713,323 @@
           }
         },
         "title": "DailySummaryUnresolvedQuestion",
+        "type": "object"
+      },
+      "DayReview": {
+        "properties": {
+          "corrections": {
+            "items": {
+              "$ref": "#/components/schemas/DayReviewCorrection"
+            },
+            "title": "Corrections",
+            "type": "array"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "final_text": {
+            "default": "",
+            "description": "summary_text with redactions masked and pending corrections applied",
+            "title": "Final Text",
+            "type": "string"
+          },
+          "generated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generated At"
+          },
+          "generation_count": {
+            "default": 0,
+            "title": "Generation Count",
+            "type": "integer"
+          },
+          "kept_conversation_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Kept Conversation Ids",
+            "type": "array"
+          },
+          "rolled_up_conversation_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Rolled Up Conversation Ids",
+            "type": "array"
+          },
+          "status": {
+            "const": "finalized",
+            "default": "finalized",
+            "title": "Status",
+            "type": "string"
+          },
+          "summary_text": {
+            "default": "",
+            "description": "Model-written summary; correction offsets index this",
+            "title": "Summary Text",
+            "type": "string"
+          },
+          "time_zone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Zone"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "date"
+        ],
+        "title": "DayReview",
+        "type": "object"
+      },
+      "DayReviewConversation": {
+        "properties": {
+          "emoji": {
+            "default": "",
+            "title": "Emoji",
+            "type": "string"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "overview": {
+            "default": "",
+            "title": "Overview",
+            "type": "string"
+          },
+          "rolled_up": {
+            "default": false,
+            "description": "Folded into this day's summary (hidden from the normal list)",
+            "title": "Rolled Up",
+            "type": "boolean"
+          },
+          "starred": {
+            "default": false,
+            "title": "Starred",
+            "type": "boolean"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "DayReviewConversation",
+        "type": "object"
+      },
+      "DayReviewCorrection": {
+        "properties": {
+          "after_paragraph": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "After Paragraph"
+          },
+          "applied_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applied At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "type": {
+            "enum": [
+              "paragraph",
+              "highlight",
+              "redaction"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "created_at"
+        ],
+        "title": "DayReviewCorrection",
+        "type": "object"
+      },
+      "DayReviewDayResponse": {
+        "properties": {
+          "conversations": {
+            "items": {
+              "$ref": "#/components/schemas/DayReviewConversation"
+            },
+            "title": "Conversations",
+            "type": "array"
+          },
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "processing_count": {
+            "default": 0,
+            "description": "Conversations of this day still being processed",
+            "title": "Processing Count",
+            "type": "integer"
+          },
+          "review": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DayReview"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "date"
+        ],
+        "title": "DayReviewDayResponse",
+        "type": "object"
+      },
+      "DayReviewsListResponse": {
+        "properties": {
+          "reviews": {
+            "items": {
+              "$ref": "#/components/schemas/DayReview"
+            },
+            "title": "Reviews",
+            "type": "array"
+          }
+        },
+        "title": "DayReviewsListResponse",
         "type": "object"
       },
       "DecisionDebugProjection": {
@@ -13211,6 +13611,21 @@
           "created_at"
         ],
         "title": "FileChat",
+        "type": "object"
+      },
+      "FinalizeDayReviewRequest": {
+        "properties": {
+          "keep_conversation_ids": {
+            "description": "Starred: stay normal conversations. The rest are rolled up.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 500,
+            "title": "Keep Conversation Ids",
+            "type": "array"
+          }
+        },
+        "title": "FinalizeDayReviewRequest",
         "type": "object"
       },
       "FirmwareVersionResponse": {
@@ -20507,6 +20922,27 @@
         "title": "PaywallStatusResponse",
         "type": "object"
       },
+      "PendingDayReviewsResponse": {
+        "properties": {
+          "pending_dates": {
+            "description": "Recent local dates with unsorted conversations",
+            "items": {
+              "type": "string"
+            },
+            "title": "Pending Dates",
+            "type": "array"
+          },
+          "today": {
+            "title": "Today",
+            "type": "string"
+          }
+        },
+        "required": [
+          "today"
+        ],
+        "title": "PendingDayReviewsResponse",
+        "type": "object"
+      },
       "PendingSyncResponse": {
         "properties": {
           "pending_export": {
@@ -21824,6 +22260,22 @@
           "referral_url"
         ],
         "title": "ReferralLinkResponse",
+        "type": "object"
+      },
+      "ReopenDayReviewResponse": {
+        "properties": {
+          "restored_count": {
+            "default": 0,
+            "title": "Restored Count",
+            "type": "integer"
+          },
+          "status": {
+            "default": "ok",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "title": "ReopenDayReviewResponse",
         "type": "object"
       },
       "ReorderFoldersRequest": {
@@ -58452,6 +58904,758 @@
         "summary": "Test Daily Summary",
         "tags": [
           "v1"
+        ]
+      }
+    },
+    "/v1/users/day-reviews": {
+      "get": {
+        "operationId": "list_day_reviews_v1_users_day_reviews_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayReviewsListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "List Day Reviews",
+        "tags": [
+          "day-reviews"
+        ]
+      }
+    },
+    "/v1/users/day-reviews/pending": {
+      "get": {
+        "description": "Recent days that still have unsorted conversations (today included; the app decides when to nudge).",
+        "operationId": "get_pending_day_reviews_v1_users_day_reviews_pending_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 7,
+              "maximum": 31,
+              "minimum": 1,
+              "title": "Days",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingDayReviewsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Get Pending Day Reviews",
+        "tags": [
+          "day-reviews"
+        ]
+      }
+    },
+    "/v1/users/day-reviews/{date}": {
+      "get": {
+        "description": "The day's conversations (to sort) and its review, if it has one.",
+        "operationId": "get_day_review_v1_users_day_reviews__date__get",
+        "parameters": [
+          {
+            "description": "Local calendar date, YYYY-MM-DD",
+            "in": "path",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "description": "Local calendar date, YYYY-MM-DD",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "title": "Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayReviewDayResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Get Day Review",
+        "tags": [
+          "day-reviews"
+        ]
+      }
+    },
+    "/v1/users/day-reviews/{date}/corrections": {
+      "post": {
+        "operationId": "add_day_review_correction_v1_users_day_reviews__date__corrections_post",
+        "parameters": [
+          {
+            "description": "Local calendar date, YYYY-MM-DD",
+            "in": "path",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "description": "Local calendar date, YYYY-MM-DD",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "title": "Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDayReviewCorrectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayReview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Add Day Review Correction",
+        "tags": [
+          "day-reviews"
+        ]
+      }
+    },
+    "/v1/users/day-reviews/{date}/corrections/{correction_id}": {
+      "delete": {
+        "operationId": "delete_day_review_correction_v1_users_day_reviews__date__corrections__correction_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "correction_id",
+            "required": true,
+            "schema": {
+              "title": "Correction Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Local calendar date, YYYY-MM-DD",
+            "in": "path",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "description": "Local calendar date, YYYY-MM-DD",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "title": "Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayReview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Delete Day Review Correction",
+        "tags": [
+          "day-reviews"
+        ]
+      }
+    },
+    "/v1/users/day-reviews/{date}/finalize": {
+      "post": {
+        "description": "Keep (star) the listed conversations; roll every other one into one day summary.",
+        "operationId": "finalize_day_review_v1_users_day_reviews__date__finalize_post",
+        "parameters": [
+          {
+            "description": "Local calendar date, YYYY-MM-DD",
+            "in": "path",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "description": "Local calendar date, YYYY-MM-DD",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "title": "Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinalizeDayReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayReview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Finalize Day Review",
+        "tags": [
+          "day-reviews"
+        ]
+      }
+    },
+    "/v1/users/day-reviews/{date}/regenerate": {
+      "post": {
+        "description": "Rewrite the summary with every correction applied (redactions stay enforced).",
+        "operationId": "regenerate_day_review_v1_users_day_reviews__date__regenerate_post",
+        "parameters": [
+          {
+            "description": "Local calendar date, YYYY-MM-DD",
+            "in": "path",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "description": "Local calendar date, YYYY-MM-DD",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "title": "Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayReview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Regenerate Day Review",
+        "tags": [
+          "day-reviews"
+        ]
+      }
+    },
+    "/v1/users/day-reviews/{date}/reopen": {
+      "post": {
+        "description": "Undo the review: rolled-up conversations come back, the summary is deleted.",
+        "operationId": "reopen_day_review_v1_users_day_reviews__date__reopen_post",
+        "parameters": [
+          {
+            "description": "Local calendar date, YYYY-MM-DD",
+            "in": "path",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "description": "Local calendar date, YYYY-MM-DD",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "title": "Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReopenDayReviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Reopen Day Review",
+        "tags": [
+          "day-reviews"
         ]
       }
     },
