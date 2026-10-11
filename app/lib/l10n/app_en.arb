@@ -11829,5 +11829,236 @@
     "processingTakingLonger": "Still working — this is taking longer than usual.",
     "@processingTakingLonger": {
         "description": "Shown on the homepage processing card after ~2 minutes with a Retry action (#5481)."
+    },
+    "dayReviewTitle": "Day review",
+    "@dayReviewTitle": {
+        "description": "Day review page title"
+    },
+    "dayReviewsTitle": "Day reviews",
+    "@dayReviewsTitle": {
+        "description": "Day reviews list page title"
+    },
+    "dayReviewLoadFailed": "Couldn't load this day",
+    "@dayReviewLoadFailed": {
+        "description": "Day review load error"
+    },
+    "dayReviewActionFailed": "Something went wrong. Try again.",
+    "@dayReviewActionFailed": {
+        "description": "Day review action error"
+    },
+    "dayReviewSortHint": "Star the conversations you want to keep. Everything else becomes one day summary you can correct.",
+    "@dayReviewSortHint": {
+        "description": "Day review sort instructions"
+    },
+    "dayReviewProcessing": "{count, plural, =1{1 conversation is still processing and is not included.} other{{count} conversations are still processing and are not included.}}",
+    "@dayReviewProcessing": {
+        "description": "Day review: conversations still processing",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewEmpty": "No finished conversations on this day.",
+    "@dayReviewEmpty": {
+        "description": "Day review: empty day"
+    },
+    "dayReviewKeepTooltip": "Keep as a conversation",
+    "@dayReviewKeepTooltip": {
+        "description": "Star button tooltip in day review"
+    },
+    "dayReviewFinalizeButton": "Keep {kept} · Summarize {rolled}",
+    "@dayReviewFinalizeButton": {
+        "description": "Day review finalize button",
+        "placeholders": {
+            "kept": {
+                "type": "int"
+            },
+            "rolled": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewConfirmTitle": "Build the day summary?",
+    "@dayReviewConfirmTitle": {
+        "description": "Day review finalize confirmation title"
+    },
+    "dayReviewConfirmBody": "{count, plural, =1{1 conversation will be folded into the day summary and leave your conversation list. You can undo this with Reopen.} other{{count} conversations will be folded into the day summary and leave your conversation list. You can undo this with Reopen.}}",
+    "@dayReviewConfirmBody": {
+        "description": "Day review finalize confirmation body",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewConfirmAction": "Summarize",
+    "@dayReviewConfirmAction": {
+        "description": "Day review finalize confirmation button"
+    },
+    "dayReviewWriting": "Writing your day summary… this can take a minute on a local model.",
+    "@dayReviewWriting": {
+        "description": "Day review busy: generating"
+    },
+    "dayReviewApplying": "Rewriting the summary with your corrections…",
+    "@dayReviewApplying": {
+        "description": "Day review busy: regenerating"
+    },
+    "dayReviewReopening": "Restoring the conversations…",
+    "@dayReviewReopening": {
+        "description": "Day review busy: reopening"
+    },
+    "dayReviewReopenTitle": "Reopen this day?",
+    "@dayReviewReopenTitle": {
+        "description": "Reopen confirmation title"
+    },
+    "dayReviewReopenBody": "The summarized conversations come back to your list and this summary (with its corrections) is deleted.",
+    "@dayReviewReopenBody": {
+        "description": "Reopen confirmation body"
+    },
+    "dayReviewReopenAction": "Reopen day",
+    "@dayReviewReopenAction": {
+        "description": "Reopen action"
+    },
+    "dayReviewCopy": "Copy summary",
+    "@dayReviewCopy": {
+        "description": "Copy button tooltip"
+    },
+    "dayReviewCopied": "Day summary copied",
+    "@dayReviewCopied": {
+        "description": "Snackbar after copying the summary"
+    },
+    "dayReviewUntitled": "Untitled conversation",
+    "@dayReviewUntitled": {
+        "description": "Conversation without a title"
+    },
+    "dayReviewCounts": "{rolled} summarized · {kept} kept",
+    "@dayReviewCounts": {
+        "description": "Day review header counts",
+        "placeholders": {
+            "rolled": {
+                "type": "int"
+            },
+            "kept": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewEditHint": "Select text to correct or redact it. Use + to add a paragraph.",
+    "@dayReviewEditHint": {
+        "description": "Day review editing hint"
+    },
+    "dayReviewCorrectAction": "Correct",
+    "@dayReviewCorrectAction": {
+        "description": "Text selection menu: attach a correction"
+    },
+    "dayReviewRedactAction": "Redact",
+    "@dayReviewRedactAction": {
+        "description": "Text selection menu: redact"
+    },
+    "dayReviewCorrectTitle": "Correction",
+    "@dayReviewCorrectTitle": {
+        "description": "Correction dialog title"
+    },
+    "dayReviewCorrectHint": "What is right? e.g. \"It was Wednesday, not Tuesday\"",
+    "@dayReviewCorrectHint": {
+        "description": "Correction dialog hint"
+    },
+    "dayReviewAddParagraph": "Add paragraph",
+    "@dayReviewAddParagraph": {
+        "description": "Add paragraph button"
+    },
+    "dayReviewAddParagraphTitle": "Add a paragraph",
+    "@dayReviewAddParagraphTitle": {
+        "description": "Add paragraph dialog title"
+    },
+    "dayReviewAddParagraphHint": "Write what the summary is missing",
+    "@dayReviewAddParagraphHint": {
+        "description": "Add paragraph dialog hint"
+    },
+    "dayReviewYourParagraph": "Your paragraph",
+    "@dayReviewYourParagraph": {
+        "description": "Label on a user-added paragraph"
+    },
+    "dayReviewCorrectionsTitle": "Your corrections",
+    "@dayReviewCorrectionsTitle": {
+        "description": "Corrections list title"
+    },
+    "dayReviewRedactedQuote": "Redacted: “{quote}”",
+    "@dayReviewRedactedQuote": {
+        "description": "Corrections list: a redaction",
+        "placeholders": {
+            "quote": {
+                "type": "String"
+            }
+        }
+    },
+    "dayReviewCorrectionPending": "Not applied yet",
+    "@dayReviewCorrectionPending": {
+        "description": "Correction state"
+    },
+    "dayReviewCorrectionApplied": "Applied",
+    "@dayReviewCorrectionApplied": {
+        "description": "Correction state"
+    },
+    "dayReviewApplyButton": "Apply corrections ({count})",
+    "@dayReviewApplyButton": {
+        "description": "Regenerate button",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewKeptTitle": "Kept as conversations ({count})",
+    "@dayReviewKeptTitle": {
+        "description": "Kept conversations section",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewRolledTitle": "In this summary ({count})",
+    "@dayReviewRolledTitle": {
+        "description": "Rolled-up conversations section",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewBannerToday": "Review today",
+    "@dayReviewBannerToday": {
+        "description": "Banner title for today"
+    },
+    "dayReviewBannerDay": "Review {day}",
+    "@dayReviewBannerDay": {
+        "description": "Banner title for an earlier day",
+        "placeholders": {
+            "day": {
+                "type": "String"
+            }
+        }
+    },
+    "dayReviewBannerBody": "Star what to keep; the rest becomes one day summary.",
+    "@dayReviewBannerBody": {
+        "description": "Banner body"
+    },
+    "dayReviewPickDate": "Review another day",
+    "@dayReviewPickDate": {
+        "description": "Date picker tooltip"
+    },
+    "dayReviewsToSort": "Waiting to be sorted",
+    "@dayReviewsToSort": {
+        "description": "Day reviews list: pending section"
+    },
+    "dayReviewsDone": "Reviewed days",
+    "@dayReviewsDone": {
+        "description": "Day reviews list: finished section"
+    },
+    "dayReviewsNone": "No reviewed days yet.",
+    "@dayReviewsNone": {
+        "description": "Day reviews list: empty"
     }
 }
