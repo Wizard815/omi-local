@@ -21,6 +21,10 @@ import 'package:omi/backend/schema/message.dart';
 import 'package:omi/gen/assets.gen.dart';
 import 'package:omi/pages/apps/widgets/capability_apps_page.dart';
 import 'package:omi/pages/chat/chat_scroll_policy.dart';
+import 'package:omi/pages/chat/widgets/chat_model_shortcuts_sheet.dart';
+import 'package:omi/pages/chat/widgets/slash_command_popup.dart';
+import 'package:omi/pages/day_review/day_review_page.dart';
+import 'package:omi/utils/chat/slash_commands.dart';
 import 'package:omi/pages/chat/widgets/ai_message.dart';
 import 'package:omi/pages/chat/widgets/jump_to_latest_button.dart';
 import 'package:omi/pages/settings/widgets/plans_sheet.dart';
@@ -37,6 +41,7 @@ import 'package:omi/providers/usage_provider.dart';
 import 'package:omi/providers/voice_recorder_provider.dart';
 import 'package:omi/services/integrations/apple_health_service.dart';
 import 'package:omi/utils/l10n_extensions.dart';
+import 'package:omi/utils/alerts/app_snackbar.dart';
 import 'package:omi/utils/other/temp.dart';
 import 'package:omi/widgets/dialog.dart';
 import 'package:omi/widgets/bottom_nav_bar.dart';
@@ -118,6 +123,8 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
       }
       // Fetch enabled chat apps
       provider.fetchChatApps();
+      // Self-hosted chat model shortcuts ("/adult") for the "/" command popup.
+      provider.refreshChatModelShortcuts();
       if (widget.initialChatContext != null) {
         setState(() => _chatScope = widget.initialChatContext);
       }
@@ -506,6 +513,8 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
                               );
                             },
                           ),
+                          _buildSlashCommandPopup(provider),
+                          _buildStickyShortcutChip(provider),
                           // Send bar
                           SafeArea(
                             bottom: false,
@@ -661,7 +670,9 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
                                                               // center, so plain `.center` reads slightly low.
                                                               textAlignVertical: const TextAlignVertical(y: -0.35),
                                                               decoration: InputDecoration(
-                                                                hintText: context.l10n.askAnything,
+                                                                hintText: provider.stickyModelShortcut == null
+                                                                    ? context.l10n.askAnything
+                                                                    : '${context.l10n.askAnything} · /${provider.stickyModelShortcut}',
                                                                 hintStyle: const TextStyle(
                                                                   fontSize: 16.0,
                                                                   color: Colors.grey,
@@ -968,6 +979,20 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
     // submit the same text twice and the AI replies twice.
     if (provider.sendingMessage) return;
 
+    // Slash commands: "/adult …" answers one message with that shortcut's
+    // model; every other command acts locally and sends nothing.
+    final command = parseSlashCommand(text, _shortcutNames(provider));
+    String? modelShortcut = provider.stickyModelShortcut;
+    if (command != null) {
+      if (command.kind != SlashCommandKind.sendWithShortcut) {
+        textController.clear();
+        await _runSlashCommand(command, provider);
+        return;
+      }
+      text = command.message!;
+      modelShortcut = command.shortcut;
+    }
+
     String? currentContext = _selectedContext;
     setState(() {
       _selectedContext = null;
@@ -986,12 +1011,185 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
 
     _resumeFollowingAndScroll(delayMs: 300, animated: true);
 
-    await provider.sendMessageStreamToServer(text, context: _chatScope);
+    await provider.sendMessageStreamToServer(text, context: _chatScope, modelShortcut: modelShortcut);
 
     // Plans sheet is shown reactively via _onMessageProviderChanged listener
 
     provider.clearSelectedFiles();
     provider.setSendingMessage(false);
+  }
+
+  Iterable<String> _shortcutNames(MessageProvider provider) {
+    final state = provider.chatModelShortcuts;
+    return state.enabled ? state.shortcuts.map((s) => s.name) : const <String>[];
+  }
+
+  SlashCommandTexts _slashTexts() {
+    final l10n = context.l10n;
+    return SlashCommandTexts(
+      sendWithShortcut: (name, model) => model == null || model.isEmpty
+          ? l10n.slashSendWithShortcutUnset(name)
+          : l10n.slashSendWithShortcut(name, model),
+      toggleShortcut: (name, active) => active ? l10n.slashToggleShortcutOff(name) : l10n.slashToggleShortcutOn(name),
+      model: l10n.slashModelCommand,
+      clear: l10n.slashClearCommand,
+      apps: l10n.slashAppsCommand,
+      review: l10n.slashReviewCommand,
+      help: l10n.slashHelpCommand,
+    );
+  }
+
+  List<SlashCommandSuggestion> _slashSuggestionsFor(String input, MessageProvider provider) {
+    final state = provider.chatModelShortcuts;
+    return slashCommandSuggestions(
+      input,
+      shortcuts: {
+        if (state.enabled)
+          for (final s in state.shortcuts) s.name: s.model,
+      },
+      activeShortcut: provider.stickyModelShortcut,
+      texts: _slashTexts(),
+    );
+  }
+
+  Widget _buildSlashCommandPopup(MessageProvider provider) {
+    if (!textFieldFocusNode.hasFocus) return const SizedBox.shrink();
+    final suggestions = _slashSuggestionsFor(textController.text, provider);
+    return SlashCommandPopup(
+      suggestions: suggestions,
+      onSelected: (suggestion) {
+        HapticFeedback.selectionClick();
+        if (suggestion.runsImmediately) {
+          _sendMessageUtil(suggestion.insert);
+          return;
+        }
+        textController.value = TextEditingValue(
+          text: suggestion.insert,
+          selection: TextSelection.collapsed(offset: suggestion.insert.length),
+        );
+      },
+    );
+  }
+
+  Widget _buildStickyShortcutChip(MessageProvider provider) {
+    final sticky = provider.stickyModelShortcut;
+    if (sticky == null) return const SizedBox.shrink();
+    final model = provider.chatModelShortcuts.byName(sticky)?.model;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: GestureDetector(
+          onTap: () => _runSlashCommand(
+            ParsedSlashCommand(SlashCommandKind.toggleShortcut, shortcut: sticky, turnOn: false),
+            provider,
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2A2A30),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.white24),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.bolt, size: 14, color: Colors.white),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    model == null
+                        ? context.l10n.chatShortcutActive(sticky)
+                        : '${context.l10n.chatShortcutActive(sticky)} · $model',
+                    style: const TextStyle(color: Colors.white, fontSize: 12.5),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Icon(Icons.close, size: 14, color: Colors.white70),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _runSlashCommand(ParsedSlashCommand command, MessageProvider provider) async {
+    final l10n = context.l10n;
+    switch (command.kind) {
+      case SlashCommandKind.sendWithShortcut:
+        return;
+      case SlashCommandKind.toggleShortcut:
+        final name = command.shortcut!;
+        final turnOn = command.turnOn ?? provider.stickyModelShortcut != name;
+        if (!turnOn) {
+          provider.setStickyModelShortcut(null);
+          AppSnackbar.showSnackbar(l10n.chatShortcutTurnedOff(name));
+          return;
+        }
+        if (!(provider.chatModelShortcuts.byName(name)?.isConfigured ?? false)) {
+          AppSnackbar.showSnackbar(l10n.chatShortcutPickModelFirst(name));
+          await ChatModelShortcutsSheet.show(context);
+          if (!(provider.chatModelShortcuts.byName(name)?.isConfigured ?? false)) return;
+        }
+        provider.setStickyModelShortcut(name);
+        AppSnackbar.showSnackbar(l10n.chatShortcutTurnedOn(name));
+        return;
+      case SlashCommandKind.shortcutNeedsArgument:
+        AppSnackbar.showSnackbar(l10n.chatShortcutNeedsMessage(command.shortcut!));
+        return;
+      case SlashCommandKind.openModelSettings:
+        FocusManager.instance.primaryFocus?.unfocus();
+        await ChatModelShortcutsSheet.show(context);
+        return;
+      case SlashCommandKind.clearChat:
+        _handleAppSelection('clear_chat', context.read<AppProvider>());
+        return;
+      case SlashCommandKind.openApps:
+        FocusManager.instance.primaryFocus?.unfocus();
+        scaffoldKey.currentState?.openEndDrawer();
+        return;
+      case SlashCommandKind.openDayReview:
+        FocusManager.instance.primaryFocus?.unfocus();
+        await routeToPage(context, DayReviewPage(date: DayReviewPage.todayKey()));
+        return;
+      case SlashCommandKind.help:
+        FocusManager.instance.primaryFocus?.unfocus();
+        final rows = _slashSuggestionsFor('/', provider);
+        await showModalBottomSheet(
+          context: context,
+          backgroundColor: const Color(0xFF1F1F25),
+          builder: (ctx) => SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(4, 16, 4, 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(l10n.slashCommandsHelpTitle,
+                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+                  ),
+                  const SizedBox(height: 8),
+                  Flexible(
+                    child: SlashCommandPopup(
+                      suggestions: rows,
+                      onSelected: (s) {
+                        Navigator.of(ctx).pop();
+                        textController.text = s.insert;
+                        textFieldFocusNode.requestFocus();
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        return;
+    }
   }
 
   Widget _scopeChip({required String label, required bool selected, required VoidCallback onTap}) {

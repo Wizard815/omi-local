@@ -18854,6 +18854,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No reviewed days yet.'**
   String get dayReviewsNone;
+
+  /// Slash command popup: one-shot model shortcut
+  ///
+  /// In en, this message translates to:
+  /// **'Answer this message with the /{shortcut} model ({model})'**
+  String slashSendWithShortcut(String shortcut, String model);
+
+  /// Slash command popup: shortcut without a model
+  ///
+  /// In en, this message translates to:
+  /// **'Answer this message with the /{shortcut} model (not set yet)'**
+  String slashSendWithShortcutUnset(String shortcut);
+
+  /// Slash command popup: sticky toggle on
+  ///
+  /// In en, this message translates to:
+  /// **'Keep using the /{shortcut} model until you toggle it off'**
+  String slashToggleShortcutOn(String shortcut);
+
+  /// Slash command popup: sticky toggle off
+  ///
+  /// In en, this message translates to:
+  /// **'Turn the /{shortcut} model off (it is on now)'**
+  String slashToggleShortcutOff(String shortcut);
+
+  /// Slash command popup: /model
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which model each shortcut uses'**
+  String get slashModelCommand;
+
+  /// Slash command popup: /clear
+  ///
+  /// In en, this message translates to:
+  /// **'Clear this chat'**
+  String get slashClearCommand;
+
+  /// Slash command popup: /apps
+  ///
+  /// In en, this message translates to:
+  /// **'Open chat apps'**
+  String get slashAppsCommand;
+
+  /// Slash command popup: /review
+  ///
+  /// In en, this message translates to:
+  /// **'Review today: keep the conversations you star, summarize the rest'**
+  String get slashReviewCommand;
+
+  /// Slash command popup: /help
+  ///
+  /// In en, this message translates to:
+  /// **'Show all chat commands'**
+  String get slashHelpCommand;
+
+  /// Title of the /help sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Chat commands'**
+  String get slashCommandsHelpTitle;
+
+  /// Chip above the chat input while a model shortcut is toggled on
+  ///
+  /// In en, this message translates to:
+  /// **'/{shortcut} model on'**
+  String chatShortcutActive(String shortcut);
+
+  /// Snackbar after toggling a model shortcut on
+  ///
+  /// In en, this message translates to:
+  /// **'/{shortcut} model on: every message uses it until you send /{shortcut} toggle again'**
+  String chatShortcutTurnedOn(String shortcut);
+
+  /// Snackbar after toggling a model shortcut off
+  ///
+  /// In en, this message translates to:
+  /// **'/{shortcut} model off: back to the base model'**
+  String chatShortcutTurnedOff(String shortcut);
+
+  /// Snackbar when toggling an unconfigured shortcut
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a model for /{shortcut} first'**
+  String chatShortcutPickModelFirst(String shortcut);
+
+  /// Snackbar for a bare shortcut command
+  ///
+  /// In en, this message translates to:
+  /// **'Type a message after /{shortcut}, or /{shortcut} toggle to keep it on'**
+  String chatShortcutNeedsMessage(String shortcut);
+
+  /// Model shortcuts sheet when the backend has no local LLM
+  ///
+  /// In en, this message translates to:
+  /// **'Model shortcuts need the self-hosted local LLM backend.'**
+  String get chatShortcutsUnavailable;
+
+  /// Model shortcuts sheet title
+  ///
+  /// In en, this message translates to:
+  /// **'Chat model shortcuts'**
+  String get chatModelShortcutsTitle;
+
+  /// Model shortcuts sheet explanation
+  ///
+  /// In en, this message translates to:
+  /// **'Type /name your question to answer one message with that model, or /name toggle to keep using it.'**
+  String get chatModelShortcutsHint;
+
+  /// Model shortcuts sheet: the default chat model
+  ///
+  /// In en, this message translates to:
+  /// **'Base model: {model}'**
+  String chatModelShortcutsBaseModel(String model);
+
+  /// Model shortcuts sheet: shortcut without a model
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get chatModelShortcutsNotSet;
+
+  /// Model shortcuts sheet: new shortcut name field
+  ///
+  /// In en, this message translates to:
+  /// **'name'**
+  String get chatModelShortcutsAddLabel;
+
+  /// Model shortcuts sheet: add button
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get chatModelShortcutsAddButton;
+
+  /// Model shortcuts sheet: save error
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the shortcut'**
+  String get chatModelShortcutsSaveFailed;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
