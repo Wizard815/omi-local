@@ -126,8 +126,12 @@ services:
       MODEL_ALLOW: ${MODEL_ALLOW:-}
       MODEL_CACHE_TTL: "60"
       MERGE_PORT: "4000"
-      # Shared Redis — allowlist syncs between dashboard and proxy
-      REDIS_DB_HOST: ${REDIS_DB_HOST:-redis}
+      # Shared Redis — allowlist syncs between dashboard and proxy. Redis runs
+      # inside omi-local (entrypoint.sh, 0.0.0.0:6380, not published to the
+      # host) — there is no separate "redis" service in this stack, so the old
+      # default hostname never resolved and the dashboard allowlist silently
+      # never reached the proxy.
+      REDIS_DB_HOST: ${REDIS_DB_HOST:-omi-local}
       REDIS_DB_PORT: ${REDIS_DB_PORT:-6380}
       REDIS_DB_PASSWORD: ${REDIS_DB_PASSWORD:-}
     logging:
