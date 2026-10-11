@@ -123,6 +123,19 @@ def set_user_time_zone_if_missing(uid: str, time_zone: str) -> bool:
     return True
 
 
+def set_user_time_zone(uid: str, time_zone: str) -> None:
+    """Authoritative time-zone write from a mobile client that does not register an FCM token.
+
+    Same write ``save_token`` performs (zone + materialized daily-summary schedule
+    defaults), minus the token: a self-hosted app with FCM registration disabled
+    otherwise never told the backend its zone, so recaps and day boundaries ran in UTC.
+    """
+    user_ref = db.collection('users').document(uid)
+    user_doc = user_ref.get()
+    user_data = _typed_doc(user_doc) if getattr(user_doc, "exists", False) else {}
+    user_ref.set({'time_zone': time_zone, **daily_summary_schedule_defaults(user_data)}, merge=True)
+
+
 # **************************************
 # *** Daily Summary Time Preferences ***
 # **************************************

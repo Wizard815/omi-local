@@ -120,6 +120,7 @@ from utils.http_client import close_all_clients
 from utils.jit_rollout import close_posthog_control_plane
 from utils.free_tier_cohort import close_free_tier_control_plane
 from utils.metrics import start_metrics_sidecar_server, stop_metrics_sidecar_server
+from utils.other.local_scheduler import local_scheduler_enabled, run_local_scheduler
 from utils.executors import (
     drain_background_tasks,
     log_executor_health,
@@ -351,6 +352,9 @@ async def startup_event():
         proactive_message_dispatcher(),
         name='proactive_message_dispatcher',
     )
+    # Self-hosted: no Cloud Scheduler fires the hourly daily-summary job here.
+    if local_scheduler_enabled():
+        start_background_task(run_local_scheduler(), name='local_hourly_scheduler')
 
 
 def _drain_pending_deletion_wipes():

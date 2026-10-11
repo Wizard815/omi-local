@@ -22294,6 +22294,22 @@
         "title": "SavePayPalPaymentDetailsRequest",
         "type": "object"
       },
+      "SaveTimeZoneRequest": {
+        "properties": {
+          "time_zone": {
+            "description": "IANA zone name, e.g. \"America/Chicago\"",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Time Zone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "time_zone"
+        ],
+        "title": "SaveTimeZoneRequest",
+        "type": "object"
+      },
       "ScreenActivityAppSummary": {
         "properties": {
           "count": {
@@ -62811,6 +62827,91 @@
         "tags": [
           "v1"
         ]
+      }
+    },
+    "/v1/users/time-zone": {
+      "put": {
+        "description": "Record the device's IANA time zone without registering a push token.\n\nThe self-hosted app never registers an FCM token, which was the only path\nthat told the backend the user's zone — so day boundaries for recaps, the\nhourly daily-summary job's recipient selection, and the chat's notion of\n\"today\" all ran in UTC.",
+        "operationId": "save_time_zone_v1_users_time_zone_put",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveTimeZoneRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FcmTokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Save Time Zone"
       }
     },
     "/v1/users/training-data-opt-in": {

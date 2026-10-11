@@ -107,6 +107,9 @@ export ADMIN_KEY="${ADMIN_KEY:-local-dev-admin-key-}"
 export BASE_API_URL="${BASE_API_URL:-http://127.0.0.1:8000}"
 export API_BASE_URL="${BASE_API_URL}"
 export OMI_LLM_GATEWAY_FEATURE_MODE=off
+# Upstream fires the hourly daily-summary/notification job from Cloud Scheduler;
+# here the backend runs it in-process (utils/other/local_scheduler.py).
+export OMI_LOCAL_SCHEDULER="${OMI_LOCAL_SCHEDULER:-1}"
 export PORT=8000 PYTHONUNBUFFERED=1
 
 # Optional: route chat/LLM calls to a local OpenAI-compatible server
