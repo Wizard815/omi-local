@@ -83,3 +83,23 @@ def test_utils_layer_does_not_import_routers():
         for alias in node.names
     }
     assert not any((name or '').startswith('routers') for name in imported)
+
+
+def test_chat_offers_the_tool_to_dashboard_configured_local_mode_with_a_synced_calendar(fake_redis, monkeypatch):
+    """The old gate read OMI_LOCAL_MODEL only, hiding the tool when the model was picked in the dashboard."""
+    import asyncio
+
+    import utils.llm.model_config as model_config
+    from utils.retrieval.tools.device_calendar_tools import device_calendar_tools_for
+
+    device_calendar_db.store_events('uid-1', [_event('standup', 1_000, 2_000)])
+    monkeypatch.delenv('OMI_LOCAL_MODEL', raising=False)
+    monkeypatch.delenv('LOCAL_LLM_MODEL', raising=False)
+    monkeypatch.setattr(model_config, '_redis_model', lambda kind: 'llama/gemma-4-12b' if kind == 'primary' else None)
+
+    monkeypatch.delenv('OPENAI_BASE_URL', raising=False)
+    assert asyncio.run(device_calendar_tools_for('uid-1')) == []  # hosted deployment
+
+    monkeypatch.setenv('OPENAI_BASE_URL', 'http://omi-proxy:4000/v1')
+    assert asyncio.run(device_calendar_tools_for('uid-1')) == [get_device_calendar_events_tool]
+    assert asyncio.run(device_calendar_tools_for('uid-2')) == []  # no calendar synced

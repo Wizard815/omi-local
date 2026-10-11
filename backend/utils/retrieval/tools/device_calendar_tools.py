@@ -4,7 +4,7 @@ Replaces Google Calendar API dependency for self-hosted setups.
 """
 
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, List, Optional, cast
 
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
@@ -97,3 +97,19 @@ def get_device_calendar_events_tool_config():
         "description": "Get upcoming calendar events from the user's device calendar (Android CalendarContract). Works with Google Calendar, DAVx5/CalDAV (Nextcloud), Exchange, and local device calendars — all through the phone's built-in calendar provider.",
         "func": get_device_calendar_events_tool,
     }
+
+
+async def device_calendar_tools_for(uid: str) -> List[Any]:
+    """[the device-calendar tool] for a self-hosted user with a synced calendar, else [].
+
+    Local mode counts a primary model picked in the dashboard (is_local_mode), not
+    just OMI_LOCAL_MODEL — the env check alone hid the tool for those setups.
+    """
+    from utils.executors import db_executor, run_blocking
+    from utils.llm.model_config import is_local_mode
+
+    if not await run_blocking(db_executor, is_local_mode):
+        return []
+    if not await run_blocking(db_executor, device_calendar_db.has_events, uid):
+        return []
+    return [get_device_calendar_events_tool]

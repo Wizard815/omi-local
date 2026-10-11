@@ -1,14 +1,16 @@
 """Self-hosted chat model shortcuts: "/adult <question>" answers with another model.
 
 Seams: model_config's Redis/env lookups and chat_model_shortcuts' Redis hash are
-patched; routers.chat.send_message runs for real with chat_db, quota and
-execute_chat_stream replaced, so the test observes which model the answer
-features would resolve to *inside* the streamed turn.
+patched; routers.chat.send_message and graph.execute_chat_stream (the routing
+wrapper) run for real with chat_db, quota and graph._execute_routed_chat_stream
+replaced, so the test observes which model the answer features would resolve
+to *inside* the streamed turn.
 """
 
 import asyncio
 import base64
 import json
+from types import SimpleNamespace
 
 import pytest
 from starlette.requests import Request
@@ -16,6 +18,7 @@ from starlette.requests import Request
 import routers.chat as chat_router
 import utils.llm.chat_model_shortcuts as shortcuts
 import utils.llm.model_config as model_config
+import utils.retrieval.graph as graph
 from models.chat import SendMessageRequest
 from utils.chat_session_target import ResolvedChatTarget
 
@@ -35,9 +38,9 @@ def local_mode(monkeypatch):
 def shortcut_store(monkeypatch):
     store: dict[str, str] = {}
     monkeypatch.delenv(shortcuts.SHORTCUTS_ENV, raising=False)
-    monkeypatch.setattr(shortcuts.redis_db, 'get_chat_model_shortcuts', lambda: dict(store))
-    monkeypatch.setattr(shortcuts.redis_db, 'set_chat_model_shortcut', lambda n, m: store.__setitem__(n, m))
-    monkeypatch.setattr(shortcuts.redis_db, 'delete_chat_model_shortcut', lambda n: store.pop(n, None))
+    monkeypatch.setattr(shortcuts.shortcuts_db, 'get_chat_model_shortcuts', lambda: dict(store))
+    monkeypatch.setattr(shortcuts.shortcuts_db, 'set_chat_model_shortcut', lambda n, m: store.__setitem__(n, m))
+    monkeypatch.setattr(shortcuts.shortcuts_db, 'delete_chat_model_shortcut', lambda n: store.pop(n, None))
     return store
 
 
@@ -142,7 +145,7 @@ def chat_turn(monkeypatch, local_mode, shortcut_store):
         lambda uid, app_id=None, chat_session_id=None: list(reversed(persisted)),
     )
 
-    async def _fake_execute_chat_stream(uid, messages, app, cited=False, callback_data=None, **kwargs):
+    async def _fake_routed_chat_stream(uid, messages, app=None, cited=False, callback_data=None, **kwargs):
         async def _producer():
             # A spawned producer task, like the agentic runner's.
             return model_config.get_model('chat_agent')
@@ -153,7 +156,7 @@ def chat_turn(monkeypatch, local_mode, shortcut_store):
         yield 'data: ok'
         yield None
 
-    monkeypatch.setattr(chat_router, 'execute_chat_stream', _fake_execute_chat_stream)
+    monkeypatch.setattr(graph, '_execute_routed_chat_stream', _fake_routed_chat_stream)
 
     def _run(text: str, model_shortcut: str | None = None) -> list[str]:
         response = chat_router.send_message(
@@ -176,7 +179,7 @@ def chat_turn(monkeypatch, local_mode, shortcut_store):
     return _run, persisted, seen
 
 
-def test_typed_shortcut_answers_with_its_model_and_stores_clean_text(chat_turn, shortcut_store):
+def test_typed_shortcut_answers_with_its_model_without_the_prefix(chat_turn, shortcut_store):
     run, persisted, seen = chat_turn
     shortcut_store['adult'] = 'llama/big-70b'
 
@@ -184,9 +187,20 @@ def test_typed_shortcut_answers_with_its_model_and_stores_clean_text(chat_turn, 
 
     assert seen['answer_model'] == 'llama/big-70b'
     assert seen['last_text'] == 'what did I promise Sam?'
-    assert persisted[0]['text'] == 'what did I promise Sam?'
+    # Stored as typed (the mobile app strips the prefix itself and sends model_shortcut).
+    assert persisted[0]['text'] == '/adult what did I promise Sam?'
     # The override does not leak past the turn.
     assert model_config.get_model('chat_agent') == 'llama/gemma-4-12b'
+
+
+def test_sticky_toggle_field_answers_with_its_model(chat_turn, shortcut_store):
+    run, _persisted, seen = chat_turn
+    shortcut_store['adult'] = 'llama/big-70b'
+
+    run('what did I promise Sam?', model_shortcut='adult')
+
+    assert seen['answer_model'] == 'llama/big-70b'
+    assert seen['last_text'] == 'what did I promise Sam?'
 
 
 def test_plain_turn_uses_the_base_model(chat_turn, shortcut_store):
@@ -199,10 +213,19 @@ def test_plain_turn_uses_the_base_model(chat_turn, shortcut_store):
 
 
 def test_unconfigured_shortcut_explains_instead_of_answering(chat_turn):
-    run, persisted, seen = chat_turn
+    run, _persisted, seen = chat_turn
 
     frames = run('hello', model_shortcut='adult')
 
     assert 'answer_model' not in seen  # no LLM turn ran
-    assert persisted == []  # nothing stored
     assert '/adult model' in _decode_done(frames)['text']
+
+
+def test_shortcuts_do_nothing_outside_local_mode(monkeypatch, shortcut_store):
+    monkeypatch.delenv('OPENAI_BASE_URL', raising=False)
+    shortcut_store['adult'] = 'llama/big-70b'
+    messages = [SimpleNamespace(sender='human', text='/adult hi')]
+
+    routing = shortcuts.route_chat_turn(messages, 'adult')
+
+    assert routing == shortcuts.ChatTurnRouting(None, messages)

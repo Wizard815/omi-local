@@ -84,8 +84,6 @@ from utils.multipart import (
 )
 from utils.retrieval.graph import execute_chat_stream
 from utils.llm.usage_tracker import set_usage_context, reset_usage_context, Features
-from utils.llm.chat_model_shortcuts import resolve_turn_shortcut, unconfigured_shortcut_reply
-from utils.llm.model_config import is_local_mode, reset_chat_model_override, set_chat_model_override
 from utils.users import get_user_display_name
 from utils.log_sanitizer import sanitize_pii
 from utils.chat_followup import followup_content_blocks
@@ -389,6 +387,12 @@ def _required_chat_quota_provider() -> str | None:
     return 'anthropic' if get_chat_agent_route() == CHAT_AGENT_ROUTE_DIRECT else None
 
 
+def _done_frame_response(message: ResponseMessage) -> StreamingResponse:
+    """A one-frame SSE reply for answers that never reach the model."""
+    encoded = base64.b64encode(bytes(message.model_dump_json(), 'utf-8')).decode('utf-8')
+    return StreamingResponse(iter([f"done: {encoded}\n\n"]), media_type="text/event-stream")
+
+
 @router.post('/v2/messages', tags=['chat'], response_model=ResponseMessage)
 def send_message(
     data: SendMessageRequest,
@@ -425,49 +429,13 @@ def send_message(
             ChatSession(**_quota_target.session) if _quota_target.session else None,
         )
 
-        def _quota_exceeded_stream():
-            encoded = base64.b64encode(bytes(response_msg.model_dump_json(), 'utf-8')).decode('utf-8')
-            yield f"done: {encoded}\n\n"
-
-        return StreamingResponse(_quota_exceeded_stream(), media_type="text/event-stream")
+        return _done_frame_response(response_msg)
 
     compat_app_id = app_id or plugin_id
     logger.info(f'send_message {sanitize_pii(data.text)} {compat_app_id} {uid}')
 
     if compat_app_id in ['null', '']:
         compat_app_id = None
-
-    # Self-hosted chat model shortcut ("/adult ..." or model_shortcut="adult").
-    # Resolved before anything is persisted: an unconfigured shortcut gets an
-    # in-memory reply saying so, instead of a base-model answer the user did not
-    # ask for. Only local-LLM deployments have shortcuts at all.
-    shortcut_model: Optional[str] = None
-    if is_local_mode():
-        turn_shortcut = resolve_turn_shortcut(data.text, data.model_shortcut)
-        if turn_shortcut.name and not turn_shortcut.model:
-            unconfigured_reply = ResponseMessage(
-                **Message(
-                    id=str(uuid.uuid4()),
-                    text=unconfigured_shortcut_reply(turn_shortcut.name),
-                    created_at=datetime.now(timezone.utc),
-                    sender='ai',
-                    type='text',
-                    app_id=compat_app_id,
-                ).model_dump(),
-                ask_for_nps=False,
-            )
-
-            def _unconfigured_shortcut_stream():
-                encoded = base64.b64encode(bytes(unconfigured_reply.model_dump_json(), 'utf-8')).decode('utf-8')
-                yield f"done: {encoded}\n\n"
-
-            return StreamingResponse(_unconfigured_shortcut_stream(), media_type="text/event-stream")
-        if turn_shortcut.model:
-            logger.info('send_message uses chat model shortcut /%s uid=%s', turn_shortcut.name, uid)
-            shortcut_model = turn_shortcut.model
-            data = data.model_copy(update={'text': turn_shortcut.text})
-    elif data.model_shortcut:
-        logger.info('send_message ignoring model_shortcut outside local-LLM mode uid=%s', uid)
 
     # get chat session — a named session also decides which app this turn runs as
     target = resolve_chat_target(uid, compat_app_id, chat_session_id)
@@ -518,11 +486,7 @@ def send_message(
         logger.exception('Failed to record chat quota question source=v2_messages uid=%s', uid)
         response_msg = _build_quota_accounting_unavailable_reply(compat_app_id)
 
-        def _quota_accounting_unavailable_stream():
-            encoded = base64.b64encode(bytes(response_msg.model_dump_json(), 'utf-8')).decode('utf-8')
-            yield f"done: {encoded}\n\n"
-
-        return StreamingResponse(_quota_accounting_unavailable_stream(), media_type="text/event-stream")
+        return _done_frame_response(response_msg)
 
     if chat_session:
         chat_db.add_message_to_chat_session(uid, chat_session.id, message.id)
@@ -644,9 +608,6 @@ def send_message(
         streamed_terminal_error = False
         # Set usage context for streaming (can't use 'with' across yields)
         usage_token = set_usage_context(uid, Features.CHAT)
-        # Same for the turn's model shortcut: set before execute_chat_stream so
-        # the producer tasks it spawns inherit it.
-        chat_model_token = set_chat_model_override(shortcut_model)
 
         def emit_done_frame(response: str) -> str:
             """Persist a terminal answer. Typed stream errors stay failed for journey/fallback SLIs.
@@ -713,6 +674,7 @@ def send_message(
                 context=data.context,
                 platform=x_app_platform,
                 client_kind=mobile_journey_attempt.client_kind,
+                model_shortcut=data.model_shortcut,
             ):
                 if chunk:
                     if chunk.startswith('error: '):
@@ -766,7 +728,6 @@ def send_message(
             raise
         finally:
             reset_usage_context(usage_token)
-            reset_chat_model_override(chat_model_token)
             if not journey_attempt.finished:
                 journey_attempt.finish('failure' if stream_exhausted else 'cancelled')
 

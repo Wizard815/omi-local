@@ -468,6 +468,7 @@ def _get_agentic_module():
     device_calendar_tool = MagicMock()
     device_calendar_tool.name = "get_device_calendar_events_tool"
     device_calendar_tools_mod.get_device_calendar_events_tool = device_calendar_tool
+    device_calendar_tools_mod.device_calendar_tools_for = AsyncMock(return_value=[])
 
     # Stub app_tools
     app_tools_mod = _stub_module("utils.retrieval.tools.app_tools")

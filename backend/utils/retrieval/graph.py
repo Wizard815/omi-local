@@ -22,7 +22,9 @@ from models.chat import ChatSession, Message, PageContext
 from utils.journey_metrics_contract import ClientKind
 from utils.llm.chat import get_current_datetime_block, get_user_timezone, retrieve_is_file_question
 from utils.llm.clients import get_llm
+from utils.llm.chat_model_shortcuts import route_chat_turn
 from utils.llm.gateway_client import GatewayDirectModelSurfaceBlocked
+from utils.llm.model_config import reset_chat_model_override, set_chat_model_override
 from utils.llm.usage_tracker import Features, track_usage
 from utils.executors import db_executor, llm_executor, run_blocking
 from utils.log_sanitizer import sanitize
@@ -380,6 +382,49 @@ async def execute_persona_chat_stream(
 
 
 async def execute_chat_stream(
+    uid: str,
+    messages: List[Message],
+    app: Optional[App] = None,
+    cited: Optional[bool] = False,
+    callback_data: Optional[Dict[str, Any]] = None,
+    chat_session: Optional[ChatSession] = None,
+    context: Optional[PageContext] = None,
+    platform: Optional[str] = None,
+    client_kind: Optional[ClientKind] = None,
+    model_shortcut: Optional[str] = None,
+) -> AsyncGenerator[Optional[str], None]:
+    """Run one chat turn, with the self-hosted chat model shortcut ("/adult …") applied.
+
+    The shortcut's model replaces the base chat model for the answer-writing
+    features of this turn only (a ContextVar that producer tasks inherit). An
+    unconfigured shortcut answers with an explanation instead of the base model.
+    """
+    if callback_data is None:
+        callback_data = {}
+    routing = await run_blocking(db_executor, route_chat_turn, messages, model_shortcut)
+    if routing.unconfigured_reply is not None:
+        callback_data['answer'] = routing.unconfigured_reply
+        yield None
+        return
+    token = set_chat_model_override(routing.model)
+    try:
+        async for chunk in _execute_routed_chat_stream(
+            uid,
+            routing.messages,
+            app,
+            cited=cited,
+            callback_data=callback_data,
+            chat_session=chat_session,
+            context=context,
+            platform=platform,
+            client_kind=client_kind,
+        ):
+            yield chunk
+    finally:
+        reset_chat_model_override(token)
+
+
+async def _execute_routed_chat_stream(
     uid: str,
     messages: List[Message],
     app: Optional[App] = None,

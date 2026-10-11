@@ -478,8 +478,6 @@ async def test_gateway_mode_selects_openai_agent_runner(agentic_mod):
             return 'SYSTEM'
         if function is agentic_mod.load_app_tools:
             return []
-        if function is agentic_mod.is_local_mode:
-            return False  # self-hosted device-calendar tool gate (reads the dashboard's Redis pick)
         raise AssertionError(f'unexpected blocking setup call: {function}')
 
     async def openai_runner(system, messages, schemas, _registry, callback, full_response, _guard, _configurable):
@@ -533,8 +531,6 @@ async def test_anthropic_byok_stays_on_openai_agent_runner(agentic_mod):
             return 'SYSTEM'
         if function is agentic_mod.load_app_tools:
             return []
-        if function is agentic_mod.is_local_mode:
-            return False  # self-hosted device-calendar tool gate (reads the dashboard's Redis pick)
         raise AssertionError(f'unexpected blocking setup call: {function}')
 
     async def openai_runner(_system, _messages, _schemas, _registry, callback, full_response, _guard, _configurable):
