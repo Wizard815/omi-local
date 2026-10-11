@@ -56,6 +56,12 @@ def test_material_keeps_every_conversation_within_budget_and_masks_redactions():
     assert len(material) <= 3000 + 2000
 
 
+def test_material_puts_undated_conversations_after_dated_ones():
+    undated = [dr.MaterialItem(None, None, f'Undated {n}', 'No timestamps.', [], '') for n in (1, 2)]
+    material = dr.render_material([undated[0], _item(15, 'Call', 'Called mom.', ''), undated[1]])
+    assert material.index('Call') < material.index('Undated 1') < material.index('Undated 2')
+
+
 def test_prompt_carries_corrections_as_ground_truth_and_never_leaks_redactions():
     corrections = [
         {'type': 'paragraph', 'text': 'Dinner moved to Wednesday.'},

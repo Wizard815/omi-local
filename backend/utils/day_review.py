@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 REDACTED = '[redacted]'
@@ -150,7 +150,9 @@ def render_material(
     transcript excerpts, so one three-hour meeting cannot crowd out the rest of
     the day. Redacted text is masked before the model ever sees it.
     """
-    ordered = sorted(items, key=lambda it: (it.started_at is None, it.started_at or datetime.min))
+    ordered = sorted(
+        items, key=lambda it: (it.started_at is None, it.started_at or datetime.min.replace(tzinfo=timezone.utc))
+    )
     heads: List[str] = []
     for it in ordered:
         lines = [f'### {_time_label(it.started_at, it.finished_at, tz)} — {it.title or "Untitled conversation"}']
