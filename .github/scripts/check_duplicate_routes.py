@@ -45,8 +45,17 @@ ENTRYPOINTS = {
 #   dedupe this registration. Evidence:
 #   omi-knowledge-base/projects/monorepo-cleanup/evidence/
 #   2026-09-03-pr12697-highrisk-audit.md (FINDING B).
+# ("main", "get", "/"): omi-local's self-hosting dashboard (routers/dashboard.py,
+#   mounted first) is the main app's landing page, which the app's "Open Server
+#   Dashboard" button opens (app/lib/pages/settings/developer.dart, joinApiUrl(
+#   baseUrl, '')); desktop_core's "/" is only an alias of its "/health"
+#   handler, which stays reachable on main, and keeps serving "/" on
+#   desktop_backend where no dashboard is mounted. Self-hosted probes
+#   (omi-host/run-omi-local-host.sh) use /health. No follow-up: the shadowing is
+#   the intended behavior for this fork.
 KNOWN_DUPLICATES = {
     ("main", "delete", "/v1/conversations/{}/action-items"),
+    ("main", "get", "/"),
 }
 
 ROUTER_DEF = re.compile(r"(\w+)\s*=\s*APIRouter\(([^)]*)\)", re.S)
