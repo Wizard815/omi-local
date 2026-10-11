@@ -30,6 +30,7 @@ install_firebase_auth_mutation_guard()
 from routers import (
     chat,
     chat_model_shortcuts,
+    day_reviews,
     dashboard,
     device_calendar,
     firmware,
@@ -253,6 +254,7 @@ app.include_router(developer.router)
 app.include_router(imports.router)
 app.include_router(wrapped.router)
 app.include_router(folders.router)
+app.include_router(day_reviews.router)
 app.include_router(knowledge_graph.router)
 app.include_router(goals.router)
 app.include_router(workstreams.router)
