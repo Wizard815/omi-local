@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:omi/backend/http/shared.dart';
 import 'package:omi/env/env.dart';
 import 'package:omi/services/device_calendar_service.dart';
+import 'package:omi/utils/other/api_url.dart';
 
 /// Background periodic sync of device calendar events to the Omi backend.
 class DeviceCalendarSync {
@@ -34,10 +34,8 @@ class DeviceCalendarSync {
     try {
       // Load calendars from device
       final calendars = await DeviceCalendarService.getCalendars();
-      final visibleCalendarIds = calendars
-          .where((c) => c['visible'] == true)
-          .map<int>((c) => (c['id'] as int))
-          .toList();
+      final visibleCalendarIds =
+          calendars.where((c) => c['visible'] == true).map<int>((c) => (c['id'] as int)).toList();
 
       if (visibleCalendarIds.isEmpty) {
         return {'synced': 0, 'message': 'No visible calendars'};
@@ -74,16 +72,26 @@ class DeviceCalendarSync {
         };
       }).toList();
 
-      // Push to backend
-      final baseUrl = Env.apiBaseUrl ?? 'http://192.168.20.5:8000';
+      // Push to backend. The base URL ends with "/"; "$base/v1/..." posted to
+      // "//v1/..." (404) and the ignored response reported success anyway.
+      final baseUrl = Env.apiBaseUrl;
+      if (baseUrl == null || baseUrl.isEmpty) {
+        return {'synced': 0, 'message': 'Sync failed: no server URL configured'};
+      }
       final response = await makeApiCall(
-        url: '$baseUrl/v1/device-calendar/sync',
+        url: joinApiUrl(baseUrl, 'v1/device-calendar/sync'),
         method: 'POST',
         body: jsonEncode({'events': enrichedEvents, 'calendars': calendars}),
         headers: {'Content-Type': 'application/json'},
       );
+      if (response == null || response.statusCode != 200) {
+        return {'synced': 0, 'message': 'Sync failed: server returned ${response?.statusCode ?? 'no response'}'};
+      }
 
-      return {'synced': enrichedEvents.length, 'message': 'Synced ${enrichedEvents.length} events from ${visibleCalendarIds.length} calendars'};
+      return {
+        'synced': enrichedEvents.length,
+        'message': 'Synced ${enrichedEvents.length} events from ${visibleCalendarIds.length} calendars'
+      };
     } catch (e) {
       return {'synced': 0, 'message': 'Sync failed: $e'};
     }
