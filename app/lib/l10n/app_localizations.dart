@@ -18584,6 +18584,276 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Still working — this is taking longer than usual.'**
   String get processingTakingLonger;
+
+  /// Day review page title
+  ///
+  /// In en, this message translates to:
+  /// **'Day review'**
+  String get dayReviewTitle;
+
+  /// Day reviews list page title
+  ///
+  /// In en, this message translates to:
+  /// **'Day reviews'**
+  String get dayReviewsTitle;
+
+  /// Day review load error
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this day'**
+  String get dayReviewLoadFailed;
+
+  /// Day review action error
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Try again.'**
+  String get dayReviewActionFailed;
+
+  /// Day review sort instructions
+  ///
+  /// In en, this message translates to:
+  /// **'Star the conversations you want to keep. Everything else becomes one day summary you can correct.'**
+  String get dayReviewSortHint;
+
+  /// Day review: conversations still processing
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 conversation is still processing and is not included.} other{{count} conversations are still processing and are not included.}}'**
+  String dayReviewProcessing(int count);
+
+  /// Day review: empty day
+  ///
+  /// In en, this message translates to:
+  /// **'No finished conversations on this day.'**
+  String get dayReviewEmpty;
+
+  /// Star button tooltip in day review
+  ///
+  /// In en, this message translates to:
+  /// **'Keep as a conversation'**
+  String get dayReviewKeepTooltip;
+
+  /// Day review finalize button
+  ///
+  /// In en, this message translates to:
+  /// **'Keep {kept} · Summarize {rolled}'**
+  String dayReviewFinalizeButton(int kept, int rolled);
+
+  /// Day review finalize confirmation title
+  ///
+  /// In en, this message translates to:
+  /// **'Build the day summary?'**
+  String get dayReviewConfirmTitle;
+
+  /// Day review finalize confirmation body
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 conversation will be folded into the day summary and leave your conversation list. You can undo this with Reopen.} other{{count} conversations will be folded into the day summary and leave your conversation list. You can undo this with Reopen.}}'**
+  String dayReviewConfirmBody(int count);
+
+  /// Day review finalize confirmation button
+  ///
+  /// In en, this message translates to:
+  /// **'Summarize'**
+  String get dayReviewConfirmAction;
+
+  /// Day review busy: generating
+  ///
+  /// In en, this message translates to:
+  /// **'Writing your day summary… this can take a minute on a local model.'**
+  String get dayReviewWriting;
+
+  /// Day review busy: regenerating
+  ///
+  /// In en, this message translates to:
+  /// **'Rewriting the summary with your corrections…'**
+  String get dayReviewApplying;
+
+  /// Day review busy: reopening
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring the conversations…'**
+  String get dayReviewReopening;
+
+  /// Reopen confirmation title
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen this day?'**
+  String get dayReviewReopenTitle;
+
+  /// Reopen confirmation body
+  ///
+  /// In en, this message translates to:
+  /// **'The summarized conversations come back to your list and this summary (with its corrections) is deleted.'**
+  String get dayReviewReopenBody;
+
+  /// Reopen action
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen day'**
+  String get dayReviewReopenAction;
+
+  /// Copy button tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Copy summary'**
+  String get dayReviewCopy;
+
+  /// Snackbar after copying the summary
+  ///
+  /// In en, this message translates to:
+  /// **'Day summary copied'**
+  String get dayReviewCopied;
+
+  /// Conversation without a title
+  ///
+  /// In en, this message translates to:
+  /// **'Untitled conversation'**
+  String get dayReviewUntitled;
+
+  /// Day review header counts
+  ///
+  /// In en, this message translates to:
+  /// **'{rolled} summarized · {kept} kept'**
+  String dayReviewCounts(int rolled, int kept);
+
+  /// Day review editing hint
+  ///
+  /// In en, this message translates to:
+  /// **'Select text to correct or redact it. Use + to add a paragraph.'**
+  String get dayReviewEditHint;
+
+  /// Text selection menu: attach a correction
+  ///
+  /// In en, this message translates to:
+  /// **'Correct'**
+  String get dayReviewCorrectAction;
+
+  /// Text selection menu: redact
+  ///
+  /// In en, this message translates to:
+  /// **'Redact'**
+  String get dayReviewRedactAction;
+
+  /// Correction dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Correction'**
+  String get dayReviewCorrectTitle;
+
+  /// Correction dialog hint
+  ///
+  /// In en, this message translates to:
+  /// **'What is right? e.g. \"It was Wednesday, not Tuesday\"'**
+  String get dayReviewCorrectHint;
+
+  /// Add paragraph button
+  ///
+  /// In en, this message translates to:
+  /// **'Add paragraph'**
+  String get dayReviewAddParagraph;
+
+  /// Add paragraph dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Add a paragraph'**
+  String get dayReviewAddParagraphTitle;
+
+  /// Add paragraph dialog hint
+  ///
+  /// In en, this message translates to:
+  /// **'Write what the summary is missing'**
+  String get dayReviewAddParagraphHint;
+
+  /// Label on a user-added paragraph
+  ///
+  /// In en, this message translates to:
+  /// **'Your paragraph'**
+  String get dayReviewYourParagraph;
+
+  /// Corrections list title
+  ///
+  /// In en, this message translates to:
+  /// **'Your corrections'**
+  String get dayReviewCorrectionsTitle;
+
+  /// Corrections list: a redaction
+  ///
+  /// In en, this message translates to:
+  /// **'Redacted: “{quote}”'**
+  String dayReviewRedactedQuote(String quote);
+
+  /// Correction state
+  ///
+  /// In en, this message translates to:
+  /// **'Not applied yet'**
+  String get dayReviewCorrectionPending;
+
+  /// Correction state
+  ///
+  /// In en, this message translates to:
+  /// **'Applied'**
+  String get dayReviewCorrectionApplied;
+
+  /// Regenerate button
+  ///
+  /// In en, this message translates to:
+  /// **'Apply corrections ({count})'**
+  String dayReviewApplyButton(int count);
+
+  /// Kept conversations section
+  ///
+  /// In en, this message translates to:
+  /// **'Kept as conversations ({count})'**
+  String dayReviewKeptTitle(int count);
+
+  /// Rolled-up conversations section
+  ///
+  /// In en, this message translates to:
+  /// **'In this summary ({count})'**
+  String dayReviewRolledTitle(int count);
+
+  /// Banner title for today
+  ///
+  /// In en, this message translates to:
+  /// **'Review today'**
+  String get dayReviewBannerToday;
+
+  /// Banner title for an earlier day
+  ///
+  /// In en, this message translates to:
+  /// **'Review {day}'**
+  String dayReviewBannerDay(String day);
+
+  /// Banner body
+  ///
+  /// In en, this message translates to:
+  /// **'Star what to keep; the rest becomes one day summary.'**
+  String get dayReviewBannerBody;
+
+  /// Date picker tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Review another day'**
+  String get dayReviewPickDate;
+
+  /// Day reviews list: pending section
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to be sorted'**
+  String get dayReviewsToSort;
+
+  /// Day reviews list: finished section
+  ///
+  /// In en, this message translates to:
+  /// **'Reviewed days'**
+  String get dayReviewsDone;
+
+  /// Day reviews list: empty
+  ///
+  /// In en, this message translates to:
+  /// **'No reviewed days yet.'**
+  String get dayReviewsNone;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
