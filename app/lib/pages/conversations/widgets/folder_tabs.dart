@@ -8,9 +8,11 @@ import 'package:provider/provider.dart';
 
 import 'package:omi/backend/schema/folder.dart';
 import 'package:omi/pages/conversations/widgets/create_folder_sheet.dart';
+import 'package:omi/pages/conversations/widgets/folder_tree_sheet.dart';
 import 'package:omi/providers/conversation_provider.dart';
 import 'package:omi/providers/folder_provider.dart';
 import 'package:omi/utils/folders/folder_icon_mapper.dart';
+import 'package:omi/utils/folders/folder_tree.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 import 'package:omi/utils/responsive/responsive_helper.dart';
 
@@ -102,7 +104,8 @@ class _FolderTabsState extends State<FolderTabs> {
   }
 
   Widget _buildFolderTab(Folder folder) {
-    final isSelected = widget.selectedFolderId == folder.id;
+    // Tabs are top-level folders; inside a subfolder its top-level ancestor stays highlighted.
+    final isSelected = rootFolderId(widget.folders, widget.selectedFolderId) == folder.id;
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: _FolderTab(
@@ -111,8 +114,8 @@ class _FolderTabsState extends State<FolderTabs> {
         color: folder.colorValue,
         count: folder.conversationCount,
         isSelected: isSelected,
-        // If already selected, clicking clears the selection
-        onTap: () => widget.onFolderSelected(isSelected ? null : folder.id),
+        // Clicking the open folder clears the selection; from a subfolder it goes back up to this folder.
+        onTap: () => widget.onFolderSelected(widget.selectedFolderId == folder.id ? null : folder.id),
         folder: folder,
       ),
     );
@@ -147,17 +150,17 @@ class _FolderTabsState extends State<FolderTabs> {
     // Starred tab
     tabs.add(_buildStarredTab());
 
-    // If a folder is selected, show it first (after Starred)
-    final selectedFolder = widget.selectedFolderId != null
-        ? widget.folders.firstWhereOrNull((f) => f.id == widget.selectedFolderId)
-        : null;
+    // If a folder is selected, show its top-level folder first (after Starred)
+    final roots = rootFolders(widget.folders);
+    final selectedRootId = rootFolderId(widget.folders, widget.selectedFolderId);
+    final selectedFolder = roots.firstWhereOrNull((f) => f.id == selectedRootId);
     if (selectedFolder != null) {
       tabs.add(_buildFolderTab(selectedFolder));
     }
 
-    // Add remaining folders (excluding selected one)
-    for (final folder in widget.folders) {
-      if (folder.id != widget.selectedFolderId) {
+    // Add remaining top-level folders (subfolders live in the SubfolderBar / folder tree)
+    for (final folder in roots) {
+      if (folder.id != selectedRootId) {
         tabs.add(_buildFolderTab(folder));
       }
     }
@@ -179,6 +182,8 @@ class _FolderTabsState extends State<FolderTabs> {
               children: tabs,
             ),
           ),
+          // Folder tree (nested folders)
+          _FolderTreeButton(onFolderSelected: widget.onFolderSelected, selectedFolderId: widget.selectedFolderId),
           // Fixed add button
           _AddFolderButton(),
         ],
@@ -266,6 +271,131 @@ class _FolderTab extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Opens the full folder tree.
+class _FolderTreeButton extends StatelessWidget {
+  final Function(String?) onFolderSelected;
+  final String? selectedFolderId;
+
+  const _FolderTreeButton({required this.onFolderSelected, required this.selectedFolderId});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(left: 8),
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          FolderTreeSheet.show(context, selectedFolderId: selectedFolderId, onFolderSelected: onFolderSelected);
+        },
+        child: Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.12), shape: BoxShape.circle),
+          child: Icon(Icons.account_tree_outlined, size: 16, color: Colors.grey[400]),
+        ),
+      ),
+    );
+  }
+}
+
+/// Breadcrumb + subfolders of the open folder, shown under the folder tabs —
+/// the "file browser" view of nested folders. Long-press a subfolder for
+/// edit / new subfolder / delete, like a tab.
+class SubfolderBar extends StatelessWidget {
+  final List<Folder> folders;
+  final String selectedFolderId;
+  final Function(String?) onFolderSelected;
+
+  const SubfolderBar({
+    super.key,
+    required this.folders,
+    required this.selectedFolderId,
+    required this.onFolderSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final current = folders.firstWhereOrNull((f) => f.id == selectedFolderId);
+    if (current == null) return const SizedBox.shrink();
+    final trail = [...folderAncestors(folders, current.id), current];
+    final children = childFolders(folders, current.id);
+    final crumbStyle = TextStyle(color: Colors.grey[400], fontSize: 12.5);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (trail.length > 1)
+            SizedBox(
+              height: 26,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                children: [
+                  for (var i = 0; i < trail.length; i++) ...[
+                    if (i > 0) Icon(Icons.chevron_right, size: 14, color: Colors.grey[600]),
+                    GestureDetector(
+                      onTap: i == trail.length - 1 ? null : () => onFolderSelected(trail[i].id),
+                      child: Center(
+                        child: Text(
+                          trail[i].name,
+                          style: i == trail.length - 1
+                              ? crumbStyle.copyWith(color: Colors.white, fontWeight: FontWeight.w600)
+                              : crumbStyle,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          SizedBox(
+            height: 34,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.only(left: 16, right: 8),
+              children: [
+                for (final child in children)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: _FolderTab(
+                      label: child.name,
+                      icon: child.icon,
+                      color: child.colorValue,
+                      count: child.conversationCount,
+                      isSelected: false,
+                      onTap: () => onFolderSelected(child.id),
+                      folder: child,
+                    ),
+                  ),
+                if (canPlaceFolder(folders, null, current.id))
+                  GestureDetector(
+                    onTap: () => showCreateFolderBottomSheet(context, parentId: current.id),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.create_new_folder_outlined, size: 14, color: Colors.grey[400]),
+                          const SizedBox(width: 5),
+                          Text(context.l10n.newSubfolder, style: TextStyle(color: Colors.grey[400], fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -388,6 +518,17 @@ class _FolderContextMenu extends StatelessWidget {
               leading: const Icon(Icons.edit_outlined, color: Colors.white),
               title: Text(context.l10n.editFolder, style: const TextStyle(color: Colors.white)),
               onTap: () => _handleEdit(context),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+
+            // New subfolder (nested folders)
+            ListTile(
+              leading: const Icon(Icons.create_new_folder_outlined, color: Colors.white),
+              title: Text(context.l10n.newSubfolder, style: const TextStyle(color: Colors.white)),
+              onTap: () async {
+                Navigator.pop(context);
+                await showCreateFolderBottomSheet(context, parentId: folder.id);
+              },
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
 

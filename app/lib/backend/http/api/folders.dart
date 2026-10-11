@@ -24,7 +24,13 @@ Future<List<Folder>> getFolders() async {
 }
 
 /// Create a new custom folder.
-Future<Folder?> createFolderApi({required String name, String? description, String? color, String? icon}) async {
+Future<Folder?> createFolderApi({
+  required String name,
+  String? description,
+  String? color,
+  String? icon,
+  String? parentId,
+}) async {
   var response = await makeApiCall(
     url: '${Env.apiBaseUrl}v1/folders',
     headers: {},
@@ -34,6 +40,7 @@ Future<Folder?> createFolderApi({required String name, String? description, Stri
       if (description != null) 'description': description,
       if (color != null) 'color': color,
       if (icon != null) 'icon': icon,
+      if (parentId != null) 'parent_id': parentId,
     }),
   );
   if (response == null) return null;
@@ -69,6 +76,24 @@ Future<Folder?> updateFolderApi(
   );
   if (response == null) return null;
   Logger.debug('updateFolderApi: ${response.body}');
+  if (response.statusCode == 200) {
+    final generated = wire.GeneratedFolder.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+    return Folder.fromGenerated(generated);
+  }
+  return null;
+}
+
+/// Move a folder inside [parentId], or to the top level when [parentId] is null.
+Future<Folder?> moveFolderApi(String folderId, String? parentId) async {
+  var response = await makeApiCall(
+    url: '${Env.apiBaseUrl}v1/folders/$folderId',
+    headers: {},
+    method: 'PATCH',
+    // parent_id is always sent: an explicit null is what means "top level".
+    body: jsonEncode({'parent_id': parentId}),
+  );
+  if (response == null) return null;
+  Logger.debug('moveFolderApi: ${response.statusCode} ${response.body}');
   if (response.statusCode == 200) {
     final generated = wire.GeneratedFolder.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
     return Folder.fromGenerated(generated);

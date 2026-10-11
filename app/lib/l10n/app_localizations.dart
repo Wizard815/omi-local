@@ -18992,6 +18992,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t save the shortcut'**
   String get chatModelShortcutsSaveFailed;
+
+  /// Create folder sheet: parent folder picker label
+  ///
+  /// In en, this message translates to:
+  /// **'Inside'**
+  String get folderInside;
+
+  /// Parent picker: no parent
+  ///
+  /// In en, this message translates to:
+  /// **'Top level'**
+  String get folderTopLevel;
+
+  /// Create a folder inside this one
+  ///
+  /// In en, this message translates to:
+  /// **'New subfolder'**
+  String get newSubfolder;
+
+  /// Folder tree sheet title
+  ///
+  /// In en, this message translates to:
+  /// **'Folders'**
+  String get folderTreeTitle;
+
+  /// Folder tree: move action
+  ///
+  /// In en, this message translates to:
+  /// **'Move…'**
+  String get moveFolder;
+
+  /// Move folder picker title
+  ///
+  /// In en, this message translates to:
+  /// **'Move \"{name}\" into…'**
+  String moveFolderTo(String name);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
