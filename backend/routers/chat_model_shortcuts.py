@@ -1,7 +1,7 @@
 """Chat model shortcuts ("/adult" → a bigger model) for self-hosted deployments.
 
 The app's chat input lists these as slash commands and its /model sheet edits
-them; routers/chat.py applies one per turn. See utils/llm/chat_model_shortcuts.py.
+them; utils/retrieval/graph.execute_chat_stream applies one per turn. See utils/llm/chat_model_shortcuts.py.
 """
 
 from typing import List, Optional
@@ -18,7 +18,7 @@ from utils.llm.chat_model_shortcuts import (
     set_shortcut,
 )
 from utils.llm.local_models import list_proxy_models
-from utils.llm.model_config import _get_local_chat_agent_model, _get_local_primary_model, is_local_mode
+from utils.llm.model_config import is_local_mode, local_base_chat_model
 from utils.other import endpoints as auth
 
 router = APIRouter()
@@ -52,17 +52,13 @@ async def _shortcuts_response() -> ChatModelShortcutsResponse:
         return ChatModelShortcutsResponse(enabled=False)
     configured = await run_blocking(db_executor, get_shortcuts)
     names = await run_blocking(db_executor, list_shortcut_names)
-    base_model = await run_blocking(db_executor, _base_chat_model)
+    base_model = await run_blocking(db_executor, local_base_chat_model)
     return ChatModelShortcutsResponse(
         enabled=True,
         base_model=base_model,
         shortcuts=[ChatModelShortcut(name=name, model=configured.get(name)) for name in names],
         available_models=[AvailableChatModel(**m) for m in await list_proxy_models()],
     )
-
-
-def _base_chat_model() -> str:
-    return _get_local_chat_agent_model() or _get_local_primary_model()
 
 
 async def _require_local_mode() -> None:

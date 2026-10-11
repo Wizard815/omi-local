@@ -151,6 +151,11 @@ def is_local_mode() -> bool:
     return _is_local_mode()
 
 
+def local_base_chat_model() -> str:
+    """The self-hosted chat answer model before any per-turn shortcut: chat_agent, else primary."""
+    return _get_local_chat_agent_model() or _get_local_primary_model()
+
+
 # ---------------------------------------------------------------------------
 # Model QoS Profile System
 #
