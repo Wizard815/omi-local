@@ -277,6 +277,17 @@ def wire_common_stubs(install) -> SimpleNamespace:
 
     usage_tracker.Features = Features
 
+    # routers.chat resolves self-hosted chat model shortcuts ("/adult ...") per
+    # turn; the real model_config imports the gateway client stubbed above.
+    # Not local mode here, so the turn path is unchanged for these suites.
+    model_config = install('utils.llm.model_config', ModuleType('utils.llm.model_config'))
+    model_config.is_local_mode = MagicMock(return_value=False)
+    model_config.set_chat_model_override = MagicMock(return_value='chat-model-token')
+    model_config.reset_chat_model_override = MagicMock()
+    shortcuts = install('utils.llm.chat_model_shortcuts', ModuleType('utils.llm.chat_model_shortcuts'))
+    shortcuts.resolve_turn_shortcut = MagicMock()
+    shortcuts.unconfigured_shortcut_reply = MagicMock(return_value='')
+
     limiter = install('utils.voice_duration_limiter', ModuleType('utils.voice_duration_limiter'))
     limiter.MAX_SESSION_DURATION_S = 120
     limiter.compute_pcm_duration_ms = MagicMock(return_value=1000)

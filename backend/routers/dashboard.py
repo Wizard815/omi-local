@@ -374,6 +374,22 @@ async def dashboard(request: Request):
   </div>
 
   <div class="card">
+    <h2>⚡ Chat Model Shortcuts</h2>
+    <p style="font-size: 13px; color: #AAA; line-height: 1.6; margin-bottom: 12px;">
+      Type <code>/name your question</code> in Ask Omi to have that one reply written by a different model,
+      or <code>/name toggle</code> to keep using it until you toggle it off. The app's <code>/model</code>
+      command edits these too.
+    </p>
+    <div id="shortcut-rows"></div>
+    <div class="model-row" style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
+      <input id="shortcut-new-name" class="model-select" style="max-width: 160px;" placeholder="new name, e.g. code">
+      <select id="shortcut-new-model" class="model-select"><option value="">Loading models...</option></select>
+      <button class="save-btn" style="margin-top: 0;" onclick="addShortcut()">Add</button>
+    </div>
+    <span id="shortcut-feedback" class="save-feedback"></span>
+  </div>
+
+  <div class="card">
     <h2>📋 Model Allowlist</h2>
     <p style="font-size: 13px; color: #AAA; line-height: 1.6; margin-bottom: 12px;">
       Only models matching these patterns appear in the picker above and in the mobile app.
@@ -436,6 +452,8 @@ async def dashboard(request: Request):
   </div>
 
   <script>
+    let modelOptionsHtml = '<option value="">No models found</option>';
+
     // Populate model dropdowns from merge proxy (grouped by backend)
     async function loadModels() {{
       try {{
@@ -450,6 +468,8 @@ async def dashboard(request: Request):
           options += "</optgroup>";
         }}
         if (!options) options = '<option value="">No models found</option>';
+        modelOptionsHtml = options;
+        document.getElementById("shortcut-new-model").innerHTML = options;
         document.getElementById("primary-select").innerHTML = options;
         document.getElementById("chat-agent-select").innerHTML = options;
         document.getElementById("embedding-select").innerHTML = options;
@@ -599,7 +619,60 @@ async def dashboard(request: Request):
       }}
     }}
 
-    loadModels();
+    async function loadShortcuts() {{
+      const rows = document.getElementById("shortcut-rows");
+      try {{
+        const data = await fetch("/dashboard/models/shortcuts").then(r => r.json());
+        rows.replaceChildren();
+        for (const sc of data.shortcuts || []) {{
+          const row = document.createElement("div");
+          row.className = "model-row";
+          row.style.cssText = "display: flex; gap: 8px; align-items: center;";
+          const label = document.createElement("code");
+          label.textContent = "/" + sc.name;
+          label.style.cssText = "min-width: 90px; color: #F5F5F5;";
+          const select = document.createElement("select");
+          select.className = "model-select";
+          select.innerHTML = '<option value="">— not set —</option>' + modelOptionsHtml;
+          select.value = sc.model || "";
+          select.onchange = () => saveShortcut(sc.name, select.value);
+          row.append(label, select);
+          rows.append(row);
+        }}
+      }} catch (e) {{
+        rows.textContent = "Could not load shortcuts: " + e.message;
+      }}
+    }}
+
+    async function saveShortcut(name, model) {{
+      const fb = document.getElementById("shortcut-feedback");
+      try {{
+        const resp = await fetch("/dashboard/models/shortcuts", {{
+          method: "POST",
+          headers: {{ "Content-Type": "application/json" }},
+          body: JSON.stringify({{ name: name, model: model }})
+        }});
+        const data = await resp.json();
+        fb.textContent = data.ok ? (model ? "✓ /" + name + " → " + model : "✓ /" + name + " cleared") : "✗ " + (data.error || "save failed");
+        fb.style.color = data.ok ? "#30D158" : "#FF453A";
+      }} catch (e) {{
+        fb.textContent = "✗ " + e.message;
+        fb.style.color = "#FF453A";
+      }}
+      fb.style.display = "inline";
+      setTimeout(() => fb.style.display = "none", 4000);
+      loadShortcuts();
+    }}
+
+    function addShortcut() {{
+      const name = document.getElementById("shortcut-new-name").value.trim().replace(/^\//, "");
+      const model = document.getElementById("shortcut-new-model").value;
+      if (!name || !model) return;
+      document.getElementById("shortcut-new-name").value = "";
+      saveShortcut(name, model);
+    }}
+
+    loadModels().then(loadShortcuts);
     loadAllowlist();
     loadRetryList();
   </script>
@@ -814,6 +887,31 @@ async def models_select(req: ModelSelectRequest):
         "embedding": _get_local_embedding_model() or "",
         "note": "Models applied. Next LLM call will use the new selection.",
     }
+
+
+class ShortcutSaveRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=25)
+    model: str = Field(default="", max_length=200, description="Merge-proxy model id; empty clears the shortcut")
+
+
+@router.get("/dashboard/models/shortcuts", response_class=JSONResponse)
+def models_shortcuts_get():
+    """Chat model shortcuts ("/adult" → model) for the Ask Omi chat."""
+    from utils.llm.chat_model_shortcuts import get_shortcuts, list_shortcut_names
+
+    configured = get_shortcuts()
+    return {"shortcuts": [{"name": n, "model": configured.get(n)} for n in list_shortcut_names()]}
+
+
+@router.post("/dashboard/models/shortcuts", response_class=JSONResponse)
+def models_shortcuts_save(req: ShortcutSaveRequest):
+    from utils.llm.chat_model_shortcuts import InvalidShortcutName, delete_shortcut, set_shortcut
+
+    try:
+        name = set_shortcut(req.name, req.model) if req.model.strip() else delete_shortcut(req.name)
+    except InvalidShortcutName as e:
+        return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
+    return {"ok": True, "name": name, "model": req.model.strip() or None}
 
 
 @router.get("/dashboard/models", response_class=JSONResponse)

@@ -1761,6 +1761,36 @@ def set_runtime_model(kind: str, model: str) -> None:
 
 
 # ******************************************************
+# *********** CHAT MODEL SHORTCUTS (self-hosting) *******
+# ******************************************************
+#
+# Named chat-model shortcuts typed in Ask Omi (e.g. "/adult") → merge-proxy
+# model id. One hash for the whole deployment, like the other omi:model:* keys:
+# the dashboard and the app's /model sheet both write it.
+
+CHAT_MODEL_SHORTCUTS_KEY = 'omi:model:chat_shortcuts'
+
+
+@try_catch_decorator
+def get_chat_model_shortcuts() -> dict[str, str]:
+    raw = r.hgetall(CHAT_MODEL_SHORTCUTS_KEY) or {}
+    return {
+        (k.decode('utf-8') if isinstance(k, bytes) else str(k)): (v.decode('utf-8') if isinstance(v, bytes) else str(v))
+        for k, v in raw.items()
+    }
+
+
+@try_catch_decorator
+def set_chat_model_shortcut(name: str, model: str) -> None:
+    r.hset(CHAT_MODEL_SHORTCUTS_KEY, name, model)
+
+
+@try_catch_decorator
+def delete_chat_model_shortcut(name: str) -> None:
+    r.hdel(CHAT_MODEL_SHORTCUTS_KEY, name)
+
+
+# ******************************************************
 # *************** MODEL ALLOWLIST (dashboard) ***********
 # ******************************************************
 

@@ -14,6 +14,7 @@ Runtime model switching (self-hosting):
 
 import logging
 import os
+from contextvars import ContextVar, Token
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple, Union
 
@@ -70,6 +71,53 @@ def _get_local_primary_model() -> str:
 def _get_local_chat_agent_model() -> str:
     """Resolve the chat-agent local model at call time (Redis → env → empty)."""
     return (_redis_model('chat_agent') or os.getenv('LOCAL_LLM_MODEL', '')).strip()
+
+
+# ---------------------------------------------------------------------------
+# Per-turn chat model override (self-hosting "model shortcuts", e.g. /adult).
+#
+# A chat turn may name a shortcut whose model replaces the base chat model for
+# the features that write the answer. It is turn-scoped through a ContextVar:
+# the chat router sets it around one streamed reply, and asyncio tasks spawned
+# inside that reply inherit it. Helper calls (chat_extraction classifiers,
+# follow-up chips, titles) deliberately stay on the base model — they are
+# small structured calls the shortcut is not meant to make slower.
+# ---------------------------------------------------------------------------
+
+CHAT_SHORTCUT_FEATURES = frozenset(
+    {
+        'chat_agent',
+        'chat_responses',
+        'file_chat_vision',
+        'file_chat_documents',
+        'persona_chat',
+        'persona_chat_premium',
+    }
+)
+
+_chat_model_override: ContextVar[Optional[str]] = ContextVar('omi_chat_model_override', default=None)
+
+
+def set_chat_model_override(model: Optional[str]) -> Token:
+    """Route this context's chat-answer features to ``model`` (None clears it).
+
+    Returns the token for ``reset_chat_model_override``. Only honored in local
+    mode — a merge-proxy model id means nothing to a cloud provider.
+    """
+    return _chat_model_override.set((model or '').strip() or None)
+
+
+def reset_chat_model_override(token: Token) -> None:
+    try:
+        _chat_model_override.reset(token)
+    except ValueError:
+        # Reset from a different Context (e.g. an async generator finalized by
+        # another task). That context dies with its task; clearing is enough.
+        _chat_model_override.set(None)
+
+
+def get_chat_model_override() -> Optional[str]:
+    return _chat_model_override.get()
 
 
 # The only OpenAI embedding model name this backend ever sends (see
@@ -310,6 +358,9 @@ def _get_model_config(feature: str) -> Tuple[str, str]:
     # --- Runtime local-mode rewrite ---
     # chat_agent gets its own model; everything else uses the primary model.
     if _is_local_mode() and base_provider in _LOCAL_REWRITABLE:
+        override = _chat_model_override.get()
+        if override and feature in CHAT_SHORTCUT_FEATURES:
+            return (override, 'openai')
         if feature == 'chat_agent':
             # No separate chat model picked (dashboard "(pass-through)", empty
             # LOCAL_LLM_MODEL) used to send model="" to the proxy, which routes
