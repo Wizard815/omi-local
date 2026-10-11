@@ -1473,10 +1473,10 @@ async def execute_agentic_chat_stream(
             # (replaces Google Calendar dependency with Android CalendarContract).
             # is_local_mode() also counts a primary model picked in the dashboard;
             # the OMI_LOCAL_MODEL env check alone hid the tool for those setups.
-            if is_local_mode():
-                from routers.device_calendar import has_device_calendar
+            if await run_blocking(db_executor, is_local_mode):
+                import database.device_calendar as device_calendar_db
 
-                if has_device_calendar(uid):
+                if await run_blocking(db_executor, device_calendar_db.has_events, uid):
                     core_tools.append(get_device_calendar_events_tool)
 
             # Dynamic app tools — deferred for Anthropic; exposed directly in managed mode

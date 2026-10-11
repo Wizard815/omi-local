@@ -462,6 +462,12 @@ def _get_agentic_module():
 
     # Stub sub-modules
     _stub_module("utils.retrieval.tools.preference_tools")
+    # Self-hosted device-calendar tool: agentic.py imports it by module path and
+    # it reads database.device_calendar, which this harness does not load.
+    device_calendar_tools_mod = _stub_module("utils.retrieval.tools.device_calendar_tools")
+    device_calendar_tool = MagicMock()
+    device_calendar_tool.name = "get_device_calendar_events_tool"
+    device_calendar_tools_mod.get_device_calendar_events_tool = device_calendar_tool
 
     # Stub app_tools
     app_tools_mod = _stub_module("utils.retrieval.tools.app_tools")
