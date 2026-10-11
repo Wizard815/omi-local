@@ -882,6 +882,16 @@ STALE_IN_PROGRESS_CONVERSATIONS_QUERY = FirestoreQuerySpec(
     ),
 )
 
+# Self-hosted dashboard (routers/dashboard.py): in-progress conversations across
+# every local account, newest first, so a stuck one can be retried.
+DASHBOARD_IN_PROGRESS_CONVERSATIONS_QUERY = FirestoreQuerySpec(
+    identifier='dashboard_in_progress_conversations_by_created',
+    collection_group='conversations',
+    query_scope='COLLECTION_GROUP',
+    filters=(FirestoreQueryFilter('status', '==', 'status'),),
+    index_fields=(_asc('status'), _desc('created_at'), _desc('__name__')),
+)
+
 # Duplicate-capture detection (#3244): the other capture clients' conversations
 # whose activity clock runs past this recording's start. Shares the composite
 # above with the stale sweep; the range and order both sit on `finished_at`.
@@ -1405,6 +1415,7 @@ QUERY_SPECS = (
     LEGACY_CONVERSATION_RECOVERY_QUERY,
     STALE_IN_PROGRESS_CONVERSATIONS_QUERY,
     CONVERSATIONS_BY_STATUS_FINISHED_AFTER_QUERY,
+    DASHBOARD_IN_PROGRESS_CONVERSATIONS_QUERY,
     ENTITY_TIMELINE_CONVERSATIONS_QUERY,
     ENTITY_TIMELINE_MEETINGS_QUERY,
     ENTITY_TIMELINE_SCREEN_ACTIVITY_QUERY,
