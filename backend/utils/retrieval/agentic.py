@@ -81,6 +81,7 @@ from utils.retrieval.web_search_gate import WEB_SEARCH_TOOL, request_tools_after
 from utils.observability.fallback import record_fallback
 from utils.llm.byok_errors import handle_llm_error_async
 from utils.llm.clients import anthropic_client, ANTHROPIC_AGENT_MODEL, get_llm, num_tokens_from_string
+from utils.llm.model_config import is_local_mode
 from utils.llm.usage_tracker import reset_usage_context, set_usage_context
 from utils.llm.chat import _get_agentic_qa_prompt, get_current_datetime_block, get_user_timezone
 from utils.executors import run_blocking, db_executor
@@ -158,8 +159,10 @@ class _PerplexityWebSearchToolProxy:
         try:
             if _use_searxng():
                 from utils.retrieval.tools.local_web_search_tool import local_web_search_tool
+
                 return local_web_search_tool.args_schema
             from utils.retrieval.tools.perplexity_tools import perplexity_web_search_tool
+
             return perplexity_web_search_tool.args_schema
         except ModuleNotFoundError as error:
             if error.name != 'langchain_core.tools':
@@ -178,8 +181,10 @@ class _PerplexityWebSearchToolProxy:
     async def ainvoke(self, tool_input, config=None):
         if _use_searxng():
             from utils.retrieval.tools.local_web_search_tool import local_web_search_tool
+
             return await local_web_search_tool.ainvoke(tool_input, config=config)
         from utils.retrieval.tools.perplexity_tools import perplexity_web_search_tool
+
         return await perplexity_web_search_tool.ainvoke(tool_input, config=config)
 
 
@@ -189,6 +194,7 @@ perplexity_web_search_tool = _PerplexityWebSearchToolProxy()
 def _use_searxng() -> bool:
     """Check if GUEST SearXNG_URL is configured for local web search."""
     import os
+
     return bool(os.environ.get("SEARXNG_URL", "").strip())
 
 
@@ -1464,9 +1470,12 @@ async def execute_agentic_chat_stream(
                 core_tools = [tool for tool in core_tools if tool.name not in JIT_ONLY_TOOL_NAMES]
 
             # Self-hosting: add device calendar tool when in local mode
-            # (replaces Google Calendar dependency with Android CalendarContract)
-            if os.environ.get("OPENAI_BASE_URL") and os.environ.get("OMI_LOCAL_MODEL"):
+            # (replaces Google Calendar dependency with Android CalendarContract).
+            # is_local_mode() also counts a primary model picked in the dashboard;
+            # the OMI_LOCAL_MODEL env check alone hid the tool for those setups.
+            if is_local_mode():
                 from routers.device_calendar import has_device_calendar
+
                 if has_device_calendar(uid):
                     core_tools.append(get_device_calendar_events_tool)
 

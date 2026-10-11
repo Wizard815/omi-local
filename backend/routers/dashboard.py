@@ -3,6 +3,7 @@
 Serves a health/telemetry page at /, component status, and
 a runtime model picker powered by LiteLLM.
 """
+
 import os
 import secrets
 import socket
@@ -39,11 +40,14 @@ def require_dashboard_auth(credentials: HTTPBasicCredentials = Depends(_dashboar
     if not expected_user or not expected_pass:
         return  # not configured — stay open, matching this feature's original LAN-only design
 
-    valid = credentials is not None and secrets.compare_digest(
-        credentials.username, expected_user
-    ) and secrets.compare_digest(credentials.password, expected_pass)
+    valid = (
+        credentials is not None
+        and secrets.compare_digest(credentials.username, expected_user)
+        and secrets.compare_digest(credentials.password, expected_pass)
+    )
     if not valid:
         raise HTTPException(status_code=401, detail='Unauthorized', headers={'WWW-Authenticate': 'Basic'})
+
 
 # ── model selection request body ──────────────────────────────────────
 
@@ -55,7 +59,9 @@ class ModelSelectRequest(BaseModel):
 
 
 class ModelAllowRequest(BaseModel):
-    allowlist: str = Field(default="", description="Comma-separated model patterns (e.g. 'gemma-4-12b,gpt-4*,claude-sonnet*')")
+    allowlist: str = Field(
+        default="", description="Comma-separated model patterns (e.g. 'gemma-4-12b,gpt-4*,claude-sonnet*')"
+    )
 
 
 # ── helpers ───────────────────────────────────────────────────────────
@@ -124,6 +130,7 @@ async def _get_async_components() -> dict:
     vector_db = os.getenv("LOCAL_VECTOR_DB", "")
     if vector_db == "chroma":
         from database.chroma_vector import chroma_count, is_chroma_enabled
+
         if is_chroma_enabled():
             count = chroma_count()
             results["vector_db"] = {"status": "up", "detail": f"ChromaDB ({count} vectors)"}
@@ -193,8 +200,9 @@ async def dashboard(request: Request):
         _get_local_chat_agent_model,
         _get_local_embedding_model,
     )
+
     primary_model = _get_local_primary_model() or "-"
-    chat_agent_model = _get_local_chat_agent_model() or "(pass-through)"
+    chat_agent_model = _get_local_chat_agent_model() or "(same as primary)"
     embedding_model = _get_local_embedding_model() or "-"
 
     component_rows = ""
@@ -637,8 +645,7 @@ async def models_available():
                 if resp.status_code == 200:
                     data = resp.json()
                     discovered_models = [
-                        {"id": m.get("id", "unknown"), "owned_by": m.get("owned_by", "")}
-                        for m in data.get("data", [])
+                        {"id": m.get("id", "unknown"), "owned_by": m.get("owned_by", "")} for m in data.get("data", [])
                     ]
         except Exception:
             pass
@@ -652,8 +659,7 @@ async def models_available():
     return {
         "models": discovered_models,
         "groups": {
-            tag: [{"id": m["id"], "name": _model_display_name(m["id"], tag)}
-                  for m in models]
+            tag: [{"id": m["id"], "name": _model_display_name(m["id"], tag)} for m in models]
             for tag, models in sorted(groups.items())
         },
         "count": len(discovered_models),
@@ -666,7 +672,7 @@ def _model_display_name(full_id: str, tag: str) -> str:
     """Strip the tag prefix for display: 'llama/gemma-4-12b' → 'gemma-4-12b'."""
     prefix = tag + "/"
     if full_id.startswith(prefix):
-        return full_id[len(prefix):]
+        return full_id[len(prefix) :]
     return full_id
 
 
@@ -680,6 +686,7 @@ async def models_allow_get():
     source = "none"
     try:
         from database.redis_db import get_model_allowlist
+
         allowlist = get_model_allowlist() or ""
         source = "redis" if allowlist else "env"
     except Exception:
@@ -724,7 +731,7 @@ async def models_allow_set(req: ModelAllowRequest):
         "ok": True,
         "allowlist": req.allowlist,
         "note": "Allowlist saved. The merge proxy will pick it up on next model refresh. "
-                "Dashboard picker and mobile APK will show only matching models.",
+        "Dashboard picker and mobile APK will show only matching models.",
     }
 
 
@@ -748,6 +755,7 @@ async def models_current():
     embedding_source = "env"
     try:
         from database.redis_db import get_runtime_model
+
         if get_runtime_model("primary"):
             primary_source = "redis"
         if get_runtime_model("chat_agent"):
@@ -760,7 +768,7 @@ async def models_current():
     return {
         "local_mode": bool(openai_base and primary),
         "primary_model": primary or "none (cloud)",
-        "chat_agent_model": chat_agent or "(pass-through)",
+        "chat_agent_model": chat_agent or "(same as primary)",
         "embedding_model": embedding or "(default)",
         "openai_base_url": openai_base or "not set",
         "provider_mode": os.getenv("PROVIDER_MODE", "offline"),
@@ -826,8 +834,7 @@ async def model_config():
                 if resp.status_code == 200:
                     data = resp.json()
                     discovered_models = [
-                        {"id": m.get("id", "unknown"), "owned_by": m.get("owned_by", "")}
-                        for m in data.get("data", [])
+                        {"id": m.get("id", "unknown"), "owned_by": m.get("owned_by", "")} for m in data.get("data", [])
                     ]
         except Exception:
             pass
@@ -835,7 +842,7 @@ async def model_config():
     return {
         "local_mode": bool(openai_base and local_model),
         "primary_model": local_model or "none (cloud)",
-        "chat_agent_model": local_llm_model or "(pass-through)",
+        "chat_agent_model": local_llm_model or "(same as primary)",
         "openai_base_url": openai_base or "not set",
         "provider_mode": provider_mode,
         "discovered_models": discovered_models,
@@ -878,9 +885,7 @@ async def dashboard_conversations(limit: int = 20):
         # transcript_segments is normally a list of dicts, but at least one
         # legacy/malformed conversation had plain strings instead — don't let
         # one bad record 500 the whole retry list.
-        preview = " ".join(
-            (s.get('text', '') if isinstance(s, dict) else str(s)) for s in segments[:3]
-        ).strip()
+        preview = " ".join((s.get('text', '') if isinstance(s, dict) else str(s)) for s in segments[:3]).strip()
         items.append(
             {
                 "id": doc.id,

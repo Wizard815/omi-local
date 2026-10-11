@@ -56,6 +56,7 @@ def _redis_model(kind: str) -> Optional[str]:
     """Read a runtime model override from Redis, returning None on any error."""
     try:
         from database.redis_db import get_runtime_model
+
         return get_runtime_model(kind)
     except Exception:
         return None
@@ -84,14 +85,22 @@ def _get_local_embedding_model() -> str:
     defaulting to DEFAULT_EMBEDDING_MODEL instead of empty so existing
     (non-self-hosted) deployments keep working unchanged without picking
     anything in the dashboard."""
-    return (
-        _redis_model('embedding') or os.getenv('LOCAL_EMBEDDING_MODEL', '') or DEFAULT_EMBEDDING_MODEL
-    ).strip()
+    return (_redis_model('embedding') or os.getenv('LOCAL_EMBEDDING_MODEL', '') or DEFAULT_EMBEDDING_MODEL).strip()
 
 
 def _is_local_mode() -> bool:
     """Return True when a local LLM backend (LiteLLM) is configured."""
     return bool(os.getenv('OPENAI_BASE_URL', '').strip() and _get_local_primary_model())
+
+
+def is_local_mode() -> bool:
+    """Public form of ``_is_local_mode`` for routers/tools gating self-hosted-only behavior.
+
+    True whether the primary model came from the dashboard (Redis) or from
+    OMI_LOCAL_MODEL — checking the env var alone misses every deployment that
+    picked its model in the dashboard.
+    """
+    return _is_local_mode()
 
 
 # ---------------------------------------------------------------------------
@@ -302,7 +311,12 @@ def _get_model_config(feature: str) -> Tuple[str, str]:
     # chat_agent gets its own model; everything else uses the primary model.
     if _is_local_mode() and base_provider in _LOCAL_REWRITABLE:
         if feature == 'chat_agent':
-            return (_get_local_chat_agent_model(), 'openai')
+            # No separate chat model picked (dashboard "(pass-through)", empty
+            # LOCAL_LLM_MODEL) used to send model="" to the proxy, which routes
+            # it to the first upstream with no model name — llama-swap/OpenRouter
+            # reject that, so Ask Omi only answered with the canned apology.
+            # Unset means "same as primary".
+            return (_get_local_chat_agent_model() or _get_local_primary_model(), 'openai')
         return (_get_local_primary_model(), 'openai')
 
     return base_model, base_provider
