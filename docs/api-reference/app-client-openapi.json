@@ -66306,7 +66306,7 @@
     },
     "/v2/tts/synthesize": {
       "post": {
-        "description": "Proxy a TTS request to ElevenLabs. Per-user rate limited.",
+        "description": "Proxy TTS. ElevenLabs by default (cloud, opt-in); the fully-offline Piper\nservice when TTS_LOCAL_BASE_URL is set. Per-user rate limited either way.",
         "operationId": "tts_synthesize_v2_tts_synthesize_post",
         "parameters": [
           {
