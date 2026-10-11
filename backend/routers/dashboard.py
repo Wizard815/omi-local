@@ -17,6 +17,8 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel, Field
 
+from utils.executors import db_executor, run_blocking
+
 router = APIRouter()
 
 STARTED_AT = time.time()
@@ -131,8 +133,8 @@ async def _get_async_components() -> dict:
     if vector_db == "chroma":
         from database.chroma_vector import chroma_count, is_chroma_enabled
 
-        if is_chroma_enabled():
-            count = chroma_count()
+        if await run_blocking(db_executor, is_chroma_enabled):
+            count = await run_blocking(db_executor, chroma_count)
             results["vector_db"] = {"status": "up", "detail": f"ChromaDB ({count} vectors)"}
         else:
             results["vector_db"] = {"status": "down", "detail": "ChromaDB init failed"}
@@ -665,7 +667,7 @@ async def dashboard(request: Request):
     }}
 
     function addShortcut() {{
-      const name = document.getElementById("shortcut-new-name").value.trim().replace(/^\//, "");
+      const name = document.getElementById("shortcut-new-name").value.trim().replace(/^\\//, "");
       const model = document.getElementById("shortcut-new-model").value;
       if (!name || !model) return;
       document.getElementById("shortcut-new-name").value = "";
@@ -753,7 +755,7 @@ def _model_display_name(full_id: str, tag: str) -> str:
 
 
 @router.get("/dashboard/models/allow", response_class=JSONResponse)
-async def models_allow_get():
+def models_allow_get():
     """Return the current model allowlist (from Redis, or env, or empty)."""
     allowlist = ""
     source = "none"
@@ -791,7 +793,7 @@ async def models_allow_set(req: ModelAllowRequest):
             content={"ok": False, "error": f"Redis unavailable: {e}"},
         )
 
-    set_model_allowlist(req.allowlist)
+    await run_blocking(db_executor, set_model_allowlist, req.allowlist)
 
     # Notify the merge proxy to flush its model cache
     try:
@@ -809,7 +811,7 @@ async def models_allow_set(req: ModelAllowRequest):
 
 
 @router.get("/dashboard/models/current", response_class=JSONResponse)
-async def models_current():
+def models_current():
     """Return the currently active models (Redis → env fallback)."""
     from utils.llm.model_config import (
         _get_local_primary_model,
@@ -852,7 +854,7 @@ async def models_current():
 
 
 @router.post("/dashboard/models/select", response_class=JSONResponse)
-async def models_select(req: ModelSelectRequest):
+def models_select(req: ModelSelectRequest):
     """Set runtime model overrides. Changes take effect on the next LLM call.
 
     The next request through get_llm() picks up the new models —
@@ -962,7 +964,7 @@ async def model_config():
 
 
 @router.get("/dashboard/conversations", response_class=JSONResponse)
-async def dashboard_conversations(limit: int = 20):
+def dashboard_conversations(limit: int = 20):
     """List recent in-progress conversations (with a transcript) across all local accounts."""
     from database._client import get_firestore_client
 
@@ -998,7 +1000,7 @@ async def dashboard_conversations(limit: int = 20):
 
 
 @router.post("/dashboard/conversations/{conversation_id}/retry", response_class=JSONResponse)
-async def dashboard_retry_conversation(conversation_id: str, uid: str):
+def dashboard_retry_conversation(conversation_id: str, uid: str):
     """Force-reprocess a stuck in-progress conversation for the given uid.
 
     Calls the same reprocess_conversation logic the app's retry button uses
