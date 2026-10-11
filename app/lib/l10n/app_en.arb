@@ -12060,5 +12060,150 @@
     "dayReviewsNone": "No reviewed days yet.",
     "@dayReviewsNone": {
         "description": "Day reviews list: empty"
+    },
+    "slashSendWithShortcut": "Answer this message with the /{shortcut} model ({model})",
+    "@slashSendWithShortcut": {
+        "description": "Slash command popup: one-shot model shortcut",
+        "placeholders": {
+            "shortcut": {
+                "type": "String"
+            },
+            "model": {
+                "type": "String"
+            }
+        }
+    },
+    "slashSendWithShortcutUnset": "Answer this message with the /{shortcut} model (not set yet)",
+    "@slashSendWithShortcutUnset": {
+        "description": "Slash command popup: shortcut without a model",
+        "placeholders": {
+            "shortcut": {
+                "type": "String"
+            }
+        }
+    },
+    "slashToggleShortcutOn": "Keep using the /{shortcut} model until you toggle it off",
+    "@slashToggleShortcutOn": {
+        "description": "Slash command popup: sticky toggle on",
+        "placeholders": {
+            "shortcut": {
+                "type": "String"
+            }
+        }
+    },
+    "slashToggleShortcutOff": "Turn the /{shortcut} model off (it is on now)",
+    "@slashToggleShortcutOff": {
+        "description": "Slash command popup: sticky toggle off",
+        "placeholders": {
+            "shortcut": {
+                "type": "String"
+            }
+        }
+    },
+    "slashModelCommand": "Choose which model each shortcut uses",
+    "@slashModelCommand": {
+        "description": "Slash command popup: /model"
+    },
+    "slashClearCommand": "Clear this chat",
+    "@slashClearCommand": {
+        "description": "Slash command popup: /clear"
+    },
+    "slashAppsCommand": "Open chat apps",
+    "@slashAppsCommand": {
+        "description": "Slash command popup: /apps"
+    },
+    "slashReviewCommand": "Review today: keep the conversations you star, summarize the rest",
+    "@slashReviewCommand": {
+        "description": "Slash command popup: /review"
+    },
+    "slashHelpCommand": "Show all chat commands",
+    "@slashHelpCommand": {
+        "description": "Slash command popup: /help"
+    },
+    "slashCommandsHelpTitle": "Chat commands",
+    "@slashCommandsHelpTitle": {
+        "description": "Title of the /help sheet"
+    },
+    "chatShortcutActive": "/{shortcut} model on",
+    "@chatShortcutActive": {
+        "description": "Chip above the chat input while a model shortcut is toggled on",
+        "placeholders": {
+            "shortcut": {
+                "type": "String"
+            }
+        }
+    },
+    "chatShortcutTurnedOn": "/{shortcut} model on: every message uses it until you send /{shortcut} toggle again",
+    "@chatShortcutTurnedOn": {
+        "description": "Snackbar after toggling a model shortcut on",
+        "placeholders": {
+            "shortcut": {
+                "type": "String"
+            }
+        }
+    },
+    "chatShortcutTurnedOff": "/{shortcut} model off: back to the base model",
+    "@chatShortcutTurnedOff": {
+        "description": "Snackbar after toggling a model shortcut off",
+        "placeholders": {
+            "shortcut": {
+                "type": "String"
+            }
+        }
+    },
+    "chatShortcutPickModelFirst": "Pick a model for /{shortcut} first",
+    "@chatShortcutPickModelFirst": {
+        "description": "Snackbar when toggling an unconfigured shortcut",
+        "placeholders": {
+            "shortcut": {
+                "type": "String"
+            }
+        }
+    },
+    "chatShortcutNeedsMessage": "Type a message after /{shortcut}, or /{shortcut} toggle to keep it on",
+    "@chatShortcutNeedsMessage": {
+        "description": "Snackbar for a bare shortcut command",
+        "placeholders": {
+            "shortcut": {
+                "type": "String"
+            }
+        }
+    },
+    "chatShortcutsUnavailable": "Model shortcuts need the self-hosted local LLM backend.",
+    "@chatShortcutsUnavailable": {
+        "description": "Model shortcuts sheet when the backend has no local LLM"
+    },
+    "chatModelShortcutsTitle": "Chat model shortcuts",
+    "@chatModelShortcutsTitle": {
+        "description": "Model shortcuts sheet title"
+    },
+    "chatModelShortcutsHint": "Type /name your question to answer one message with that model, or /name toggle to keep using it.",
+    "@chatModelShortcutsHint": {
+        "description": "Model shortcuts sheet explanation"
+    },
+    "chatModelShortcutsBaseModel": "Base model: {model}",
+    "@chatModelShortcutsBaseModel": {
+        "description": "Model shortcuts sheet: the default chat model",
+        "placeholders": {
+            "model": {
+                "type": "String"
+            }
+        }
+    },
+    "chatModelShortcutsNotSet": "Not set",
+    "@chatModelShortcutsNotSet": {
+        "description": "Model shortcuts sheet: shortcut without a model"
+    },
+    "chatModelShortcutsAddLabel": "name",
+    "@chatModelShortcutsAddLabel": {
+        "description": "Model shortcuts sheet: new shortcut name field"
+    },
+    "chatModelShortcutsAddButton": "Add",
+    "@chatModelShortcutsAddButton": {
+        "description": "Model shortcuts sheet: add button"
+    },
+    "chatModelShortcutsSaveFailed": "Couldn't save the shortcut",
+    "@chatModelShortcutsSaveFailed": {
+        "description": "Model shortcuts sheet: save error"
     }
 }

@@ -57,7 +57,7 @@ class _RecordingMessageProvider extends MessageProvider {
   final List<String> sent = [];
 
   @override
-  Future sendMessageStreamToServer(String text, {ChatPageContext? context}) async {
+  Future sendMessageStreamToServer(String text, {ChatPageContext? context, String? modelShortcut}) async {
     sent.add(text);
   }
 }

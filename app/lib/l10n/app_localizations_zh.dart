@@ -9961,4 +9961,94 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get dayReviewsNone => 'No reviewed days yet.';
+
+  @override
+  String slashSendWithShortcut(String shortcut, String model) {
+    return 'Answer this message with the /$shortcut model ($model)';
+  }
+
+  @override
+  String slashSendWithShortcutUnset(String shortcut) {
+    return 'Answer this message with the /$shortcut model (not set yet)';
+  }
+
+  @override
+  String slashToggleShortcutOn(String shortcut) {
+    return 'Keep using the /$shortcut model until you toggle it off';
+  }
+
+  @override
+  String slashToggleShortcutOff(String shortcut) {
+    return 'Turn the /$shortcut model off (it is on now)';
+  }
+
+  @override
+  String get slashModelCommand => 'Choose which model each shortcut uses';
+
+  @override
+  String get slashClearCommand => 'Clear this chat';
+
+  @override
+  String get slashAppsCommand => 'Open chat apps';
+
+  @override
+  String get slashReviewCommand => 'Review today: keep the conversations you star, summarize the rest';
+
+  @override
+  String get slashHelpCommand => 'Show all chat commands';
+
+  @override
+  String get slashCommandsHelpTitle => 'Chat commands';
+
+  @override
+  String chatShortcutActive(String shortcut) {
+    return '/$shortcut model on';
+  }
+
+  @override
+  String chatShortcutTurnedOn(String shortcut) {
+    return '/$shortcut model on: every message uses it until you send /$shortcut toggle again';
+  }
+
+  @override
+  String chatShortcutTurnedOff(String shortcut) {
+    return '/$shortcut model off: back to the base model';
+  }
+
+  @override
+  String chatShortcutPickModelFirst(String shortcut) {
+    return 'Pick a model for /$shortcut first';
+  }
+
+  @override
+  String chatShortcutNeedsMessage(String shortcut) {
+    return 'Type a message after /$shortcut, or /$shortcut toggle to keep it on';
+  }
+
+  @override
+  String get chatShortcutsUnavailable => 'Model shortcuts need the self-hosted local LLM backend.';
+
+  @override
+  String get chatModelShortcutsTitle => 'Chat model shortcuts';
+
+  @override
+  String get chatModelShortcutsHint =>
+      'Type /name your question to answer one message with that model, or /name toggle to keep using it.';
+
+  @override
+  String chatModelShortcutsBaseModel(String model) {
+    return 'Base model: $model';
+  }
+
+  @override
+  String get chatModelShortcutsNotSet => 'Not set';
+
+  @override
+  String get chatModelShortcutsAddLabel => 'name';
+
+  @override
+  String get chatModelShortcutsAddButton => 'Add';
+
+  @override
+  String get chatModelShortcutsSaveFailed => 'Couldn\'t save the shortcut';
 }

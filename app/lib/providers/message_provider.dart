@@ -14,6 +14,7 @@ import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 
 import 'package:omi/backend/http/api/apps.dart';
+import 'package:omi/backend/http/api/chat_model_shortcuts.dart';
 import 'package:omi/backend/http/api/messages.dart';
 import 'package:omi/backend/http/api/users.dart';
 import 'package:omi/backend/preferences.dart';
@@ -51,6 +52,41 @@ class MessageProvider extends ChangeNotifier {
   // Chat quota exceeded — set transiently when backend returns 402
   bool _chatQuotaExceeded = false;
   bool get isChatQuotaExceeded => _chatQuotaExceeded;
+
+  /// Self-hosted chat model shortcuts ("/adult" → a bigger model).
+  ChatModelShortcutsState chatModelShortcuts = ChatModelShortcutsState.disabled;
+
+  /// The shortcut kept on by "/name toggle", applied to every message until toggled off.
+  String? get stickyModelShortcut {
+    final value = SharedPreferencesUtil().stickyChatModelShortcut;
+    return value.isEmpty ? null : value;
+  }
+
+  void setStickyModelShortcut(String? name) {
+    SharedPreferencesUtil().stickyChatModelShortcut = name ?? '';
+    notifyListeners();
+  }
+
+  Future<void> refreshChatModelShortcuts() async {
+    final state = await getChatModelShortcuts();
+    if (state == null) return;
+    chatModelShortcuts = state;
+    // A sticky shortcut the server no longer offers would make every send fail.
+    final sticky = stickyModelShortcut;
+    if (sticky != null && (!state.enabled || state.byName(sticky) == null)) {
+      SharedPreferencesUtil().stickyChatModelShortcut = '';
+    }
+    notifyListeners();
+  }
+
+  Future<bool> saveChatModelShortcut(String name, String? model) async {
+    final state =
+        model == null || model.isEmpty ? await deleteChatModelShortcut(name) : await setChatModelShortcut(name, model);
+    if (state == null) return false;
+    chatModelShortcuts = state;
+    notifyListeners();
+    return true;
+  }
 
   List<File> selectedFiles = [];
   List<String> selectedFileTypes = [];
@@ -586,7 +622,7 @@ class MessageProvider extends ChangeNotifier {
     setShowTypingIndicator(false);
   }
 
-  Future sendMessageStreamToServer(String text, {ChatPageContext? context}) async {
+  Future sendMessageStreamToServer(String text, {ChatPageContext? context, String? modelShortcut}) async {
     _chatQuotaExceeded = false; // Clear stale quota state from previous sends
     aiStreamProgress = 0.0;
     // If Omi was still speaking a prior voice reply, stop it — the user's
@@ -634,7 +670,13 @@ class MessageProvider extends ChangeNotifier {
     }
 
     try {
-      await for (var chunk in sendMessageStreamServer(text, appId: currentAppId, filesId: fileIds, context: context)) {
+      await for (var chunk in sendMessageStreamServer(
+        text,
+        appId: currentAppId,
+        filesId: fileIds,
+        context: context,
+        modelShortcut: modelShortcut,
+      )) {
         if (chunk.type == MessageChunkType.think) {
           flushBuffer();
           message.thinkings.add(chunk.text);
