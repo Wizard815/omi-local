@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:omi/utils/other/api_url.dart';
 import 'package:omi/utils/platform/platform_manager.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -294,7 +295,8 @@ class _DeveloperSettingsPageState extends State<_DeveloperSettingsPageView> {
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Server URL set to $normalized\nRestart the app for it to take full effect.'),
+                              content:
+                                  Text('Server URL set to $normalized\nRestart the app for it to take full effect.'),
                               backgroundColor: Colors.green.shade700,
                               duration: const Duration(seconds: 4),
                             ),
@@ -422,8 +424,9 @@ class _DeveloperSettingsPageState extends State<_DeveloperSettingsPageView> {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () async {
-                    if (await canLaunchUrl(Uri.parse('$baseUrl/'))) {
-                      await launchUrl(Uri.parse('$baseUrl/'), mode: LaunchMode.externalApplication);
+                    final url = joinApiUrl(baseUrl, '');
+                    if (await canLaunchUrl(Uri.parse(url))) {
+                      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                     }
                   },
                   icon: const FaIcon(FontAwesomeIcons.chartLine, size: 14),
@@ -441,7 +444,7 @@ class _DeveloperSettingsPageState extends State<_DeveloperSettingsPageView> {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () async {
-                    final url = '$baseUrl/dashboard/models';
+                    final url = joinApiUrl(baseUrl, 'dashboard/models');
                     if (await canLaunchUrl(Uri.parse(url))) {
                       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                     }
@@ -724,7 +727,8 @@ class _DeveloperSettingsPageState extends State<_DeveloperSettingsPageView> {
                   const SizedBox(height: 12),
 
                   // Calendar Provider Section (self-hosting)
-                  _buildSectionHeader('Calendar Provider', subtitle: 'Use device calendar instead of Google Cloud. Syncs any calendar Android knows.'),
+                  _buildSectionHeader('Calendar Provider',
+                      subtitle: 'Use device calendar instead of Google Cloud. Syncs any calendar Android knows.'),
                   const SizedBox(height: 8),
                   _buildDeviceCalendarSection(),
                   const SizedBox(height: 12),
