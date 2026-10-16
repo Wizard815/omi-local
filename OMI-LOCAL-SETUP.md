@@ -155,14 +155,15 @@ omi-host/
 The backend already had a **self-hosted STT seam**: it talks to whatever
 `HOSTED_PARAKEET_API_URL` points at (a WebSocket `/v3/stream` for live capture and
 `POST /v1//v2/transcribe` for batch) and to `HOSTED_SPEAKER_EMBEDDING_API_URL` for
-diarization. `local_audio_service.py` speaks that exact protocol on CPU, so:
+diarization. `local_audio_service.py` speaks that exact protocol, so:
 
-- **STT** = faster-whisper (CTranslate2, int8). Default `Systran/faster-whisper-small`
-  (~5× realtime on the ML350). Set `OMI_ASR_MODEL=Systran/faster-whisper-large-v3` for
-  top accuracy (~1× realtime) if you want it.
+- **STT** = whisper.cpp's `whisper-server` on the GPU (ROCm, gfx906; `WHISPER_MODEL`,
+  default `large-v3-turbo`). `OMI_ASR_ENGINE=fasterwhisper` falls back to faster-whisper
+  on CPU (`OMI_ASR_MODEL`, default `Systran/faster-whisper-small`).
 - **Endpointing** = pure-numpy energy VAD with AGC (no torchscript — robust).
-- **Diarization** = resemblyzer ECAPA embeddings + online greedy speaker clustering.
-  Toggle off with `OMI_DISABLE_DIA=1` (segments then label `SPEAKER_00`).
+- **Diarization** = resemblyzer ECAPA embeddings + online greedy speaker clustering, on
+  the GPU by default (`OMI_DIA_DEVICE=cuda`; `cpu` keeps it off the GPU). Toggle off with
+  `OMI_DISABLE_DIA=1` (segments then label `SPEAKER_00`).
 - **TTS** = Piper (`en_US-lessac-medium` by default; `download-piper-voice.sh` fetches it,
   other voices supported). Serves MP3 when `ffmpeg` is present, WAV otherwise.
 
@@ -170,10 +171,27 @@ Phone → server, no STT on the phone: the phone streams raw 16 kHz PCM over
 `/v4/listen`; the backend forwards it to `omi-audio`. To use it, set
 **Settings → Transcription → "Omi Parakeet"** in the app.
 
-Everything is CPU. Nothing is forced to the cloud: with no `MODULATE_API_KEY`,
+Nothing is forced to the cloud: with no `MODULATE_API_KEY`,
 `DEEPGRAM_API_KEY`, or `ELEVENLABS_API_KEY` set, the provider policy selects the
 local audio service for every surface (verified). Set any of those keys and the
 corresponding cloud path becomes available again — that's the optional fallback.
+
+### GPU memory: what idle unload frees
+
+- `whisper-server` starts on the first transcription and is stopped after
+  `OMI_ASR_IDLE_UNLOAD_S` (default 300) seconds with no transcription. Stopping the
+  process is what frees its VRAM; the next transcription starts it again. Every
+  transcription resets the timer: live capture, offline-sync uploads, and the retries
+  of a sync that failed.
+- Check it with `curl -s 127.0.0.1:8790/health` (`asr_server_running`, `asr_idle_s`,
+  `asr_in_flight`). The `omi-audio` log says `whisper-server model released after Ns
+  idle` when it happens.
+- Not freed by idle unload: with `OMI_DIA_DEVICE=cuda` the audio service process keeps
+  its GPU context and the speaker-embedding model for the container's lifetime
+  (`rocm-smi --showpids` lists it next to `whisper-server`). Set `OMI_DIA_DEVICE=cpu`
+  if idle VRAM has to reach zero; that model is small.
+- The service code is copied into the image: after pulling changes, rerun
+  `bash omi-host/run-omi-local-host.sh`, which rebuilds the images and restarts them.
 
 ## Self-hosted extras (October 2026)
 
