@@ -84,7 +84,6 @@ _MODEL_NAME = "unit-test"
 def _reset_state():
     del SPAWNED[:]
     las.WHISPER_CPP_SERVER.stop()
-    las._whisper_cpp_loaded = False
     las._whisper_cpp_in_flight = 0
     las._whisper_cpp_last_used = time.time()
 
@@ -94,7 +93,6 @@ def test_server_is_not_running_at_startup():
     _reset_state()
     assert las.WHISPER_CPP_SERVER.is_running() is False, "server must not be up at boot"
     assert SPAWNED == [], "no process may be spawned before the first ASR call"
-    assert las._whisper_cpp_loaded is False, "nothing is loaded at boot"
 
 
 def test_first_use_starts_it_and_reuses_the_same_process():
@@ -158,7 +156,6 @@ def test_idle_unloader_stops_the_server_after_the_threshold():
     with mock.patch.object(las.subprocess, "Popen", _FakePopen), \
          mock.patch.object(las.requests, "get", _fake_get):
         las.WHISPER_CPP_SERVER.ensure_running()
-        las._whisper_cpp_loaded = True
         # Older than the threshold, so the unloader must act on its first pass.
         las.WHISPER_CPP_IDLE_UNLOAD_S = 300.0
         las._whisper_cpp_last_used = time.time() - 1000
@@ -169,7 +166,32 @@ def test_idle_unloader_stops_the_server_after_the_threshold():
             pass
 
         assert SPAWNED[0].terminated is True, "idle unloader must stop the server"
-        assert las._whisper_cpp_loaded is False, "loaded flag must clear after release"
+        assert las.WHISPER_CPP_SERVER.is_running() is False
+
+
+def test_a_server_whose_first_request_failed_is_still_released():
+    """The unloader used to trust a flag set only after a *successful* inference.
+    A cold start whose request then failed (timeout, 5xx) left whisper-server up
+    with the flag False, so it was never stopped and kept its VRAM indefinitely."""
+    _reset_state()
+
+    def _failing_post(*_args, **_kwargs):
+        raise las.requests.exceptions.ReadTimeout("inference timed out")
+
+    with mock.patch.object(las.subprocess, "Popen", _FakePopen), \
+         mock.patch.object(las.requests, "get", _fake_get), \
+         mock.patch.object(las.requests, "post", _failing_post):
+        assert las._transcribe_whispercpp(las.np.zeros(16000, dtype=las.np.float32), "en") == []
+        assert las.WHISPER_CPP_SERVER.is_running() is True, "the cold start must have spawned the server"
+
+        las.WHISPER_CPP_IDLE_UNLOAD_S = 300.0
+        las._whisper_cpp_last_used = time.time() - 1000
+        try:
+            asyncio.run(_one_unloader_pass())
+        except asyncio.CancelledError:
+            pass
+
+        assert SPAWNED[0].terminated is True, "an idle server must be stopped even if its request failed"
         assert las.WHISPER_CPP_SERVER.is_running() is False
 
 
@@ -179,7 +201,6 @@ def test_idle_unloader_leaves_a_busy_server_alone():
     with mock.patch.object(las.subprocess, "Popen", _FakePopen), \
          mock.patch.object(las.requests, "get", _fake_get):
         las.WHISPER_CPP_SERVER.ensure_running()
-        las._whisper_cpp_loaded = True
         las._whisper_cpp_last_used = time.time() - 1000
         las._whisper_cpp_in_flight = 1  # busy
 
@@ -192,6 +213,24 @@ def test_idle_unloader_leaves_a_busy_server_alone():
         assert las.WHISPER_CPP_SERVER.is_running() is True
 
 
+def test_health_reports_whether_the_model_is_loaded():
+    """Operators check the idle unload with `curl 127.0.0.1:8790/health`."""
+    import json
+
+    _reset_state()
+    with mock.patch.object(las.subprocess, "Popen", _FakePopen), \
+         mock.patch.object(las.requests, "get", _fake_get):
+        las.WHISPER_CPP_SERVER.ensure_running()
+        loaded = json.loads(asyncio.run(las.health()).body)
+        las.WHISPER_CPP_SERVER.stop()
+        released = json.loads(asyncio.run(las.health()).body)
+
+    assert loaded["asr_server_running"] is True, loaded
+    assert released["asr_server_running"] is False, released
+    assert released["asr_idle_unload_s"] == las.WHISPER_CPP_IDLE_UNLOAD_S
+    assert released["asr_in_flight"] == 0
+
+
 def main() -> None:
     _point_at_a_real_model_file()
     tests = [
@@ -199,7 +238,9 @@ def main() -> None:
         test_first_use_starts_it_and_reuses_the_same_process,
         test_idle_stop_releases_then_next_use_restarts,
         test_idle_unloader_stops_the_server_after_the_threshold,
+        test_a_server_whose_first_request_failed_is_still_released,
         test_idle_unloader_leaves_a_busy_server_alone,
+        test_health_reports_whether_the_model_is_loaded,
     ]
     for t in tests:
         t()
