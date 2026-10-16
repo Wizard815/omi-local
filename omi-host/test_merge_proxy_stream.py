@@ -14,6 +14,10 @@ This test stubs httpx.AsyncClient so a *closed* client raises the same
 RuntimeError, then drives the real ASGI app and asserts the streamed body
 arrives intact. Under the old code it fails; under the fix it passes.
 
+It also pins the non-streaming path (conversation processing, embeddings):
+an unreachable upstream or a plain-text upstream error used to crash the
+handler into a bare "500 Internal Server Error", hiding the real reason.
+
 Run:  python3 test_merge_proxy_stream.py     (no pytest required)
 """
 
@@ -116,13 +120,40 @@ class _FakeAsyncClient:
         raise AssertionError("non-streaming path must not run in this test")
 
 
-def _patch_proxy_httpx():
+class _FakePlainResponse:
+    def __init__(self, status_code, content, content_type):
+        self.status_code = status_code
+        self.content = content
+        self.headers = {"content-type": content_type}
+
+
+class _NonStreamingClient:
+    """Fake for the non-streaming path: post() raises or returns `outcome`."""
+
+    outcome = None
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc_info):
+        return False
+
+    async def post(self, *args, **kwargs):
+        if isinstance(_NonStreamingClient.outcome, Exception):
+            raise _NonStreamingClient.outcome
+        return _NonStreamingClient.outcome
+
+
+def _patch_proxy_httpx(client_cls=_FakeAsyncClient):
     """Give merge_proxy a namespace whose AsyncClient is the fake, without
     disturbing the real httpx the test itself uses for the ASGI call."""
     fake_module = types.SimpleNamespace(
         **{name: getattr(httpx, name) for name in dir(httpx) if not name.startswith("_")}
     )
-    fake_module.AsyncClient = _FakeAsyncClient
+    fake_module.AsyncClient = client_cls
     merge_proxy.httpx = fake_module
 
 
@@ -172,6 +203,29 @@ async def _run_upstream_error() -> None:
     assert status == 400, f"upstream error was masked as {status}"
     assert b"model not loaded" in body
     assert all(c.closed for c in _FakeAsyncClient.instances), "upstream client leaked on the error path"
+
+
+async def _post_non_streaming(path: str, outcome) -> "httpx.Response":
+    _patch_proxy_httpx(_NonStreamingClient)
+    merge_proxy._upstreams["llama"] = "http://upstream.invalid/v1"
+    _NonStreamingClient.outcome = outcome
+    transport = httpx.ASGITransport(app=merge_proxy.app, raise_app_exceptions=False)
+    async with _RealAsyncClient(transport=transport, base_url="http://proxy.test") as client:
+        return await client.post(path, json={"model": "llama/test-model", "messages": [], "input": "x"})
+
+
+def test_non_streaming_unreachable_upstream_is_a_502_with_the_reason() -> None:
+    response = asyncio.run(_post_non_streaming("/v1/chat/completions", httpx.ConnectError("connection refused")))
+    assert response.status_code == 502, f"masked as {response.status_code}: {response.text!r}"
+    assert "upstream 'llama' unreachable: ConnectError" in response.text, response.text
+
+
+def test_non_streaming_plain_text_upstream_error_keeps_status_and_text() -> None:
+    for path in ("/v1/chat/completions", "/v1/embeddings"):
+        upstream = _FakePlainResponse(503, b"unable to start process: out of memory", "text/plain")
+        response = asyncio.run(_post_non_streaming(path, upstream))
+        assert response.status_code == 503, f"{path}: masked as {response.status_code}: {response.text!r}"
+        assert response.text == "unable to start process: out of memory", f"{path}: {response.text!r}"
 
 
 def test_streaming_chat_survives_the_handler_returning() -> None:
@@ -270,4 +324,6 @@ if __name__ == "__main__":
     test_streaming_chat_survives_the_handler_returning()
     test_streaming_upstream_error_keeps_its_status()
     test_unreachable_redis_falls_back_to_env_allowlist()
-    print("PASS: merge proxy streaming + allowlist fallback")
+    test_non_streaming_unreachable_upstream_is_a_502_with_the_reason()
+    test_non_streaming_plain_text_upstream_error_keeps_status_and_text()
+    print("PASS: merge proxy streaming + non-streaming errors + allowlist fallback")
