@@ -261,6 +261,37 @@ async def reload_allowlist():
     return {"ok": True, "note": "Cache flushed — next /v1/models will re-filter"}
 
 
+def _upstream_unreachable(tag: str, exc: Exception) -> JSONResponse:
+    return JSONResponse(
+        {"error": {"message": f"upstream '{tag}' unreachable: {type(exc).__name__}", "type": "upstream_error"}},
+        status_code=502,
+    )
+
+
+async def _post_upstream(tag: str, url: str, payload: dict, headers: dict[str, str]) -> Response:
+    """Non-streaming POST that relays the upstream's status and body as-is.
+
+    An unreachable upstream, or an error body that is not JSON (llama-swap and
+    reverse proxies answer in plain text), used to raise inside the handler, so
+    the caller got a bare "500 Internal Server Error" and the real reason — a
+    model that failed to load, a backend that is down — was lost.
+    """
+    try:
+        async with httpx.AsyncClient(timeout=600.0) as client:
+            resp = await client.post(url, json=payload, headers=headers)
+    except Exception as exc:  # noqa: BLE001 - relayed to the caller as a 502
+        return _upstream_unreachable(tag, exc)
+    try:
+        content = json.loads(resp.content) if resp.content else {}
+    except json.JSONDecodeError:
+        return Response(
+            content=resp.content,
+            status_code=resp.status_code,
+            media_type=resp.headers.get("content-type", "text/plain"),
+        )
+    return JSONResponse(content=content, status_code=resp.status_code)
+
+
 @app.post("/v1/chat/completions")
 async def chat_completions(request: Request):
     body = await request.body()
@@ -314,10 +345,7 @@ async def chat_completions(request: Request):
             resp = await client.send(upstream_request, stream=True)
         except Exception as exc:
             await client.aclose()
-            return JSONResponse(
-                {"error": {"message": f"upstream '{tag}' unreachable: {type(exc).__name__}", "type": "upstream_error"}},
-                status_code=502,
-            )
+            return _upstream_unreachable(tag, exc)
 
         if resp.status_code >= 400:
             body_bytes = await resp.aread()
@@ -339,17 +367,7 @@ async def chat_completions(request: Request):
 
         return StreamingResponse(_stream(), media_type="text/event-stream")
 
-    async with httpx.AsyncClient(timeout=600.0) as client:
-        resp = await client.post(
-            f"{base_url.rstrip('/')}/chat/completions",
-            json=payload,
-            headers=headers,
-        )
-        content = resp.content
-        return JSONResponse(
-            content=json.loads(content) if content else {},
-            status_code=resp.status_code,
-        )
+    return await _post_upstream(tag, f"{base_url.rstrip('/')}/chat/completions", payload, headers)
 
 
 @app.post("/v1/embeddings")
@@ -381,17 +399,7 @@ async def embeddings(request: Request):
     else:
         headers["Authorization"] = f"Bearer {DEFAULT_KEY}"
 
-    async with httpx.AsyncClient(timeout=600.0) as client:
-        resp = await client.post(
-            f"{base_url.rstrip('/')}/embeddings",
-            json=payload,
-            headers=headers,
-        )
-        content = resp.content
-        return JSONResponse(
-            content=json.loads(content) if content else {},
-            status_code=resp.status_code,
-        )
+    return await _post_upstream(tag, f"{base_url.rstrip('/')}/embeddings", payload, headers)
 
 
 if __name__ == "__main__":
