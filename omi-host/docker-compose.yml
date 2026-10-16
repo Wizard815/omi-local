@@ -170,7 +170,8 @@ services:
       WHISPER_MODEL: ${WHISPER_MODEL:-large-v3-turbo}
       WHISPER_CPP_MODELS_DIR: /data/whispercpp/models
       WHISPER_CPP_SERVER_URL: http://127.0.0.1:8081
-      # Unload the ggml model off the GPU after this many idle seconds (0 = never).
+      # Stop whisper-server (freeing its VRAM) after this many seconds with no
+      # transcription (0 = never). Check it: curl -s 127.0.0.1:8790/health
       OMI_ASR_IDLE_UNLOAD_S: ${OMI_ASR_IDLE_UNLOAD_S:-300}
       # VAD endpointing: how much silence (ms) must follow speech before an
       # utterance is considered finished/cut — raise this to keep listening
@@ -188,6 +189,8 @@ services:
       THREADS: ${THREADS:-8}
       # Diarization (resemblyzer) on the GPU. Set OMI_DIA_DEVICE=cpu to force CPU
       # (e.g. GPU passthrough not working) instead of relying on the auto-fallback.
+      # On the GPU this process holds VRAM for the container's lifetime -- idle
+      # unload only stops whisper-server -- so cpu is also how idle VRAM reaches 0.
       OMI_DIA_DEVICE: ${OMI_DIA_DEVICE:-cuda}
       # gfx906 has no bf16 hardware -- fp16 autocast is the real speedup path (see
       # gfx906_runtime_env.sh). MIOpen find-db persists on the shared volume so the
