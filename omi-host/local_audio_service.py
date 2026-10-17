@@ -464,7 +464,13 @@ async def _whisper_cpp_idle_unloader() -> None:
             idle_for = time.time() - _whisper_cpp_last_used
             in_flight = _whisper_cpp_in_flight
             loaded = _whisper_cpp_loaded
-        if not loaded or in_flight > 0 or idle_for < WHISPER_CPP_IDLE_UNLOAD_S:
+        # Ground truth is the PROCESS, not the flag. A request that failed right
+        # after ensure_running() used to leave _whisper_cpp_loaded False with the
+        # server still up, and this guard then skipped forever -- the model sat
+        # in VRAM until the container was restarted. is_running() closes that.
+        if not (loaded or WHISPER_CPP_SERVER.is_running()):
+            continue
+        if in_flight > 0 or idle_for < WHISPER_CPP_IDLE_UNLOAD_S:
             continue
         # whisper.cpp's server has no /unload route, so releasing the model means
         # stopping the process entirely. The next ASR call starts it again (see
@@ -511,6 +517,12 @@ def _transcribe_whispercpp(audio16: np.ndarray, language: str) -> List[Dict[str,
         # Cold start after an idle release: bring the server (and its model load)
         # up first, so the request timeout below covers inference only.
         WHISPER_CPP_SERVER.ensure_running()
+        # The process is up, so the idle unloader must be allowed to stop it even
+        # if this request fails below. Setting this only after a 200 was a bug:
+        # a failed transcription (raise_for_status, timeout) left the server
+        # orphaned in VRAM, because the unloader's "not loaded" guard then
+        # skipped forever and nothing else could ever stop it.
+        _whisper_cpp_loaded = True
         resp = requests.post(
             f"{WHISPER_CPP_SERVER_URL}/inference",
             files={"file": ("audio.wav", wav, "audio/wav")},
