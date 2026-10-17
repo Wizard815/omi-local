@@ -192,6 +192,29 @@ def test_idle_unloader_leaves_a_busy_server_alone():
         assert las.WHISPER_CPP_SERVER.is_running() is True
 
 
+def test_unloader_stops_orphaned_server_after_a_failed_request():
+    """The 4GB-for-12-hours case: ensure_running() started the process, then the
+    inference failed, so _whisper_cpp_loaded stayed False. The unloader must
+    still stop it -- the running process is the ground truth, not the flag."""
+    _reset_state()
+    with mock.patch.object(las.subprocess, "Popen", _FakePopen), \
+         mock.patch.object(las.requests, "get", _fake_get):
+        las.WHISPER_CPP_SERVER.ensure_running()
+        assert las.WHISPER_CPP_SERVER.is_running() is True
+
+        las._whisper_cpp_loaded = False          # exactly what a failed request left behind
+        las.WHISPER_CPP_IDLE_UNLOAD_S = 300.0
+        las._whisper_cpp_last_used = time.time() - 1000
+
+        try:
+            asyncio.run(_one_unloader_pass())
+        except asyncio.CancelledError:
+            pass
+
+        assert SPAWNED[0].terminated is True, "an orphaned server must still be stopped on idle"
+        assert las.WHISPER_CPP_SERVER.is_running() is False
+
+
 def main() -> None:
     _point_at_a_real_model_file()
     tests = [
@@ -200,6 +223,7 @@ def main() -> None:
         test_idle_stop_releases_then_next_use_restarts,
         test_idle_unloader_stops_the_server_after_the_threshold,
         test_idle_unloader_leaves_a_busy_server_alone,
+        test_unloader_stops_orphaned_server_after_a_failed_request,
     ]
     for t in tests:
         t()
