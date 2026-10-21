@@ -4,6 +4,7 @@ import 'package:collection/collection.dart';
 
 import 'package:omi/backend/http/api/folders.dart';
 import 'package:omi/backend/schema/folder.dart';
+import 'package:omi/utils/folders/folder_tree.dart' as tree;
 import 'package:omi/utils/logger.dart';
 
 typedef FoldersFetcher = Future<List<Folder>> Function();
@@ -31,6 +32,14 @@ class FolderProvider extends ChangeNotifier {
   List<Folder> get systemFolders => _folders.where((f) => f.isSystem).toList();
 
   List<Folder> get customFolders => _folders.where((f) => !f.isSystem).toList();
+
+  /// Top-level folders (nested folders hang off these).
+  List<Folder> get rootFolders => tree.rootFolders(_folders);
+
+  List<Folder> childrenOf(String folderId) => tree.childFolders(_folders, folderId);
+
+  /// "Work / Clients / Acme".
+  String pathOf(String folderId) => tree.folderPath(_folders, folderId);
 
   Future<void> loadFolders() async {
     final generation = _sessionGeneration;
@@ -64,10 +73,22 @@ class FolderProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Folder?> createFolder({required String name, String? description, String? color, String? icon}) async {
+  Future<Folder?> createFolder({
+    required String name,
+    String? description,
+    String? color,
+    String? icon,
+    String? parentId,
+  }) async {
     final generation = _sessionGeneration;
     try {
-      final folder = await createFolderApi(name: name, description: description, color: color, icon: icon);
+      final folder = await createFolderApi(
+        name: name,
+        description: description,
+        color: color,
+        icon: icon,
+        parentId: parentId,
+      );
       if (generation != _sessionGeneration) return null;
       if (folder != null) {
         _folders.add(folder);
@@ -116,6 +137,29 @@ class FolderProvider extends ChangeNotifier {
       notifyListeners();
     }
     return null;
+  }
+
+  /// Move [folderId] inside [parentId] (null = top level).
+  Future<bool> moveFolder(String folderId, String? parentId) async {
+    final generation = _sessionGeneration;
+    try {
+      final moved = await moveFolderApi(folderId, parentId);
+      if (generation != _sessionGeneration) return false;
+      if (moved != null) {
+        final index = _folders.indexWhere((f) => f.id == folderId);
+        if (index >= 0) {
+          _folders[index] = moved;
+          notifyListeners();
+        }
+        return true;
+      }
+    } catch (e) {
+      if (generation != _sessionGeneration) return false;
+      Logger.debug('Error moving folder: $e');
+    }
+    _error = 'Failed to move folder';
+    notifyListeners();
+    return false;
   }
 
   Future<bool> deleteFolder(String folderId, {String? moveToFolderId}) async {

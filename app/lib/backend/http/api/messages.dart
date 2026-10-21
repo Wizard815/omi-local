@@ -177,6 +177,7 @@ Stream<ServerMessageChunk> sendMessageStreamServer(
   String? appId,
   List<String>? filesId,
   ChatPageContext? context,
+  String? modelShortcut,
 }) async* {
   var url = '${Env.apiBaseUrl}v2/messages?app_id=$appId';
   if (appId == null || appId.isEmpty || appId == 'null' || appId == 'no_selected') {
@@ -188,6 +189,8 @@ Stream<ServerMessageChunk> sendMessageStreamServer(
     'text': text,
     'file_ids': filesId,
     if (context != null) 'context': context.toJson(),
+    // Self-hosted chat model shortcut for this turn (e.g. "adult").
+    if (modelShortcut != null) 'model_shortcut': modelShortcut,
   };
 
   await for (var line in makeStreamingApiCall(url: url, body: jsonEncode(body))) {

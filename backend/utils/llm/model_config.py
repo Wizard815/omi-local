@@ -14,6 +14,7 @@ Runtime model switching (self-hosting):
 
 import logging
 import os
+from contextvars import ContextVar, Token
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple, Union
 
@@ -56,6 +57,7 @@ def _redis_model(kind: str) -> Optional[str]:
     """Read a runtime model override from Redis, returning None on any error."""
     try:
         from database.redis_db import get_runtime_model
+
         return get_runtime_model(kind)
     except Exception:
         return None
@@ -71,6 +73,53 @@ def _get_local_chat_agent_model() -> str:
     return (_redis_model('chat_agent') or os.getenv('LOCAL_LLM_MODEL', '')).strip()
 
 
+# ---------------------------------------------------------------------------
+# Per-turn chat model override (self-hosting "model shortcuts", e.g. /adult).
+#
+# A chat turn may name a shortcut whose model replaces the base chat model for
+# the features that write the answer. It is turn-scoped through a ContextVar:
+# the chat router sets it around one streamed reply, and asyncio tasks spawned
+# inside that reply inherit it. Helper calls (chat_extraction classifiers,
+# follow-up chips, titles) deliberately stay on the base model — they are
+# small structured calls the shortcut is not meant to make slower.
+# ---------------------------------------------------------------------------
+
+CHAT_SHORTCUT_FEATURES = frozenset(
+    {
+        'chat_agent',
+        'chat_responses',
+        'file_chat_vision',
+        'file_chat_documents',
+        'persona_chat',
+        'persona_chat_premium',
+    }
+)
+
+_chat_model_override: ContextVar[Optional[str]] = ContextVar('omi_chat_model_override', default=None)
+
+
+def set_chat_model_override(model: Optional[str]) -> Token:
+    """Route this context's chat-answer features to ``model`` (None clears it).
+
+    Returns the token for ``reset_chat_model_override``. Only honored in local
+    mode — a merge-proxy model id means nothing to a cloud provider.
+    """
+    return _chat_model_override.set((model or '').strip() or None)
+
+
+def reset_chat_model_override(token: Token) -> None:
+    try:
+        _chat_model_override.reset(token)
+    except ValueError:
+        # Reset from a different Context (e.g. an async generator finalized by
+        # another task). That context dies with its task; clearing is enough.
+        _chat_model_override.set(None)
+
+
+def get_chat_model_override() -> Optional[str]:
+    return _chat_model_override.get()
+
+
 # The only OpenAI embedding model name this backend ever sends (see
 # clients.py) — self-hosted backends need a model actually answering to this
 # exact alias (e.g. in llama-swap's config), since the code never asks for
@@ -84,14 +133,27 @@ def _get_local_embedding_model() -> str:
     defaulting to DEFAULT_EMBEDDING_MODEL instead of empty so existing
     (non-self-hosted) deployments keep working unchanged without picking
     anything in the dashboard."""
-    return (
-        _redis_model('embedding') or os.getenv('LOCAL_EMBEDDING_MODEL', '') or DEFAULT_EMBEDDING_MODEL
-    ).strip()
+    return (_redis_model('embedding') or os.getenv('LOCAL_EMBEDDING_MODEL', '') or DEFAULT_EMBEDDING_MODEL).strip()
 
 
 def _is_local_mode() -> bool:
     """Return True when a local LLM backend (LiteLLM) is configured."""
     return bool(os.getenv('OPENAI_BASE_URL', '').strip() and _get_local_primary_model())
+
+
+def is_local_mode() -> bool:
+    """Public form of ``_is_local_mode`` for routers/tools gating self-hosted-only behavior.
+
+    True whether the primary model came from the dashboard (Redis) or from
+    OMI_LOCAL_MODEL — checking the env var alone misses every deployment that
+    picked its model in the dashboard.
+    """
+    return _is_local_mode()
+
+
+def local_base_chat_model() -> str:
+    """The self-hosted chat answer model before any per-turn shortcut: chat_agent, else primary."""
+    return _get_local_chat_agent_model() or _get_local_primary_model()
 
 
 # ---------------------------------------------------------------------------
@@ -301,8 +363,16 @@ def _get_model_config(feature: str) -> Tuple[str, str]:
     # --- Runtime local-mode rewrite ---
     # chat_agent gets its own model; everything else uses the primary model.
     if _is_local_mode() and base_provider in _LOCAL_REWRITABLE:
+        override = _chat_model_override.get()
+        if override and feature in CHAT_SHORTCUT_FEATURES:
+            return (override, 'openai')
         if feature == 'chat_agent':
-            return (_get_local_chat_agent_model(), 'openai')
+            # No separate chat model picked (dashboard "(pass-through)", empty
+            # LOCAL_LLM_MODEL) used to send model="" to the proxy, which routes
+            # it to the first upstream with no model name — llama-swap/OpenRouter
+            # reject that, so Ask Omi only answered with the canned apology.
+            # Unset means "same as primary".
+            return (_get_local_chat_agent_model() or _get_local_primary_model(), 'openai')
         return (_get_local_primary_model(), 'openai')
 
     return base_model, base_provider

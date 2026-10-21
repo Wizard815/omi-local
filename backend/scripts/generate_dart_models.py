@@ -231,6 +231,22 @@ SCHEMA_GROUPS = {
             ),
         ),
     },
+    'self_hosted': {
+        # Self-hosted-only surfaces: chat model shortcuts ("/adult") and the end-of-day review.
+        'output': DEFAULT_OUTPUT_DIR / 'self_hosted_wire.g.dart',
+        'schemas': (
+            'ChatModelShortcut',
+            'AvailableChatModel',
+            'ChatModelShortcutsResponse',
+            'DayReviewCorrection',
+            'DayReview',
+            'DayReviewConversation',
+            'DayReviewDayResponse',
+            'DayReviewsListResponse',
+            'PendingDayReviewsResponse',
+            'ReopenDayReviewResponse',
+        ),
+    },
     'misc': {
         'output': DEFAULT_OUTPUT_DIR / 'misc_wire.g.dart',
         'schemas': (

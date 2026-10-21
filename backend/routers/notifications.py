@@ -2,6 +2,7 @@ import os
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional, Tuple, cast
 
+import pytz
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from fastapi.responses import JSONResponse
 
@@ -13,7 +14,7 @@ from utils.apps import (
 )
 from utils.app_integrations import send_app_notification
 import database.notifications as notification_db
-from models.other import FcmTokenResponse, SaveFcmTokenRequest
+from models.other import FcmTokenResponse, SaveFcmTokenRequest, SaveTimeZoneRequest
 from models.integrations import IntegrationNotificationResponse
 from utils.notifications import (
     send_notification,
@@ -82,6 +83,23 @@ def save_token(
     token_data['device_key'] = device_key
 
     notification_db.save_token(uid, token_data)
+    return FcmTokenResponse(status='Ok')
+
+
+@router.put('/v1/users/time-zone', response_model=FcmTokenResponse)
+def save_time_zone(data: SaveTimeZoneRequest, uid: str = Depends(auth.get_current_user_uid)) -> FcmTokenResponse:
+    """Record the device's IANA time zone without registering a push token.
+
+    The self-hosted app never registers an FCM token, which was the only path
+    that told the backend the user's zone — so day boundaries for recaps, the
+    hourly daily-summary job's recipient selection, and the chat's notion of
+    "today" all ran in UTC.
+    """
+    try:
+        pytz.timezone(data.time_zone)
+    except pytz.UnknownTimeZoneError:
+        raise HTTPException(status_code=422, detail='Unknown time zone')
+    notification_db.set_user_time_zone(uid, data.time_zone)
     return FcmTokenResponse(status='Ok')
 
 

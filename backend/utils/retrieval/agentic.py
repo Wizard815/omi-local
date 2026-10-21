@@ -65,7 +65,7 @@ from utils.retrieval.tools.app_tools import load_app_tools, get_tool_status_mess
 from utils.retrieval.tools.conversation_jit_gate import (
     append_jit_conversation_retrieval_prompt,
 )
-from utils.retrieval.tools.device_calendar_tools import get_device_calendar_events_tool
+from utils.retrieval.tools.device_calendar_tools import device_calendar_tools_for
 from utils.retrieval.tool_result_boundaries import preserve_chat_memory_tool_result_boundary
 from utils.retrieval.chat_scope import build_chat_scope
 from utils.retrieval.safety import (
@@ -158,8 +158,10 @@ class _PerplexityWebSearchToolProxy:
         try:
             if _use_searxng():
                 from utils.retrieval.tools.local_web_search_tool import local_web_search_tool
+
                 return local_web_search_tool.args_schema
             from utils.retrieval.tools.perplexity_tools import perplexity_web_search_tool
+
             return perplexity_web_search_tool.args_schema
         except ModuleNotFoundError as error:
             if error.name != 'langchain_core.tools':
@@ -178,8 +180,10 @@ class _PerplexityWebSearchToolProxy:
     async def ainvoke(self, tool_input, config=None):
         if _use_searxng():
             from utils.retrieval.tools.local_web_search_tool import local_web_search_tool
+
             return await local_web_search_tool.ainvoke(tool_input, config=config)
         from utils.retrieval.tools.perplexity_tools import perplexity_web_search_tool
+
         return await perplexity_web_search_tool.ainvoke(tool_input, config=config)
 
 
@@ -188,7 +192,6 @@ perplexity_web_search_tool = _PerplexityWebSearchToolProxy()
 
 def _use_searxng() -> bool:
     """Check if GUEST SearXNG_URL is configured for local web search."""
-    import os
     return bool(os.environ.get("SEARXNG_URL", "").strip())
 
 
@@ -1463,12 +1466,8 @@ async def execute_agentic_chat_stream(
             if not jit_conversation_retrieval_enabled:
                 core_tools = [tool for tool in core_tools if tool.name not in JIT_ONLY_TOOL_NAMES]
 
-            # Self-hosting: add device calendar tool when in local mode
-            # (replaces Google Calendar dependency with Android CalendarContract)
-            if os.environ.get("OPENAI_BASE_URL") and os.environ.get("OMI_LOCAL_MODEL"):
-                from routers.device_calendar import has_device_calendar
-                if has_device_calendar(uid):
-                    core_tools.append(get_device_calendar_events_tool)
+            # Self-hosting: Android device-calendar tool (local-LLM mode, calendar synced).
+            core_tools.extend(await device_calendar_tools_for(uid))
 
             # Dynamic app tools — deferred for Anthropic; exposed directly in managed mode
             app_tools = []

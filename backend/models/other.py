@@ -13,6 +13,10 @@ class FcmTokenResponse(BaseModel):
     status: str
 
 
+class SaveTimeZoneRequest(BaseModel):
+    time_zone: str = Field(min_length=1, max_length=64, description='IANA zone name, e.g. "America/Chicago"')
+
+
 class SendNotificationRequest(BaseModel):
     uid: str
     title: str

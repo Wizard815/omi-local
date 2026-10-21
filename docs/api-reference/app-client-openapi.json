@@ -4336,6 +4336,24 @@
         "title": "AuthStep",
         "type": "object"
       },
+      "AvailableChatModel": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "owned_by": {
+            "default": "",
+            "title": "Owned By",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "AvailableChatModel",
+        "type": "object"
+      },
       "AvailableLanguage": {
         "properties": {
           "code": {
@@ -6496,6 +6514,63 @@
           "count"
         ],
         "title": "ChatMessageCountResponse",
+        "type": "object"
+      },
+      "ChatModelShortcut": {
+        "properties": {
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ChatModelShortcut",
+        "type": "object"
+      },
+      "ChatModelShortcutsResponse": {
+        "properties": {
+          "available_models": {
+            "items": {
+              "$ref": "#/components/schemas/AvailableChatModel"
+            },
+            "title": "Available Models",
+            "type": "array"
+          },
+          "base_model": {
+            "default": "",
+            "title": "Base Model",
+            "type": "string"
+          },
+          "enabled": {
+            "description": "False unless the backend runs in local-LLM mode (shortcuts need the merge proxy).",
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "shortcuts": {
+            "items": {
+              "$ref": "#/components/schemas/ChatModelShortcut"
+            },
+            "title": "Shortcuts",
+            "type": "array"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "ChatModelShortcutsResponse",
         "type": "object"
       },
       "ChatQuotaUnit": {
@@ -9448,6 +9523,89 @@
         "title": "CreateDailySummaryRequest",
         "type": "object"
       },
+      "CreateDayReviewCorrectionRequest": {
+        "properties": {
+          "after_paragraph": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Insert a paragraph after this paragraph index (omit = at the end)",
+            "title": "After Paragraph"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Selection end offset in summary_text",
+            "title": "End"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Selected summary text (highlight/redaction)",
+            "title": "Quote"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Selection start offset in summary_text",
+            "title": "Start"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "maxLength": 8000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Paragraph body, or the highlight comment",
+            "title": "Text"
+          },
+          "type": {
+            "enum": [
+              "paragraph",
+              "highlight",
+              "redaction"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "title": "CreateDayReviewCorrectionRequest",
+        "type": "object"
+      },
       "CreateFolderRequest": {
         "description": "Request model for creating a new folder.",
         "properties": {
@@ -9491,6 +9649,18 @@
             "minLength": 1,
             "title": "Name",
             "type": "string"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Create inside this folder; omit for top level",
+            "title": "Parent Id"
           }
         },
         "required": [
@@ -10543,6 +10713,323 @@
           }
         },
         "title": "DailySummaryUnresolvedQuestion",
+        "type": "object"
+      },
+      "DayReview": {
+        "properties": {
+          "corrections": {
+            "items": {
+              "$ref": "#/components/schemas/DayReviewCorrection"
+            },
+            "title": "Corrections",
+            "type": "array"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "final_text": {
+            "default": "",
+            "description": "summary_text with redactions masked and pending corrections applied",
+            "title": "Final Text",
+            "type": "string"
+          },
+          "generated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generated At"
+          },
+          "generation_count": {
+            "default": 0,
+            "title": "Generation Count",
+            "type": "integer"
+          },
+          "kept_conversation_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Kept Conversation Ids",
+            "type": "array"
+          },
+          "rolled_up_conversation_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Rolled Up Conversation Ids",
+            "type": "array"
+          },
+          "status": {
+            "const": "finalized",
+            "default": "finalized",
+            "title": "Status",
+            "type": "string"
+          },
+          "summary_text": {
+            "default": "",
+            "description": "Model-written summary; correction offsets index this",
+            "title": "Summary Text",
+            "type": "string"
+          },
+          "time_zone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Zone"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "date"
+        ],
+        "title": "DayReview",
+        "type": "object"
+      },
+      "DayReviewConversation": {
+        "properties": {
+          "emoji": {
+            "default": "",
+            "title": "Emoji",
+            "type": "string"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "overview": {
+            "default": "",
+            "title": "Overview",
+            "type": "string"
+          },
+          "rolled_up": {
+            "default": false,
+            "description": "Folded into this day's summary (hidden from the normal list)",
+            "title": "Rolled Up",
+            "type": "boolean"
+          },
+          "starred": {
+            "default": false,
+            "title": "Starred",
+            "type": "boolean"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "DayReviewConversation",
+        "type": "object"
+      },
+      "DayReviewCorrection": {
+        "properties": {
+          "after_paragraph": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "After Paragraph"
+          },
+          "applied_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applied At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "type": {
+            "enum": [
+              "paragraph",
+              "highlight",
+              "redaction"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "created_at"
+        ],
+        "title": "DayReviewCorrection",
+        "type": "object"
+      },
+      "DayReviewDayResponse": {
+        "properties": {
+          "conversations": {
+            "items": {
+              "$ref": "#/components/schemas/DayReviewConversation"
+            },
+            "title": "Conversations",
+            "type": "array"
+          },
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "processing_count": {
+            "default": 0,
+            "description": "Conversations of this day still being processed",
+            "title": "Processing Count",
+            "type": "integer"
+          },
+          "review": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DayReview"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "date"
+        ],
+        "title": "DayReviewDayResponse",
+        "type": "object"
+      },
+      "DayReviewsListResponse": {
+        "properties": {
+          "reviews": {
+            "items": {
+              "$ref": "#/components/schemas/DayReview"
+            },
+            "title": "Reviews",
+            "type": "array"
+          }
+        },
+        "title": "DayReviewsListResponse",
         "type": "object"
       },
       "DecisionDebugProjection": {
@@ -13126,6 +13613,21 @@
         "title": "FileChat",
         "type": "object"
       },
+      "FinalizeDayReviewRequest": {
+        "properties": {
+          "keep_conversation_ids": {
+            "description": "Starred: stay normal conversations. The rest are rolled up.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 500,
+            "title": "Keep Conversation Ids",
+            "type": "array"
+          }
+        },
+        "title": "FinalizeDayReviewRequest",
+        "type": "object"
+      },
       "FirmwareVersionResponse": {
         "properties": {
           "changelog": {
@@ -13386,6 +13888,18 @@
             "default": 0,
             "title": "Order",
             "type": "integer"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Containing folder for nested folders; None means top level",
+            "title": "Parent Id"
           },
           "updated_at": {
             "format": "date-time",
@@ -20408,6 +20922,27 @@
         "title": "PaywallStatusResponse",
         "type": "object"
       },
+      "PendingDayReviewsResponse": {
+        "properties": {
+          "pending_dates": {
+            "description": "Recent local dates with unsorted conversations",
+            "items": {
+              "type": "string"
+            },
+            "title": "Pending Dates",
+            "type": "array"
+          },
+          "today": {
+            "title": "Today",
+            "type": "string"
+          }
+        },
+        "required": [
+          "today"
+        ],
+        "title": "PendingDayReviewsResponse",
+        "type": "object"
+      },
       "PendingSyncResponse": {
         "properties": {
           "pending_export": {
@@ -21727,6 +22262,22 @@
         "title": "ReferralLinkResponse",
         "type": "object"
       },
+      "ReopenDayReviewResponse": {
+        "properties": {
+          "restored_count": {
+            "default": 0,
+            "title": "Restored Count",
+            "type": "integer"
+          },
+          "status": {
+            "default": "ok",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "title": "ReopenDayReviewResponse",
+        "type": "object"
+      },
       "ReorderFoldersRequest": {
         "description": "Request model for reordering folders.",
         "properties": {
@@ -22217,6 +22768,22 @@
           "paypalme_url"
         ],
         "title": "SavePayPalPaymentDetailsRequest",
+        "type": "object"
+      },
+      "SaveTimeZoneRequest": {
+        "properties": {
+          "time_zone": {
+            "description": "IANA zone name, e.g. \"America/Chicago\"",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Time Zone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "time_zone"
+        ],
+        "title": "SaveTimeZoneRequest",
         "type": "object"
       },
       "ScreenActivityAppSummary": {
@@ -22922,6 +23489,18 @@
             "default": [],
             "title": "File Ids"
           },
+          "model_shortcut": {
+            "anyOf": [
+              {
+                "maxLength": 25,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Shortcut"
+          },
           "text": {
             "title": "Text",
             "type": "string"
@@ -22965,6 +23544,21 @@
           "sent_to"
         ],
         "title": "SendShareEmailResponse",
+        "type": "object"
+      },
+      "SetChatModelShortcutRequest": {
+        "properties": {
+          "model": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Model",
+            "type": "string"
+          }
+        },
+        "required": [
+          "model"
+        ],
+        "title": "SetChatModelShortcutRequest",
         "type": "object"
       },
       "SetConversationActionItemsStateRequest": {
@@ -27738,6 +28332,18 @@
               }
             ],
             "title": "Order"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Move into this folder; send null explicitly to move to the top level",
+            "title": "Parent Id"
           }
         },
         "title": "UpdateFolderRequest",
@@ -37831,6 +38437,266 @@
         ]
       }
     },
+    "/v1/chat/model-shortcuts": {
+      "get": {
+        "operationId": "get_chat_model_shortcuts_v1_chat_model_shortcuts_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatModelShortcutsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Get Chat Model Shortcuts",
+        "tags": [
+          "chat"
+        ]
+      }
+    },
+    "/v1/chat/model-shortcuts/{name}": {
+      "delete": {
+        "operationId": "delete_chat_model_shortcut_v1_chat_model_shortcuts__name__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatModelShortcutsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Delete Chat Model Shortcut",
+        "tags": [
+          "chat"
+        ]
+      },
+      "put": {
+        "operationId": "put_chat_model_shortcut_v1_chat_model_shortcuts__name__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetChatModelShortcutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatModelShortcutsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Put Chat Model Shortcut",
+        "tags": [
+          "chat"
+        ]
+      }
+    },
     "/v1/connectors/synthesize": {
       "post": {
         "description": "Return-only calendar/gmail/notes synthesis through the managed memories feature.\n\nDoes not write Firestore. Desktop connector importers call this instead of building\ntheir own prompts and inventing memories via Anthropic Haiku chat completions, then\npersist through the normal memory/task write APIs.",
@@ -44966,7 +45832,7 @@
     },
     "/v1/folders/{folder_id}": {
       "delete": {
-        "description": "Delete a folder and move its conversations to another folder.",
+        "description": "Delete a folder: its conversations move to another folder, its subfolders move up one level.",
         "operationId": "delete_folder_v1_folders__folder_id__delete",
         "parameters": [
           {
@@ -58041,6 +58907,758 @@
         ]
       }
     },
+    "/v1/users/day-reviews": {
+      "get": {
+        "operationId": "list_day_reviews_v1_users_day_reviews_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayReviewsListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "List Day Reviews",
+        "tags": [
+          "day-reviews"
+        ]
+      }
+    },
+    "/v1/users/day-reviews/pending": {
+      "get": {
+        "description": "Recent days that still have unsorted conversations (today included; the app decides when to nudge).",
+        "operationId": "get_pending_day_reviews_v1_users_day_reviews_pending_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 7,
+              "maximum": 31,
+              "minimum": 1,
+              "title": "Days",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingDayReviewsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Get Pending Day Reviews",
+        "tags": [
+          "day-reviews"
+        ]
+      }
+    },
+    "/v1/users/day-reviews/{date}": {
+      "get": {
+        "description": "The day's conversations (to sort) and its review, if it has one.",
+        "operationId": "get_day_review_v1_users_day_reviews__date__get",
+        "parameters": [
+          {
+            "description": "Local calendar date, YYYY-MM-DD",
+            "in": "path",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "description": "Local calendar date, YYYY-MM-DD",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "title": "Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayReviewDayResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Get Day Review",
+        "tags": [
+          "day-reviews"
+        ]
+      }
+    },
+    "/v1/users/day-reviews/{date}/corrections": {
+      "post": {
+        "operationId": "add_day_review_correction_v1_users_day_reviews__date__corrections_post",
+        "parameters": [
+          {
+            "description": "Local calendar date, YYYY-MM-DD",
+            "in": "path",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "description": "Local calendar date, YYYY-MM-DD",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "title": "Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDayReviewCorrectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayReview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Add Day Review Correction",
+        "tags": [
+          "day-reviews"
+        ]
+      }
+    },
+    "/v1/users/day-reviews/{date}/corrections/{correction_id}": {
+      "delete": {
+        "operationId": "delete_day_review_correction_v1_users_day_reviews__date__corrections__correction_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "correction_id",
+            "required": true,
+            "schema": {
+              "title": "Correction Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Local calendar date, YYYY-MM-DD",
+            "in": "path",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "description": "Local calendar date, YYYY-MM-DD",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "title": "Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayReview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Delete Day Review Correction",
+        "tags": [
+          "day-reviews"
+        ]
+      }
+    },
+    "/v1/users/day-reviews/{date}/finalize": {
+      "post": {
+        "description": "Keep (star) the listed conversations; roll every other one into one day summary.",
+        "operationId": "finalize_day_review_v1_users_day_reviews__date__finalize_post",
+        "parameters": [
+          {
+            "description": "Local calendar date, YYYY-MM-DD",
+            "in": "path",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "description": "Local calendar date, YYYY-MM-DD",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "title": "Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinalizeDayReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayReview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Finalize Day Review",
+        "tags": [
+          "day-reviews"
+        ]
+      }
+    },
+    "/v1/users/day-reviews/{date}/regenerate": {
+      "post": {
+        "description": "Rewrite the summary with every correction applied (redactions stay enforced).",
+        "operationId": "regenerate_day_review_v1_users_day_reviews__date__regenerate_post",
+        "parameters": [
+          {
+            "description": "Local calendar date, YYYY-MM-DD",
+            "in": "path",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "description": "Local calendar date, YYYY-MM-DD",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "title": "Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayReview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Regenerate Day Review",
+        "tags": [
+          "day-reviews"
+        ]
+      }
+    },
+    "/v1/users/day-reviews/{date}/reopen": {
+      "post": {
+        "description": "Undo the review: rolled-up conversations come back, the summary is deleted.",
+        "operationId": "reopen_day_review_v1_users_day_reviews__date__reopen_post",
+        "parameters": [
+          {
+            "description": "Local calendar date, YYYY-MM-DD",
+            "in": "path",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "description": "Local calendar date, YYYY-MM-DD",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "title": "Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReopenDayReviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Reopen Day Review",
+        "tags": [
+          "day-reviews"
+        ]
+      }
+    },
     "/v1/users/delete-account": {
       "delete": {
         "operationId": "delete_account_v1_users_delete_account_delete",
@@ -62451,6 +64069,91 @@
         ]
       }
     },
+    "/v1/users/time-zone": {
+      "put": {
+        "description": "Record the device's IANA time zone without registering a push token.\n\nThe self-hosted app never registers an FCM token, which was the only path\nthat told the backend the user's zone — so day boundaries for recaps, the\nhourly daily-summary job's recipient selection, and the chat's notion of\n\"today\" all ran in UTC.",
+        "operationId": "save_time_zone_v1_users_time_zone_put",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveTimeZoneRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FcmTokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Save Time Zone"
+      }
+    },
     "/v1/users/training-data-opt-in": {
       "get": {
         "description": "Get the user's training data opt-in status.",
@@ -66306,7 +68009,7 @@
     },
     "/v2/tts/synthesize": {
       "post": {
-        "description": "Proxy a TTS request to ElevenLabs. Per-user rate limited.",
+        "description": "Proxy TTS. ElevenLabs by default (cloud, opt-in); the fully-offline Piper\nservice when TTS_LOCAL_BASE_URL is set. Per-user rate limited either way.",
         "operationId": "tts_synthesize_v2_tts_synthesize_post",
         "parameters": [
           {

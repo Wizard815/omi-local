@@ -3,6 +3,7 @@
 Serves a health/telemetry page at /, component status, and
 a runtime model picker powered by LiteLLM.
 """
+
 import os
 import secrets
 import socket
@@ -15,6 +16,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel, Field
+
+from utils.executors import db_executor, run_blocking
 
 router = APIRouter()
 
@@ -39,11 +42,14 @@ def require_dashboard_auth(credentials: HTTPBasicCredentials = Depends(_dashboar
     if not expected_user or not expected_pass:
         return  # not configured — stay open, matching this feature's original LAN-only design
 
-    valid = credentials is not None and secrets.compare_digest(
-        credentials.username, expected_user
-    ) and secrets.compare_digest(credentials.password, expected_pass)
+    valid = (
+        credentials is not None
+        and secrets.compare_digest(credentials.username, expected_user)
+        and secrets.compare_digest(credentials.password, expected_pass)
+    )
     if not valid:
         raise HTTPException(status_code=401, detail='Unauthorized', headers={'WWW-Authenticate': 'Basic'})
+
 
 # ── model selection request body ──────────────────────────────────────
 
@@ -55,7 +61,9 @@ class ModelSelectRequest(BaseModel):
 
 
 class ModelAllowRequest(BaseModel):
-    allowlist: str = Field(default="", description="Comma-separated model patterns (e.g. 'gemma-4-12b,gpt-4*,claude-sonnet*')")
+    allowlist: str = Field(
+        default="", description="Comma-separated model patterns (e.g. 'gemma-4-12b,gpt-4*,claude-sonnet*')"
+    )
 
 
 # ── helpers ───────────────────────────────────────────────────────────
@@ -124,8 +132,9 @@ async def _get_async_components() -> dict:
     vector_db = os.getenv("LOCAL_VECTOR_DB", "")
     if vector_db == "chroma":
         from database.chroma_vector import chroma_count, is_chroma_enabled
-        if is_chroma_enabled():
-            count = chroma_count()
+
+        if await run_blocking(db_executor, is_chroma_enabled):
+            count = await run_blocking(db_executor, chroma_count)
             results["vector_db"] = {"status": "up", "detail": f"ChromaDB ({count} vectors)"}
         else:
             results["vector_db"] = {"status": "down", "detail": "ChromaDB init failed"}
@@ -193,8 +202,9 @@ async def dashboard(request: Request):
         _get_local_chat_agent_model,
         _get_local_embedding_model,
     )
+
     primary_model = _get_local_primary_model() or "-"
-    chat_agent_model = _get_local_chat_agent_model() or "(pass-through)"
+    chat_agent_model = _get_local_chat_agent_model() or "(same as primary)"
     embedding_model = _get_local_embedding_model() or "-"
 
     component_rows = ""
@@ -366,6 +376,22 @@ async def dashboard(request: Request):
   </div>
 
   <div class="card">
+    <h2>⚡ Chat Model Shortcuts</h2>
+    <p style="font-size: 13px; color: #AAA; line-height: 1.6; margin-bottom: 12px;">
+      Type <code>/name your question</code> in Ask Omi to have that one reply written by a different model,
+      or <code>/name toggle</code> to keep using it until you toggle it off. The app's <code>/model</code>
+      command edits these too.
+    </p>
+    <div id="shortcut-rows"></div>
+    <div class="model-row" style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
+      <input id="shortcut-new-name" class="model-select" style="max-width: 160px;" placeholder="new name, e.g. code">
+      <select id="shortcut-new-model" class="model-select"><option value="">Loading models...</option></select>
+      <button class="save-btn" style="margin-top: 0;" onclick="addShortcut()">Add</button>
+    </div>
+    <span id="shortcut-feedback" class="save-feedback"></span>
+  </div>
+
+  <div class="card">
     <h2>📋 Model Allowlist</h2>
     <p style="font-size: 13px; color: #AAA; line-height: 1.6; margin-bottom: 12px;">
       Only models matching these patterns appear in the picker above and in the mobile app.
@@ -428,6 +454,8 @@ async def dashboard(request: Request):
   </div>
 
   <script>
+    let modelOptionsHtml = '<option value="">No models found</option>';
+
     // Populate model dropdowns from merge proxy (grouped by backend)
     async function loadModels() {{
       try {{
@@ -442,6 +470,8 @@ async def dashboard(request: Request):
           options += "</optgroup>";
         }}
         if (!options) options = '<option value="">No models found</option>';
+        modelOptionsHtml = options;
+        document.getElementById("shortcut-new-model").innerHTML = options;
         document.getElementById("primary-select").innerHTML = options;
         document.getElementById("chat-agent-select").innerHTML = options;
         document.getElementById("embedding-select").innerHTML = options;
@@ -591,7 +621,60 @@ async def dashboard(request: Request):
       }}
     }}
 
-    loadModels();
+    async function loadShortcuts() {{
+      const rows = document.getElementById("shortcut-rows");
+      try {{
+        const data = await fetch("/dashboard/models/shortcuts").then(r => r.json());
+        rows.replaceChildren();
+        for (const sc of data.shortcuts || []) {{
+          const row = document.createElement("div");
+          row.className = "model-row";
+          row.style.cssText = "display: flex; gap: 8px; align-items: center;";
+          const label = document.createElement("code");
+          label.textContent = "/" + sc.name;
+          label.style.cssText = "min-width: 90px; color: #F5F5F5;";
+          const select = document.createElement("select");
+          select.className = "model-select";
+          select.innerHTML = '<option value="">— not set —</option>' + modelOptionsHtml;
+          select.value = sc.model || "";
+          select.onchange = () => saveShortcut(sc.name, select.value);
+          row.append(label, select);
+          rows.append(row);
+        }}
+      }} catch (e) {{
+        rows.textContent = "Could not load shortcuts: " + e.message;
+      }}
+    }}
+
+    async function saveShortcut(name, model) {{
+      const fb = document.getElementById("shortcut-feedback");
+      try {{
+        const resp = await fetch("/dashboard/models/shortcuts", {{
+          method: "POST",
+          headers: {{ "Content-Type": "application/json" }},
+          body: JSON.stringify({{ name: name, model: model }})
+        }});
+        const data = await resp.json();
+        fb.textContent = data.ok ? (model ? "✓ /" + name + " → " + model : "✓ /" + name + " cleared") : "✗ " + (data.error || "save failed");
+        fb.style.color = data.ok ? "#30D158" : "#FF453A";
+      }} catch (e) {{
+        fb.textContent = "✗ " + e.message;
+        fb.style.color = "#FF453A";
+      }}
+      fb.style.display = "inline";
+      setTimeout(() => fb.style.display = "none", 4000);
+      loadShortcuts();
+    }}
+
+    function addShortcut() {{
+      const name = document.getElementById("shortcut-new-name").value.trim().replace(/^\\//, "");
+      const model = document.getElementById("shortcut-new-model").value;
+      if (!name || !model) return;
+      document.getElementById("shortcut-new-name").value = "";
+      saveShortcut(name, model);
+    }}
+
+    loadModels().then(loadShortcuts);
     loadAllowlist();
     loadRetryList();
   </script>
@@ -637,8 +720,7 @@ async def models_available():
                 if resp.status_code == 200:
                     data = resp.json()
                     discovered_models = [
-                        {"id": m.get("id", "unknown"), "owned_by": m.get("owned_by", "")}
-                        for m in data.get("data", [])
+                        {"id": m.get("id", "unknown"), "owned_by": m.get("owned_by", "")} for m in data.get("data", [])
                     ]
         except Exception:
             pass
@@ -652,8 +734,7 @@ async def models_available():
     return {
         "models": discovered_models,
         "groups": {
-            tag: [{"id": m["id"], "name": _model_display_name(m["id"], tag)}
-                  for m in models]
+            tag: [{"id": m["id"], "name": _model_display_name(m["id"], tag)} for m in models]
             for tag, models in sorted(groups.items())
         },
         "count": len(discovered_models),
@@ -666,7 +747,7 @@ def _model_display_name(full_id: str, tag: str) -> str:
     """Strip the tag prefix for display: 'llama/gemma-4-12b' → 'gemma-4-12b'."""
     prefix = tag + "/"
     if full_id.startswith(prefix):
-        return full_id[len(prefix):]
+        return full_id[len(prefix) :]
     return full_id
 
 
@@ -674,12 +755,13 @@ def _model_display_name(full_id: str, tag: str) -> str:
 
 
 @router.get("/dashboard/models/allow", response_class=JSONResponse)
-async def models_allow_get():
+def models_allow_get():
     """Return the current model allowlist (from Redis, or env, or empty)."""
     allowlist = ""
     source = "none"
     try:
         from database.redis_db import get_model_allowlist
+
         allowlist = get_model_allowlist() or ""
         source = "redis" if allowlist else "env"
     except Exception:
@@ -711,7 +793,7 @@ async def models_allow_set(req: ModelAllowRequest):
             content={"ok": False, "error": f"Redis unavailable: {e}"},
         )
 
-    set_model_allowlist(req.allowlist)
+    await run_blocking(db_executor, set_model_allowlist, req.allowlist)
 
     # Notify the merge proxy to flush its model cache
     try:
@@ -724,12 +806,12 @@ async def models_allow_set(req: ModelAllowRequest):
         "ok": True,
         "allowlist": req.allowlist,
         "note": "Allowlist saved. The merge proxy will pick it up on next model refresh. "
-                "Dashboard picker and mobile APK will show only matching models.",
+        "Dashboard picker and mobile APK will show only matching models.",
     }
 
 
 @router.get("/dashboard/models/current", response_class=JSONResponse)
-async def models_current():
+def models_current():
     """Return the currently active models (Redis → env fallback)."""
     from utils.llm.model_config import (
         _get_local_primary_model,
@@ -748,6 +830,7 @@ async def models_current():
     embedding_source = "env"
     try:
         from database.redis_db import get_runtime_model
+
         if get_runtime_model("primary"):
             primary_source = "redis"
         if get_runtime_model("chat_agent"):
@@ -760,7 +843,7 @@ async def models_current():
     return {
         "local_mode": bool(openai_base and primary),
         "primary_model": primary or "none (cloud)",
-        "chat_agent_model": chat_agent or "(pass-through)",
+        "chat_agent_model": chat_agent or "(same as primary)",
         "embedding_model": embedding or "(default)",
         "openai_base_url": openai_base or "not set",
         "provider_mode": os.getenv("PROVIDER_MODE", "offline"),
@@ -771,7 +854,7 @@ async def models_current():
 
 
 @router.post("/dashboard/models/select", response_class=JSONResponse)
-async def models_select(req: ModelSelectRequest):
+def models_select(req: ModelSelectRequest):
     """Set runtime model overrides. Changes take effect on the next LLM call.
 
     The next request through get_llm() picks up the new models —
@@ -808,6 +891,31 @@ async def models_select(req: ModelSelectRequest):
     }
 
 
+class ShortcutSaveRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=25)
+    model: str = Field(default="", max_length=200, description="Merge-proxy model id; empty clears the shortcut")
+
+
+@router.get("/dashboard/models/shortcuts", response_class=JSONResponse)
+def models_shortcuts_get():
+    """Chat model shortcuts ("/adult" → model) for the Ask Omi chat."""
+    from utils.llm.chat_model_shortcuts import get_shortcuts, list_shortcut_names
+
+    configured = get_shortcuts()
+    return {"shortcuts": [{"name": n, "model": configured.get(n)} for n in list_shortcut_names()]}
+
+
+@router.post("/dashboard/models/shortcuts", response_class=JSONResponse)
+def models_shortcuts_save(req: ShortcutSaveRequest):
+    from utils.llm.chat_model_shortcuts import InvalidShortcutName, delete_shortcut, set_shortcut
+
+    try:
+        name = set_shortcut(req.name, req.model) if req.model.strip() else delete_shortcut(req.name)
+    except InvalidShortcutName as e:
+        return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
+    return {"ok": True, "name": name, "model": req.model.strip() or None}
+
+
 @router.get("/dashboard/models", response_class=JSONResponse)
 async def model_config():
     """Legacy endpoint — returns current config. Prefer /models/available + /models/current."""
@@ -826,8 +934,7 @@ async def model_config():
                 if resp.status_code == 200:
                     data = resp.json()
                     discovered_models = [
-                        {"id": m.get("id", "unknown"), "owned_by": m.get("owned_by", "")}
-                        for m in data.get("data", [])
+                        {"id": m.get("id", "unknown"), "owned_by": m.get("owned_by", "")} for m in data.get("data", [])
                     ]
         except Exception:
             pass
@@ -835,7 +942,7 @@ async def model_config():
     return {
         "local_mode": bool(openai_base and local_model),
         "primary_model": local_model or "none (cloud)",
-        "chat_agent_model": local_llm_model or "(pass-through)",
+        "chat_agent_model": local_llm_model or "(same as primary)",
         "openai_base_url": openai_base or "not set",
         "provider_mode": provider_mode,
         "discovered_models": discovered_models,
@@ -857,14 +964,18 @@ async def model_config():
 
 
 @router.get("/dashboard/conversations", response_class=JSONResponse)
-async def dashboard_conversations(limit: int = 20):
+def dashboard_conversations(limit: int = 20):
     """List recent in-progress conversations (with a transcript) across all local accounts."""
+    from google.cloud.firestore_v1 import FieldFilter
+
     from database._client import get_firestore_client
+    from database.firestore_index_registry import DASHBOARD_IN_PROGRESS_CONVERSATIONS_QUERY
 
     db = get_firestore_client()
     query = (
-        db.collection_group('conversations')
-        .where('status', '==', 'in_progress')
+        DASHBOARD_IN_PROGRESS_CONVERSATIONS_QUERY.build(
+            db.collection_group('conversations'), {'status': 'in_progress'}, field_filter_factory=FieldFilter
+        )
         .order_by('created_at', direction='DESCENDING')
         .limit(limit)
     )
@@ -878,9 +989,7 @@ async def dashboard_conversations(limit: int = 20):
         # transcript_segments is normally a list of dicts, but at least one
         # legacy/malformed conversation had plain strings instead — don't let
         # one bad record 500 the whole retry list.
-        preview = " ".join(
-            (s.get('text', '') if isinstance(s, dict) else str(s)) for s in segments[:3]
-        ).strip()
+        preview = " ".join((s.get('text', '') if isinstance(s, dict) else str(s)) for s in segments[:3]).strip()
         items.append(
             {
                 "id": doc.id,
@@ -895,7 +1004,7 @@ async def dashboard_conversations(limit: int = 20):
 
 
 @router.post("/dashboard/conversations/{conversation_id}/retry", response_class=JSONResponse)
-async def dashboard_retry_conversation(conversation_id: str, uid: str):
+def dashboard_retry_conversation(conversation_id: str, uid: str):
     """Force-reprocess a stuck in-progress conversation for the given uid.
 
     Calls the same reprocess_conversation logic the app's retry button uses

@@ -101,12 +101,20 @@ export MEMORY_CANONICAL_CONSOLIDATION_ENABLED=true
 export REDIS_DB_HOST=127.0.0.1 REDIS_DB_PORT=6380 REDIS_DB_PASSWORD=
 export ENVIRONMENT=local-dev-harness
 export ENCRYPTION_SECRET="${ENCRYPTION_SECRET:-omi_local_dev_harness_32_byte_test_secret_not_prod}"
-export ADMIN_KEY="${ADMIN_KEY:-local-dev-admin-key-}"
+# The backend treats "Bearer <ADMIN_KEY><uid>" as that user. A fixed default
+# (this used to be "local-dev-admin-key-", published in this repo) is a skeleton
+# key for anyone who can reach the backend, e.g. through a Cloudflare tunnel.
+# Generate one per start unless the operator pins their own; in-container
+# scripts read it from the backend process (scripts/_container_env.py).
+export ADMIN_KEY="${ADMIN_KEY:-$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')}"
 # Typesense intentionally unconfigured (conversation full-text search is optional;
 # the client falls back to Firestore queries). Leave unset.
 export BASE_API_URL="${BASE_API_URL:-http://127.0.0.1:8000}"
 export API_BASE_URL="${BASE_API_URL}"
 export OMI_LLM_GATEWAY_FEATURE_MODE=off
+# Upstream fires the hourly daily-summary/notification job from Cloud Scheduler;
+# here the backend runs it in-process (utils/other/local_scheduler.py).
+export OMI_LOCAL_SCHEDULER="${OMI_LOCAL_SCHEDULER:-1}"
 export PORT=8000 PYTHONUNBUFFERED=1
 
 # Optional: route chat/LLM calls to a local OpenAI-compatible server

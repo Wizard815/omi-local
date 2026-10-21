@@ -713,6 +713,10 @@ class SendMessageRequest(BaseModel):
     text: str
     file_ids: Optional[List[str]] = []
     context: Optional[PageContext] = None
+    # Self-hosted chat model shortcut for this turn (e.g. "adult"): the reply is
+    # written by the model configured for that name instead of the base chat
+    # model. Ignored unless the deployment runs in local-LLM mode.
+    model_shortcut: Optional[str] = Field(default=None, max_length=25)
 
 
 class GenerateReplyTurn(BaseModel):

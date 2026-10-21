@@ -340,8 +340,10 @@ class WhisperCppServer:
         return os.path.join(WHISPER_CPP_MODELS_DIR, f"ggml-{WHISPER_CPP_MODEL_NAME}.bin")
 
     def is_running(self) -> bool:
-        with self._lock:
-            return self._proc is not None and self._proc.poll() is None
+        # Lock-free on purpose: /health reads this from the event loop, and
+        # stop() holds the lock for up to 30s while the process exits.
+        proc = self._proc
+        return proc is not None and proc.poll() is None
 
     def ensure_running(self) -> None:
         """Start the server if it is not up, and block until /health reports 200."""
@@ -434,12 +436,13 @@ async def lifespan(_app: FastAPI):
 
 # --------------------------------------------------------------------------- idle unload
 # Nothing is loaded at boot: the server process only exists once an ASR call
-# needs it (see WhisperCppServer). _whisper_cpp_loaded tracks that process and
-# goes False when the idle unloader stops it. Untouched on the fasterwhisper path.
+# needs it (see WhisperCppServer), and that process is the only record of
+# whether the model is loaded -- a separate "loaded" flag, set only after a
+# successful inference, used to miss a server whose first request failed, which
+# then never unloaded. Untouched on the fasterwhisper path.
 _whisper_cpp_lock = threading.Lock()
 _whisper_cpp_last_used = time.time()
 _whisper_cpp_in_flight = 0
-_whisper_cpp_loaded = False
 
 
 def _whisper_cpp_touch(start: bool) -> None:
@@ -452,35 +455,44 @@ def _whisper_cpp_touch(start: bool) -> None:
             _whisper_cpp_last_used = time.time()
 
 
+def _whisper_cpp_stop_if_idle() -> Optional[float]:
+    """Stop whisper-server if it is running and has had no ASR call for
+    WHISPER_CPP_IDLE_UNLOAD_S; return the idle seconds when it was stopped.
+
+    Blocking (waits for the process to exit). The check and the stop happen
+    under _whisper_cpp_lock, so a request arriving meanwhile waits in
+    _whisper_cpp_touch and then starts a fresh server, rather than having this
+    one stopped underneath it mid-inference.
+    """
+    with _whisper_cpp_lock:
+        idle_for = time.time() - _whisper_cpp_last_used
+        if _whisper_cpp_in_flight > 0 or idle_for < WHISPER_CPP_IDLE_UNLOAD_S:
+            return None
+        if not WHISPER_CPP_SERVER.is_running():
+            return None
+        # whisper.cpp's server has no /unload route, so releasing the model means
+        # stopping the process entirely. The next ASR call starts it again (see
+        # WhisperCppServer.ensure_running).
+        WHISPER_CPP_SERVER.stop()
+        return idle_for
+
+
 async def _whisper_cpp_idle_unloader() -> None:
     """Background loop: unload the ggml model off the GPU after WHISPER_CPP_IDLE_UNLOAD_S
     of no ASR calls. Skips while a request is in flight; the next call after an unload
     just eats whisper-server's own reload time on that one request."""
-    global _whisper_cpp_loaded
+    loop = asyncio.get_running_loop()
     check_every = max(10.0, min(30.0, WHISPER_CPP_IDLE_UNLOAD_S / 4))
     while True:
         await asyncio.sleep(check_every)
-        with _whisper_cpp_lock:
-            idle_for = time.time() - _whisper_cpp_last_used
-            in_flight = _whisper_cpp_in_flight
-            loaded = _whisper_cpp_loaded
-        # Ground truth is the PROCESS, not the flag. A request that failed right
-        # after ensure_running() used to leave _whisper_cpp_loaded False with the
-        # server still up, and this guard then skipped forever -- the model sat
-        # in VRAM until the container was restarted. is_running() closes that.
-        if not (loaded or WHISPER_CPP_SERVER.is_running()):
-            continue
-        if in_flight > 0 or idle_for < WHISPER_CPP_IDLE_UNLOAD_S:
-            continue
-        # whisper.cpp's server has no /unload route, so releasing the model means
-        # stopping the process entirely. The next ASR call starts it again (see
-        # WhisperCppServer.ensure_running).
         try:
-            WHISPER_CPP_SERVER.stop()
-            _whisper_cpp_loaded = False
-            log.info("whisper-server model released after %.0fs idle (GPU/host RAM freed).", idle_for)
+            # Off the event loop: stopping waits up to 30s for the process to exit.
+            idle_for = await loop.run_in_executor(None, _whisper_cpp_stop_if_idle)
         except Exception as e:  # noqa: BLE001
             log.warning("whisper-server stop failed: %s", e)
+            continue
+        if idle_for is not None:
+            log.info("whisper-server model released after %.0fs idle (GPU/host RAM freed).", idle_for)
 
 
 app = FastAPI(lifespan=lifespan)
@@ -510,19 +522,12 @@ def _transcribe_whispercpp(audio16: np.ndarray, language: str) -> List[Dict[str,
     faster-whisper path returns, so callers (WS stream + batch v1/v2) don't need
     to know which engine served the request. The server is started on demand
     here and stopped again by the idle unloader."""
-    global _whisper_cpp_loaded
     wav = wav_bytes(float_to_pcm16(audio16), 16000)
     _whisper_cpp_touch(True)
     try:
         # Cold start after an idle release: bring the server (and its model load)
         # up first, so the request timeout below covers inference only.
         WHISPER_CPP_SERVER.ensure_running()
-        # The process is up, so the idle unloader must be allowed to stop it even
-        # if this request fails below. Setting this only after a 200 was a bug:
-        # a failed transcription (raise_for_status, timeout) left the server
-        # orphaned in VRAM, because the unloader's "not loaded" guard then
-        # skipped forever and nothing else could ever stop it.
-        _whisper_cpp_loaded = True
         resp = requests.post(
             f"{WHISPER_CPP_SERVER_URL}/inference",
             files={"file": ("audio.wav", wav, "audio/wav")},
@@ -538,7 +543,6 @@ def _transcribe_whispercpp(audio16: np.ndarray, language: str) -> List[Dict[str,
         )
         resp.raise_for_status()
         data = resp.json()
-        _whisper_cpp_loaded = True
     except Exception as e:  # noqa: BLE001
         log.error("whisper-server request failed: %s", e)
         return []
@@ -578,9 +582,15 @@ def embed(audio16: np.ndarray) -> Optional[np.ndarray]:
 # --------------------------------------------------------------------------- health
 @app.get("/health")
 async def health():
-    return JSONResponse(
-        {"status": "healthy" if MODELS.ready else "loading", "ready": MODELS.ready},
-        status_code=200 if MODELS.ready else 503)
+    body: Dict[str, Any] = {"status": "healthy" if MODELS.ready else "loading", "ready": MODELS.ready}
+    if OMI_ASR_ENGINE == "whispercpp":
+        # Lets an operator check the idle unload without rocm-smi:
+        # curl -s 127.0.0.1:8790/health
+        body["asr_server_running"] = WHISPER_CPP_SERVER.is_running()
+        body["asr_idle_s"] = round(time.time() - _whisper_cpp_last_used)
+        body["asr_in_flight"] = _whisper_cpp_in_flight
+        body["asr_idle_unload_s"] = WHISPER_CPP_IDLE_UNLOAD_S
+    return JSONResponse(body, status_code=200 if MODELS.ready else 503)
 
 
 # --------------------------------------------------------------------------- WS /v3/stream
