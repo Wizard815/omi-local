@@ -46,6 +46,10 @@ if not hasattr(_exc, "InvalidArgument"):
     _exc.InvalidArgument = type("InvalidArgument", (Exception,), {})
 if not hasattr(_exc, "Aborted"):
     _exc.Aborted = type("Aborted", (Exception,), {})
+# database/_client.py also imports these at module scope.
+for _name in ("DeadlineExceeded", "ResourceExhausted", "ServiceUnavailable"):
+    if not hasattr(_exc, _name):
+        setattr(_exc, _name, type(_name, (Exception,), {}))
 
 _fs = _mod("google.cloud.firestore")
 if not hasattr(_fs, "Query"):
