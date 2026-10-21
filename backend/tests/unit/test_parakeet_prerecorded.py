@@ -743,3 +743,53 @@ class TestProviderClass:
             words = provider.transcribe_url("https://example.com/audio.wav", diarize=False)
 
         assert len(words) == 1
+
+
+class TestSelfHostedModulateGate:
+    """omi-local (OMI_SELF_HOSTED=1) without MODULATE_API_KEY never selects cloud Modulate.
+
+    It falls through to the local Parakeet that omi-audio serves; a hosted deployment
+    keeps upstream's selection, which never consults the key.
+    """
+
+    MODELS = ('modulate-velma-2', 'parakeet')
+
+    @pytest.fixture(autouse=True)
+    def _env(self, monkeypatch):
+        for name in ('OMI_SELF_HOSTED', 'MODULATE_API_KEY', 'SONIOX_API_KEY'):
+            monkeypatch.delenv(name, raising=False)
+        monkeypatch.setenv('HOSTED_PARAKEET_API_URL', 'http://fake-parakeet:8080')
+
+    @pytest.mark.parametrize(
+        'env, live, prerecorded',
+        [
+            ({}, (STTService.modulate, 'multi', 'velma-2'), (pr.PrerecordedSTTService.MODULATE, 'en', 'velma-2')),
+            (
+                {'OMI_SELF_HOSTED': '1'},
+                (STTService.parakeet, 'en', 'parakeet'),
+                (pr.PrerecordedSTTService.PARAKEET, 'en', 'parakeet'),
+            ),
+            (
+                {'OMI_SELF_HOSTED': '1', 'MODULATE_API_KEY': 'operator-key'},
+                (STTService.modulate, 'multi', 'velma-2'),
+                (pr.PrerecordedSTTService.MODULATE, 'en', 'velma-2'),
+            ),
+        ],
+        ids=['hosted_without_key', 'self_hosted_without_key', 'self_hosted_with_key'],
+    )
+    def test_modulate_selection_follows_the_self_hosted_key_gate(self, monkeypatch, env, live, prerecorded):
+        for name, value in env.items():
+            monkeypatch.setenv(name, value)
+        with patch('utils.stt.streaming.stt_service_models', list(self.MODELS)):
+            assert get_stt_service_for_language('en', multi_lang_enabled=True) == live
+        with patch.object(pr, 'get_prerecorded_models', return_value=self.MODELS):
+            assert pr.get_prerecorded_service('en') == prerecorded
+
+    def test_self_hosted_without_key_never_falls_back_to_modulate(self, monkeypatch):
+        """A language local Parakeet cannot serve gets no provider, not Modulate."""
+        monkeypatch.setenv('OMI_SELF_HOSTED', '1')
+        with patch('utils.stt.streaming.stt_service_models', list(self.MODELS)):
+            assert get_stt_service_for_language('zh')[0] != STTService.modulate
+        with patch.object(pr, 'get_prerecorded_models', return_value=self.MODELS):
+            with pytest.raises(pr.TranscriptionFailure):
+                pr.get_prerecorded_service('zh')

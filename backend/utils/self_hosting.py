@@ -14,3 +14,14 @@ import os
 
 def is_self_hosted() -> bool:
     return os.getenv('OMI_SELF_HOSTED', '').strip().lower() in {'1', 'true', 'yes'}
+
+
+def modulate_credentials_available() -> bool:
+    """Whether live and pre-recorded STT selection may pick cloud Modulate.
+
+    Hosted deployments always carry MODULATE_API_KEY, so upstream selects Modulate
+    on serving policy alone. A self-hosted backend without the key must fall
+    through to the local Parakeet that omi-audio serves, the way Soniox already
+    requires SONIOX_API_KEY.
+    """
+    return not is_self_hosted() or bool(os.getenv('MODULATE_API_KEY'))

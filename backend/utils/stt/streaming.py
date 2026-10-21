@@ -41,6 +41,7 @@ from utils.byok import get_byok_key
 from utils.executors import sync_executor, run_blocking
 from utils.metrics import OMI_LIVE_STT_MISALIGNED_FRAMES_TOTAL
 from utils.http_client import get_stt_client, get_stt_semaphore
+from utils.self_hosting import modulate_credentials_available
 from utils.log_sanitizer import sanitize_provider_error
 from utils.stt.committed_words import remember_provider_word
 from utils.stt.failure_diagnostics import connection_loss_cause
@@ -877,7 +878,7 @@ def _requested_stt_language(
         and multi_lang_enabled
         and language
         and supports_live_multilingual_mode(language)
-        and os.getenv('MODULATE_API_KEY')
+        and modulate_credentials_available()
     ):
         return 'multi'
     return base_lang
@@ -966,7 +967,7 @@ def get_stt_service_for_language(
             if (
                 model == 'modulate-velma-2'
                 and provider_is_enabled(MODULATE_PROVIDER, surface)
-                and os.getenv('MODULATE_API_KEY')
+                and modulate_credentials_available()
                 and modulate_supports_language(requested_language)
             ):
                 return (STTService.modulate, requested_language, 'velma-2'), parakeet_fallback_reason
