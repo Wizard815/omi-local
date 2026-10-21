@@ -67,7 +67,9 @@ def _store(*folder_docs):
 
 def test_create_inside_a_folder_and_reject_a_missing_parent():
     store = _store({'id': 'work', 'name': 'Work', 'is_system': True})
-    with patch.object(folders, 'db', _FakeDb({}, store)):
+    with patch.object(folders, 'db', (fake := _FakeDb({}, store))), patch.object(
+        folders, 'get_firestore_client', return_value=fake
+    ):
         created = folders_router.create_folder(CreateFolderRequest(name='Clients', parent_id='work'), uid='u1')
         assert created['parent_id'] == 'work'
         with pytest.raises(HTTPException) as exc:
@@ -81,7 +83,9 @@ def test_move_rules_through_the_router():
         {'id': 'clients', 'name': 'Clients', 'parent_id': 'work'},
         {'id': 'home', 'name': 'Home'},
     )
-    with patch.object(folders, 'db', _FakeDb({}, store)):
+    with patch.object(folders, 'db', (fake := _FakeDb({}, store))), patch.object(
+        folders, 'get_firestore_client', return_value=fake
+    ):
         moved = folders_router.update_folder('clients', UpdateFolderRequest(parent_id='home'), uid='u1')
         assert moved['parent_id'] == 'home'
         # Explicit null moves to the top level.
@@ -105,7 +109,9 @@ def test_deleting_a_folder_moves_its_subfolders_up_one_level():
         {'id': 'acme', 'name': 'Acme', 'parent_id': 'clients'},
     )
     conversations = {'c1': {'folder_id': 'clients', 'discarded': False}}
-    with patch.object(folders, 'db', _FakeDb(conversations, store)):
+    with patch.object(folders, 'db', (fake := _FakeDb(conversations, store))), patch.object(
+        folders, 'get_firestore_client', return_value=fake
+    ):
         folders.delete_folder('u1', 'clients', move_to_folder_id='work')
     assert 'clients' not in store
     assert store['acme']['parent_id'] == 'work'

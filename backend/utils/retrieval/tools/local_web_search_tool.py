@@ -3,6 +3,7 @@ Local web search tool using SearXNG (self-hosted metasearch engine).
 Replaces Perplexity when SEARXNG_URL is configured.
 Falls back to Perplexity gateway only if SEARXNG_URL is not set.
 """
+
 import logging
 import os
 from urllib.parse import urlencode
@@ -100,4 +101,5 @@ def get_web_search_tool():
         return local_web_search_tool
     # Fall back to Perplexity (imported elsewhere to avoid circular imports)
     from utils.retrieval.tools.perplexity_tools import perplexity_web_search_tool
+
     return perplexity_web_search_tool

@@ -1,240 +1,377 @@
-"""Cross-device duplicate capture detection (#3244).
+"""Non-destructive cross-source overlap hints and capture groups at finalization (#3244).
 
-When an Omi device (paired to the phone app) and the macOS app both hear the
-same room, the backend receives two independent ``/v4/listen`` streams. Each
-stream owns its own conversation — cross-source sockets must never share one
-(#5388), because the two captures can legitimately hold different audio (a
-pendant in the room plus a headphone meeting on the laptop). Multi-device
-recording therefore stays fully enabled; nothing is toggled off on any client.
+Overlap is evidence of a possible shared meeting, not proof of identical speech.
+Keep both transcripts, discard state, and derived work independent. Longer wall
+windows are primary; equal windows use the document ID for stable ordering.
 
-What this module decides is narrower: at finalization, whether *this*
-conversation's content is already carried by another capture client's
-conversation. Only then is it folded away as a discarded duplicate (the
-transcript and audio stay on the document, and the primary is recorded under
-``external_data[DUPLICATE_CAPTURE_OF_KEY]``). The decision is content-based
-and deterministic — it never infers a duplicate from device presence alone:
-
-1. The other conversation belongs to a different capture client.
-2. The other conversation's wall window covers at least
-   ``MIN_WINDOW_COVERAGE`` of this one's and the overlap lasts at least
-   ``MIN_OVERLAP_SECONDS``.
-3. At least ``MIN_TRANSCRIPT_CONTAINMENT`` of this conversation's word bigrams
-   also occur in the other transcript. Containment (not symmetric similarity)
-   is deliberate: a capture that holds speech the other one lacks — the
-   pendant hearing the user's side while the laptop only hears remote
-   participants — keeps a low containment and survives as its own
-   conversation. Bigrams tolerate the word-level disagreement two microphones
-   and two STT passes produce while unrelated same-time conversations share
-   only generic phrases.
-4. Exactly one side yields. A ``completed`` counterpart is always primary; a
-   ``processing`` counterpart is primary only when it was created earlier, so
-   two sessions that time out on the same silence and finalize concurrently
-   cannot both discard themselves or both survive.
-
-Everything here is pure: callers load the candidate rows and persist the
-outcome.
+A window match is only a proposal. When both captures also share speech
+(``shared_speech``), they join one capture group (``database.capture_groups``),
+which records their shared event identity. Grouping is metadata only.
+The default-off desktop-call path accepts complementary speech under its
+meeting-role and window contract, and pins the desktop primary.
 """
 
 from __future__ import annotations
 
-import re
-from collections import Counter
+import logging
+import json
+import math
+import os
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Iterable, Mapping, Optional, Sequence, cast
+from typing import Any, Mapping
 
-DUPLICATE_CAPTURE_OF_KEY = 'duplicate_capture_of'
+from config.capture_shared_speech import shared_speech_mode
+from database import capture_groups as capture_groups_db
+from database import conversations as conversations_db
+from database.capture_speech import get_shared_speech_snapshot
+from utils.conversations.capture_containment import (
+    capture_group_containment_mode,
+    measure_capture_containment,
+    record_capture_containment,
+)
+from utils.conversations.shared_speech import measure_shared_speech
+from utils.conversations.overlap_shared_speech import (
+    measure_overlap_shared_speech,
+    pair_category,
+    shared_speech_group_guard,
+    VERSION,
+)
+from utils.observability.fallback import record_fallback
+from utils.product_metrics import record_product_event
 
-# Below this the LLM discard gate owns the verdict; bigram statistics on a
-# handful of words say nothing about whether two captures heard the same room.
-MIN_CANDIDATE_WORDS = 30
-MIN_OVERLAP_SECONDS = 30.0
-# Fraction of the candidate's own wall window that the primary must cover. A
-# pendant conversation that kept running long after the laptop stopped holds
-# speech the laptop never captured and must not be folded into it.
-MIN_WINDOW_COVERAGE = 0.8
-# Fraction of the candidate's word bigrams (multiset) present in the primary.
-MIN_TRANSCRIPT_CONTAINMENT = 0.5
-# One bounded page per status. The candidate read is ordered by the activity
-# clock from the candidate's start, so the overlapping captures come first;
-# anything beyond the page finished long after it and cannot cover it.
-CANDIDATE_PAGE_LIMIT = 25
-
-_PRIMARY_ELIGIBLE_STATUSES = frozenset({'completed', 'processing'})
-_WORD_RE = re.compile(r'[^\W_]+', re.UNICODE)
+logger = logging.getLogger(__name__)
+MIN_OVERLAP_SECONDS = 60.0
+MIN_WINDOW_COVERAGE = 0.5
+CANDIDATE_PAGE_LIMIT = 100
+# Each confirmation re-reads one decrypted transcript; bound the work per finalization.
+MAX_CONTENT_CHECKS = 6
+MAX_SHARED_SPEECH_CHECKS = 12
 
 
 @dataclass(frozen=True)
 class CaptureRecord:
-    """The provenance, window, and words of one capture, independent of storage shape."""
-
-    conversation_id: Optional[str]
-    created_at: datetime
+    conversation_id: str
     started_at: datetime
     finished_at: datetime
-    status: Optional[str]
-    words: tuple[str, ...]
-    source: Optional[str] = None
-    client_device_id: Optional[str] = None
-    client_platform: Optional[str] = None
-    discarded: bool = False
+    source: str
 
     @property
     def duration_seconds(self) -> float:
-        return max(0.0, (self.finished_at - self.started_at).total_seconds())
+        return (self.finished_at - self.started_at).total_seconds()
+
+    @property
+    def primary_rank(self) -> tuple[float, str]:
+        return (-self.duration_seconds, self.conversation_id)
 
 
-@dataclass(frozen=True)
-class DuplicateCaptureMatch:
-    primary_conversation_id: str
-    window_coverage: float
-    transcript_containment: float
+def capture_record(record: Any) -> CaptureRecord | None:
+    def field(name):
+        return record.get(name) if isinstance(record, Mapping) else getattr(record, name, None)
 
-
-def transcript_words(segments: Optional[Iterable[Any]]) -> tuple[str, ...]:
-    """Lower-cased word tokens across segments (models or persisted dicts), in order."""
-    words: list[str] = []
-    for segment in segments or ():
-        text = _field(segment, 'text')
-        if not isinstance(text, str) or not text:
-            continue
-        words.extend(match.group(0).lower() for match in _WORD_RE.finditer(text))
-    return tuple(words)
-
-
-def _enum_value(value: Any) -> Optional[str]:
-    if value is None:
+    if field('discarded') or field('status') != 'completed':
         return None
-    value = getattr(value, 'value', value)
-    return str(value) if value != '' else None
-
-
-def _aware(value: Any) -> Optional[datetime]:
-    if not isinstance(value, datetime):
+    start, finish = field('started_at'), field('finished_at')
+    if not isinstance(start, datetime) or not isinstance(finish, datetime):
         return None
-    return value if value.tzinfo is not None else value.replace(tzinfo=timezone.utc)
+    start = start if start.tzinfo else start.replace(tzinfo=timezone.utc)
+    finish = finish if finish.tzinfo else finish.replace(tzinfo=timezone.utc)
+    source = getattr(field('source'), 'value', field('source'))
+    if finish <= start or not source or not field('id'):
+        return None
+    return CaptureRecord(str(field('id')), start, finish, str(source))
 
 
-def _field(record: Any, name: str) -> Any:
-    if isinstance(record, Mapping):
-        return cast(Mapping[str, Any], record).get(name)
-    return getattr(record, name, None)
+def overlap_match(a: CaptureRecord, b: CaptureRecord, *, seconds: float, ratio: float) -> dict | None:
+    if a.conversation_id == b.conversation_id or a.source == b.source:
+        return None
+    overlap = (min(a.finished_at, b.finished_at) - max(a.started_at, b.started_at)).total_seconds()
+    coverage = overlap / min(a.duration_seconds, b.duration_seconds)
+    if overlap <= seconds or coverage <= ratio:
+        return None
+    return {'method': 'wall_clock_overlap', 'overlap_seconds': overlap, 'overlap_ratio': coverage}
 
 
-def capture_record(record: Any) -> Optional[CaptureRecord]:
-    """Project a conversation (model or Firestore dict) onto a ``CaptureRecord``.
+def _threshold(name: str, default: float, maximum: float = math.inf) -> float:
+    value = float(os.getenv(name, str(default)))
+    if not math.isfinite(value) or not 0 <= value <= maximum:
+        raise ValueError('invalid overlap threshold')
+    return value
 
-    Returns ``None`` when the record has no usable wall window — such a row can
-    neither be judged a duplicate nor serve as a primary.
+
+def link_duplicate_captures(uid: str, conversation: Any) -> None:
+    """Link a completed pair regardless of which device finalized last.
+
+    The existing bounded status/finished_at query needs no new Firestore index.
+    The transaction rechecks both snapshots, including discard, before writing.
+    A failed optional hint must not prevent the original capture from completing.
     """
-    started_at = _aware(_field(record, 'started_at'))
-    finished_at = _aware(_field(record, 'finished_at'))
-    if started_at is None or finished_at is None or finished_at < started_at:
-        return None
-    created_at = _aware(_field(record, 'created_at')) or started_at
-    conversation_id = _field(record, 'id')
-    return CaptureRecord(
-        conversation_id=str(conversation_id) if conversation_id else None,
-        created_at=created_at,
-        started_at=started_at,
-        finished_at=finished_at,
-        status=_enum_value(_field(record, 'status')),
-        words=transcript_words(_field(record, 'transcript_segments')),
-        source=_enum_value(_field(record, 'source')),
-        client_device_id=_enum_value(_field(record, 'client_device_id')),
-        client_platform=_enum_value(_field(record, 'client_platform')),
-        discarded=bool(_field(record, 'discarded')),
+    candidate = capture_record(conversation)
+    if candidate is None:
+        return
+    speech_mode = shared_speech_mode(uid)
+    try:
+        seconds = _threshold('CROSS_DEVICE_DEDUP_MIN_OVERLAP_SECONDS', MIN_OVERLAP_SECONDS)
+        ratio = _threshold('CROSS_DEVICE_DEDUP_MIN_OVERLAP_RATIO', MIN_WINDOW_COVERAGE, 1.0)
+        rows = conversations_db.get_conversations_finished_after(
+            uid, status='completed', finished_after=candidate.started_at, limit=CANDIDATE_PAGE_LIMIT
+        )
+        if len(rows) == CANDIDATE_PAGE_LIMIT:
+            _record_degraded()
+        # Largest windows first, so a secondary with several matches gets the
+        # most complete observed capture. Existing pointers are idempotent.
+        others = sorted(filter(None, map(capture_record, rows)), key=lambda row: row.primary_rank)
+        matches = []
+        for other in others:
+            match = overlap_match(candidate, other, seconds=seconds, ratio=ratio)
+            if match is None:
+                continue
+            matches.append(other)
+            primary, secondary = sorted((candidate, other), key=lambda row: row.primary_rank)
+            if conversations_db.link_duplicate_capture(uid, primary, secondary, match):
+                record_product_event('duplicate_capture_detected')
+                logger.info(
+                    'cross_device_duplicate_detected overlap_seconds=%.1f overlap_ratio=%.3f',
+                    match['overlap_seconds'],
+                    match['overlap_ratio'],
+                )
+    except Exception:
+        # Exception strings can carry request data; keep telemetry content-free.
+        _record_degraded()
+        return
+    if speech_mode != 'on':
+        _group_confirmed_captures(uid, conversation, candidate, matches[:MAX_CONTENT_CHECKS])
+    if speech_mode != 'off':
+        overlapping = [
+            other
+            for other in others
+            if other.conversation_id != candidate.conversation_id
+            and min(candidate.finished_at, other.finished_at) > max(candidate.started_at, other.started_at)
+        ]
+        _group_with_overlap_speech(
+            uid,
+            candidate,
+            overlapping[:MAX_CONTENT_CHECKS],
+            mode=speech_mode,
+            legacy_ids={other.conversation_id for other in matches[:MAX_CONTENT_CHECKS]},
+        )
+
+
+def _segments_of(record: Any):
+    return (
+        record.get('transcript_segments')
+        if isinstance(record, Mapping)
+        else getattr(record, 'transcript_segments', None)
     )
 
 
-def same_capture_client(a: CaptureRecord, b: CaptureRecord) -> bool:
-    """Whether two records were produced by one capture client.
+def _group_with_overlap_speech(
+    uid: str, candidate: CaptureRecord, matches: list[CaptureRecord], *, mode: str, legacy_ids: set[str]
+) -> None:
+    """Observe or apply bounded same-sentence decisions through the fenced writer.
 
-    The device hash is authoritative when both sides carry it. Legacy rows
-    without it fall back to the platform/source pair, which errs toward "same"
-    for a reconnecting client whose provenance is unknown.
+    Shadow adds at most seven decrypted reads, no new writes. On replaces all
+    automatic grouping policies for the cohort and keeps existing groups intact.
     """
-    if a.client_device_id and b.client_device_id:
-        return a.client_device_id == b.client_device_id
-    return (a.client_platform, a.source) == (b.client_platform, b.source)
+    if not matches:
+        return
+    snapshots = {}
+
+    def load(cid):
+        if cid not in snapshots:
+            if len(snapshots) >= MAX_CONTENT_CHECKS + 1:
+                return None, None
+            snapshots[cid] = get_shared_speech_snapshot(uid, cid)
+        return snapshots[cid]
+
+    remaining_checks = MAX_SHARED_SPEECH_CHECKS
+
+    def confirms(first, second):
+        nonlocal remaining_checks
+        if remaining_checks <= 0:
+            return None
+        remaining_checks -= 1
+        return measure_overlap_shared_speech(first, second)
+
+    try:
+        own, own_fingerprint = load(candidate.conversation_id)
+    except Exception:
+        _record_degraded(to_mode='separate_captures')
+        return
+    for other in matches:
+        try:
+            row, fingerprint = load(other.conversation_id)
+            if not row:
+                break  # exhausted read budget or absent snapshot; never infer a fold
+            started = time.perf_counter()
+            decision = confirms(own, row)
+            if decision is None:
+                break
+            elapsed_ms = (time.perf_counter() - started) * 1000
+            incumbent = False
+            if other.conversation_id in legacy_ids:
+                if any(
+                    record.get('has_transcript_corrections')
+                    or record.get('transcript_correction_overlay') is not None
+                    or record.get('_shared_speech_rejection')
+                    for record in (own or {}, row)
+                ):
+                    incumbent = None  # no mutable overlay reads to simulate the incumbent
+                else:
+                    incumbent = measure_shared_speech(_segments_of(own), _segments_of(row)).confirms()
+                    if not incumbent and capture_group_containment_mode() == 'on':
+                        containment = measure_capture_containment(own, row, mode='on')
+                        incumbent = containment.would_join and containment.basis == 'full'
+            own_group = (own or {}).get('capture_group') or {}
+            other_group = (row or {}).get('capture_group') or {}
+            already_grouped = bool(own_group.get('id') and own_group.get('id') == other_group.get('id'))
+            windows = {r.conversation_id: (r.started_at, r.finished_at) for r in (candidate, other)}
+            fingerprints = {candidate.conversation_id: own_fingerprint, other.conversation_id: fingerprint}
+            existing = own_group if own_group.get('id') else other_group
+            expected_revision = int(existing.get('revision') or 0)
+            would_join, reason = decision.would_join, decision.reason
+            if would_join and not already_grouped:
+                # Shared speech is not transitive: a long A containing scenes B
+                # and C must not fold B and C through A. Confirm the new entrant
+                # against every existing member, within the same read/CPU budget.
+                if own_group.get('id') and other_group.get('id'):
+                    would_join, reason = False, 'different_groups'
+                else:
+                    entrant = row if own_group.get('id') else own
+                    for member in existing.get('members') or []:
+                        cid = member['id']
+                        if cid in fingerprints:
+                            continue
+                        member_row, member_fingerprint = load(cid)
+                        record = capture_record(member_row)
+                        if record is None:
+                            would_join, reason = False, 'group_unconfirmed'
+                            break
+                        confirmation = confirms(entrant, member_row)
+                        if confirmation is None or not confirmation.would_join:
+                            would_join, reason = False, 'group_unconfirmed'
+                            break
+                        windows[cid] = (record.started_at, record.finished_at)
+                        fingerprints[cid] = member_fingerprint
+            outcome = 'shadow' if mode == 'shadow' else 'none'
+            if mode == 'on' and would_join:
+                group_id = capture_groups_db.join_capture_group(
+                    uid,
+                    candidate.conversation_id,
+                    other.conversation_id,
+                    decision.evidence(),
+                    expected_windows=windows,
+                    expected_fingerprints=fingerprints,
+                    expected_group_revision=expected_revision,
+                    join_guard=shared_speech_group_guard,
+                )
+                outcome = 'applied' if group_id else 'conflict'
+                record_product_event('capture_group_joined', outcome=outcome)
+            logger.info(
+                'capture_shared_speech %s',
+                json.dumps(
+                    {
+                        'event': 'capture_shared_speech',
+                        'version': VERSION,
+                        'mode': mode,
+                        'uid': uid,
+                        'first_id': candidate.conversation_id,
+                        'second_id': other.conversation_id,
+                        'category': pair_category(own, row),
+                        'current_would_join': incumbent,
+                        'already_grouped': already_grouped,
+                        'would_join': would_join,
+                        'reason': reason,
+                        'pair_would_join': decision.would_join,
+                        'outcome': outcome,
+                        'matcher_ms': round(elapsed_ms, 3),
+                        **decision.evidence(),
+                    },
+                    sort_keys=True,
+                    separators=(',', ':'),
+                ),
+            )
+        except Exception:
+            logger.warning('event=capture_shared_speech outcome=error')
+            _record_degraded(to_mode='separate_captures')
 
 
-def window_coverage(candidate: CaptureRecord, other: CaptureRecord) -> tuple[float, float]:
-    """``(overlap_seconds, fraction of the candidate's window that overlap covers)``."""
-    overlap = (
-        min(candidate.finished_at, other.finished_at) - max(candidate.started_at, other.started_at)
-    ).total_seconds()
-    if overlap <= 0:
-        return 0.0, 0.0
-    duration = candidate.duration_seconds
-    if duration <= 0:
-        return overlap, 0.0
-    return overlap, min(1.0, overlap / duration)
+def _group_confirmed_captures(uid: str, conversation: Any, candidate: CaptureRecord, matches: list) -> None:
+    """Group window matches that also share speech; never block finalization.
 
-
-def bigram_containment(candidate_words: Sequence[str], other_words: Sequence[str]) -> float:
-    """Fraction of the candidate's word bigrams (with multiplicity) present in ``other_words``."""
-    if len(candidate_words) < 2 or len(other_words) < 2:
-        return 0.0
-    candidate_bigrams = Counter(zip(candidate_words, candidate_words[1:]))
-    other_bigrams = Counter(zip(other_words, other_words[1:]))
-    shared = sum(min(count, other_bigrams[bigram]) for bigram, count in candidate_bigrams.items())
-    return shared / sum(candidate_bigrams.values())
-
-
-def is_primary_eligible(candidate: CaptureRecord, other: CaptureRecord) -> bool:
-    """Whether ``other`` may absorb ``candidate`` (rule 4 in the module docstring)."""
-    if other.discarded or not other.conversation_id or other.status not in _PRIMARY_ELIGIBLE_STATUSES:
-        return False
-    if other.conversation_id == candidate.conversation_id:
-        return False
-    if other.status == 'completed':
-        return True
-    return (other.created_at, other.conversation_id) < (candidate.created_at, candidate.conversation_id or '')
-
-
-def mark_duplicate_capture(conversation: Any, match: DuplicateCaptureMatch) -> None:
-    """Record the primary on the conversation model that is about to be discarded.
-
-    ``external_data`` rides the same persist as the discard flag (``dict()`` on
-    both the live and the ingress-create model), so pointer and verdict land in
-    one write.
+    Both transcripts are re-read fresh (the in-memory conversation may predate a
+    later edit) together with a fingerprint the join transaction re-checks.
     """
-    external_data = dict(getattr(conversation, 'external_data', None) or {})
-    external_data[DUPLICATE_CAPTURE_OF_KEY] = match.primary_conversation_id
-    conversation.external_data = external_data
+    if not matches:
+        return
+    try:
+        own_row, own_fingerprint = conversations_db.get_conversation_for_capture_check(uid, candidate.conversation_id)
+    except Exception:
+        _record_degraded(to_mode='separate_captures')
+        return
+    own_segments = _segments_of(own_row or {})
+    containment_mode = capture_group_containment_mode()
+    for other in matches:
+        try:
+            other_row, other_fingerprint = conversations_db.get_conversation_for_capture_check(
+                uid, other.conversation_id
+            )
+            shared = measure_shared_speech(own_segments, _segments_of(other_row or {}))
+            containment = None
+            if containment_mode != 'off':
+                try:
+                    containment = measure_capture_containment(own_row or {}, other_row or {}, mode=containment_mode)
+                    record_capture_containment(containment, mode=containment_mode)
+                except Exception:
+                    logger.warning('capture_group_containment detector failed')
+                    _record_degraded(to_mode='separate_captures')
+                    containment = None
+            if shared.confirms():
+                evidence = shared.evidence()
+            elif (
+                containment_mode == 'on'
+                and containment is not None
+                and containment.would_join
+                and containment.basis == 'full'
+            ):
+                evidence = containment.evidence()
+            else:
+                record_product_event('capture_group_joined', outcome='none')
+                continue
+            group_id = capture_groups_db.join_capture_group(
+                uid,
+                candidate.conversation_id,
+                other.conversation_id,
+                evidence,
+                expected_windows={
+                    record.conversation_id: (record.started_at, record.finished_at) for record in (candidate, other)
+                },
+                expected_fingerprints={
+                    candidate.conversation_id: own_fingerprint,
+                    other.conversation_id: other_fingerprint,
+                },
+            )
+            record_product_event('capture_group_joined', outcome='applied' if group_id else 'conflict')
+            if group_id and isinstance(own_row, dict):
+                primary = min((candidate, other), key=lambda row: row.primary_rank)
+                own_row['capture_group'] = {'id': group_id, 'primary_id': primary.conversation_id}
+            logger.info(
+                'capture_group_join outcome=%s containment=%.3f shared_trigrams=%d',
+                'applied' if group_id else 'conflict',
+                shared.containment,
+                shared.shared_trigrams,
+            )
+        except Exception:
+            _record_degraded(to_mode='separate_captures')
 
 
-def find_duplicate_capture(
-    candidate: CaptureRecord,
-    others: Iterable[CaptureRecord],
-    *,
-    min_candidate_words: int = MIN_CANDIDATE_WORDS,
-    min_overlap_seconds: float = MIN_OVERLAP_SECONDS,
-    min_window_coverage: float = MIN_WINDOW_COVERAGE,
-    min_transcript_containment: float = MIN_TRANSCRIPT_CONTAINMENT,
-) -> Optional[DuplicateCaptureMatch]:
-    """Return the primary that already carries ``candidate``, or ``None`` to keep it."""
-    if candidate.discarded or len(candidate.words) < min_candidate_words:
-        return None
-    best: Optional[DuplicateCaptureMatch] = None
-    for other in others:
-        if not is_primary_eligible(candidate, other) or same_capture_client(candidate, other):
-            continue
-        overlap_seconds, coverage = window_coverage(candidate, other)
-        if overlap_seconds < min_overlap_seconds or coverage < min_window_coverage:
-            continue
-        containment = bigram_containment(candidate.words, other.words)
-        if containment < min_transcript_containment:
-            continue
-        match = DuplicateCaptureMatch(
-            primary_conversation_id=other.conversation_id or '',
-            window_coverage=coverage,
-            transcript_containment=containment,
-        )
-        if best is None or (match.transcript_containment, match.window_coverage) > (
-            best.transcript_containment,
-            best.window_coverage,
-        ):
-            best = match
-    return best
+def _record_degraded(to_mode: str = 'keep_both_captures') -> None:
+    record_fallback(
+        component='conversation_finalization',
+        from_mode='duplicate_capture_check',
+        to_mode=to_mode,
+        reason='other',
+        outcome='degraded',
+        log=logger,
+    )

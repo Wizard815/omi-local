@@ -3,6 +3,7 @@ ChromaDB vector database replacement for Pinecone.
 Activated when LOCAL_VECTOR_DB=chroma and no Pinecone key is set.
 Implements the same interface as the Pinecone paths in vector_db.py.
 """
+
 import logging
 import os
 import uuid

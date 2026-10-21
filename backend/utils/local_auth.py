@@ -196,8 +196,7 @@ def authenticate_local_account(username: str, password: str, *, client_ip: str) 
     # wrong password and the response-time difference leaks which usernames
     # exist.
     dummy_hash = (
-        '$argon2id$v=19$m=65536,t=3,p=4$'
-        'c29tZXNhbHR2YWx1ZTEyMzQ1Njc4$c29tZWhhc2h2YWx1ZTEyMzQ1Njc4OTAxMjM0NTY3ODkw'
+        '$argon2id$v=19$m=65536,t=3,p=4$' 'c29tZXNhbHR2YWx1ZTEyMzQ1Njc4$c29tZWhhc2h2YWx1ZTEyMzQ1Njc4OTAxMjM0NTY3ODkw'
     )
     password_ok = verify_password(password, account.password_hash if account else dummy_hash)
 

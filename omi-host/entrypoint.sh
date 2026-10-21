@@ -111,6 +111,9 @@ else
 fi
 export FIRESTORE_EMULATOR_HOST=127.0.0.1:8085
 export FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099
+# The emulator is this stack's real auth store, so keep upstream's password-less
+# local-dev token route (routers/auth.py) switched off.
+export OMI_DISABLE_LOCAL_DEV_TOKEN_ROUTE=1
 export FIREBASE_AUTH_PROJECT_ID=demo-omi-local
 export FIREBASE_PROJECT_ID=demo-omi-local
 # The emulator's special default database is the literal sentinel "(default)",
@@ -137,6 +140,10 @@ export ADMIN_KEY="${ADMIN_KEY:-local-dev-admin-key-}"
 export BASE_API_URL="${BASE_API_URL:-http://127.0.0.1:8000}"
 export API_BASE_URL="${BASE_API_URL}"
 export OMI_LLM_GATEWAY_FEATURE_MODE=off
+# Upstream writes conversation notes only through the shaped notes agent and
+# fails closed ("Shaped notes disabled") unless this is on; its prod runtime
+# overlay sets it, so a self-hosted stack has to set it here.
+export OMI_SHAPED_AGENT_MODE="${OMI_SHAPED_AGENT_MODE:-on}"
 # Upstream fires the hourly daily-summary/notification job from Cloud Scheduler;
 # here the backend runs it in-process (utils/other/local_scheduler.py).
 export OMI_LOCAL_SCHEDULER="${OMI_LOCAL_SCHEDULER:-1}"
