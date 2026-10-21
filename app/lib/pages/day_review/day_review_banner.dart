@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:omi/backend/http/api/day_reviews.dart';
 import 'package:omi/pages/day_review/day_review_page.dart';
 import 'package:omi/utils/l10n_extensions.dart';
+import 'package:omi/utils/logger.dart';
 import 'package:omi/utils/other/temp.dart';
 
 /// Which unsorted day (if any) to nudge the user about: the latest earlier day,
@@ -36,7 +37,12 @@ class _DayReviewBannerState extends State<DayReviewBanner> {
   }
 
   Future<void> _load() async {
-    final pending = await getPendingDayReviews();
+    // An optional nudge: if the lookup fails for any reason, show nothing
+    // rather than letting the error escape into the conversation list.
+    final pending = await getPendingDayReviews().catchError((Object e) {
+      Logger.debug('Day review banner lookup failed: ${e.runtimeType}');
+      return null;
+    });
     if (!mounted || pending == null) return;
     setState(() {
       _today = pending.today;

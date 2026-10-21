@@ -191,7 +191,12 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
   }
 
   Future<void> refreshChatModelShortcuts() async {
-    final state = await getChatModelShortcuts();
+    // Runs unprompted when the chat page opens: a failed lookup keeps the
+    // previous state instead of escaping as an uncaught error.
+    final state = await getChatModelShortcuts().catchError((Object e) {
+      Logger.debug('Chat model shortcuts refresh failed: ${e.runtimeType}');
+      return null;
+    });
     if (state == null) return;
     chatModelShortcuts = state;
     // A sticky shortcut the server no longer offers would make every send fail.
