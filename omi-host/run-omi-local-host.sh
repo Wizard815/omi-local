@@ -19,7 +19,8 @@
 #   OMI_LOCAL_MODEL=llama/gemma-4-12b (default primary model — merge proxy name)
 #   LOCAL_LLM_MODEL=llama/gemma-4-12b (default chat agent model)
 #   OPENAI_API_KEY=local              (key for llama.cpp / local backends)
-#   OMI_ASR_MODEL=Systran/faster-whisper-small  (STT model for omi-audio)
+#   OMI_AUDIO_URL=http://host:8790    (audio service elsewhere, or "off"; default the
+#                                      bundled omi-audio — see examples/audio/README.md)
 #   DEEPGRAM_API_KEY=***              (optional — re-enables CLOUD STT)
 #   MODULATE_API_KEY=***              (optional — re-enables CLOUD STT)
 #
@@ -65,7 +66,11 @@ fi
 # 1. Build images
 echo "=== Building images (first run takes a few minutes) ==="
 docker build -t omi-local:latest       -f "$REPO/omi-host/Dockerfile"       "$REPO"
-docker build -t omi-local-audio:latest -f "$REPO/omi-host/Dockerfile.audio" "$REPO/omi-host"
+# Skipped when OMI_AUDIO_URL sends audio elsewhere; compose still builds it on
+# demand if the bundled omi-audio is left running.
+if [ -z "${OMI_AUDIO_URL:-}" ]; then
+  docker build -t omi-local-audio:latest -f "$REPO/omi-host/Dockerfile.audio" "$REPO/omi-host"
+fi
 docker build -t omi-proxy:latest       -f "$HERE/Dockerfile.proxy"          "$HERE"
 
 # 2. Build UPSTREAMS JSON from env — adds llama.cpp and optionally OpenRouter.
@@ -101,7 +106,6 @@ LOCAL_LLM_MODEL="${LOCAL_LLM_MODEL:-}" \
 OMI_LOCAL_MODEL="${OMI_LOCAL_MODEL:-}" \
 DEEPGRAM_API_KEY="${DEEPGRAM_API_KEY:-}" \
 MODULATE_API_KEY="${MODULATE_API_KEY:-}" \
-OMI_ASR_MODEL="${OMI_ASR_MODEL:-Systran/faster-whisper-small}" \
 LOCAL_VECTOR_DB="${LOCAL_VECTOR_DB:-chroma}" \
 SEARXNG_URL="${SEARXNG_URL:-}" \
 STORAGE_BACKEND="${STORAGE_BACKEND:-local}" \
@@ -152,18 +156,27 @@ curl -sf "http://${BIND_IP}:8000/health" >/dev/null 2>&1 || {
   exit 1
 }
 
-echo "=== Waiting for audio service (model load, ~1-2 min first run) ==="
-for i in $(seq 1 240); do
-  if curl -sf http://127.0.0.1:8790/health >/dev/null 2>&1; then
-    echo "audio HEALTHY after ${i}s"
-    break
-  fi
-  sleep 1
-done
-curl -sf http://127.0.0.1:8790/health >/dev/null 2>&1 || {
-  echo "audio service not healthy — check: docker logs omi-audio" >&2
-  exit 1
-}
+# The bundled omi-audio publishes its port on 127.0.0.1 only; an audio service
+# on another machine is checked at the URL the backend uses.
+case "${OMI_AUDIO_URL:-}" in
+  "") AUDIO_HEALTH_URL="http://127.0.0.1:8790/health" ;;
+  off) AUDIO_HEALTH_URL="" ;;
+  *) AUDIO_HEALTH_URL="${OMI_AUDIO_URL%/}/health" ;;
+esac
+if [ -n "$AUDIO_HEALTH_URL" ]; then
+  echo "=== Waiting for audio service at ${AUDIO_HEALTH_URL} (model load, ~1-2 min first run) ==="
+  for i in $(seq 1 240); do
+    if curl -sf "$AUDIO_HEALTH_URL" >/dev/null 2>&1; then
+      echo "audio HEALTHY after ${i}s"
+      break
+    fi
+    sleep 1
+  done
+  curl -sf "$AUDIO_HEALTH_URL" >/dev/null 2>&1 || {
+    echo "audio service not healthy at ${AUDIO_HEALTH_URL} — check: docker logs omi-audio (on the machine running it)" >&2
+    exit 1
+  }
+fi
 
 echo
 echo "=== DONE ==="
@@ -171,7 +184,7 @@ echo "Dashboard:     http://${BIND_IP}:8000/  (model picker shows ALL backends)"
 echo "Model list:    http://${BIND_IP}:8000/dashboard/models/available"
 echo "Auth emulator: http://${BIND_IP}:9099/"
 echo "Merge proxy:   http://127.0.0.1:4000/health"
-echo "Local audio:   http://127.0.0.1:8790/health (CPU STT + diarization + TTS)"
+echo "Audio:         ${AUDIO_HEALTH_URL:-off (cloud STT only)} (STT + diarization + TTS)"
 echo "Logs:          docker logs -f omi-local | docker logs -f omi-proxy | docker logs -f omi-audio"
 echo "Stop:          cd $HERE && docker compose down"
 echo

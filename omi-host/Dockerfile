@@ -32,6 +32,7 @@ RUN cd backend && uv venv --python 3.11.15 .venv \
 
 COPY omi-host/entrypoint.sh /entrypoint.sh
 COPY omi-host/local_llm_adapter.py /app/omi-host/local_llm_adapter.py
+COPY omi-host/audio-env.sh /app/omi-host/audio-env.sh
 RUN chmod +x /entrypoint.sh
 
 ENV PATH="/app/backend/.venv/bin:$PATH"

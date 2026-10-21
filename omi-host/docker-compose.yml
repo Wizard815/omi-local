@@ -29,11 +29,21 @@ services:
       # These must match tagged names from the merge proxy: llama/gemma-4-12b, or/openai/gpt-4o, etc.
       OMI_LOCAL_MODEL: ${OMI_LOCAL_MODEL:-}
       LOCAL_LLM_MODEL: ${LOCAL_LLM_MODEL:-}
+      # Audio: transcription, speaker embeddings and TTS all go to OMI_AUDIO_URL,
+      # the bundled omi-audio container unless set (another machine running it,
+      # or "off" for cloud STT only). entrypoint.sh/audio-env.sh derive the
+      # HOSTED_* URLs and the live-STT chain from it and from whichever cloud
+      # STT keys are set. Which engine omi-audio transcribes with is set on
+      # omi-audio below. Worked examples: examples/audio/README.md.
+      OMI_AUDIO_URL: ${OMI_AUDIO_URL:-}
       DEEPGRAM_API_KEY: ${DEEPGRAM_API_KEY:-}
       MODULATE_API_KEY: ${MODULATE_API_KEY:-}
-      HOSTED_PARAKEET_API_URL: ${HOSTED_PARAKEET_API_URL:-http://omi-audio:8790}
-      HOSTED_SPEAKER_EMBEDDING_API_URL: ${HOSTED_SPEAKER_EMBEDDING_API_URL:-http://omi-audio:8790}
-      TTS_LOCAL_BASE_URL: ${TTS_LOCAL_BASE_URL:-http://omi-audio:8790}
+      SONIOX_API_KEY: ${SONIOX_API_KEY:-}
+      HOSTED_PARAKEET_API_URL: ${HOSTED_PARAKEET_API_URL:-}
+      HOSTED_SPEAKER_EMBEDDING_API_URL: ${HOSTED_SPEAKER_EMBEDDING_API_URL:-}
+      TTS_LOCAL_BASE_URL: ${TTS_LOCAL_BASE_URL:-}
+      STT_SERVICE_MODELS: ${STT_SERVICE_MODELS:-}
+      STT_PRERECORDED_MODEL: ${STT_PRERECORDED_MODEL:-}
       PUBLIC_URL: ${PUBLIC_URL:-http://${BIND_IP:-0.0.0.0}:${BACKEND_PORT:-8000}}
       # Local-first infrastructure (self-hosting defaults)
       LOCAL_VECTOR_DB: ${LOCAL_VECTOR_DB:-chroma}
@@ -110,8 +120,13 @@ services:
     volumes:
       - omi-data:/data
     depends_on:
-      - omi-audio
-      - omi-proxy
+      # Not required, so an override can park omi-audio when OMI_AUDIO_URL
+      # points elsewhere (examples/audio/remote-gateway.override.yml).
+      omi-audio:
+        condition: service_started
+        required: false
+      omi-proxy:
+        condition: service_started
     logging:
       driver: json-file
       options: { max-size: "20m", max-file: "3" }
@@ -154,7 +169,8 @@ services:
 
   # Fully-offline audio, both STT and diarization on the MI50 (gfx906) + Piper
   # TTS. Set OMI_ASR_ENGINE=fasterwhisper / OMI_DIA_DEVICE=cpu to fall back to
-  # the original CPU-only paths instead.
+  # the original CPU-only paths instead, or OMI_ASR_ENGINE=openai to transcribe
+  # with any OpenAI-compatible server or API (examples/audio/README.md).
   omi-audio:
     image: omi-local-audio:latest
     build:
@@ -203,8 +219,23 @@ services:
       ROCBLAS_LAYER: "0"
       OMP_NUM_THREADS: "4"
       MKL_NUM_THREADS: "4"
-      # faster-whisper fallback path only (OMI_ASR_ENGINE=fasterwhisper).
-      OMI_ASR_MODEL: ${OMI_ASR_MODEL:-Systran/faster-whisper-small}
+      # Model for OMI_ASR_ENGINE=fasterwhisper (default Systran/faster-whisper-small)
+      # or OMI_ASR_ENGINE=openai (default whisper-1); whispercpp uses WHISPER_MODEL.
+      OMI_ASR_MODEL: ${OMI_ASR_MODEL:-}
+      # "en", another language code, or "auto" to let the engine detect it.
+      OMI_ASR_LANGUAGE: ${OMI_ASR_LANGUAGE:-en}
+      # OMI_ASR_ENGINE=openai: POST {OMI_ASR_URL}/audio/transcriptions per utterance.
+      # VAD, diarization, speaker embeddings and TTS still run here.
+      OMI_ASR_URL: ${OMI_ASR_URL:-}
+      OMI_ASR_API_KEY: ${OMI_ASR_API_KEY:-}
+      OMI_ASR_RESPONSE_FORMAT: ${OMI_ASR_RESPONSE_FORMAT:-verbose_json}
+      OMI_ASR_TIMEOUT_S: ${OMI_ASR_TIMEOUT_S:-120}
+      # TTS: piper (bundled voice below) or openai (POST {OMI_TTS_URL}/audio/speech).
+      OMI_TTS_ENGINE: ${OMI_TTS_ENGINE:-piper}
+      OMI_TTS_URL: ${OMI_TTS_URL:-}
+      OMI_TTS_API_KEY: ${OMI_TTS_API_KEY:-}
+      OMI_TTS_MODEL: ${OMI_TTS_MODEL:-}
+      OMI_TTS_VOICE: ${OMI_TTS_VOICE:-}
       OMI_ASR_COMPUTE: ${OMI_ASR_COMPUTE:-int8}
       OMI_ASR_THREADS: ${OMI_ASR_THREADS:-8}
       OMI_DISABLE_DIA: ${OMI_DISABLE_DIA:-0}

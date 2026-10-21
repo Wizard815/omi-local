@@ -188,25 +188,11 @@ if [ "${PROVIDER_MODE:-offline}" = "offline" ]; then
   # LEFT UNSET so the provider policy never selects a cloud engine — selection
   # falls through to the local Parakeet protocol served by omi-audio. Set
   # DEEPGRAM_API_KEY / MODULATE_API_KEY to fall back to cloud if you want.
-  export HOSTED_PARAKEET_API_URL="${HOSTED_PARAKEET_API_URL:-http://omi-audio:8790}"
-  export HOSTED_SPEAKER_EMBEDDING_API_URL="${HOSTED_SPEAKER_EMBEDDING_API_URL:-http://omi-audio:8790}"
-  export TTS_LOCAL_BASE_URL="${TTS_LOCAL_BASE_URL:-http://omi-audio:8790}"
-  echo "Audio (STT/diarization/TTS) -> local CPU service at ${HOSTED_PARAKEET_API_URL}"
   echo "NOTE: offline mode — no cloud AI keys. LLM via OPENAI_BASE_URL (llama.cpp)."
 fi
 
-# Live-STT serving chain. Upstream's default is modulate-velma-2,soniox,dg-nova-3,parakeet,
-# and the backend refuses to start when soniox is listed without SONIOX_API_KEY
-# (utils/stt/streaming.py validate_streaming_stt_env). List only the cloud engines
-# whose key is set, in upstream's order, ahead of the local Parakeet from omi-audio.
-if [ -z "${STT_SERVICE_MODELS:-}" ]; then
-  STT_SERVICE_MODELS=""
-  [ -n "${MODULATE_API_KEY:-}" ] && STT_SERVICE_MODELS="${STT_SERVICE_MODELS}modulate-velma-2,"
-  [ -n "${SONIOX_API_KEY:-}" ] && STT_SERVICE_MODELS="${STT_SERVICE_MODELS}soniox,"
-  [ -n "${DEEPGRAM_API_KEY:-}" ] && STT_SERVICE_MODELS="${STT_SERVICE_MODELS}dg-nova-3,"
-  export STT_SERVICE_MODELS="${STT_SERVICE_MODELS}parakeet"
-fi
-echo "live STT chain: ${STT_SERVICE_MODELS}"
+# Where audio goes (bundled omi-audio by default) and the live-STT chain.
+. /app/omi-host/audio-env.sh
 
 echo "backend: starting"
 uvicorn main:app --host 0.0.0.0 --port 8000 &
