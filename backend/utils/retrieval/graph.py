@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import uuid
 import asyncio
-from contextlib import nullcontext
+from contextlib import aclosing, nullcontext
 from typing import List, Optional, AsyncGenerator, Tuple, Any, Dict, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -256,21 +256,26 @@ async def execute_chat_stream(
         return
     token = set_chat_model_override(routing.model)
     try:
-        async for chunk in _execute_routed_chat_stream(
-            uid,
-            routing.messages,
-            app,
-            cited=cited,
-            callback_data=callback_data,
-            chat_session=chat_session,
-            context=context,
-            platform=platform,
-            client_kind=client_kind,
-            client_tz=client_tz,
-            device_tool_names=device_tool_names,
-            shaped_invocation=shaped_invocation,
-        ):
-            yield chunk
+        # aclosing: closing this stream closes the routed one now rather than at
+        # GC, so its context-prefetch scope cancels its reads on every early exit.
+        async with aclosing(
+            _execute_routed_chat_stream(
+                uid,
+                routing.messages,
+                app,
+                cited=cited,
+                callback_data=callback_data,
+                chat_session=chat_session,
+                context=context,
+                platform=platform,
+                client_kind=client_kind,
+                client_tz=client_tz,
+                device_tool_names=device_tool_names,
+                shaped_invocation=shaped_invocation,
+            )
+        ) as routed:
+            async for chunk in routed:
+                yield chunk
     finally:
         reset_chat_model_override(token)
 

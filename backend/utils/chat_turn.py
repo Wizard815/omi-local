@@ -627,6 +627,9 @@ def _run_chat_turn(uid, surface, session, message, reply_sink, *, principal, opt
                     journey_attempt.finish('success')
             return f"done: {encoded_response}\n\n"
 
+        # Self-hosted chat model shortcut: forwarded only when the client sent one,
+        # so a plain turn calls the shared stream exactly as before the feature.
+        shortcut_kwargs = {'model_shortcut': data.model_shortcut} if data.model_shortcut else {}
         try:
             async for chunk in execute_chat_stream(
                 uid,
@@ -641,7 +644,7 @@ def _run_chat_turn(uid, surface, session, message, reply_sink, *, principal, opt
                 client_tz=chat_tz,
                 device_tool_names=set(data.device_tools or ()),
                 shaped_invocation=True,
-                model_shortcut=data.model_shortcut,
+                **shortcut_kwargs,
             ):
                 if chunk:
                     if chunk.startswith('error: '):
