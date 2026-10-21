@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:omi/utils/debugging/non_fatal_reporter.dart';
+
 /// No-op stub. This app is self-hosted with zero Google/cloud crash
 /// reporting — every method here used to call FirebaseCrashlytics, which
 /// always talks to real Google servers with no local/emulator equivalent
@@ -40,17 +42,29 @@ class CrashlyticsManager {
 
   void setEnabled(bool isEnabled) {}
 
+  /// Where reports go instead of Crashlytics. Nothing leaves the device: the
+  /// default drops them. Tests replace it to check that a failure is reported
+  /// exactly once, and that a failing sink cannot escape as an uncaught error.
+  @visibleForTesting
+  static Future<void> Function(Object error, StackTrace stack, {required bool fatal}) localRecord = _dropReport;
+
+  static Future<void> _dropReport(Object error, StackTrace stack, {required bool fatal}) async {}
+
+  static Future<void> _ignoreAttribute(String key, String value) async {}
+
   Future<void> reportCrash(
     Object exception,
     StackTrace stackTrace, {
     Map<String, String>? userAttributes,
-  }) async {}
+  }) =>
+      recordNonFatalFailure(exception, stackTrace, record: localRecord, setAttribute: _ignoreAttribute);
 
   Future<void> reportNonFatal(
     Object exception,
     StackTrace stackTrace, {
     Map<String, String> userAttributes = const {},
-  }) async {}
+  }) =>
+      recordNonFatalFailure(exception, stackTrace, record: localRecord, setAttribute: _ignoreAttribute);
 
   NavigatorObserver? getNavigatorObserver() {
     return null;

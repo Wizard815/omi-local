@@ -1048,11 +1048,12 @@ void main() {
 
       expect(outcome.harnessError, isNull);
       expect(outcome.unhandled, isEmpty);
-      expect(crashlytics.recordErrors, hasLength(1));
-      final args = crashlytics.recordErrors.single.arguments as Map<dynamic, dynamic>;
-      expect(args['exception'], 'capture_people_refresh_segments: StateError');
-      expect(args['fatal'], isFalse);
-      expect(args['stackTraceElements'], isNotEmpty);
+      expect(crashlytics.recordErrors, isEmpty);
+      expect(crashlytics.reports, hasLength(1));
+      final report = crashlytics.reports.single;
+      expect(report.error.toString(), 'capture_people_refresh_segments: StateError');
+      expect(report.fatal, isFalse);
+      expect(report.stack.toString(), isNotEmpty);
     });
 
     test('a failed refresh from a speaker suggestion reschedules without an unhandled zone error', () async {
@@ -1077,7 +1078,7 @@ void main() {
         expect(actions.setPeopleCallCount, 1);
         first.completeError(sentinel, deterministicStack);
         await _flushEventQueue();
-        expect(crashlytics.recordErrors, hasLength(1));
+        expect(crashlytics.reports, hasLength(1));
         final second = Completer<void>();
         actions.setSetPeopleCompleter(second);
         provider.onMessageEventReceived(
@@ -1090,11 +1091,12 @@ void main() {
 
       expect(outcome.harnessError, isNull);
       expect(outcome.unhandled, isEmpty);
-      expect(crashlytics.recordErrors, hasLength(1));
-      final args = crashlytics.recordErrors.single.arguments as Map<dynamic, dynamic>;
-      expect(args['exception'], 'capture_people_refresh_suggestion: StateError');
-      expect(args['fatal'], isFalse);
-      expect(args['stackTraceElements'], isNotEmpty);
+      expect(crashlytics.recordErrors, isEmpty);
+      expect(crashlytics.reports, hasLength(1));
+      final report = crashlytics.reports.single;
+      expect(report.error.toString(), 'capture_people_refresh_suggestion: StateError');
+      expect(report.fatal, isFalse);
+      expect(report.stack.toString(), isNotEmpty);
     });
 
     test('a suggestion joining a segment-owned refresh attaches no second error observer', () async {
@@ -1122,8 +1124,9 @@ void main() {
 
       expect(outcome.harnessError, isNull);
       expect(outcome.unhandled, isEmpty);
-      expect(crashlytics.recordErrors, hasLength(1));
-      expect(crashlytics.recordErrors.single.arguments['exception'], 'capture_people_refresh_segments: StateError');
+      expect(crashlytics.recordErrors, isEmpty);
+      expect(crashlytics.reports, hasLength(1));
+      expect(crashlytics.reports.single.error.toString(), 'capture_people_refresh_segments: StateError');
     });
   });
 
