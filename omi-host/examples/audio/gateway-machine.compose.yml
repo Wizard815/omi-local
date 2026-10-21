@@ -1,0 +1,31 @@
+# Runs ONLY omi-audio, on a second machine, for the remote-gateway recipe
+# (the backend's machine sets OMI_AUDIO_URL=http://<this machine>:8790).
+# See README.md.
+#
+# On this machine, from a checkout of the repo:
+#   docker compose -f omi-host/examples/audio/gateway-machine.compose.yml up -d --build
+# Choose its engine the usual way: a .env next to this file, or exported vars
+# (OMI_ASR_ENGINE=openai, OMI_ASR_URL, ... as in the other recipes). No AMD
+# gfx906 card here? Add  -f omi-host/examples/audio/no-gpu.override.yml
+# Check it from the backend's machine:
+#   curl -s http://<this machine>:8790/health
+#
+# omi-audio has NO authentication. Publish it on a LAN or VPN address only
+# (GATEWAY_BIND_IP), never to the internet.
+
+name: omi-audio-gateway
+
+services:
+  omi-audio:
+    # Same service as the stack's own omi-audio (GPU passthrough, engine
+    # settings, model cache), so the two never drift apart.
+    extends:
+      file: ../../docker-compose.yml
+      service: omi-audio
+    build:
+      context: ../..
+    ports: !override
+      - "${GATEWAY_BIND_IP:-0.0.0.0}:8790:8790"
+
+volumes:
+  omi-data:

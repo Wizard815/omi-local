@@ -1,0 +1,20 @@
+# Runs omi-audio on a host WITHOUT the AMD gfx906 card the default setup
+# expects. See README.md.
+#
+# The bundled engine (whisper.cpp built for gfx906) can't run there, so this
+# defaults to faster-whisper on the CPU; pair it with external-local-engine.env.example
+# or a frontier recipe (OMI_ASR_ENGINE=openai) to transcribe elsewhere instead.
+# Diarization and Piper TTS run on the CPU either way.
+#
+# Apply: save as omi-host/docker-compose.override.yml, or add the omi-audio
+# entry below to the one you have, then: cd omi-host && docker compose up -d
+# (or pass it with -f after gateway-machine.compose.yml on a gateway machine).
+# Needs Docker Compose 2.24+ for !reset.
+
+services:
+  omi-audio:
+    devices: !reset []
+    group_add: !reset []
+    environment:
+      OMI_ASR_ENGINE: ${OMI_ASR_ENGINE:-fasterwhisper}
+      OMI_DIA_DEVICE: cpu
