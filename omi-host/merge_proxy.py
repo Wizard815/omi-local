@@ -273,9 +273,16 @@ async def chat_completions(request: Request):
 
     stream = payload.get("stream", False)
 
-    async with httpx.AsyncClient(timeout=600.0) as client:
-        if stream:
-            async def _stream():
+    if stream:
+        # The httpx client must outlive this handler: StreamingResponse iterates
+        # the generator AFTER the handler returns, so a client opened in an
+        # `async with` that wraps the `return` is already closed by the time the
+        # generator runs — raising "Cannot send a request, as the client has
+        # been closed." on the first chunk. The caller sees a truncated body
+        # (RemoteProtocolError: incomplete chunked read) and falls back to a
+        # canned reply. Open and close the client inside the generator instead.
+        async def _stream():
+            async with httpx.AsyncClient(timeout=600.0) as client:
                 async with client.stream(
                     "POST",
                     f"{base_url.rstrip('/')}/chat/completions",
@@ -289,8 +296,9 @@ async def chat_completions(request: Request):
                     async for line in resp.aiter_lines():
                         yield line + "\n"
 
-            return StreamingResponse(_stream(), media_type="text/event-stream")
+        return StreamingResponse(_stream(), media_type="text/event-stream")
 
+    async with httpx.AsyncClient(timeout=600.0) as client:
         resp = await client.post(
             f"{base_url.rstrip('/')}/chat/completions",
             json=payload,

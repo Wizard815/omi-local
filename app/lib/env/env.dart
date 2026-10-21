@@ -39,21 +39,35 @@ abstract class Env {
 
   // static String? get apiBaseUrl => 'https://omi-backend.ngrok.app/';
   static String? get apiBaseUrl {
-    if (_apiBaseUrlOverride != null) return _apiBaseUrlOverride;
-    if (_apiBaseUrlFromDefine.isNotEmpty) return _apiBaseUrlFromDefine;
-    // Self-hosting: check SharedPreferences for user-configured custom URL first
+    if (_apiBaseUrlOverride != null) return _normalizeBaseUrl(_apiBaseUrlOverride!);
+    // Self-hosting: a server URL the user typed at login (or in developer
+    // settings) is authoritative and must beat any build-time
+    // OMI_API_BASE_URL define. Previously the define was checked first, so the
+    // login request used the typed URL while every subsequent call silently
+    // went to the host baked into the APK — the app authenticated and then
+    // timed out on the first real request. See establishRemoteSession.
     try {
       // ignore: depend_on_referenced_packages
       final savedUrl = SharedPreferencesUtil().customApiBaseUrl;
-      if (savedUrl.isNotEmpty) return savedUrl;
+      if (savedUrl.isNotEmpty) return _normalizeBaseUrl(savedUrl);
     } catch (_) {
       // SharedPreferences not initialized yet; fall through to baked-in URL
     }
+    if (_apiBaseUrlFromDefine.isNotEmpty) return _normalizeBaseUrl(_apiBaseUrlFromDefine);
     final configuredApiBaseUrl = _instance.apiBaseUrl;
     if (configuredApiBaseUrl != null && configuredApiBaseUrl.isNotEmpty) {
-      return configuredApiBaseUrl;
+      return _normalizeBaseUrl(configuredApiBaseUrl);
     }
     return profile.defaultApiBaseUrl;
+  }
+
+  /// Every authenticated URL is built by concatenating `${Env.apiBaseUrl}` with
+  /// a path (`'${Env.apiBaseUrl}v1/users/language'`), so a base without a
+  /// trailing slash yields `hostv1/...`. Normalize once here rather than
+  /// relying on every caller and login path to remember it.
+  static String _normalizeBaseUrl(String url) {
+    final trimmed = url.trim();
+    return trimmed.endsWith('/') ? trimmed : '$trimmed/';
   }
 
   static int get firebaseAuthEmulatorPort => int.tryParse(_firebaseAuthEmulatorPort) ?? 9099;

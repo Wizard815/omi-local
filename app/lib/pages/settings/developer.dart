@@ -288,12 +288,13 @@ class _DeveloperSettingsPageState extends State<_DeveloperSettingsPageView> {
                     onPressed: () {
                       final url = controller.text.trim();
                       if (url.isNotEmpty) {
-                        Env.overrideApiBaseUrl(url);
-                        SharedPreferencesUtil().customApiBaseUrl = url;
+                        final normalized = url.endsWith('/') ? url : '$url/';
+                        Env.overrideApiBaseUrl(normalized);
+                        SharedPreferencesUtil().customApiBaseUrl = normalized;
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Server URL set to $url\nRestart the app for it to take full effect.'),
+                              content: Text('Server URL set to $normalized\nRestart the app for it to take full effect.'),
                               backgroundColor: Colors.green.shade700,
                               duration: const Duration(seconds: 4),
                             ),
