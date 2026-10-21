@@ -8,8 +8,8 @@ the two commands to finish.
 
 | Artifact | Path | What it is |
 |---|---|---|
-| **Android APK** | `omi-dev-local.apk` | `com.friend.ios.dev` (dev flavor), built from `app/` with Flutter 3.44.5. Pre-wired to `http://192.168.20.5:8000/` + Auth emulator `192.168.20.5:9099`. Cleartext + `omi-dev://` callback scheme confirmed in the manifest. |
-| **Host stack package** | `omi-host/` | `Dockerfile` + `docker-compose.yml` + `entrypoint.sh` + `run-omi-local-host.sh`. Two containers (one compose project): **omi-local** (Firebase **Auth emulator (:9099)**, **Firestore emulator (:8085)**, **Redis (:6380)**, Python **backend (:8000)**) and **omi-audio** (fully-offline **CPU** speech: faster-whisper STT + speaker diarization + Piper TTS on `:8790`). All from this repo's own code (`backend/`), offline provider mode. |
+| **Android APK** | `omi-dev-local.apk` | `com.friend.ios.dev` (dev flavor), built from `app/` with Flutter 3.44.5. Signs in with a server URL (`http://192.168.20.5:8000/` or a tunnel URL) plus the username/password seeded on the server. Cleartext + `omi-dev://` callback scheme confirmed in the manifest. |
+| **Host stack package** | `omi-host/` | `Dockerfile` + `docker-compose.yml` + `entrypoint.sh` + `run-omi-local-host.sh`. Two containers (one compose project): **omi-local** (Firebase **Auth emulator** (container-internal), **Firestore emulator (:8085)**, **Redis (:6380)**, Python **backend (:8000)**) and **omi-audio** (fully-offline **CPU** speech: faster-whisper STT + speaker diarization + Piper TTS on `:8790`). All from this repo's own code (`backend/`), offline provider mode. |
 
 The APK is already at the repo root. The host package is in `omi-host/`.
 
@@ -36,10 +36,11 @@ adb install -r omi-dev-local.apk
 #     (allow "install unknown apps" for your file manager)
 ```
 
-Then open **Omi Dev** → **Sign in with Google** (any Google account). The local
-Firebase Auth emulator verifies the Google token and mints a `demo-omi-local`
-token; the local backend verifies it. No Omi cloud, no Omi account, no Omi
-Firebase project is touched.
+Then open **Omi Dev** and enter the **Server URL** (`http://192.168.20.5:8000/` on
+the LAN, or your tunnel URL) and the username/password you seeded with
+`backend/scripts/seed_local_account.py`. The backend checks the password and
+signs its own session token (see **Login** below). No Omi cloud, no Omi account,
+no Google, no Firebase project is touched.
 
 ## What's local vs what's cloud (by design of this repo)
 
@@ -48,8 +49,8 @@ The Omi app is architecturally a **Firebase-Auth + backend-API** client. To run 
 
 | Layer | Local in this setup? | Notes |
 |---|---|---|
-| **Identity / sign-in** | ✅ Local | Firebase **Auth emulator** (`:9099`, project `demo-omi-local`). "Sign in with Google" still contacts Google's OAuth servers (the emulator verifies the returned token) — that one hop to `accounts.google.com` is inherent to Google Sign-In; no Omi involvement. |
-| **All app data** (conversations, memories, settings, action items, chat) | ✅ Local | Python backend (`:8000`) + **Firestore emulator** (`:8085`) + Redis. The app makes **zero direct Firestore calls** — everything goes through the backend, so only `:8000` and `:9099` need to be LAN-reachable. |
+| **Identity / sign-in** | ✅ Local | Username/password checked by the backend (`/v1/auth/local-login`), which signs its own session tokens. The Firebase **Auth emulator** (project `demo-omi-local`) only holds each account's uid, inside the container. See **Login** below. |
+| **All app data** (conversations, memories, settings, action items, chat) | ✅ Local | Python backend (`:8000`) + **Firestore emulator** (`:8085`) + Redis. The app makes **zero direct Firestore calls** — everything goes through the backend, so only `:8000` needs to be reachable. |
 | **Speech-to-text (live capture / memos / batch)** | ✅ Fully local (server-side CPU) | In-app **Settings → Transcription → "Omi Parakeet"** routes speech to the `omi-audio` container (faster-whisper on CPU, ~5× realtime on the ML350). The phone only streams raw audio; **no STT runs on the phone** in this path. This is the default. |
 | **Speech-to-text (on-phone alternative)** | ✅ Fully local | **Settings → Transcription → "On-device (Whisper)"** runs Whisper entirely on the phone (downloads a model once), no network. Use this if you'd rather keep STT off the server; heavier on the phone's battery/CPU. |
 | **Speaker diarization ("who said what")** | ✅ Fully local | `omi-audio` does resemblyzer ECAPA embeddings + greedy clustering, wired to the backend's `HOSTED_SPEAKER_EMBEDDING_API_URL`. |
@@ -89,15 +90,15 @@ The Omi app is architecturally a **Firebase-Auth + backend-API** client. To run 
    disabled (they fail closed rather than call a fake endpoint). Good for testing the
    whole pipeline without any AI.
 
-> **Why not just point the app at Omi's cloud?** `api.omi.me` verifies tokens against
-> Omi's *production* Firebase project. Your local `demo-omi-local` tokens would be
-> rejected with 401 on every call. The whole point of the local Auth emulator is that
-> the local backend verifies against the *same* project the app signs into.
+> **Why not just point the app at Omi's cloud?** `api.omi.me` only accepts Omi's
+> *production* accounts. Your account and its session tokens belong to your own
+> backend, so the cloud would answer 401 on every call.
 
 ## What was verified (real runs, not assumptions)
 
 - Backend boots offline on this box; `/health` → 200.
-- Created a user in the Auth emulator → its token verified by the backend →
+- (Historical: the backend has refused Auth-emulator tokens since October 2026, see
+  **Login**.) Created a user in the Auth emulator → its token verified by the backend →
   `GET /v1/conversations` and `GET /v1/users/onboarding` returned **200**
   (`/v1/users/profile` → `410 User not found`, the correct pre-onboarding state).
 - APK built (`flutter build apk --debug --flavor dev`), `aapt2` confirms
@@ -136,7 +137,7 @@ omi-dev-local.apk              # the Android APK
 omi-host/
   Dockerfile                   # omi-local host container image
   Dockerfile.audio             # omi-audio image (pipecat base + faster-whisper/piper/resemblyzer)
-  docker-compose.yml           # pins 192.168.20.5:8000 + :9099 + omi-audio (:8790 loopback)
+  docker-compose.yml           # pins 192.168.20.5:8000 + omi-audio (:8790 loopback)
   entrypoint.sh                # starts redis + firebase emulators + backend (+ local-audio env)
   local_audio_service.py       # fully-offline CPU audio: WS /v3/stream + /v1//v2 transcribe
                                #   + /v2/embedding + /v1/tts (Piper) + /health
@@ -230,6 +231,29 @@ browsing there): the tiles are top-level folders; opening one shows its path and
 as chips (long-press a chip to edit, add a subfolder or delete), plus **New subfolder**. The tree
 icon opens the whole tree (open, new subfolder, move, edit). AI folder assignment sees full paths
 ("Work / Clients / Acme").
+
+### Login
+Every sign-in, on the LAN or through a tunnel, goes through the backend's
+`/v1/auth/local-login`: it checks the password (argon2, rate-limited) and returns a
+session token it signs with `LOCAL_AUTH_JWT_SECRET`. Leave that unset and one is
+generated on first start and kept in the data volume (`/data/secrets/local_auth_jwt_secret`),
+so sessions survive restarts; delete that file to sign every device out.
+
+The Firebase Auth emulator issues *unsigned* tokens, and the Firebase Admin SDK checks
+no signature in emulator mode, so a backend that accepted them let anyone who could
+reach it act as any user. On a self-hosted stack the backend now refuses every
+Firebase ID token (`backend/utils/self_hosted_id_tokens.py`), the emulator listens on
+the container's loopback only, and port 9099 is no longer published.
+
+Moving over from the old **Local network** login:
+- **Accounts:** nothing to do. An account that only exists in the emulator (seeded for
+  the old LAN login) signs in once through `/v1/auth/local-login`, keeps its uid and
+  data, and gets its own login entry.
+- **App already installed:** the next request after the upgrade gets a 401. Pick
+  **Remote (internet)** on the login screen and enter the same LAN URL
+  (`http://<server IP>:8000/`). If the app still shows you signed in, sign out first.
+- **New app build:** the login screen is a single form, and a leftover emulator
+  session is signed out at startup.
 
 ### Self-hosting switch (`OMI_SELF_HOSTED`)
 omi-host's entrypoint exports `OMI_SELF_HOSTED=1`. The backend reads it (`backend/utils/self_hosting.py`)

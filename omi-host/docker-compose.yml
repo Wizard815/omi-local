@@ -18,7 +18,9 @@ services:
       # container-to-container traffic (e.g. a cloudflared connector on the
       # same Docker network reaches it at http://omi-local:8000 either way).
       - "${BIND_IP:-0.0.0.0}:${BACKEND_PORT:-8000}:8000"
-      - "${BIND_IP:-0.0.0.0}:9099:9099"
+      # No 9099: the Firebase Auth emulator issues unsigned tokens and answers
+      # admin calls from anyone, so it stays inside the container. Phones sign
+      # in through the backend (/v1/auth/local-login).
       - "127.0.0.1:8085:8085"
     environment:
       PROVIDER_MODE: ${PROVIDER_MODE:-offline}
@@ -86,10 +88,9 @@ services:
       # production-tuned values — see model_config.py/clients.py for why.
       FOREGROUND_REQUEST_TIMEOUT_SECONDS: ${FOREGROUND_REQUEST_TIMEOUT_SECONDS:-}
       BACKGROUND_CHAT_EXTRACTION_TIMEOUT_SECONDS: ${BACKGROUND_CHAT_EXTRACTION_TIMEOUT_SECONDS:-}
-      # Only needed for the internet-facing /v1/auth/local-login path (see
-      # backend/utils/local_auth.py) — signs this backend's own session
-      # tokens for that endpoint. No Firebase/Google involved at all; LAN-only
-      # deployments via the Auth emulator (port 9099) don't need this.
+      # Signs the session tokens /v1/auth/local-login issues, the only way to
+      # sign in (backend/utils/local_auth.py). Leave empty to have one
+      # generated on first start and kept in /data/secrets (auth-env.sh).
       LOCAL_AUTH_JWT_SECRET: ${LOCAL_AUTH_JWT_SECRET:-}
       # Gates the dashboard (/, model picker, conversation retry) behind
       # HTTP Basic Auth — it has no auth of its own otherwise, and this same

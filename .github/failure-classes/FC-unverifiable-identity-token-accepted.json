@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "id": "FC-unverifiable-identity-token-accepted",
+  "violated_contract": "A deployment that serves real users must not accept an identity token it cannot verify cryptographically. The Firebase Auth emulator issues unsigned (alg none) ID tokens, and firebase_admin skips signature verification whenever FIREBASE_AUTH_EMULATOR_HOST is set, which is a test-harness convenience. omi-local's self-hosted stack serves real users from that emulator and published its port. Every token check (verify_token, the dependencies.py Bearer path, the WebSocket handshake, and the OAuth and shared-chat routes) therefore accepted a hand-written token naming any uid. Anyone who could reach the backend, including through a Cloudflare tunnel, could act as any user.",
+  "canonical_prevention": "Decide trust in the one function every check calls, not at call sites. On a self-hosted emulator stack, install a guard over firebase_admin.auth.verify_id_token at process start. It accepts only the backend's own HS256 session token (LOCAL_AUTH_JWT_SECRET) and raises InvalidIdTokenError for everything else, so call sites added later inherit it. Keep the emulator itself on loopback. Prove it with a forged alg-none token against the real firebase_admin, accepted without the guard and refused with it, and again through the production verify_token path.",
+  "canonical_prevention_artifact": [
+    "backend/utils/self_hosted_id_tokens.py",
+    "backend/tests/unit/test_self_hosted_id_tokens.py"
+  ],
+  "evidence_prs": [],
+  "scope_hints": [
+    "backend/utils/self_hosted_id_tokens.py",
+    "backend/utils/local_auth.py",
+    "backend/utils/other/endpoints.py",
+    "backend/dependencies.py",
+    "omi-host/**"
+  ],
+  "status": "open"
+}

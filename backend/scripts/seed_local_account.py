@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-"""Create (or update the password of) the single login account for a
-self-hosted OMI deployment: the LAN-only Firebase Auth emulator account, and
-(unless --lan-only) the internet-reachable credential used by /v1/auth/local-login.
+"""Create (or update the password of) a login account for a self-hosted OMI
+deployment: the Firebase Auth emulator user that owns the account's uid, and
+the credential /v1/auth/local-login checks (utils/local_auth.py).
 
 There is no in-app account-creation flow — this is the server-side
-counterpart to both the app's LAN login screen (server IP + username +
-password, talks to the Auth emulator directly) and the remote login flow
-(server URL + username + password, talks to /v1/auth/local-login, see
-utils/local_auth.py for why that second path exists). Run inside the backend
+counterpart to the app's login screen (server URL + username + password),
+which signs in through /v1/auth/local-login on the LAN and over the internet
+alike. Run inside the backend
 container, from /app/backend with PYTHONPATH set, not the repo root — a
 plain `docker exec -it omi-local python backend/scripts/seed_local_account.py`
 run from /app fails with `ModuleNotFoundError: No module named 'utils'`
@@ -18,10 +17,9 @@ not /app/backend:
     docker exec -it omi-local bash -c "cd /app/backend && PYTHONPATH=/app/backend python scripts/seed_local_account.py --username you"
 
 The username is mapped to a synthetic "<username>@local.omi" address for the
-emulator account — the same transform the app applies (see
-AuthService.usernameToLocalEmail in app/lib/services/auth_service.dart) —
-Firebase Auth's password provider requires an email-shaped identifier, but
-nothing about it is ever shown to the user or treated as a real email.
+emulator account (utils/local_auth.local_account_email) — Firebase Auth's
+password provider requires an email-shaped identifier, but nothing about it is
+ever shown to the user or treated as a real email.
 
 The emulator account is created directly against the Auth emulator's
 Identity Toolkit REST API (the same mechanism
@@ -50,10 +48,6 @@ inherit_pid1_env()
 DEFAULT_AUTH_PORT = 9099
 
 
-def username_to_local_email(username: str) -> str:
-    return f"{username.strip().lower()}@local.omi"
-
-
 def _post(url: str, payload: dict) -> dict:
     data = json.dumps(payload).encode("utf-8")
     request = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"}, method="POST")
@@ -66,7 +60,11 @@ def _post(url: str, payload: dict) -> dict:
 
 
 def seed_account(auth_host: str, auth_port: int, username: str, password: str) -> str:
-    email = username_to_local_email(username)
+    # Imported here, not at module level: inherit_pid1_env() above must run
+    # first, and these pull in the backend's full dependency set.
+    from utils.local_auth import local_account_email
+
+    email = local_account_email(username)
     base = f"http://{auth_host}:{auth_port}/identitytoolkit.googleapis.com/v1/accounts"
     key = "local-dev-harness"  # the emulator does not validate this key
 
@@ -114,11 +112,6 @@ def main() -> None:
     )
     parser.add_argument("--auth-host", default="127.0.0.1", help="Firebase Auth emulator host (default: 127.0.0.1)")
     parser.add_argument("--auth-port", type=int, default=DEFAULT_AUTH_PORT, help=f"default: {DEFAULT_AUTH_PORT}")
-    parser.add_argument(
-        "--lan-only",
-        action="store_true",
-        help="Skip the remote-login credential (Firestore + argon2 hash) — only seed the LAN emulator account.",
-    )
     args = parser.parse_args()
 
     password = args.password or getpass.getpass("Password: ")
@@ -127,16 +120,14 @@ def main() -> None:
 
     uid = seed_account(args.auth_host, args.auth_port, args.username, password)
 
-    if not args.lan_only:
-        # Imported here, not at module level: these pull in the backend's full
-        # dependency set (firebase_admin, google-cloud-firestore), so running
-        # this script with --lan-only stays usable outside the container too.
-        from utils.local_auth import set_local_account
+    from utils.local_auth import set_local_account
 
-        set_local_account(args.username, uid, password)
-        print(f"Remote-login credential stored for '{args.username}' (uid={uid}).")
-
-    print(f"On the phone: Server IP = this machine's LAN IP, Username = {args.username}.")
+    set_local_account(args.username, uid, password)
+    print(f"Login credential stored for '{args.username}' (uid={uid}).")
+    print(
+        f"On the phone: Server URL = http://<this machine's LAN IP>:8000/ (or your tunnel URL), "
+        f"Username = {args.username}."
+    )
 
 
 if __name__ == "__main__":

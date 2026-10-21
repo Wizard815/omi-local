@@ -3,7 +3,7 @@
 #
 # Starts THREE containers (one compose project, shared omi-data volume):
 #   omi-proxy  — auto-discovering model merge proxy (:4000)
-#   omi-local  — backend (:8000) + Firebase Auth (:9099) + Firestore emulator + Redis
+#   omi-local  — backend (:8000) + Firebase Auth/Firestore emulators + Redis
 #   omi-audio  — fully-offline CPU audio: faster-whisper STT + diarization + Piper TTS
 #
 # Usage:
@@ -182,7 +182,6 @@ echo
 echo "=== DONE ==="
 echo "Dashboard:     http://${BIND_IP}:8000/  (model picker shows ALL backends)"
 echo "Model list:    http://${BIND_IP}:8000/dashboard/models/available"
-echo "Auth emulator: http://${BIND_IP}:9099/"
 echo "Merge proxy:   http://127.0.0.1:4000/health"
 echo "Audio:         ${AUDIO_HEALTH_URL:-off (cloud STT only)} (STT + diarization + TTS)"
 echo "Logs:          docker logs -f omi-local | docker logs -f omi-proxy | docker logs -f omi-audio"
@@ -195,6 +194,6 @@ echo "Phone setup:"
 echo "  1. Seed your login account (once):"
 echo "     docker exec -it omi-local bash -c \"cd /app/backend && PYTHONPATH=/app/backend python scripts/seed_local_account.py --username you\""
 echo "  2. Install the local-only APK build → Log in with:"
-echo "     Server IP: ${BIND_IP}   Username/password: whatever you just seeded"
+echo "     Server URL: http://${BIND_IP}:${BACKEND_PORT:-8000}/ (or your tunnel URL)   Username/password: whatever you just seeded"
 echo "  Settings > Transcription → 'Omi Parakeet' (server) or 'On-device Whisper' (phone)"
 echo "  Speaker diarization & voice training work with both — server handles embeddings"

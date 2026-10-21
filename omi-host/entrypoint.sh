@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Entrypoint for the Omi local host container.
-# Starts: redis (6380), firebase firestore+auth emulators (8085/9099), backend (8000).
+# Starts: redis (6380), firebase firestore+auth emulators (8085, auth 9099 on loopback), backend (8000).
 # Provider mode: "offline" = no external keys (STT/LLM calls are inert);
 #                "real" = uses OPENAI_API_KEY / DEEPGRAM_API_KEY from environment.
 set -uo pipefail
@@ -27,9 +27,11 @@ echo "redis: pid $REDIS_PID"
 
 # ---- Firebase emulators (firestore + auth) ----
 # firebase.json binds emulators to 127.0.0.1 — fine bare-metal, but inside this
-# container the published :9099/:8085 ports DNAT to the container's eth0, not its
-# loopback. Rewrite hosts to 0.0.0.0 into a container-local config so the phone
-# can reach the auth emulator through the published port.
+# container the published :8085 port DNATs to the container's eth0, not its
+# loopback, so the container-local config below rebinds Firestore to 0.0.0.0.
+# The auth emulator stays on loopback: only this backend and the seed script
+# talk to it. Its tokens are unsigned, and phones sign in through
+# /v1/auth/local-login instead (see auth-env.sh).
 #
 # Also adds a "ui" block here rather than in the shared repo-root firebase.json
 # (which scripts/dev-harness and others also read) — the Emulator UI (Firestore
@@ -42,7 +44,7 @@ python - <<'PY'
 import json
 cfg = json.load(open('/app/firebase.json'))
 for name, emu in cfg.get('emulators', {}).items():
-    emu['host'] = '0.0.0.0'
+    emu['host'] = '127.0.0.1' if name == 'auth' else '0.0.0.0'
 cfg.setdefault('emulators', {})['ui'] = {'enabled': True, 'host': '0.0.0.0', 'port': 4000}
 json.dump(cfg, open('/app/firebase.docker.json', 'w'), indent=2)
 PY
@@ -190,6 +192,9 @@ fi
 
 # Where audio goes (bundled omi-audio by default) and the live-STT chain.
 . /app/omi-host/audio-env.sh
+
+# The key that signs login sessions (generated once, kept on the volume).
+. /app/omi-host/auth-env.sh
 
 echo "backend: starting"
 uvicorn main:app --host 0.0.0.0 --port 8000 &
