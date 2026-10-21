@@ -11,6 +11,7 @@ from utils.firebase_admin_runtime import (
     install_google_adc_guard,
 )
 from config.chat_first_e2e_fixture import is_chat_first_e2e_harness_runtime
+from utils.self_hosted_id_tokens import install_self_hosted_id_token_guard
 
 load_backend_env()  # No-op if no env files exist (production); stage + local overrides otherwise
 install_google_adc_guard()
@@ -33,6 +34,8 @@ from utils.stt_cap_cohort import refresh_stt_cap_cohort_forever
 
 prepare_google_credentials()
 install_firebase_auth_mutation_guard()
+# omi-local: the Auth emulator's tokens are unsigned, so accept only our own.
+install_self_hosted_id_token_guard()
 
 from utils.observability.sync_upload import SyncUploadMetricsMiddleware
 from utils.observability.external_lists import ExternalListMetricsMiddleware

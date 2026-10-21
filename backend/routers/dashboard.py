@@ -445,8 +445,8 @@ async def dashboard(request: Request):
     <h2>📱 Phone Setup</h2>
     <p style="font-size: 13px; color: #AAA; line-height: 1.6;">
       1. Install <strong>Omi Local</strong> on your Android phone (no Google account needed — Google Sign-In has been removed)<br>
-      2. On the login screen: LAN → <code>http://{'{BIND_IP}'}:{'{BACKEND_PORT}'}/</code> from the same network as this server,
-         or Remote → this server's public URL (e.g. a Cloudflare Tunnel domain), with the username/password
+      2. On the login screen: Server URL → <code>http://{'{BIND_IP}'}:{'{BACKEND_PORT}'}/</code> from the same network as this server,
+         or this server's public URL (e.g. a Cloudflare Tunnel domain), with the username/password
          from <code>backend/scripts/seed_local_account.py</code><br>
       3. Transcription routes through the <strong>Omi Parakeet</strong> slot automatically — that name is
          just an internal label reused to point at this deployment's own local STT engine

@@ -10,10 +10,12 @@ with it and still expect the billing and backfill gates to hold.
 """
 
 import os
+from typing import Mapping, Optional
 
 
-def is_self_hosted() -> bool:
-    return os.getenv('OMI_SELF_HOSTED', '').strip().lower() in {'1', 'true', 'yes'}
+def is_self_hosted(environ: Optional[Mapping[str, str]] = None) -> bool:
+    source = os.environ if environ is None else environ
+    return source.get('OMI_SELF_HOSTED', '').strip().lower() in {'1', 'true', 'yes'}
 
 
 def modulate_credentials_available() -> bool:

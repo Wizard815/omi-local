@@ -1,23 +1,21 @@
-"""Self-hosted username/password login for internet-exposed deployments.
+"""Self-hosted username/password login: the only way to sign in to omi-local.
 
-Why this exists: the app's LAN-only login (AuthService.signInWithLocalUsername
-in the Dart client, backend/scripts/seed_local_account.py on this side) talks
-directly to the local Firebase Auth *emulator* over a plain, non-standard port
-(9099). That works fine on a LAN but cannot be reached through a normal
-Cloudflare Tunnel (or any HTTPS-only reverse proxy) — the emulator's SDK path
-always builds a bare http://host:port URL, and edge proxies like Cloudflare
-only forward standard HTTPS (443) by hostname.
+The app used to have a second, LAN-only login that signed in to the local
+Firebase Auth *emulator* directly on port 9099. The emulator's tokens are
+unsigned, so a backend that accepted them let anyone who could reach it write
+a token for any uid (see utils/self_hosted_id_tokens.py). Both the LAN and the
+internet now sign in here, and the emulator port is no longer published.
 
-This module is the fully self-hosted fix: credentials are checked here
-(argon2 hash, rate-limited, generic errors — this endpoint is the one thing
-directly reachable from the open internet, so it gets the scrutiny that
-implies), and on success this backend mints its own signed session token —
+Credentials are checked here (argon2 hash, rate-limited, generic errors —
+this endpoint is the one thing directly reachable from the open internet, so
+it gets the scrutiny that implies), and on success this backend mints its own
+signed session token —
 no Firebase project, no Google infrastructure, nothing leaves this box at
 any point. utils/other/endpoints.py's verify_token() recognizes this token
-type alongside Firebase ID tokens, so the rest of the backend (all ~69 files
-that depend on that one function) needs no changes to accept it. The token
-carries the same `uid` the Firebase-emulator LAN account already uses (see
-seed_local_account.py), so both login paths reach the same account and data.
+type, so the rest of the backend (all ~69 files that depend on that one
+function) needs no changes to accept it. The token carries the uid of the
+account's Firebase-emulator user (see seed_local_account.py), so data stored
+under the old LAN login stays with the account.
 """
 
 from __future__ import annotations
@@ -27,6 +25,7 @@ import time
 from dataclasses import dataclass
 from typing import Optional
 
+import httpx
 import jwt
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, InvalidHash
@@ -39,6 +38,7 @@ from database import _client as firestore_client_module
 from database import redis_db
 
 _LOCAL_ACCOUNTS_COLLECTION = 'local_login_accounts'
+_EMULATOR_TIMEOUT_SECONDS = 5.0
 
 # Deliberately expensive (argon2id defaults: 64 MiB memory, 3 iterations) —
 # this endpoint is only ever called a handful of times a day by the real
@@ -81,9 +81,15 @@ def get_local_account(username: str) -> Optional[LocalAccount]:
     return LocalAccount(username=username.strip().lower(), uid=uid, password_hash=password_hash)
 
 
+def local_account_email(username: str) -> str:
+    """The emulator user's email for a username (the app never shows it)."""
+    return f'{username.strip().lower()}@local.omi'
+
+
 def set_local_account(username: str, uid: str, password: str) -> None:
-    """Create or update a local login account. Called only from the seed
-    script (backend/scripts/seed_local_account.py), never from a request."""
+    """Create or update a local login account: from the seed script
+    (backend/scripts/seed_local_account.py), or when an emulator-only account
+    first signs in here (see _emulator_account_uid)."""
     _account_doc(username).set(
         {
             'username': username.strip().lower(),
@@ -157,7 +163,7 @@ def _jwt_secret(*, required: bool) -> Optional[str]:
     if not secret and required:
         raise HTTPException(
             status_code=503,
-            detail='Remote login is not configured on this server: LOCAL_AUTH_JWT_SECRET is not set.',
+            detail='Login is not configured on this server: LOCAL_AUTH_JWT_SECRET is not set.',
         )
     return secret or None
 
@@ -173,7 +179,7 @@ def decode_local_session_token(token: str) -> Optional[str]:
     """Return the uid encoded in a locally-issued session token, or None if
     this isn't one of ours (a real Firebase ID token, for instance — those
     are RS256-signed and simply fail this HS256 decode) or the secret isn't
-    configured (LAN-only deployments) or the token is invalid/expired. Called
+    configured or the token is invalid/expired. Called
     unconditionally by verify_token() for every request, so it must never
     raise — a missing/wrong token here just means "not a local session,
     check something else," not an error."""
@@ -185,6 +191,34 @@ def decode_local_session_token(token: str) -> Optional[str]:
     except jwt.PyJWTError:
         return None
     uid = payload.get('uid')
+    return uid if isinstance(uid, str) and uid else None
+
+
+def _emulator_account_uid(username: str, password: str) -> Optional[str]:
+    """uid of the Firebase Auth emulator user with this username and password.
+
+    Accounts seeded for the old LAN login (or with the old --lan-only flag)
+    exist only in the emulator. Checking the password there lets them sign in
+    here once, after which they have their own entry. Only a self-hosted
+    emulator stack asks, over the container's loopback: the emulator's port is
+    not published.
+    """
+    from utils.self_hosted_id_tokens import self_hosted_id_token_guard_enabled
+
+    if not self_hosted_id_token_guard_enabled():
+        return None
+    host = os.environ['FIREBASE_AUTH_EMULATOR_HOST'].strip()
+    try:
+        response = httpx.post(
+            f'http://{host}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=omi-local',
+            json={'email': local_account_email(username), 'password': password, 'returnSecureToken': True},
+            timeout=_EMULATOR_TIMEOUT_SECONDS,
+        )
+    except httpx.HTTPError:
+        return None
+    if response.status_code != 200:
+        return None
+    uid = response.json().get('localId')
     return uid if isinstance(uid, str) and uid else None
 
 
@@ -206,6 +240,13 @@ def authenticate_local_account(username: str, password: str, *, client_ip: str) 
         '$argon2id$v=19$m=65536,t=3,p=4$' 'c29tZXNhbHR2YWx1ZTEyMzQ1Njc4$c29tZWhhc2h2YWx1ZTEyMzQ1Njc4OTAxMjM0NTY3ODkw'
     )
     password_ok = verify_password(password, account.password_hash if account else dummy_hash)
+
+    if account is None:
+        emulator_uid = _emulator_account_uid(username, password)
+        if emulator_uid is not None:
+            set_local_account(username, emulator_uid, password)
+            _clear_rate_limit(client_ip=client_ip, username=username)
+            return create_remote_login_token(emulator_uid)
 
     if not account or not password_ok:
         raise HTTPException(status_code=401, detail='Invalid username or password')
