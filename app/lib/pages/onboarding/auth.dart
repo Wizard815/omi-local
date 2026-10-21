@@ -26,13 +26,6 @@ class _AuthComponentState extends State<AuthComponent> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  /// LAN mode talks to the Auth emulator directly (server IP + :9099);
-  /// Remote mode goes through /v1/auth/local-login instead, since the
-  /// emulator's raw port can't be reached through a Cloudflare-Tunnel-style
-  /// HTTPS proxy. See AuthenticationProvider.signInLocalAccount vs
-  /// signInRemoteAccount for what actually differs.
-  bool _remoteLogin = false;
-
   @override
   void initState() {
     super.initState();
@@ -53,15 +46,16 @@ class _AuthComponentState extends State<AuthComponent> {
 
   bool get _canSubmitLogin => _usernameController.text.trim().isNotEmpty && _passwordController.text.isNotEmpty;
 
+  /// The same server URL works on the LAN (http://<server IP>:8000/) and
+  /// through a tunnel; either way the server checks the password itself
+  /// (AuthenticationProvider.signInRemoteAccount).
   void _submitLogin(AuthenticationProvider provider) {
-    final serverUrl = _serverUrlController.text.trim();
-    final username = _usernameController.text.trim();
-    final password = _passwordController.text;
-    if (_remoteLogin) {
-      provider.signInRemoteAccount(serverUrl, username, password, widget.onSignIn);
-    } else {
-      provider.signInLocalAccount(serverUrl, username, password, widget.onSignIn);
-    }
+    provider.signInRemoteAccount(
+      _serverUrlController.text.trim(),
+      _usernameController.text.trim(),
+      _passwordController.text,
+      widget.onSignIn,
+    );
   }
 
   InputDecoration _fieldDecoration({required String label, required String hint, required IconData icon}) {
@@ -169,26 +163,6 @@ class _AuthComponentState extends State<AuthComponent> {
               // a shared harness user, so the same account is reachable from
               // any device and survives an app relaunch.
               if (provider.isLocalDevProfile) ...[
-                Row(
-                  children: [
-                    Expanded(
-                      child: _LoginModeButton(
-                        label: 'Local network',
-                        selected: !_remoteLogin,
-                        onTap: () => setState(() => _remoteLogin = false),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _LoginModeButton(
-                        label: 'Remote (internet)',
-                        selected: _remoteLogin,
-                        onTap: () => setState(() => _remoteLogin = true),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
                 TextField(
                   controller: _usernameController,
                   style: TextStyle(color: OmiColors.textPrimary, fontSize: 14, fontFamily: 'Manrope'),
@@ -272,39 +246,6 @@ class _AuthComponentState extends State<AuthComponent> {
           ),
         );
       },
-    );
-  }
-}
-
-class _LoginModeButton extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _LoginModeButton({required this.label, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? OmiColors.accent : OmiColors.surface2,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? OmiColors.accent : OmiColors.border),
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: selected ? OmiColors.onAccent : OmiColors.textSecondary,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            fontFamily: 'Manrope',
-          ),
-        ),
-      ),
     );
   }
 }

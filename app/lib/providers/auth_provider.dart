@@ -181,62 +181,16 @@ class AuthenticationProvider extends BaseProvider {
 
   bool get _hasFirebaseUser => _auth.currentUser != null && !_auth.currentUser!.isAnonymous;
 
-  /// Self-hosted LAN login: server URL + username + password, provisioned
-  /// once on the server (see backend/scripts/seed_local_account.py) rather
-  /// than created in-app. Talks to the Auth emulator directly on its own
-  /// port — works on a LAN, but can't be reached through a standard
-  /// Cloudflare-Tunnel-style HTTPS proxy (see [signInRemoteAccount] for that
-  /// case). A real Firebase user either way — the same username/password
-  /// reaches the same account from any device, and it satisfies
-  /// AuthService.isSignedIn() (which never treats anonymous sessions as
-  /// signed in) so a relaunch doesn't bounce back to the login screen.
-  Future<void> signInLocalAccount(String serverUrl, String username, String password, Function() onSignIn) async {
-    if (loading) return;
-    setLoadingState(true);
-    try {
-      if (serverUrl.isNotEmpty) {
-        final normalized = _normalizeServerUrl(serverUrl);
-        SharedPreferencesUtil().customApiBaseUrl = normalized;
-        Env.overrideApiBaseUrl(normalized);
-      }
-
-      final uri = Uri.tryParse(SharedPreferencesUtil().customApiBaseUrl);
-      if (uri != null && uri.host.isNotEmpty) {
-        try {
-          await _auth.useAuthEmulator(uri.host, Env.firebaseAuthEmulatorPort);
-        } catch (e) {
-          Logger.debug('Auth emulator already configured: $e');
-        }
-      }
-
-      final credential = await AuthService.instance.signInWithLocalUsername(username, password);
-      if (credential != null && _hasFirebaseUser) {
-        await _signIn(onSignIn, credential: credential, authProvider: 'local');
-      } else {
-        AppSnackbar.showSnackbarError(
-          globalNavigatorKey.currentContext?.l10n.authenticationFailed ?? 'Authentication failed. Please try again.',
-        );
-      }
-    } on FirebaseAuthException catch (e) {
-      Logger.debug('Local account sign in error: ${e.code}');
-      AppSnackbar.showSnackbarError(e.message ?? 'Sign in failed. Please try again.');
-    } catch (e) {
-      Logger.debug('Local account sign in error: $e');
-      AppSnackbar.showSnackbarError(
-        globalNavigatorKey.currentContext?.l10n.authenticationFailed ?? 'Authentication failed. Please try again.',
-      );
-    }
-    setLoadingState(false);
-  }
-
-  /// Remote (internet-facing) counterpart to [signInLocalAccount] — same
-  /// server URL + username + password, but routed through the backend's own
-  /// /v1/auth/local-login instead of talking to the Auth emulator's port
-  /// directly, and never touching FirebaseAuth at all (see
-  /// AuthService.signInWithRemoteAccount / establishRemoteSession — the
-  /// session token this backend signs itself, no Firebase/Google
-  /// involvement). Uses [_completeRemoteSignIn] instead of [_signIn], which
-  /// requires a real Firebase UserCredential this path never has.
+  /// Self-hosted login: server URL + username + password, provisioned once on
+  /// the server (backend/scripts/seed_local_account.py) rather than created
+  /// in-app. The backend's /v1/auth/local-login checks the password and
+  /// returns a session token it signs itself; FirebaseAuth is never touched
+  /// (see AuthService.signInWithRemoteAccount / establishRemoteSession). The
+  /// same call serves the LAN and a tunnel. There used to be a LAN-only login
+  /// that signed in to the server's Firebase Auth emulator, whose unsigned
+  /// tokens the server now refuses. Uses [_completeRemoteSignIn] instead of
+  /// [_signIn], which requires a real Firebase UserCredential this path never
+  /// has.
   Future<void> signInRemoteAccount(String serverUrl, String username, String password, Function() onSignIn) async {
     if (loading) return;
     setLoadingState(true);

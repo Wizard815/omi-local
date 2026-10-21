@@ -91,6 +91,7 @@ import 'package:omi/providers/usage_provider.dart';
 import 'package:omi/providers/user_provider.dart';
 import 'package:omi/providers/voice_recorder_provider.dart';
 import 'package:omi/providers/phone_call_provider.dart';
+import 'package:omi/services/auth/emulator_login_retirement.dart';
 import 'package:omi/services/auth_service.dart';
 import 'package:omi/ui/omi_theme.dart';
 import 'package:omi/ui/omi_tokens.dart';
@@ -226,23 +227,19 @@ Future<void> _reportBootCrash(
   }
 }
 
-/// Only configures the auth emulator at startup if the user has a saved
-/// customApiBaseUrl from a previous session. Otherwise the login page does it.
-Future<void> _useAuthEmulatorFromSavedServerUrl() async {
+/// See [retireEmulatorLoginSession]: a session from the old emulator login is
+/// signed out before anything tries to use it.
+Future<void> _retireEmulatorLoginSession() async {
   try {
-    final sp = await SharedPreferences.getInstance();
-    final savedUrl = sp.getString('customApiBaseUrl');
-    if (savedUrl != null && savedUrl.isNotEmpty) {
-      final uri = Uri.tryParse(savedUrl);
-      if (uri != null && uri.host.isNotEmpty) {
-        final host = uri.host;
-        final port = Env.firebaseAuthEmulatorPort;
-        await FirebaseAuth.instance.useAuthEmulator(host, port);
-        debugPrint('Auth emulator configured from saved URL: $host:$port');
-      }
-    }
-  } catch (_) {
-    // SharedPreferences not available yet — login page will configure later
+    final auth = FirebaseAuth.instance;
+    await retireEmulatorLoginSession(
+      currentUserEmail: auth.currentUser?.email,
+      savedServerUrl: (await SharedPreferences.getInstance()).getString('customApiBaseUrl') ?? '',
+      pointAtServer: (host) => auth.useAuthEmulator(host, Env.firebaseAuthEmulatorPort),
+      signOut: auth.signOut,
+    );
+  } catch (e) {
+    debugPrint('Could not retire the old emulator login session: $e');
   }
 }
 
@@ -299,12 +296,11 @@ Future _init() async {
     );
   }
 
-  // Auth emulator setup: deferred to login page for local_dev.
-  // The user enters their server URL at login and the emulator host
-  // is derived from it at sign-in time. This keeps the APK portable —
-  // no hardcoded IP, works for any self-hosted backend.
+  // Self-hosted builds sign in through the server (/v1/auth/local-login), never
+  // the Auth emulator; only a session left over from the old emulator login
+  // needs handling here.
   if (Env.profile.usesFirebaseAuthEmulator) {
-    await PhysicalQualification.startupStage('auth_emulator', _useAuthEmulatorFromSavedServerUrl);
+    await PhysicalQualification.startupStage('auth_emulator', _retireEmulatorLoginSession);
   }
 
   await PhysicalQualification.startupStage('platform_services', PlatformManager.initializeServices);
