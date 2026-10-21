@@ -4,12 +4,15 @@ Seam: model_config._redis_model (the dashboard model picker's Redis lookups)
 and the OPENAI_BASE_URL / OMI_LOCAL_MODEL / LOCAL_LLM_MODEL env vars.
 """
 
+from unittest.mock import MagicMock
+
 import pytest
 
+import utils.llm.clients as clients
 import utils.llm.model_config as model_config
 from utils.llm import providers
 from utils.llm.clients import get_llm
-from utils.llm.gateway_client import GatewayContextChatOpenAI
+from utils.llm.gateway_client import LLM_GATEWAY_FEATURE_MODE_ENV_VAR, GatewayContextChatOpenAI
 
 
 @pytest.fixture
@@ -74,3 +77,42 @@ def test_hosted_mode_still_uses_the_gateway(monkeypatch, fresh_llm_clients):
     monkeypatch.setattr(model_config, '_redis_model', lambda kind: None)
 
     assert isinstance(get_llm('conv_structure'), GatewayContextChatOpenAI)
+
+
+def test_local_mode_embeddings_follow_the_dashboard_pick(local_mode, fresh_llm_clients):
+    """Self-hosted: the embedding model is re-read per call, so a dashboard swap needs no restart."""
+    proxy = clients._OpenAIEmbeddingsProxy('text-embedding-3-large', None, {})
+    local_mode['embedding'] = 'llama/nomic-embed'
+
+    first = proxy._default_client()
+    assert first.model == 'llama/nomic-embed'
+    assert proxy._default_client() is first
+
+    local_mode['embedding'] = 'llama/bge-m3'
+    assert proxy._default_client().model == 'llama/bge-m3'
+
+
+def test_hosted_mode_embeddings_keep_the_constructed_client(monkeypatch):
+    """Regression: the per-call re-resolution ran outside local mode too and replaced
+    the configured client with a fresh text-embedding-3-large one."""
+    monkeypatch.delenv('OPENAI_BASE_URL', raising=False)
+    monkeypatch.setenv('LOCAL_EMBEDDING_MODEL', 'llama/nomic-embed')
+    monkeypatch.setattr(model_config, '_redis_model', lambda kind: None)
+    default = MagicMock()
+    proxy = clients._OpenAIEmbeddingsProxy('text-embedding-3-small', default, {})
+
+    assert proxy._default_client() is default
+
+
+def test_local_mode_gemini_embed_query_without_a_key_uses_local_embeddings(local_mode, monkeypatch):
+    """A self-hosted stack has no Gemini key: screen-activity search embeds locally, never via Google."""
+    monkeypatch.delenv('GEMINI_API_KEY', raising=False)
+    monkeypatch.delenv(LLM_GATEWAY_FEATURE_MODE_ENV_VAR, raising=False)
+    monkeypatch.setattr(clients, 'get_byok_key', lambda provider: None)
+    monkeypatch.setattr(clients.httpx, 'post', MagicMock(side_effect=AssertionError('Google must not be called')))
+    local_embeddings = MagicMock()
+    local_embeddings.embed_query.return_value = [0.4, 0.5]
+    monkeypatch.setattr(clients, 'embeddings', local_embeddings)
+
+    assert clients.gemini_embed_query('standup notes') == [0.4, 0.5]
+    local_embeddings.embed_query.assert_called_once_with('standup notes')
