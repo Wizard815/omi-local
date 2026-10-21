@@ -110,6 +110,7 @@ six==1.16.0
 sniffio==1.3.1
 sortedcontainers==2.4.0
 starlette==0.49.3
+staticmap==0.5.7
 stripe==11.3.0
 tenacity==8.2.3
 tiktoken==0.7.0
