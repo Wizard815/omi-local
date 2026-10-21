@@ -153,6 +153,19 @@ PHOTO_PROFILES = (
         start_date=[FROZEN_NOW],
         end_date=[FROZEN_LATER],
     ),
+    # omi-local end-of-day review: one local day (load_day, discarded included)
+    # and the recent-days pending scan.
+    _profile(
+        'day-review-load',
+        photo=True,
+        date_field=['started_at'],
+        include_discarded=[True],
+        start_date=[FROZEN_NOW],
+        end_date=[FROZEN_LATER],
+    ),
+    _profile(
+        'day-review-pending', photo=True, date_field=['started_at'], start_date=[FROZEN_NOW], end_date=[FROZEN_LATER]
+    ),
     _profile(
         'calendar-capture-gaps',
         photo=True,
