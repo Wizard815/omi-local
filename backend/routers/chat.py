@@ -366,7 +366,7 @@ def _record_chat_quota_question_best_effort(
         logger.exception('Failed to record chat quota question source=%s uid=%s', source, uid)
 
 
-def _release_chat_quota_question_best_effort(
+async def _release_chat_quota_question_best_effort(
     uid: str,
     *,
     idempotency_key: str,
@@ -376,7 +376,7 @@ def _release_chat_quota_question_best_effort(
     A release failure must never mask the original stream failure, and a retry
     is idempotent on the same event doc."""
     try:
-        llm_usage_db.release_chat_quota_question(uid, idempotency_key)
+        await run_blocking(db_executor, llm_usage_db.release_chat_quota_question, uid, idempotency_key)
     except Exception:
         logger.exception('Failed to release chat quota question uid=%s', uid)
 
@@ -385,6 +385,12 @@ def _required_chat_quota_provider() -> str | None:
     # Direct agent chat consumes managed Anthropic unless an Anthropic BYOK key
     # is on the request. Other BYOK providers must stay metered on this path.
     return 'anthropic' if get_chat_agent_route() == CHAT_AGENT_ROUTE_DIRECT else None
+
+
+def _done_frame_response(message: ResponseMessage) -> StreamingResponse:
+    """A one-frame SSE reply for answers that never reach the model."""
+    encoded = base64.b64encode(bytes(message.model_dump_json(), 'utf-8')).decode('utf-8')
+    return StreamingResponse(iter([f"done: {encoded}\n\n"]), media_type="text/event-stream")
 
 
 @router.post('/v2/messages', tags=['chat'], response_model=ResponseMessage)
@@ -423,11 +429,7 @@ def send_message(
             ChatSession(**_quota_target.session) if _quota_target.session else None,
         )
 
-        def _quota_exceeded_stream():
-            encoded = base64.b64encode(bytes(response_msg.model_dump_json(), 'utf-8')).decode('utf-8')
-            yield f"done: {encoded}\n\n"
-
-        return StreamingResponse(_quota_exceeded_stream(), media_type="text/event-stream")
+        return _done_frame_response(response_msg)
 
     compat_app_id = app_id or plugin_id
     logger.info(f'send_message {sanitize_pii(data.text)} {compat_app_id} {uid}')
@@ -484,11 +486,7 @@ def send_message(
         logger.exception('Failed to record chat quota question source=v2_messages uid=%s', uid)
         response_msg = _build_quota_accounting_unavailable_reply(compat_app_id)
 
-        def _quota_accounting_unavailable_stream():
-            encoded = base64.b64encode(bytes(response_msg.model_dump_json(), 'utf-8')).decode('utf-8')
-            yield f"done: {encoded}\n\n"
-
-        return StreamingResponse(_quota_accounting_unavailable_stream(), media_type="text/event-stream")
+        return _done_frame_response(response_msg)
 
     if chat_session:
         chat_db.add_message_to_chat_session(uid, chat_session.id, message.id)
@@ -676,6 +674,7 @@ def send_message(
                 context=data.context,
                 platform=x_app_platform,
                 client_kind=mobile_journey_attempt.client_kind,
+                model_shortcut=data.model_shortcut,
             ):
                 if chunk:
                     if chunk.startswith('error: '):
@@ -709,7 +708,7 @@ def send_message(
                         )
                     # The turn produced no answer: release the question charged
                     # up front so the user is not billed for a failed turn.
-                    _release_chat_quota_question_best_effort(uid, idempotency_key=quota_idempotency_key)
+                    await _release_chat_quota_question_best_effort(uid, idempotency_key=quota_idempotency_key)
                     yield await emit_stream_error_fallback(
                         uid,
                         app_id_from_app,
@@ -725,7 +724,7 @@ def send_message(
             raise
         except Exception:
             journey_attempt.finish('failure')
-            _release_chat_quota_question_best_effort(uid, idempotency_key=quota_idempotency_key)
+            await _release_chat_quota_question_best_effort(uid, idempotency_key=quota_idempotency_key)
             raise
         finally:
             reset_usage_context(usage_token)

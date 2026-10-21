@@ -37,7 +37,7 @@ from typing import Any
 import httpx
 import redis as redis_lib
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 
 # ── config ──────────────────────────────────────────────────────────────
 
@@ -55,21 +55,25 @@ if _or_key:
 DEFAULT_KEY = os.environ.get("OPENAI_API_KEY", "local").strip()
 
 # ── Redis (optional — for dashboard-managed allowlist) ─────────────────
+#
+# Connected lazily, never pinged at import: in docker-compose.yml this
+# container starts BEFORE omi-local (omi-local depends_on omi-proxy), and
+# omi-local is what runs Redis. A ping-at-import failed on every cold start
+# and left the proxy on the env allowlist forever, so the dashboard's
+# "save allowlist" never reached it. redis-py connects on first command, and
+# every read below is guarded, so an unreachable Redis just falls back to env.
 
 _redis: Any = None
 _redis_host = os.environ.get("REDIS_DB_HOST", "").strip()
 if _redis_host:
-    try:
-        _redis = redis_lib.Redis(
-            host=_redis_host,
-            port=int(os.environ.get("REDIS_DB_PORT", "6379")),
-            password=os.environ.get("REDIS_DB_PASSWORD", "") or None,
-            socket_connect_timeout=3,
-            health_check_interval=30,
-        )
-        _redis.ping()
-    except Exception:
-        _redis = None  # fail-open: env fallback works without Redis
+    _redis = redis_lib.Redis(
+        host=_redis_host,
+        port=int(os.environ.get("REDIS_DB_PORT", "6379")),
+        password=os.environ.get("REDIS_DB_PASSWORD", "") or None,
+        socket_connect_timeout=2,
+        socket_timeout=2,
+        health_check_interval=30,
+    )
 
 ALLOWLIST_REDIS_KEY = "omi:model:allow"
 
@@ -92,21 +96,31 @@ def _build_allowlist(raw: str) -> list[tuple[str, bool]]:
     return entries
 
 
+def _read_redis_allowlist() -> str | None:
+    """The dashboard-saved allowlist, or None when Redis is unset/unreachable/empty."""
+    if _redis is None:
+        return None
+    try:
+        raw = _redis.get(ALLOWLIST_REDIS_KEY)
+    except Exception:
+        return None
+    return raw.decode("utf-8") if raw else None
+
+
 def _read_allowlist() -> str:
     """Read allowlist string: Redis → env → empty (show all)."""
-    if _redis:
-        try:
-            raw = _redis.get(ALLOWLIST_REDIS_KEY)
-            if raw:
-                return raw.decode("utf-8")
-        except Exception:
-            pass
-    return os.environ.get("MODEL_ALLOW", "")
+    return _read_redis_allowlist() or os.environ.get("MODEL_ALLOW", "")
 
 
-def _model_allowed(raw_id: str) -> bool:
-    """Return True if this raw model ID passes the allowlist filter."""
-    allowlist = _build_allowlist(_read_allowlist())
+def _model_allowed(raw_id: str, allowlist: list[tuple[str, bool]] | None = None) -> bool:
+    """Return True if this raw model ID passes the allowlist filter.
+
+    Pass ``allowlist`` when filtering many models: reading it once per refresh
+    instead of once per model keeps a slow Redis from multiplying into the
+    model-list latency.
+    """
+    if allowlist is None:
+        allowlist = _build_allowlist(_read_allowlist())
     if not allowlist:
         return True  # no filter = show everything
     return any(
@@ -146,7 +160,7 @@ def _untag(name: str) -> tuple[str, str]:
     return "", name
 
 
-async def _fetch_models(tag: str, base_url: str) -> list[dict]:
+async def _fetch_models(tag: str, base_url: str, allowlist: list[tuple[str, bool]]) -> list[dict]:
     try:
         headers: dict[str, str] = {}
         if tag == "or" and _or_key:
@@ -162,7 +176,7 @@ async def _fetch_models(tag: str, base_url: str) -> list[dict]:
             models: list[dict] = []
             for m in data.get("data", []):
                 raw_id = m.get("id", "unknown")
-                if not _model_allowed(raw_id):
+                if not _model_allowed(raw_id, allowlist):
                     continue
                 models.append({
                     "id": _tagged_name(tag, raw_id),
@@ -181,7 +195,8 @@ async def refresh_models() -> list[dict]:
         if time.monotonic() < _cache_expiry and _merged_models:
             return _merged_models
 
-        tasks = [_fetch_models(tag, url) for tag, url in _upstreams.items()]
+        allowlist = _build_allowlist(_read_allowlist())
+        tasks = [_fetch_models(tag, url, allowlist) for tag, url in _upstreams.items()]
         results = await asyncio.gather(*tasks)
 
         merged: list[dict] = []
@@ -214,7 +229,8 @@ async def health():
         except Exception as e:
             backends[tag] = str(e)
 
-    allow_raw = _read_allowlist()
+    redis_allow = _read_redis_allowlist()
+    allow_raw = redis_allow or os.environ.get("MODEL_ALLOW", "")
     allowlist = _build_allowlist(allow_raw)
 
     return {
@@ -222,7 +238,7 @@ async def health():
         "upstreams": backends,
         "model_count": len(_merged_models),
         "allowlist": [e[0] + ("*" if e[1] else "") for e in allowlist] if allowlist else "all",
-        "allowlist_source": "redis" if (_redis and _redis.get(ALLOWLIST_REDIS_KEY)) else ("env" if allow_raw else "none"),
+        "allowlist_source": "redis" if redis_allow else ("env" if allow_raw else "none"),
     }
 
 
@@ -243,6 +259,37 @@ async def reload_allowlist():
     """
     _flush_cache()
     return {"ok": True, "note": "Cache flushed — next /v1/models will re-filter"}
+
+
+def _upstream_unreachable(tag: str, exc: Exception) -> JSONResponse:
+    return JSONResponse(
+        {"error": {"message": f"upstream '{tag}' unreachable: {type(exc).__name__}", "type": "upstream_error"}},
+        status_code=502,
+    )
+
+
+async def _post_upstream(tag: str, url: str, payload: dict, headers: dict[str, str]) -> Response:
+    """Non-streaming POST that relays the upstream's status and body as-is.
+
+    An unreachable upstream, or an error body that is not JSON (llama-swap and
+    reverse proxies answer in plain text), used to raise inside the handler, so
+    the caller got a bare "500 Internal Server Error" and the real reason — a
+    model that failed to load, a backend that is down — was lost.
+    """
+    try:
+        async with httpx.AsyncClient(timeout=600.0) as client:
+            resp = await client.post(url, json=payload, headers=headers)
+    except Exception as exc:  # noqa: BLE001 - relayed to the caller as a 502
+        return _upstream_unreachable(tag, exc)
+    try:
+        content = json.loads(resp.content) if resp.content else {}
+    except json.JSONDecodeError:
+        return Response(
+            content=resp.content,
+            status_code=resp.status_code,
+            media_type=resp.headers.get("content-type", "text/plain"),
+        )
+    return JSONResponse(content=content, status_code=resp.status_code)
 
 
 @app.post("/v1/chat/completions")
@@ -280,35 +327,47 @@ async def chat_completions(request: Request):
         # generator runs — raising "Cannot send a request, as the client has
         # been closed." on the first chunk. The caller sees a truncated body
         # (RemoteProtocolError: incomplete chunked read) and falls back to a
-        # canned reply. Open and close the client inside the generator instead.
+        # canned reply. The generator owns closing the client instead.
+        #
+        # The upstream request is sent BEFORE returning, though, so an upstream
+        # error keeps its real status: streaming the error JSON inside a 200
+        # text/event-stream (the old behavior) made the OpenAI SDK fail to parse
+        # it as SSE instead of raising APIStatusError, which is what the
+        # backend's retry/fallback logic keys on.
+        client = httpx.AsyncClient(timeout=600.0)
+        try:
+            upstream_request = client.build_request(
+                "POST",
+                f"{base_url.rstrip('/')}/chat/completions",
+                json=payload,
+                headers=headers,
+            )
+            resp = await client.send(upstream_request, stream=True)
+        except Exception as exc:
+            await client.aclose()
+            return _upstream_unreachable(tag, exc)
+
+        if resp.status_code >= 400:
+            body_bytes = await resp.aread()
+            await resp.aclose()
+            await client.aclose()
+            return Response(
+                content=body_bytes,
+                status_code=resp.status_code,
+                media_type=resp.headers.get("content-type", "application/json"),
+            )
+
         async def _stream():
-            async with httpx.AsyncClient(timeout=600.0) as client:
-                async with client.stream(
-                    "POST",
-                    f"{base_url.rstrip('/')}/chat/completions",
-                    json=payload,
-                    headers=headers,
-                ) as resp:
-                    if resp.status_code >= 400:
-                        body_bytes = await resp.aread()
-                        yield body_bytes
-                        return
-                    async for line in resp.aiter_lines():
-                        yield line + "\n"
+            try:
+                async for line in resp.aiter_lines():
+                    yield line + "\n"
+            finally:
+                await resp.aclose()
+                await client.aclose()
 
         return StreamingResponse(_stream(), media_type="text/event-stream")
 
-    async with httpx.AsyncClient(timeout=600.0) as client:
-        resp = await client.post(
-            f"{base_url.rstrip('/')}/chat/completions",
-            json=payload,
-            headers=headers,
-        )
-        content = resp.content
-        return JSONResponse(
-            content=json.loads(content) if content else {},
-            status_code=resp.status_code,
-        )
+    return await _post_upstream(tag, f"{base_url.rstrip('/')}/chat/completions", payload, headers)
 
 
 @app.post("/v1/embeddings")
@@ -340,17 +399,7 @@ async def embeddings(request: Request):
     else:
         headers["Authorization"] = f"Bearer {DEFAULT_KEY}"
 
-    async with httpx.AsyncClient(timeout=600.0) as client:
-        resp = await client.post(
-            f"{base_url.rstrip('/')}/embeddings",
-            json=payload,
-            headers=headers,
-        )
-        content = resp.content
-        return JSONResponse(
-            content=json.loads(content) if content else {},
-            status_code=resp.status_code,
-        )
+    return await _post_upstream(tag, f"{base_url.rstrip('/')}/embeddings", payload, headers)
 
 
 if __name__ == "__main__":

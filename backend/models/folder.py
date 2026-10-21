@@ -24,6 +24,9 @@ class Folder(BaseModel):
         default=None, description="Maps to CategoryEnum value for backwards compatibility"
     )
     conversation_count: int = 0
+    parent_id: Optional[str] = Field(
+        default=None, description="Containing folder for nested folders; None means top level"
+    )
 
 
 class CreateFolderRequest(BaseModel):
@@ -37,6 +40,7 @@ class CreateFolderRequest(BaseModel):
     )
     color: Optional[str] = None
     icon: Optional[str] = None
+    parent_id: Optional[str] = Field(default=None, description="Create inside this folder; omit for top level")
 
 
 class UpdateFolderRequest(BaseModel):
@@ -47,6 +51,9 @@ class UpdateFolderRequest(BaseModel):
     color: Optional[str] = None
     icon: Optional[str] = None
     order: Optional[int] = None
+    parent_id: Optional[str] = Field(
+        default=None, description="Move into this folder; send null explicitly to move to the top level"
+    )
 
 
 class MoveConversationRequest(BaseModel):

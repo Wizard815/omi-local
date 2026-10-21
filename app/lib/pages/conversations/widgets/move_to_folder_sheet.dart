@@ -8,6 +8,7 @@ import 'package:omi/backend/schema/folder.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 import 'package:omi/providers/folder_provider.dart';
 import 'package:omi/utils/folders/folder_icon_mapper.dart';
+import 'package:omi/utils/folders/folder_tree.dart';
 import 'package:omi/utils/responsive/responsive_helper.dart';
 
 class MoveToFolderSheet extends StatelessWidget {
@@ -79,15 +80,20 @@ class MoveToFolderSheet extends StatelessWidget {
                   child: ListView.builder(
                     shrinkWrap: true,
                     padding: const EdgeInsets.only(bottom: 20),
-                    itemCount: provider.folders.length,
+                    // Nested folders: tree order, each subfolder indented under its parent.
+                    itemCount: folderTreeOrder(provider.folders).length,
                     itemBuilder: (context, index) {
-                      final folder = provider.folders[index];
+                      final entry = folderTreeOrder(provider.folders)[index];
+                      final folder = entry.folder;
                       final isCurrentFolder = folder.id == currentFolderId;
 
-                      return _FolderListItem(
-                        folder: folder,
-                        isCurrentFolder: isCurrentFolder,
-                        onTap: isCurrentFolder ? null : () => _moveToFolder(context, provider, folder.id),
+                      return Padding(
+                        padding: EdgeInsets.only(left: 20.0 * entry.depth),
+                        child: _FolderListItem(
+                          folder: folder,
+                          isCurrentFolder: isCurrentFolder,
+                          onTap: isCurrentFolder ? null : () => _moveToFolder(context, provider, folder.id),
+                        ),
                       );
                     },
                   ),

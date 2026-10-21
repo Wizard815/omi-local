@@ -640,6 +640,11 @@ class SharedPreferencesUtil {
 
   set showDiscardedMemories(bool value) => saveBool('showDiscardedMemories', value);
 
+  /// Chat model shortcut kept on by "/name toggle" in Ask Omi ('' = off).
+  String get stickyChatModelShortcut => getString('stickyChatModelShortcut', defaultValue: '');
+
+  set stickyChatModelShortcut(String value) => saveString('stickyChatModelShortcut', value);
+
   // Show short conversations - default is false (hidden)
   bool get showShortConversations => getBool('showShortConversations', defaultValue: false);
 

@@ -11829,5 +11829,410 @@
     "processingTakingLonger": "Still working — this is taking longer than usual.",
     "@processingTakingLonger": {
         "description": "Shown on the homepage processing card after ~2 minutes with a Retry action (#5481)."
+    },
+    "dayReviewTitle": "Day review",
+    "@dayReviewTitle": {
+        "description": "Day review page title"
+    },
+    "dayReviewsTitle": "Day reviews",
+    "@dayReviewsTitle": {
+        "description": "Day reviews list page title"
+    },
+    "dayReviewLoadFailed": "Couldn't load this day",
+    "@dayReviewLoadFailed": {
+        "description": "Day review load error"
+    },
+    "dayReviewActionFailed": "Something went wrong. Try again.",
+    "@dayReviewActionFailed": {
+        "description": "Day review action error"
+    },
+    "dayReviewSortHint": "Star the conversations you want to keep. Everything else becomes one day summary you can correct.",
+    "@dayReviewSortHint": {
+        "description": "Day review sort instructions"
+    },
+    "dayReviewProcessing": "{count, plural, =1{1 conversation is still processing and is not included.} other{{count} conversations are still processing and are not included.}}",
+    "@dayReviewProcessing": {
+        "description": "Day review: conversations still processing",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewEmpty": "No finished conversations on this day.",
+    "@dayReviewEmpty": {
+        "description": "Day review: empty day"
+    },
+    "dayReviewKeepTooltip": "Keep as a conversation",
+    "@dayReviewKeepTooltip": {
+        "description": "Star button tooltip in day review"
+    },
+    "dayReviewFinalizeButton": "Keep {kept} · Summarize {rolled}",
+    "@dayReviewFinalizeButton": {
+        "description": "Day review finalize button",
+        "placeholders": {
+            "kept": {
+                "type": "int"
+            },
+            "rolled": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewConfirmTitle": "Build the day summary?",
+    "@dayReviewConfirmTitle": {
+        "description": "Day review finalize confirmation title"
+    },
+    "dayReviewConfirmBody": "{count, plural, =1{1 conversation will be folded into the day summary and leave your conversation list. You can undo this with Reopen.} other{{count} conversations will be folded into the day summary and leave your conversation list. You can undo this with Reopen.}}",
+    "@dayReviewConfirmBody": {
+        "description": "Day review finalize confirmation body",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewConfirmAction": "Summarize",
+    "@dayReviewConfirmAction": {
+        "description": "Day review finalize confirmation button"
+    },
+    "dayReviewWriting": "Writing your day summary… this can take a minute on a local model.",
+    "@dayReviewWriting": {
+        "description": "Day review busy: generating"
+    },
+    "dayReviewApplying": "Rewriting the summary with your corrections…",
+    "@dayReviewApplying": {
+        "description": "Day review busy: regenerating"
+    },
+    "dayReviewReopening": "Restoring the conversations…",
+    "@dayReviewReopening": {
+        "description": "Day review busy: reopening"
+    },
+    "dayReviewReopenTitle": "Reopen this day?",
+    "@dayReviewReopenTitle": {
+        "description": "Reopen confirmation title"
+    },
+    "dayReviewReopenBody": "The summarized conversations come back to your list and this summary (with its corrections) is deleted.",
+    "@dayReviewReopenBody": {
+        "description": "Reopen confirmation body"
+    },
+    "dayReviewReopenAction": "Reopen day",
+    "@dayReviewReopenAction": {
+        "description": "Reopen action"
+    },
+    "dayReviewCopy": "Copy summary",
+    "@dayReviewCopy": {
+        "description": "Copy button tooltip"
+    },
+    "dayReviewCopied": "Day summary copied",
+    "@dayReviewCopied": {
+        "description": "Snackbar after copying the summary"
+    },
+    "dayReviewUntitled": "Untitled conversation",
+    "@dayReviewUntitled": {
+        "description": "Conversation without a title"
+    },
+    "dayReviewCounts": "{rolled} summarized · {kept} kept",
+    "@dayReviewCounts": {
+        "description": "Day review header counts",
+        "placeholders": {
+            "rolled": {
+                "type": "int"
+            },
+            "kept": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewEditHint": "Select text to correct or redact it. Use + to add a paragraph.",
+    "@dayReviewEditHint": {
+        "description": "Day review editing hint"
+    },
+    "dayReviewCorrectAction": "Correct",
+    "@dayReviewCorrectAction": {
+        "description": "Text selection menu: attach a correction"
+    },
+    "dayReviewRedactAction": "Redact",
+    "@dayReviewRedactAction": {
+        "description": "Text selection menu: redact"
+    },
+    "dayReviewCorrectTitle": "Correction",
+    "@dayReviewCorrectTitle": {
+        "description": "Correction dialog title"
+    },
+    "dayReviewCorrectHint": "What is right? e.g. \"It was Wednesday, not Tuesday\"",
+    "@dayReviewCorrectHint": {
+        "description": "Correction dialog hint"
+    },
+    "dayReviewAddParagraph": "Add paragraph",
+    "@dayReviewAddParagraph": {
+        "description": "Add paragraph button"
+    },
+    "dayReviewAddParagraphTitle": "Add a paragraph",
+    "@dayReviewAddParagraphTitle": {
+        "description": "Add paragraph dialog title"
+    },
+    "dayReviewAddParagraphHint": "Write what the summary is missing",
+    "@dayReviewAddParagraphHint": {
+        "description": "Add paragraph dialog hint"
+    },
+    "dayReviewYourParagraph": "Your paragraph",
+    "@dayReviewYourParagraph": {
+        "description": "Label on a user-added paragraph"
+    },
+    "dayReviewCorrectionsTitle": "Your corrections",
+    "@dayReviewCorrectionsTitle": {
+        "description": "Corrections list title"
+    },
+    "dayReviewRedactedQuote": "Redacted: “{quote}”",
+    "@dayReviewRedactedQuote": {
+        "description": "Corrections list: a redaction",
+        "placeholders": {
+            "quote": {
+                "type": "String"
+            }
+        }
+    },
+    "dayReviewCorrectionPending": "Not applied yet",
+    "@dayReviewCorrectionPending": {
+        "description": "Correction state"
+    },
+    "dayReviewCorrectionApplied": "Applied",
+    "@dayReviewCorrectionApplied": {
+        "description": "Correction state"
+    },
+    "dayReviewApplyButton": "Apply corrections ({count})",
+    "@dayReviewApplyButton": {
+        "description": "Regenerate button",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewKeptTitle": "Kept as conversations ({count})",
+    "@dayReviewKeptTitle": {
+        "description": "Kept conversations section",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewRolledTitle": "In this summary ({count})",
+    "@dayReviewRolledTitle": {
+        "description": "Rolled-up conversations section",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewBannerToday": "Review today",
+    "@dayReviewBannerToday": {
+        "description": "Banner title for today"
+    },
+    "dayReviewBannerDay": "Review {day}",
+    "@dayReviewBannerDay": {
+        "description": "Banner title for an earlier day",
+        "placeholders": {
+            "day": {
+                "type": "String"
+            }
+        }
+    },
+    "dayReviewBannerBody": "Star what to keep; the rest becomes one day summary.",
+    "@dayReviewBannerBody": {
+        "description": "Banner body"
+    },
+    "dayReviewPickDate": "Review another day",
+    "@dayReviewPickDate": {
+        "description": "Date picker tooltip"
+    },
+    "dayReviewsToSort": "Waiting to be sorted",
+    "@dayReviewsToSort": {
+        "description": "Day reviews list: pending section"
+    },
+    "dayReviewsDone": "Reviewed days",
+    "@dayReviewsDone": {
+        "description": "Day reviews list: finished section"
+    },
+    "dayReviewsNone": "No reviewed days yet.",
+    "@dayReviewsNone": {
+        "description": "Day reviews list: empty"
+    },
+    "slashSendWithShortcut": "Answer this message with the /{shortcut} model ({model})",
+    "@slashSendWithShortcut": {
+        "description": "Slash command popup: one-shot model shortcut",
+        "placeholders": {
+            "shortcut": {
+                "type": "String"
+            },
+            "model": {
+                "type": "String"
+            }
+        }
+    },
+    "slashSendWithShortcutUnset": "Answer this message with the /{shortcut} model (not set yet)",
+    "@slashSendWithShortcutUnset": {
+        "description": "Slash command popup: shortcut without a model",
+        "placeholders": {
+            "shortcut": {
+                "type": "String"
+            }
+        }
+    },
+    "slashToggleShortcutOn": "Keep using the /{shortcut} model until you toggle it off",
+    "@slashToggleShortcutOn": {
+        "description": "Slash command popup: sticky toggle on",
+        "placeholders": {
+            "shortcut": {
+                "type": "String"
+            }
+        }
+    },
+    "slashToggleShortcutOff": "Turn the /{shortcut} model off (it is on now)",
+    "@slashToggleShortcutOff": {
+        "description": "Slash command popup: sticky toggle off",
+        "placeholders": {
+            "shortcut": {
+                "type": "String"
+            }
+        }
+    },
+    "slashModelCommand": "Choose which model each shortcut uses",
+    "@slashModelCommand": {
+        "description": "Slash command popup: /model"
+    },
+    "slashClearCommand": "Clear this chat",
+    "@slashClearCommand": {
+        "description": "Slash command popup: /clear"
+    },
+    "slashAppsCommand": "Open chat apps",
+    "@slashAppsCommand": {
+        "description": "Slash command popup: /apps"
+    },
+    "slashReviewCommand": "Review today: keep the conversations you star, summarize the rest",
+    "@slashReviewCommand": {
+        "description": "Slash command popup: /review"
+    },
+    "slashHelpCommand": "Show all chat commands",
+    "@slashHelpCommand": {
+        "description": "Slash command popup: /help"
+    },
+    "slashCommandsHelpTitle": "Chat commands",
+    "@slashCommandsHelpTitle": {
+        "description": "Title of the /help sheet"
+    },
+    "chatShortcutActive": "/{shortcut} model on",
+    "@chatShortcutActive": {
+        "description": "Chip above the chat input while a model shortcut is toggled on",
+        "placeholders": {
+            "shortcut": {
+                "type": "String"
+            }
+        }
+    },
+    "chatShortcutTurnedOn": "/{shortcut} model on: every message uses it until you send /{shortcut} toggle again",
+    "@chatShortcutTurnedOn": {
+        "description": "Snackbar after toggling a model shortcut on",
+        "placeholders": {
+            "shortcut": {
+                "type": "String"
+            }
+        }
+    },
+    "chatShortcutTurnedOff": "/{shortcut} model off: back to the base model",
+    "@chatShortcutTurnedOff": {
+        "description": "Snackbar after toggling a model shortcut off",
+        "placeholders": {
+            "shortcut": {
+                "type": "String"
+            }
+        }
+    },
+    "chatShortcutPickModelFirst": "Pick a model for /{shortcut} first",
+    "@chatShortcutPickModelFirst": {
+        "description": "Snackbar when toggling an unconfigured shortcut",
+        "placeholders": {
+            "shortcut": {
+                "type": "String"
+            }
+        }
+    },
+    "chatShortcutNeedsMessage": "Type a message after /{shortcut}, or /{shortcut} toggle to keep it on",
+    "@chatShortcutNeedsMessage": {
+        "description": "Snackbar for a bare shortcut command",
+        "placeholders": {
+            "shortcut": {
+                "type": "String"
+            }
+        }
+    },
+    "chatShortcutsUnavailable": "Model shortcuts need the self-hosted local LLM backend.",
+    "@chatShortcutsUnavailable": {
+        "description": "Model shortcuts sheet when the backend has no local LLM"
+    },
+    "chatModelShortcutsTitle": "Chat model shortcuts",
+    "@chatModelShortcutsTitle": {
+        "description": "Model shortcuts sheet title"
+    },
+    "chatModelShortcutsHint": "Type /name your question to answer one message with that model, or /name toggle to keep using it.",
+    "@chatModelShortcutsHint": {
+        "description": "Model shortcuts sheet explanation"
+    },
+    "chatModelShortcutsBaseModel": "Base model: {model}",
+    "@chatModelShortcutsBaseModel": {
+        "description": "Model shortcuts sheet: the default chat model",
+        "placeholders": {
+            "model": {
+                "type": "String"
+            }
+        }
+    },
+    "chatModelShortcutsNotSet": "Not set",
+    "@chatModelShortcutsNotSet": {
+        "description": "Model shortcuts sheet: shortcut without a model"
+    },
+    "chatModelShortcutsAddLabel": "name",
+    "@chatModelShortcutsAddLabel": {
+        "description": "Model shortcuts sheet: new shortcut name field"
+    },
+    "chatModelShortcutsAddButton": "Add",
+    "@chatModelShortcutsAddButton": {
+        "description": "Model shortcuts sheet: add button"
+    },
+    "chatModelShortcutsSaveFailed": "Couldn't save the shortcut",
+    "@chatModelShortcutsSaveFailed": {
+        "description": "Model shortcuts sheet: save error"
+    },
+    "folderInside": "Inside",
+    "@folderInside": {
+        "description": "Create folder sheet: parent folder picker label"
+    },
+    "folderTopLevel": "Top level",
+    "@folderTopLevel": {
+        "description": "Parent picker: no parent"
+    },
+    "newSubfolder": "New subfolder",
+    "@newSubfolder": {
+        "description": "Create a folder inside this one"
+    },
+    "folderTreeTitle": "Folders",
+    "@folderTreeTitle": {
+        "description": "Folder tree sheet title"
+    },
+    "moveFolder": "Move…",
+    "@moveFolder": {
+        "description": "Folder tree: move action"
+    },
+    "moveFolderTo": "Move \"{name}\" into…",
+    "@moveFolderTo": {
+        "description": "Move folder picker title",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
     }
 }

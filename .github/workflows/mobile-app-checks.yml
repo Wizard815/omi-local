@@ -251,6 +251,13 @@ jobs:
           sudo docker image prune --all --force
           df -h /
 
+      # Gradle 8.14.2 cannot run on the runner image's default JDK (class file
+      # major version 69); upstream pins JDK 21 for this job the same way.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:

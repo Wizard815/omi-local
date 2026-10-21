@@ -5,19 +5,17 @@ and pushes events to this endpoint for the backend's agentic tools to use.
 
 Fully local: no Google API calls, no cloud calendar provider needed.
 """
+
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
+import database.device_calendar as device_calendar_db
 from utils.other import endpoints as auth
 
 router = APIRouter()
-
-# In-memory event cache keyed by uid. For a self-hosted setup with a single user,
-# this is fine. For multi-user, would use Firestore or Redis.
-_device_calendar_cache: Dict[str, List[Dict[str, Any]]] = {}
 
 
 class DeviceCalendarEvent(BaseModel):
@@ -50,7 +48,7 @@ def sync_device_calendar(
     uid: str = Depends(auth.get_current_user_uid),
 ):
     """Accept calendar events from the phone's CalendarContract provider."""
-    _device_calendar_cache[uid] = [
+    events = [
         {
             "event_id": str(e.eventId),
             "title": e.title,
@@ -68,6 +66,7 @@ def sync_device_calendar(
         }
         for e in request.events
     ]
+    device_calendar_db.store_events(uid, events)
     return DeviceCalendarSyncResponse(
         synced=len(request.events),
         message=f"Synced {len(request.events)} device calendar events",
@@ -80,29 +79,6 @@ def get_device_calendar_events(
     start_ms: Optional[int] = None,
     end_ms: Optional[int] = None,
 ):
-    """Get cached device calendar events, optionally filtered by time range."""
-    events = _device_calendar_cache.get(uid, [])
-    if start_ms is not None:
-        events = [e for e in events if e["end_ms"] >= start_ms]
-    if end_ms is not None:
-        events = [e for e in events if e["start_ms"] <= end_ms]
+    """Get synced device calendar events, optionally filtered by time range."""
+    events = device_calendar_db.get_events(uid, start_ms=start_ms, end_ms=end_ms)
     return {"events": events, "provider": "device_calendar", "count": len(events)}
-
-
-def get_cached_device_calendar_events(
-    uid: str,
-    start_ms: Optional[int] = None,
-    end_ms: Optional[int] = None,
-) -> List[Dict[str, Any]]:
-    """Programmatic access for agentic tools. Returns [] if no device calendar data."""
-    events = _device_calendar_cache.get(uid, [])
-    if start_ms is not None:
-        events = [e for e in events if e["end_ms"] >= start_ms]
-    if end_ms is not None:
-        events = [e for e in events if e["start_ms"] <= end_ms]
-    return events
-
-
-def has_device_calendar(uid: str) -> bool:
-    """Check if device calendar data has been synced for this user."""
-    return uid in _device_calendar_cache and len(_device_calendar_cache.get(uid, [])) > 0

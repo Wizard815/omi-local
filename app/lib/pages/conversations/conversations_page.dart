@@ -12,6 +12,9 @@ import 'package:omi/pages/capture/widgets/widgets.dart';
 import 'package:omi/pages/conversations/widgets/daily_summaries_list.dart';
 import 'package:omi/pages/conversations/conversation_map_page.dart';
 import 'package:omi/pages/conversations/widgets/folder_tabs.dart';
+import 'package:omi/pages/day_review/day_review_banner.dart';
+import 'package:omi/pages/day_review/day_reviews_list_page.dart';
+import 'package:omi/utils/other/temp.dart';
 import 'package:omi/pages/conversations/widgets/goals_widget.dart';
 import 'package:omi/pages/conversations/widgets/processing_capture.dart';
 import 'package:omi/pages/phone_calls/active_call_banner.dart';
@@ -680,6 +683,9 @@ class _ConversationsPageState extends State<ConversationsPage> with AutomaticKee
               ),
               const SliverToBoxAdapter(child: SearchResultHeaderWidget()),
               getProcessingConversationsWidget(convoProvider.processingConversations),
+              // End-of-day review nudge: sort an unsorted day into kept conversations + one summary.
+              if (!convoProvider.showDailySummaries && convoProvider.previousQuery.isEmpty)
+                const SliverToBoxAdapter(child: DayReviewBanner()),
 
               // Today's Tasks and Goals widgets - hide when showing daily recaps, search bar is active, or calendar filter is active
               Selector<HomeProvider, bool>(
@@ -728,6 +734,13 @@ class _ConversationsPageState extends State<ConversationsPage> with AutomaticKee
                             convoProvider.showDailySummaries ? context.l10n.dailyRecaps : context.l10n.conversations,
                             style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
                           ),
+                          if (convoProvider.showDailySummaries)
+                            IconButton(
+                              key: const Key('day_reviews_button'),
+                              tooltip: context.l10n.dayReviewsTitle,
+                              icon: const Icon(Icons.auto_stories_outlined, color: Colors.white),
+                              onPressed: () => routeToPage(context, const DayReviewsListPage()),
+                            ),
                           if (!convoProvider.showDailySummaries)
                             IconButton(
                               key: const Key('conversation_map_button'),
@@ -771,6 +784,17 @@ class _ConversationsPageState extends State<ConversationsPage> with AutomaticKee
                       ),
                     );
                   },
+                ),
+              // Nested folders: breadcrumb + subfolders of the open folder.
+              if (!convoProvider.showDailySummaries && convoProvider.selectedFolderId != null)
+                Consumer<FolderProvider>(
+                  builder: (context, folderProvider, _) => SliverToBoxAdapter(
+                    child: SubfolderBar(
+                      folders: folderProvider.folders,
+                      selectedFolderId: convoProvider.selectedFolderId!,
+                      onFolderSelected: convoProvider.filterByFolder,
+                    ),
+                  ),
                 ),
               // Show daily summaries list or conversations based on filter
               if (convoProvider.showDailySummaries)

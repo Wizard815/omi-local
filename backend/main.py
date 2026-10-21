@@ -29,6 +29,8 @@ install_firebase_auth_mutation_guard()
 
 from routers import (
     chat,
+    chat_model_shortcuts,
+    day_reviews,
     dashboard,
     device_calendar,
     firmware,
@@ -119,6 +121,7 @@ from utils.http_client import close_all_clients
 from utils.jit_rollout import close_posthog_control_plane
 from utils.free_tier_cohort import close_free_tier_control_plane
 from utils.metrics import start_metrics_sidecar_server, stop_metrics_sidecar_server
+from utils.other.local_scheduler import local_scheduler_enabled, run_local_scheduler
 from utils.executors import (
     drain_background_tasks,
     log_executor_health,
@@ -214,6 +217,7 @@ app.include_router(integrations.router)
 app.include_router(x_connector.router)
 app.include_router(memories.router)
 app.include_router(chat.router)
+app.include_router(chat_model_shortcuts.router)
 app.include_router(speech_profile.router)
 app.include_router(notifications.router)
 app.include_router(integration.router)
@@ -250,6 +254,7 @@ app.include_router(developer.router)
 app.include_router(imports.router)
 app.include_router(wrapped.router)
 app.include_router(folders.router)
+app.include_router(day_reviews.router)
 app.include_router(knowledge_graph.router)
 app.include_router(goals.router)
 app.include_router(workstreams.router)
@@ -349,6 +354,9 @@ async def startup_event():
         proactive_message_dispatcher(),
         name='proactive_message_dispatcher',
     )
+    # Self-hosted: no Cloud Scheduler fires the hourly daily-summary job here.
+    if local_scheduler_enabled():
+        start_background_task(run_local_scheduler(), name='local_hourly_scheduler')
 
 
 def _drain_pending_deletion_wipes():

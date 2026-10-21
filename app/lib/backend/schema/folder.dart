@@ -20,6 +20,9 @@ class Folder {
   final String? categoryMapping;
   final int conversationCount;
 
+  /// Containing folder for nested folders; null means top level.
+  final String? parentId;
+
   Folder({
     required this.id,
     required this.name,
@@ -33,6 +36,7 @@ class Folder {
     required this.isSystem,
     this.categoryMapping,
     required this.conversationCount,
+    this.parentId,
   });
 
   factory Folder.fromJson(Map<String, dynamic> json) {
@@ -53,6 +57,7 @@ class Folder {
       isSystem: generated.isSystem,
       categoryMapping: generated.categoryMapping,
       conversationCount: generated.conversationCount,
+      parentId: generated.parentId,
     );
   }
 
@@ -70,6 +75,7 @@ class Folder {
       isSystem: isSystem,
       categoryMapping: categoryMapping,
       conversationCount: conversationCount,
+      parentId: parentId,
     );
   }
 
@@ -102,6 +108,8 @@ class Folder {
     bool? isSystem,
     String? categoryMapping,
     int? conversationCount,
+    String? parentId,
+    bool clearParent = false,
   }) {
     return Folder(
       id: id ?? this.id,
@@ -116,6 +124,7 @@ class Folder {
       isSystem: isSystem ?? this.isSystem,
       categoryMapping: categoryMapping ?? this.categoryMapping,
       conversationCount: conversationCount ?? this.conversationCount,
+      parentId: clearParent ? null : (parentId ?? this.parentId),
     );
   }
 }

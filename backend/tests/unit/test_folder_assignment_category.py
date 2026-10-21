@@ -82,6 +82,8 @@ _clients = _mod("utils.llm.clients")
 _clients.get_llm = MagicMock(return_value=MagicMock())
 
 folders_db = _load_module_from_file("database.folders", BACKEND_DIR / "database" / "folders.py")
+# Pure helper conversation_folder uses to name nested folders by path.
+_load_module_from_file("utils.folder_tree", BACKEND_DIR / "utils" / "folder_tree.py")
 conv_folder = _load_module_from_file(
     "utils.llm.conversation_folder", BACKEND_DIR / "utils" / "llm" / "conversation_folder.py"
 )

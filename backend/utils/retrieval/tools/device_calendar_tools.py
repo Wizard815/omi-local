@@ -2,11 +2,15 @@
 Agentic chat tools for device calendar (Android CalendarContract / local calendar).
 Replaces Google Calendar API dependency for self-hosted setups.
 """
-from datetime import datetime, timezone
 
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, cast
+
+from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 
-from routers.device_calendar import get_cached_device_calendar_events
+import database.device_calendar as device_calendar_db
+from utils.retrieval.tools.integration_base import resolve_config_uid
 import logging
 
 logger = logging.getLogger(__name__)
@@ -36,9 +40,9 @@ def _format_event(e: dict) -> str:
 
 @tool
 def get_device_calendar_events_tool(
-    uid: str,
     days_ahead: int = 7,
     days_behind: int = 0,
+    config: RunnableConfig = None,  # type: ignore[reportAssignmentType]  # langchain injects at runtime; None default for direct calls
 ) -> str:
     """Get calendar events from the user's device calendar (Android CalendarContract).
 
@@ -47,7 +51,6 @@ def get_device_calendar_events_tool(
     No cloud API dependency. No Google OAuth needed.
 
     Args:
-        uid: The user ID (injected automatically).
         days_ahead: How many days into the future to look (default 7).
         days_behind: How many days into the past to look (default 0).
 
@@ -56,11 +59,19 @@ def get_device_calendar_events_tool(
     """
     from datetime import timedelta
 
+    # The user comes from the run config like every other tool. This used to be
+    # an LLM-visible `uid` argument the docstring called "injected" — nothing
+    # injected it, so the model had to invent an id and never found any events.
+    uid, uid_err = resolve_config_uid(cast(Optional[Dict[str, Any]], config))
+    if uid_err:
+        return uid_err
+    assert uid is not None
+
     now = datetime.now(timezone.utc)
     start_ms = int((now - timedelta(days=days_behind)).timestamp() * 1000)
     end_ms = int((now + timedelta(days=days_ahead)).timestamp() * 1000)
 
-    events = get_cached_device_calendar_events(uid, start_ms=start_ms, end_ms=end_ms)
+    events = device_calendar_db.get_events(uid, start_ms=start_ms, end_ms=end_ms)
 
     if not events:
         return (
@@ -86,3 +97,19 @@ def get_device_calendar_events_tool_config():
         "description": "Get upcoming calendar events from the user's device calendar (Android CalendarContract). Works with Google Calendar, DAVx5/CalDAV (Nextcloud), Exchange, and local device calendars — all through the phone's built-in calendar provider.",
         "func": get_device_calendar_events_tool,
     }
+
+
+async def device_calendar_tools_for(uid: str) -> List[Any]:
+    """[the device-calendar tool] for a self-hosted user with a synced calendar, else [].
+
+    Local mode counts a primary model picked in the dashboard (is_local_mode), not
+    just OMI_LOCAL_MODEL — the env check alone hid the tool for those setups.
+    """
+    from utils.executors import db_executor, run_blocking
+    from utils.llm.model_config import is_local_mode
+
+    if not await run_blocking(db_executor, is_local_mode):
+        return []
+    if not await run_blocking(db_executor, device_calendar_db.has_events, uid):
+        return []
+    return [get_device_calendar_events_tool]

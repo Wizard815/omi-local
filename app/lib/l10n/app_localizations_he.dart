@@ -9902,4 +9902,283 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get processingTakingLonger => 'עדיין בעבודה — זה לוקח יותר זמן מהרגיל.';
+
+  @override
+  String get dayReviewTitle => 'Day review';
+
+  @override
+  String get dayReviewsTitle => 'Day reviews';
+
+  @override
+  String get dayReviewLoadFailed => 'Couldn\'t load this day';
+
+  @override
+  String get dayReviewActionFailed => 'Something went wrong. Try again.';
+
+  @override
+  String get dayReviewSortHint =>
+      'Star the conversations you want to keep. Everything else becomes one day summary you can correct.';
+
+  @override
+  String dayReviewProcessing(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count conversations are still processing and are not included.',
+      one: '1 conversation is still processing and is not included.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewEmpty => 'No finished conversations on this day.';
+
+  @override
+  String get dayReviewKeepTooltip => 'Keep as a conversation';
+
+  @override
+  String dayReviewFinalizeButton(int kept, int rolled) {
+    return 'Keep $kept · Summarize $rolled';
+  }
+
+  @override
+  String get dayReviewConfirmTitle => 'Build the day summary?';
+
+  @override
+  String dayReviewConfirmBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count conversations will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+      one:
+          '1 conversation will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewConfirmAction => 'Summarize';
+
+  @override
+  String get dayReviewWriting => 'Writing your day summary… this can take a minute on a local model.';
+
+  @override
+  String get dayReviewApplying => 'Rewriting the summary with your corrections…';
+
+  @override
+  String get dayReviewReopening => 'Restoring the conversations…';
+
+  @override
+  String get dayReviewReopenTitle => 'Reopen this day?';
+
+  @override
+  String get dayReviewReopenBody =>
+      'The summarized conversations come back to your list and this summary (with its corrections) is deleted.';
+
+  @override
+  String get dayReviewReopenAction => 'Reopen day';
+
+  @override
+  String get dayReviewCopy => 'Copy summary';
+
+  @override
+  String get dayReviewCopied => 'Day summary copied';
+
+  @override
+  String get dayReviewUntitled => 'Untitled conversation';
+
+  @override
+  String dayReviewCounts(int rolled, int kept) {
+    return '$rolled summarized · $kept kept';
+  }
+
+  @override
+  String get dayReviewEditHint => 'Select text to correct or redact it. Use + to add a paragraph.';
+
+  @override
+  String get dayReviewCorrectAction => 'Correct';
+
+  @override
+  String get dayReviewRedactAction => 'Redact';
+
+  @override
+  String get dayReviewCorrectTitle => 'Correction';
+
+  @override
+  String get dayReviewCorrectHint => 'What is right? e.g. \"It was Wednesday, not Tuesday\"';
+
+  @override
+  String get dayReviewAddParagraph => 'Add paragraph';
+
+  @override
+  String get dayReviewAddParagraphTitle => 'Add a paragraph';
+
+  @override
+  String get dayReviewAddParagraphHint => 'Write what the summary is missing';
+
+  @override
+  String get dayReviewYourParagraph => 'Your paragraph';
+
+  @override
+  String get dayReviewCorrectionsTitle => 'Your corrections';
+
+  @override
+  String dayReviewRedactedQuote(String quote) {
+    return 'Redacted: “$quote”';
+  }
+
+  @override
+  String get dayReviewCorrectionPending => 'Not applied yet';
+
+  @override
+  String get dayReviewCorrectionApplied => 'Applied';
+
+  @override
+  String dayReviewApplyButton(int count) {
+    return 'Apply corrections ($count)';
+  }
+
+  @override
+  String dayReviewKeptTitle(int count) {
+    return 'Kept as conversations ($count)';
+  }
+
+  @override
+  String dayReviewRolledTitle(int count) {
+    return 'In this summary ($count)';
+  }
+
+  @override
+  String get dayReviewBannerToday => 'Review today';
+
+  @override
+  String dayReviewBannerDay(String day) {
+    return 'Review $day';
+  }
+
+  @override
+  String get dayReviewBannerBody => 'Star what to keep; the rest becomes one day summary.';
+
+  @override
+  String get dayReviewPickDate => 'Review another day';
+
+  @override
+  String get dayReviewsToSort => 'Waiting to be sorted';
+
+  @override
+  String get dayReviewsDone => 'Reviewed days';
+
+  @override
+  String get dayReviewsNone => 'No reviewed days yet.';
+
+  @override
+  String slashSendWithShortcut(String shortcut, String model) {
+    return 'Answer this message with the /$shortcut model ($model)';
+  }
+
+  @override
+  String slashSendWithShortcutUnset(String shortcut) {
+    return 'Answer this message with the /$shortcut model (not set yet)';
+  }
+
+  @override
+  String slashToggleShortcutOn(String shortcut) {
+    return 'Keep using the /$shortcut model until you toggle it off';
+  }
+
+  @override
+  String slashToggleShortcutOff(String shortcut) {
+    return 'Turn the /$shortcut model off (it is on now)';
+  }
+
+  @override
+  String get slashModelCommand => 'Choose which model each shortcut uses';
+
+  @override
+  String get slashClearCommand => 'Clear this chat';
+
+  @override
+  String get slashAppsCommand => 'Open chat apps';
+
+  @override
+  String get slashReviewCommand => 'Review today: keep the conversations you star, summarize the rest';
+
+  @override
+  String get slashHelpCommand => 'Show all chat commands';
+
+  @override
+  String get slashCommandsHelpTitle => 'Chat commands';
+
+  @override
+  String chatShortcutActive(String shortcut) {
+    return '/$shortcut model on';
+  }
+
+  @override
+  String chatShortcutTurnedOn(String shortcut) {
+    return '/$shortcut model on: every message uses it until you send /$shortcut toggle again';
+  }
+
+  @override
+  String chatShortcutTurnedOff(String shortcut) {
+    return '/$shortcut model off: back to the base model';
+  }
+
+  @override
+  String chatShortcutPickModelFirst(String shortcut) {
+    return 'Pick a model for /$shortcut first';
+  }
+
+  @override
+  String chatShortcutNeedsMessage(String shortcut) {
+    return 'Type a message after /$shortcut, or /$shortcut toggle to keep it on';
+  }
+
+  @override
+  String get chatShortcutsUnavailable => 'Model shortcuts need the self-hosted local LLM backend.';
+
+  @override
+  String get chatModelShortcutsTitle => 'Chat model shortcuts';
+
+  @override
+  String get chatModelShortcutsHint =>
+      'Type /name your question to answer one message with that model, or /name toggle to keep using it.';
+
+  @override
+  String chatModelShortcutsBaseModel(String model) {
+    return 'Base model: $model';
+  }
+
+  @override
+  String get chatModelShortcutsNotSet => 'Not set';
+
+  @override
+  String get chatModelShortcutsAddLabel => 'name';
+
+  @override
+  String get chatModelShortcutsAddButton => 'Add';
+
+  @override
+  String get chatModelShortcutsSaveFailed => 'Couldn\'t save the shortcut';
+
+  @override
+  String get folderInside => 'Inside';
+
+  @override
+  String get folderTopLevel => 'Top level';
+
+  @override
+  String get newSubfolder => 'New subfolder';
+
+  @override
+  String get folderTreeTitle => 'Folders';
+
+  @override
+  String get moveFolder => 'Move…';
+
+  @override
+  String moveFolderTo(String name) {
+    return 'Move \"$name\" into…';
+  }
 }
