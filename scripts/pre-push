@@ -7,6 +7,14 @@ set -eo pipefail
 # work tree. This keeps linked worktrees from aborting into a --no-verify push.
 cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
+# Git exports GIT_DIR to hooks; from a linked worktree it is the absolute path of
+# .git/worktrees/<name>. Everything below inherits it, including `git init
+# <fixture>` in check self-tests and unit tests, which then reinitializes this
+# repository instead: git guesses it bare and writes core.bare=true into the
+# config every worktree shares. Discovery from the work tree top reaches the
+# same repository, so no child needs the exported location.
+unset GIT_DIR GIT_WORK_TREE
+
 # shellcheck source=dev-harness/_resolve_python.sh
 source scripts/dev-harness/_resolve_python.sh
 PYTHON_BIN="$(dev_harness_python)"
@@ -37,6 +45,26 @@ while read -r local_ref local_oid remote_ref remote_oid; do
   [ "${local_oid:-$ZERO_SHA}" != "$ZERO_SHA" ] || continue
   PUSH_UPDATES+=("$local_oid:$remote_oid:$remote_ref")
 done
+
+# Fast-forwarding a branch to a SHA that GitHub CI already certified re-ran the
+# whole local suite against an unchanged tree (~55 min per rollout sync). Skip
+# only that duplicate: pre_push_ci_verified.py asks GitHub about every pushed
+# SHA and fails closed. It reads no environment, so it is not a skip hatch.
+if [ "${#PUSH_UPDATES[@]}" -gt 0 ]; then
+  declare -a PUSH_OIDS=()
+  for update in "${PUSH_UPDATES[@]}"; do
+    PUSH_OIDS+=("${update%%:*}")
+  done
+  PUSH_REMOTE_URL="${2:-$(git remote get-url "$PUSH_REMOTE" 2>/dev/null || true)}"
+  if "$PYTHON_BIN" scripts/pre_push_ci_verified.py \
+    --remote-url "$PUSH_REMOTE_URL" \
+    --log-file "$(git rev-parse --git-common-dir)/omi-pre-push-ci-verified.log" \
+    "${PUSH_OIDS[@]}"
+  then
+    echo "Every pushed SHA already passed terminal-green CI on GitHub; the local pre-push suite would only repeat it."
+    exit 0
+  fi
+fi
 
 if [ "${#PUSH_UPDATES[@]}" -gt 0 ]; then
   echo "Running bounded pre-push checks for ${#PUSH_UPDATES[@]} pushed ref(s) against ${BASE_REMOTE_REF#refs/remotes/}."
@@ -179,6 +207,20 @@ fi
 if ci_prediction_selected "windows-kgworker-native-closure"; then
   ci_prediction_note_deferred "Windows packaged build and real asar worker proof"
 fi
+
+# Runs first: a missing local prerequisite (unresolved app dependencies, no
+# backend/.venv, a SwiftPM .build whose recorded artifacts are gone) otherwise
+# surfaces only when its phase runs, minutes in, one push attempt per problem.
+check_worktree_env() {
+  if [ "${PRE_PUSH_SKIP_ENV_DOCTOR:-}" = "1" ]; then
+    echo "Skipping worktree env doctor because PRE_PUSH_SKIP_ENV_DOCTOR=1."
+    return
+  fi
+
+  "$PYTHON_BIN" scripts/worktree_env_doctor.py \
+    --changed-files "$CHANGED_FILES_LIST" \
+    --selection "$CI_PREDICTION_SELECTION"
+}
 
 check_pr_preflight() {
   local has_supplied_pr_body=0
@@ -366,9 +408,6 @@ check_flutter_generated_if_needed() {
     fi
     echo "==> Flutter build_runner generated-output check"
     (
-      # Git exports linked-worktree metadata to hooks. Flutter resolves its own
-      # SDK version through Git, so those variables must not leak into Flutter.
-      unset GIT_DIR GIT_WORK_TREE
       cd app
       flutter pub run build_runner build --delete-conflicting-outputs
       git diff --exit-code -- lib || {
@@ -394,8 +433,6 @@ check_flutter_generated_if_needed() {
     fi
     echo "==> Flutter l10n generated-output check"
     (
-      # Keep Flutter's SDK-version Git lookup isolated from hook worktree state.
-      unset GIT_DIR GIT_WORK_TREE
       cd app
       flutter gen-l10n
       git diff --exit-code -- lib/l10n || {
@@ -815,6 +852,7 @@ check_gauntlet_evidence_if_needed() {
   desktop/macos/scripts/check-gauntlet-evidence-at-head.sh warn
 }
 
+run_step check_worktree_env
 run_step check_pr_preflight
 run_step "$PYTHON_BIN" .github/scripts/check-desktop-prod-promotion-policy.py
 run_step "$PYTHON_BIN" .github/scripts/check-deployment-concurrency.py --self-test

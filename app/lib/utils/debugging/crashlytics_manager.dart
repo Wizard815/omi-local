@@ -20,6 +20,10 @@ class CrashlyticsManager {
 
   static Future<void> init() async {}
 
+  /// Upstream attaches git SHA / build number to Crashlytics here; there is
+  /// no Crashlytics in a self-hosted build, so this is a no-op.
+  static Future<void> applyBuildProvenanceKeys() async {}
+
   void identifyUser(String email, String name, String userId) {}
 
   void logInfo(String message) {}
@@ -40,6 +44,12 @@ class CrashlyticsManager {
     Object exception,
     StackTrace stackTrace, {
     Map<String, String>? userAttributes,
+  }) async {}
+
+  Future<void> reportNonFatal(
+    Object exception,
+    StackTrace stackTrace, {
+    Map<String, String> userAttributes = const {},
   }) async {}
 
   NavigatorObserver? getNavigatorObserver() {

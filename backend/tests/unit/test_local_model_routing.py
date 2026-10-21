@@ -7,6 +7,9 @@ and the OPENAI_BASE_URL / OMI_LOCAL_MODEL / LOCAL_LLM_MODEL env vars.
 import pytest
 
 import utils.llm.model_config as model_config
+from utils.llm import providers
+from utils.llm.clients import get_llm
+from utils.llm.gateway_client import GatewayContextChatOpenAI
 
 
 @pytest.fixture
@@ -45,3 +48,29 @@ def test_not_local_without_a_proxy_url(monkeypatch):
     monkeypatch.setattr(model_config, '_redis_model', lambda kind: 'llama/gemma-4-12b')
     assert model_config.is_local_mode() is False
     assert model_config.get_model_config('chat_agent')[0] != 'llama/gemma-4-12b'
+
+
+@pytest.fixture
+def fresh_llm_clients(monkeypatch):
+    monkeypatch.setenv('OPENAI_API_KEY', 'sk-test')
+    monkeypatch.setattr(providers, '_llm_cache', {})
+
+
+def test_local_mode_keeps_managed_features_off_the_omi_gateway(local_mode, fresh_llm_clients):
+    """Upstream now sends every managed get_llm() through the Omi LLM gateway.
+
+    A self-hosted stack has no gateway: local mode must keep generation on the
+    direct OpenAI-compatible client at OPENAI_BASE_URL (the merge proxy).
+    """
+    llm = get_llm('conv_structure')
+
+    assert not isinstance(llm, GatewayContextChatOpenAI)
+    assert llm.model_name == 'llama/gemma-4-12b'
+    assert str(llm.root_client.base_url).startswith('http://omi-proxy:4000/v1')
+
+
+def test_hosted_mode_still_uses_the_gateway(monkeypatch, fresh_llm_clients):
+    monkeypatch.delenv('OPENAI_BASE_URL', raising=False)
+    monkeypatch.setattr(model_config, '_redis_model', lambda kind: None)
+
+    assert isinstance(get_llm('conv_structure'), GatewayContextChatOpenAI)

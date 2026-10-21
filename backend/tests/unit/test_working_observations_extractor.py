@@ -10,7 +10,7 @@ from langchain_core.messages import AIMessage
 from models.memory_contracts import L1MemoryArchiveClass, L1MemoryArchiveItem
 from models.transcript_segment import TranscriptSegment
 from utils.llm import working_observations
-from utils.llm.conversation_prompt_prefix import ConversationPromptPrefix
+from utils.llm.conversation_prompt_context import ConversationPromptPrefix
 from utils.llm.memories import extract_canonical_l1_memory_candidates
 from utils.llm.working_observations import (
     MAX_WORKING_OBSERVATION_ITEMS,
@@ -22,6 +22,8 @@ from utils.llm.usage_tracker import get_current_context
 
 
 class FakeLLM:
+    model_name = "gpt-6-luna"
+
     def __init__(self, content):
         self.content = content
         self.calls = []
@@ -157,6 +159,66 @@ def test_canonical_l1_wrapper_keeps_broad_source_aware_candidates_out_of_archive
     assert captured["persist_route_outcomes"] is False
     assert "David:" in captured["text"]
     assert "Speaker 1:" in captured["text"]
+
+
+def test_canonical_l1_wrapper_carries_confirmed_owner_voice_provenance(monkeypatch):
+    extracted = [
+        L1MemoryArchiveItem(
+            text="The owner chose the short retention window.",
+            evidence_quotes=["I chose the short retention window."],
+            speaker_label="speaker_0",
+            about="the user",
+        ),
+        L1MemoryArchiveItem(
+            text="Sarah prefers the long retention window.",
+            evidence_quotes=["Sarah prefers the long retention window."],
+            speaker_label="speaker_1",
+            about="Sarah",
+        ),
+    ]
+    monkeypatch.setattr(
+        working_observations,
+        "extract_l1_memory_archive_items_from_text",
+        lambda **_kwargs: extracted,
+    )
+    segments = [
+        TranscriptSegment(
+            id="segment-user",
+            text="I chose the short retention window.",
+            speaker="SPEAKER_00",
+            speaker_id=0,
+            speaker_id_scope="conversation-owner:0",
+            is_user=True,
+            start=0.0,
+            end=2.0,
+        ),
+        TranscriptSegment(
+            id="segment-other",
+            text="Sarah prefers the long retention window.",
+            speaker="SPEAKER_01",
+            speaker_id=1,
+            speaker_id_scope="conversation-owner:1",
+            is_user=False,
+            start=2.0,
+            end=4.0,
+        ),
+    ]
+
+    candidates = extract_canonical_l1_memory_candidates(
+        "user_1",
+        "conversation_owner",
+        segments,
+        user_name="David",
+        language="en",
+    )
+
+    assert candidates[0].source_id == "conversation_owner"
+    assert candidates[0].source_type == "conversation"
+    assert candidates[0].source_signal == "transcription"
+    assert candidates[0].lineage_id == "conversation_owner"
+    assert candidates[0].independence_group == "conversation_owner"
+    assert candidates[0].attribution == "user_spoken"
+    assert candidates[1].attribution is None
 
 
 def test_canonical_l1_wrapper_threads_rejection_examples_to_the_prompt_boundary(monkeypatch):
@@ -606,39 +668,68 @@ def test_l1_archive_extractor_deduplicates_within_subject_without_collapsing_oth
     assert len({item.archive_id for item in items}) == 2
 
 
-def test_l1_prompt_omits_belief_instructions_when_flag_off(monkeypatch):
-    monkeypatch.delenv("MEMORY_BELIEF_MODEL_ENABLED", raising=False)
-    fake_llm = FakeLLM('{"items": []}')
-    extract_l1_memory_archive_items_from_text(
-        uid="user_belief_off",
-        source_id="source_belief_off",
+def test_l1_preserves_scoped_subject_and_source_lineage():
+    fake_llm = FakeLLM(
+        json.dumps(
+            {
+                "items": [
+                    {
+                        "text": "David accepted the launch plan for Omi.",
+                        "class": "general",
+                        "source_refs": [{"source_id": "source-decision", "quote": "I accept the launch plan"}],
+                        "evidence_quotes": ["I accept the launch plan because it keeps the team focused"],
+                        "about": "the user",
+                        "subject_scope": "user_owned_project",
+                    }
+                ]
+            }
+        )
+    )
+
+    items = extract_l1_memory_archive_items_from_text(
+        uid="user_decision",
+        source_id="source-decision",
         source_type="voice_transcript",
-        text="User prefers dark mode and asked Omi to remember it.",
+        text="I accept the launch plan because it keeps the team focused.",
+        user_name="David",
         persist_route_outcomes=False,
         llm=fake_llm,
     )
-    prompt = _invoked_system_prompt(fake_llm)
-    assert "belief_class" not in prompt
-    assert "half_life_days" not in prompt
-    assert "subject_scope" not in prompt
+
+    assert len(items) == 1
+    assert items[0].subject_scope == "user_owned_project"
+    assert items[0].source_refs[0]["source_id"] == "source-decision"
 
 
-def test_l1_prompt_includes_belief_instructions_when_flag_on(monkeypatch):
-    monkeypatch.setenv("MEMORY_BELIEF_MODEL_ENABLED", "true")
-    fake_llm = FakeLLM('{"items": []}')
-    extract_l1_memory_archive_items_from_text(
-        uid="user_belief_on",
-        source_id="source_belief_on",
-        source_type="voice_transcript",
-        text="User prefers dark mode and asked Omi to remember it.",
+def test_l1_does_not_default_assistant_content_to_primary_user(monkeypatch):
+    fake_llm = FakeLLM(
+        json.dumps(
+            {
+                "items": [
+                    {
+                        "text": "The assistant suggested switching to dark mode.",
+                        "class": "general",
+                        "evidence_quotes": ["You should switch to dark mode"],
+                        "about": "the user",
+                        "subject_scope": "primary_user",
+                    }
+                ]
+            }
+        )
+    )
+
+    items = extract_l1_memory_archive_items_from_text(
+        uid="user-assistant",
+        source_id="assistant-source",
+        source_type="assistant_response",
+        text="You should switch to dark mode because it is easier on the eyes.",
+        user_name="David",
         persist_route_outcomes=False,
         llm=fake_llm,
     )
-    prompt = _invoked_system_prompt(fake_llm)
-    assert "belief_class" in prompt
-    assert "half_life_days" in prompt
-    assert "subject_scope" in prompt
-    assert "media_screen" in prompt
+
+    assert len(items) == 1
+    assert items[0].subject_scope is None
 
 
 def test_l1_extraction_receives_untrusted_cluster_render(monkeypatch):

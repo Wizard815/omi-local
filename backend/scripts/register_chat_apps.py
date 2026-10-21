@@ -164,12 +164,8 @@ def main() -> None:
     parser.add_argument('--name', help='Display name shown in the app browser')
     parser.add_argument('--description', help='Shown in the app browser')
     parser.add_argument('--category', default='utilities', help='Default: utilities')
-    parser.add_argument(
-        '--mount', help='Gateway mount path, e.g. "myapp" for http://omi-apps-gateway:8080/myapp'
-    )
-    parser.add_argument(
-        '--base-url', help='Full base URL instead of --mount, for an app not on the shared gateway'
-    )
+    parser.add_argument('--mount', help='Gateway mount path, e.g. "myapp" for http://omi-apps-gateway:8080/myapp')
+    parser.add_argument('--base-url', help='Full base URL instead of --mount, for an app not on the shared gateway')
     parser.add_argument(
         '--skip',
         default='',

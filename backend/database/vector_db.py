@@ -14,6 +14,28 @@ from pinecone import Pinecone
 from database import projection_repair
 from database._client import data_plane_db as default_db_client
 from database.legal_holds import external_write_fence
+
+try:
+    from database.legal_holds import destructive_operation_gate
+except ImportError:
+    destructive_operation_gate = None
+
+try:
+    from database.legal_holds import finish_destructive_operation
+except ImportError:
+    finish_destructive_operation = None
+
+try:
+    from database.legal_holds import (
+        DestructiveOperationInProgress,
+        LegalHoldActive,
+        LegalHoldAuthorityUnavailable,
+    )
+except ImportError:
+    # Route tests stub legal_holds with the gate helpers and omit the exception types.
+    DestructiveOperationInProgress = None
+    LegalHoldActive = None
+    LegalHoldAuthorityUnavailable = None
 from database.memory_vector_metadata import (
     build_archive_memory_vector_filter,
     build_canonical_memory_vector_delete_filter,
@@ -29,6 +51,8 @@ from models.product_memory import MemoryItem
 from models.memory_search_gateway import SearchMode, SearchVectorHit
 from utils.llm.clients import embeddings
 from utils.observability.fallback import record_fallback
+
+from utils.metrics import OMI_CONVERSATION_SUMMARY_VECTOR_UPSERTS_TOTAL
 
 logger = logging.getLogger(__name__)
 
@@ -137,6 +161,7 @@ if _use_chroma:
         chroma_query,
         is_chroma_enabled,
     )
+
     logger.info("Vector DB: ChromaDB (local). Set PINECONE_API_KEY to override.")
 elif _pinecone_api_key and _pinecone_index_name:
     pc = Pinecone(api_key=_pinecone_api_key)
@@ -161,7 +186,11 @@ def _get_data(uid: str, conversation_id: str, vector: List[float]) -> VectorReco
 
 def upsert_vector(uid: str, conversation_id: str, vector: List[float]) -> None:
     if _use_chroma:
-        chroma_upsert(f'{uid}-{conversation_id}', vector, {'uid': uid, 'conversation_id': conversation_id, 'created_at': int(datetime.now(timezone.utc).timestamp())})
+        chroma_upsert(
+            f'{uid}-{conversation_id}',
+            vector,
+            {'uid': uid, 'conversation_id': conversation_id, 'created_at': int(datetime.now(timezone.utc).timestamp())},
+        )
         return
     if index is None:
         return
@@ -170,18 +199,33 @@ def upsert_vector(uid: str, conversation_id: str, vector: List[float]) -> None:
 
 
 @_account_external_data_write
-def upsert_vector2(uid: str, conversation_id: str, vector: List[float], metadata: Dict[str, Any]) -> None:
+def upsert_vector2(uid: str, conversation_id: str, vector: List[float], metadata: Dict[str, Any]) -> bool:
     if _use_chroma:
-        meta = {'uid': uid, 'conversation_id': conversation_id, 'created_at': int(datetime.now(timezone.utc).timestamp()), **metadata}
-        chroma_upsert(f'{uid}-{conversation_id}', vector, meta)
-        return
+        meta = {
+            'uid': uid,
+            'conversation_id': conversation_id,
+            'created_at': int(datetime.now(timezone.utc).timestamp()),
+            **metadata,
+        }
+        try:
+            chroma_upsert(f'{uid}-{conversation_id}', vector, meta)
+        except Exception:
+            OMI_CONVERSATION_SUMMARY_VECTOR_UPSERTS_TOTAL.labels(outcome='error').inc()
+            raise
+        return True
     if index is None:
-        return
-    data: VectorRecordDoc = _get_data(uid, conversation_id, vector)
-    typed_metadata: Dict[str, Any] = data['metadata']
-    typed_metadata.update(metadata)
-    res = index.upsert(vectors=[data], namespace="ns1")
+        OMI_CONVERSATION_SUMMARY_VECTOR_UPSERTS_TOTAL.labels(outcome='error').inc()
+        return False
+    try:
+        data: VectorRecordDoc = _get_data(uid, conversation_id, vector)
+        typed_metadata: Dict[str, Any] = data['metadata']
+        typed_metadata.update(metadata)
+        res = index.upsert(vectors=[data], namespace="ns1")
+    except Exception:
+        OMI_CONVERSATION_SUMMARY_VECTOR_UPSERTS_TOTAL.labels(outcome='error').inc()
+        raise
     logger.info(f'upsert_vector {res}')
+    return True
 
 
 @_account_external_data_write
@@ -197,7 +241,10 @@ def update_vector_metadata(uid: str, conversation_id: str, metadata: Dict[str, A
 def upsert_vectors(uid: str, vectors: List[List[float]], conversation_ids: List[str]) -> None:
     if _use_chroma:
         ids = [f'{uid}-{cid}' for cid in conversation_ids]
-        metas = [{'uid': uid, 'conversation_id': cid, 'created_at': int(datetime.now(timezone.utc).timestamp())} for cid in conversation_ids]
+        metas = [
+            {'uid': uid, 'conversation_id': cid, 'created_at': int(datetime.now(timezone.utc).timestamp())}
+            for cid in conversation_ids
+        ]
         chroma_upsert_batch(ids, vectors, metas)
         return
     if index is None:
@@ -232,7 +279,9 @@ def query_vectors(
     if _use_chroma:
         xq = query_vector if query_vector is not None else embeddings.embed_query(query)
         ids = chroma_query(
-            query_vector=xq, uid=uid, top_k=k,
+            query_vector=xq,
+            uid=uid,
+            top_k=k,
             filter_created_after=starts_at,
             filter_created_before=ends_at,
         )
@@ -647,8 +696,13 @@ def upsert_canonical_memory_vector(
 def delete_canonical_memory_vectors(uid: str, memory_id: str | None = None) -> bool:
     """Delete canonical vectors by authoritative UID metadata, including legacy bare-ID rows."""
     if index is None:
-        logger.warning('Pinecone index not initialized, skipping canonical memory vector filter delete')
-        return False
+        # No vector store is configured, so no vector copy can exist: the desired
+        # absence is trivially confirmed. Privacy deletion must not fail closed
+        # on a projection the deployment never writes (#10446 regression class —
+        # without this, every explicit memory delete 503s on Pinecone-less
+        # deployments). A configured index that raises still fails closed below.
+        logger.warning('Pinecone index not initialized, nothing to purge for canonical memory vector delete')
+        return True
     delete_filter = build_canonical_memory_vector_delete_filter(uid, memory_id)
     index.delete(filter=delete_filter, namespace=MEMORIES_NAMESPACE)
     logger.info(
@@ -657,6 +711,103 @@ def delete_canonical_memory_vectors(uid: str, memory_id: str | None = None) -> b
         memory_id or '*',
     )
     return True
+
+
+def _retry_stale_vector_gate_finish(uid: str, token: str, outcome: str) -> None:
+    """Record the gate outcome once more if the context manager's finish failed.
+
+    A running gate blocks other provider writes until the six-hour stale bound.
+    Search cleanup is allowed to fail, but it must not leave that row running.
+    """
+
+    if finish_destructive_operation is None or not token:
+        return
+    try:
+        finish_destructive_operation(
+            uid,
+            kind='stale_vector_index_cleanup',
+            token=token,
+            outcome=outcome,
+        )
+    except Exception:
+        logger.warning('canonical memory vector delete gate finalization retry failed')
+
+
+def delete_canonical_memory_vectors_by_ids(uid: str, observed: List[tuple]) -> int:
+    """Delete one user's canonical vectors for these observed commits in one call.
+
+    Each pair is ``(memory_id, projection_commit_id)``. A replacement upsert
+    writes a new projection commit on the same provider id, so this filter
+    does not remove that replacement. A provider failure raises once.
+    """
+
+    if index is None:
+        logger.warning('Pinecone index not initialized, skipping canonical memory vector delete by ids')
+        return 0
+    if not uid.strip():
+        raise ValueError('uid is required')
+    clauses: List[Dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for observed_pair in observed:
+        memory_id, projection_commit_id = observed_pair
+        if (
+            not memory_id
+            or not str(memory_id).strip()
+            or not projection_commit_id
+            or not str(projection_commit_id).strip()
+        ):
+            continue
+        pair_key = (str(memory_id), str(projection_commit_id))
+        if pair_key in seen:
+            continue
+        seen.add(pair_key)
+        clauses.append(
+            {
+                '$and': [
+                    {'memory_id': {'$eq': memory_id}},
+                    {'projection_commit_id': {'$eq': projection_commit_id}},
+                ]
+            }
+        )
+    if not clauses:
+        return 0
+    if (
+        destructive_operation_gate is None
+        or LegalHoldActive is None
+        or LegalHoldAuthorityUnavailable is None
+        or DestructiveOperationInProgress is None
+    ):
+        raise RuntimeError('destructive operation gate is unavailable')
+    gate_token: Optional[str] = None
+    provider_deleted = False
+    try:
+        with destructive_operation_gate(uid, kind='stale_vector_index_cleanup') as gate_token:
+            index.delete(
+                filter={'$and': [{'uid': {'$eq': uid}}, {'$or': clauses}]},
+                namespace=MEMORIES_NAMESPACE,
+            )
+            provider_deleted = True
+    except (LegalHoldActive, LegalHoldAuthorityUnavailable, DestructiveOperationInProgress):
+        if gate_token is not None:
+            _retry_stale_vector_gate_finish(
+                uid,
+                gate_token,
+                'completed' if provider_deleted else 'failed',
+            )
+        if not provider_deleted:
+            logger.warning('canonical memory vector delete by ids skipped; destructive authority did not permit it')
+            return 0
+    except Exception:
+        if gate_token is not None:
+            _retry_stale_vector_gate_finish(
+                uid,
+                gate_token,
+                'completed' if provider_deleted else 'failed',
+            )
+        if not provider_deleted:
+            raise
+    logger.info('delete_canonical_memory_vectors_by_ids count=%d', len(clauses))
+    return len(clauses)
 
 
 def query_memory_vector_candidates(
@@ -1208,6 +1359,8 @@ def search_transcript_chunks(
     starts_at: Optional[int] = None,
     ends_at: Optional[int] = None,
     query_vector: Optional[List[float]] = None,
+    *,
+    timeout_seconds: Optional[float] = None,
 ) -> List[Dict[str, Any]]:
     """Semantic search over transcript chunks. Returns chunk references
     [{conversation_id, chunk_index, created_at, score}] — hydrate text from
@@ -1222,12 +1375,16 @@ def search_transcript_chunks(
     if created_at is not None:
         filter_data['created_at'] = created_at
     vector = query_vector if query_vector is not None else embeddings.embed_query(query)
+    query_kwargs: Dict[str, Any] = {}
+    if timeout_seconds is not None:
+        query_kwargs['_request_timeout'] = timeout_seconds
     xc = index.query(
         vector=vector,
         top_k=limit,
         include_metadata=True,
         filter=filter_data,
         namespace=TRANSCRIPT_CHUNKS_NAMESPACE,
+        **query_kwargs,
     )
     results: List[Dict[str, Any]] = []
     matches: List[Any] = xc.get('matches', [])
@@ -1245,6 +1402,7 @@ def search_transcript_chunks(
     return results
 
 
+@_account_external_data_write
 def delete_transcript_chunk_vectors(uid: str, conversation_id: str) -> None:
     """Delete all chunk vectors for one conversation (id-prefix listing on serverless)."""
     if index is None:

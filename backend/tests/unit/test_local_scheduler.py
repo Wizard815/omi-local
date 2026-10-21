@@ -11,10 +11,10 @@ import asyncio
 from datetime import datetime, timezone
 
 import pytest
-from fastapi import HTTPException
+from pydantic import ValidationError
 
 import routers.notifications as notifications_router
-from models.other import SaveTimeZoneRequest
+from models.other import SyncUserTimeZoneRequest
 from utils.other import local_scheduler
 
 
@@ -56,15 +56,16 @@ def test_scheduler_is_opt_in(monkeypatch, value, enabled):
 
 
 def test_time_zone_endpoint_validates_and_writes(monkeypatch):
-    written = []
+    """The app's PUT /v1/users/time-zone (upstream's handler) records the zone without an FCM token."""
+    synced = []
     monkeypatch.setattr(
-        notifications_router.notification_db, 'set_user_time_zone', lambda uid, tz: written.append((uid, tz))
+        notifications_router.notification_db,
+        'sync_user_time_zone_from_client',
+        lambda uid, tz: synced.append((uid, tz)) or tz,
     )
 
-    notifications_router.save_time_zone(SaveTimeZoneRequest(time_zone='America/Chicago'), uid='uid-1')
-    assert written == [('uid-1', 'America/Chicago')]
+    notifications_router.sync_user_time_zone(SyncUserTimeZoneRequest(time_zone='America/Chicago'), uid='uid-1')
+    assert synced == [('uid-1', 'America/Chicago')]
 
-    with pytest.raises(HTTPException) as exc:
-        notifications_router.save_time_zone(SaveTimeZoneRequest(time_zone='Mars/Olympus'), uid='uid-1')
-    assert exc.value.status_code == 422
-    assert written == [('uid-1', 'America/Chicago')]
+    with pytest.raises(ValidationError):
+        SyncUserTimeZoneRequest(time_zone='Mars/Olympus')

@@ -16,6 +16,7 @@ import pytest
 from starlette.requests import Request
 
 import routers.chat as chat_router
+import utils.chat_turn as chat_turn_mod
 import utils.llm.chat_model_shortcuts as shortcuts
 import utils.llm.model_config as model_config
 import utils.retrieval.graph as graph
@@ -133,14 +134,14 @@ def chat_turn(monkeypatch, local_mode, shortcut_store):
     persisted: list[dict] = []
     seen: dict = {}
 
-    monkeypatch.setattr(chat_router, 'enforce_chat_quota', lambda *a, **k: None)
-    monkeypatch.setattr(chat_router, 'resolve_chat_target', lambda uid, app_id, sid: ResolvedChatTarget(None, None))
-    monkeypatch.setattr(chat_router, '_record_chat_quota_question', lambda *a, **k: None)
-    monkeypatch.setattr(chat_router, 'try_acquire_goal_extraction_lock', lambda uid: False)
-    monkeypatch.setattr(chat_router, 'get_available_app_by_id', lambda app_id, uid: None)
-    monkeypatch.setattr(chat_router.chat_db, 'add_message', lambda uid, msg: persisted.append(msg))
+    monkeypatch.setattr(chat_turn_mod, 'enforce_chat_quota', lambda *a, **k: None)
+    monkeypatch.setattr(chat_turn_mod, 'resolve_chat_target', lambda uid, app_id, sid: ResolvedChatTarget(None, None))
+    monkeypatch.setattr(chat_turn_mod, '_record_chat_quota_question', lambda *a, **k: None)
+    monkeypatch.setattr(chat_turn_mod, 'try_acquire_goal_extraction_lock', lambda uid: False)
+    monkeypatch.setattr(chat_turn_mod, 'get_available_app_by_id', lambda app_id, uid: None)
+    monkeypatch.setattr(chat_turn_mod.chat_db, 'add_message', lambda uid, msg: persisted.append(msg))
     monkeypatch.setattr(
-        chat_router.chat_db,
+        chat_turn_mod.chat_db,
         'get_cache_aligned_messages',
         lambda uid, app_id=None, chat_session_id=None: list(reversed(persisted)),
     )
