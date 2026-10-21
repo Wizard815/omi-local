@@ -221,13 +221,15 @@ void main() {
 
       // Simulate device pause: set isPaused and change to pause state
       captureProvider.updateRecordingState(RecordingState.pause);
-      // isPaused is set via pauseDeviceRecording which needs BLE — set it directly
-      // by triggering the internal pause flow
-      try {
-        await captureProvider.pauseDeviceRecording();
-      } catch (_) {
-        // BLE operations fail in test — but isPaused flag is set before the throw
-      }
+      // The production mute path awaits real platform and preference I/O, which
+      // never completes inside the fake-async test zone; run it for real.
+      await tester.runAsync(() async {
+        try {
+          await captureProvider.pauseDeviceRecording();
+        } catch (_) {
+          // BLE operations fail in test — but isPaused flag is set before the throw
+        }
+      });
       await tester.pump();
 
       // Muted/Paused should override Listening for device recording
