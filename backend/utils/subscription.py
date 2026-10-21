@@ -1197,12 +1197,13 @@ def enforce_chat_quota(
     # Import at call time: funded_processing imports this module's allowance
     # resolver, so importing its adapter at module scope would close a cycle.
     from utils.generated_compute import require_generated_compute
+    from utils.self_hosting import is_self_hosted
 
     funded_kwargs = {'firestore_client': firestore_client} if firestore_client is not None else {}
 
-    # Self-hosted offline deployments have no billing plane to enforce against:
-    # skip the ladder budget, funded-compute admission and plan paywall alike.
-    if os.getenv('PROVIDER_MODE', '').strip().lower() == 'offline':
+    # Self-hosted deployments have no billing plane to enforce against: skip
+    # the ladder budget, funded-compute admission and plan paywall alike.
+    if is_self_hosted():
         return
 
     # Release probes retain their legacy question-quota exemption. The flagged
@@ -1725,6 +1726,7 @@ def _usage_seconds(usage: Any) -> Optional[int]:
 
 
 from utils.marketplace_reviewers import is_marketplace_reviewer
+from utils.self_hosting import is_self_hosted
 
 
 def resolve_transcription_allowance(
@@ -1760,10 +1762,10 @@ def resolve_transcription_allowance(
     """
     known_limit_seconds: Optional[int] = 0
     try:
-        # Self-hosted offline deployments have no billing plane to enforce
-        # against, same bypass as enforce_chat_quota.
-        if os.getenv('PROVIDER_MODE', '').strip().lower() == 'offline':
-            return TranscriptionAllowance(TRANSCRIPTION_MODE_MANAGED, None, 'provider_mode_offline', limit_seconds=None)
+        # Self-hosted deployments have no billing plane to enforce against,
+        # same bypass as enforce_chat_quota.
+        if is_self_hosted():
+            return TranscriptionAllowance(TRANSCRIPTION_MODE_MANAGED, None, 'self_hosted', limit_seconds=None)
         # The reviewer identities the subscription snapshot already treats as
         # unlimited; resolved first so the paywall cannot contradict that snapshot.
         if is_marketplace_reviewer(uid):

@@ -152,6 +152,9 @@ export OMI_SHAPED_AGENT_MODE="${OMI_SHAPED_AGENT_MODE:-on}"
 # Upstream fires the hourly daily-summary/notification job from Cloud Scheduler;
 # here the backend runs it in-process (utils/other/local_scheduler.py).
 export OMI_LOCAL_SCHEDULER="${OMI_LOCAL_SCHEDULER:-1}"
+# The backend's self-hosting switch (backend/utils/self_hosting.py): no billing
+# plane, no account cutover, no Cloud Tasks queue, no cloud STT without keys.
+export OMI_SELF_HOSTED=1
 export PORT=8000 PYTHONUNBUFFERED=1
 
 # Optional: route chat/LLM calls to a local OpenAI-compatible server
