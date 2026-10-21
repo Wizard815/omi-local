@@ -107,14 +107,18 @@ def _get_component_status() -> dict:
 async def _get_async_components() -> dict:
     results = {}
 
-    # Audio service
-    audio_url = os.getenv("HOSTED_PARAKEET_API_URL", "http://omi-audio:8790")
-    audio_health = audio_url.rstrip("/") + "/health"
-    ok, code, err = await _check_http(audio_health, timeout=3.0)
-    results["audio_service"] = {
-        "status": "up" if ok else "down",
-        "detail": f"{audio_url} ({code})" if ok else err,
-    }
+    # Audio service. omi-host/audio-env.sh leaves it empty for OMI_AUDIO_URL=off
+    # (cloud STT only).
+    audio_url = os.getenv("HOSTED_PARAKEET_API_URL", "http://omi-audio:8790").strip()
+    if audio_url:
+        audio_health = audio_url.rstrip("/") + "/health"
+        ok, code, err = await _check_http(audio_health, timeout=3.0)
+        results["audio_service"] = {
+            "status": "up" if ok else "down",
+            "detail": f"{audio_url} ({code})" if ok else err,
+        }
+    else:
+        results["audio_service"] = {"status": "not_configured", "detail": "OMI_AUDIO_URL=off (cloud STT only)"}
 
     # LLM backend (LiteLLM or direct llama.cpp — whatever OPENAI_BASE_URL points at)
     llm_base = os.getenv("OPENAI_BASE_URL", "")
