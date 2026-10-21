@@ -139,6 +139,7 @@ _DEV_KEY = 'omi_dev_' + 'a' * 32
 _MCP_KEY = 'omi_mcp_' + 'a' * 32
 
 BODY_DIGEST = {
+    'database.chroma_vector.chroma_count': 'cc8b3a1c0d22e546cabd0a1ac6066bf35a5c3555732e7e7d29c21f2f8c20720d',
     'database.batch_pipeline_shadow.ShadowStore._busy': '3be03e458c8e65c535fed1475cbfae9c97421970c89dc751e2f4eaa4a46a4467',
     'database.batch_pipeline_shadow.ShadowStore.reap': 'e5ea33125389c09c8ad556fab4a6319142f223e4dfa655095dcd89c64e976a8d',
     'database.batch_ramp.ramp_admission_policy': 'af9830f4381f5f9d880199ed21df739af633db7a327d7e723ac4d409585c9a01',
@@ -1156,6 +1157,7 @@ _add(
             'description': (None, 'optional payload field; not filter-affecting'),
             'color': (None, 'optional payload field; not filter-affecting'),
             'icon': (None, 'optional payload field; not filter-affecting'),
+            'parent_id': (None, 'nested-folder payload field; not filter-affecting'),
         },
     )
 )
@@ -1186,6 +1188,18 @@ _add(
     )
 )
 _add(DriverEntry('database.folders.update_folder_conversation_count', base={'uid': UID, 'folder_id': 'folder-1'}))
+
+# omi-local (self-hosted fork): end-of-day reviews, the dashboard's in-progress
+# list, and the ChromaDB vector store.
+_add(DriverEntry('database.day_reviews.list_day_reviews', base={'uid': UID}, neutrals={'limit': _LIMIT}))
+_add(DriverEntry('routers.dashboard.dashboard_conversations', neutrals={'limit': _LIMIT}))
+_add(
+    SkipEntry(
+        'database.chroma_vector.chroma_count',
+        reason='Not Firestore: counts the local ChromaDB collection; .count() is the Chroma API',
+        body_digest=BODY_DIGEST['database.chroma_vector.chroma_count'],
+    )
+)
 
 _FRAME_REQUEST_DOC = {
     'request_id': 'req-1',
