@@ -130,6 +130,7 @@ class _DeviceSettingsState extends State<DeviceSettings> {
 
   void _updateDimRatio(double value) async {
     final deviceProvider = context.read<DeviceProvider>();
+    SharedPreferencesUtil().ledDimRatio = value.toInt();
     if (deviceProvider.pairedDevice != null) {
       var connection = await ServiceManager.instance().device.ensureConnection(deviceProvider.pairedDevice!.id);
       await connection?.setLedDimRatio(value.toInt());

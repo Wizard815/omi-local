@@ -36,7 +36,6 @@ import 'package:omi/services/capture/freemium_threshold_tracker.dart';
 import 'package:omi/services/capture/stt_mode_resolver.dart';
 import 'package:omi/services/capture/recording_lifecycle_telemetry.dart';
 import 'package:omi/services/connectivity_service.dart';
-import 'package:omi/services/devices.dart';
 import 'package:omi/services/services.dart';
 import 'package:omi/services/voice_playback/omi_voice_playback_service.dart';
 import 'package:omi/services/sockets/transcription_service.dart';
@@ -2639,7 +2638,8 @@ class CaptureController extends ChangeNotifier
     // Write mute state first — before BLE cancel which may fire other events
     await BatteryWidgetService().updateMuteState(true);
     await ForegroundUtil.updateMuteState(true);
-    if (!_isPaused) _applyMuteLed(true); // fire-and-forget; never block the mute path on BLE
+    // Dim the device LED to 1% so it visibly signals "muted".
+    await _setLedDimRatio(1);
     // Pause the BLE stream but keep the device connection
     await _bleBytesStream?.cancel();
     await SharedPreferencesUtil().saveBool('nativeBleForegroundReady', false);
@@ -2653,48 +2653,28 @@ class CaptureController extends ChangeNotifier
     notifyListeners();
   }
 
+  /// Push the LED dim ratio onto the paired device (0–100). Mirrors the device
+  /// settings brightness slider: no-op when unpaired/uncapable (e.g. OmiGlass).
+  Future<void> _setLedDimRatio(int ratio) async {
+    if (_recordingDevice == null) return;
+    final connection = await ServiceManager.instance().device.ensureConnection(_recordingDevice!.id);
+    await connection?.setLedDimRatio(ratio);
+  }
+
   Future<void> resumeDeviceRecording() async {
     if (_recordingDevice == null) return;
     _isPaused = false;
     // Clear the persisted mute so we don't re-mute on the next restart.
     SharedPreferencesUtil().deviceMuted = false;
+    // Restore the device LED to the brightness the user set in settings.
+    await _setLedDimRatio(SharedPreferencesUtil().ledDimRatio);
     // Update widget immediately — don't wait for streaming setup
     BatteryWidgetService().updateMuteState(false);
     ForegroundUtil.updateMuteState(false);
-    _applyMuteLed(false); // fire-and-forget; restores the pre-mute brightness
     // Resume streaming from the device
     await _initiateDeviceAudioStreaming();
 
     updateRecordingState(RecordingState.deviceRecord);
     notifyListeners();
-  }
-
-  /// Dims the device LED to 1% on mute, or restores it to whatever it was
-  /// set to right before muting. No-ops on devices without the LED-dimming
-  /// feature, and never throws -- a failed LED write must never block or
-  /// break mute/unmute itself.
-  Future<void> _applyMuteLed(bool muted) async {
-    if (_recordingDevice == null) return;
-    try {
-      final connection = await ServiceManager.instance().device.ensureConnection(_recordingDevice!.id);
-      if (connection == null) return;
-      final features = await connection.getFeatures();
-      if ((features & OmiFeatures.ledDimming) == 0) return;
-
-      if (muted) {
-        final current = await connection.getLedDimRatio();
-        if (current != null) {
-          SharedPreferencesUtil().preMuteLedBrightness = current;
-        }
-        await connection.setLedDimRatio(1);
-      } else {
-        final saved = SharedPreferencesUtil().preMuteLedBrightness;
-        if (saved >= 0) {
-          await connection.setLedDimRatio(saved);
-        }
-      }
-    } catch (e) {
-      Logger.debug('CaptureProvider: mute LED dim apply failed: $e');
-    }
   }
 }
