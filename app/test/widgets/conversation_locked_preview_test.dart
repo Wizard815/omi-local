@@ -32,6 +32,11 @@ class _Usage extends UsageProvider {
 }
 
 void main() {
+  // These surfaces only exist with a billing plane; self-hosted builds turn it
+  // off (UsageProvider.selfHosted). Run them with upstream's billing rules.
+  setUp(() => UsageProvider.selfHosted = false);
+  tearDown(() => UsageProvider.selfHosted = true);
+
   late ConversationProvider conversations;
   late UsageProvider usage;
 

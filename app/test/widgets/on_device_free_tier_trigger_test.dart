@@ -22,6 +22,11 @@ class _Capture extends ChangeNotifier implements CaptureProvider {
 }
 
 void main() {
+  // These surfaces only exist with a billing plane; self-hosted builds turn it
+  // off (UsageProvider.selfHosted). Run them with upstream's billing rules.
+  setUp(() => UsageProvider.selfHosted = false);
+  tearDown(() => UsageProvider.selfHosted = true);
+
   final original = OnDeviceTranscriptionController.instance;
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
