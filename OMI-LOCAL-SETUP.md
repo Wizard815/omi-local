@@ -214,10 +214,18 @@ paragraphs. **Apply corrections** rewrites the summary with them. **Reopen day**
 Tune `DAY_REVIEW_TIMEOUT_SECONDS` / `DAY_REVIEW_MAX_INPUT_CHARS` for slow or small-context models.
 
 ### Folder tree
-Folders can be nested (up to 5 levels). Tabs show top-level folders; opening one shows a
-breadcrumb and its subfolders. The tree icon next to **+** opens the whole tree (new subfolder,
-move, edit); long-press a folder for **New subfolder**. AI folder assignment sees full paths
+Folders can be nested (up to 5 levels). Folders live in **Search** (upstream moved folder
+browsing there): the tiles are top-level folders; opening one shows its path and its subfolders
+as chips (long-press a chip to edit, add a subfolder or delete), plus **New subfolder**. The tree
+icon opens the whole tree (open, new subfolder, move, edit). AI folder assignment sees full paths
 ("Work / Clients / Acme").
+
+### Self-hosting switch (`OMI_SELF_HOSTED`)
+omi-host's entrypoint exports `OMI_SELF_HOSTED=1`. The backend reads it (`backend/utils/self_hosting.py`)
+to turn off what a self-hosted install does not have: billing and quota gates, the whole-account
+cutover fence, the Cloud Tasks queue for historical sync (backfill runs inline) and, unless you set
+`MODULATE_API_KEY`, the Modulate cloud STT provider. `PROVIDER_MODE=offline` alone no longer does
+this: upstream's own test stacks run with it and still expect those gates.
 
 ### Daily recap
 The backend now runs the hourly recap job itself (`OMI_LOCAL_SCHEDULER=1`, default on) at your
