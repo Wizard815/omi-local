@@ -74,9 +74,20 @@ def test_local_mode_keeps_managed_features_off_the_omi_gateway(local_mode, fresh
 
 def test_hosted_mode_still_uses_the_gateway(monkeypatch, fresh_llm_clients):
     monkeypatch.delenv('OPENAI_BASE_URL', raising=False)
+    monkeypatch.delenv('OMI_SELF_HOSTED', raising=False)
     monkeypatch.setattr(model_config, '_redis_model', lambda kind: None)
 
     assert isinstance(get_llm('conv_structure'), GatewayContextChatOpenAI)
+
+
+def test_self_hosted_cloud_keys_call_the_provider_directly(monkeypatch, fresh_llm_clients):
+    """omi-host with PROVIDER_MODE=real (no OPENAI_BASE_URL, no local model) has no
+    gateway either: managed features use the direct client with the operator's key."""
+    monkeypatch.delenv('OPENAI_BASE_URL', raising=False)
+    monkeypatch.setenv('OMI_SELF_HOSTED', '1')
+    monkeypatch.setattr(model_config, '_redis_model', lambda kind: None)
+
+    assert not isinstance(get_llm('conv_structure'), GatewayContextChatOpenAI)
 
 
 def test_local_mode_embeddings_follow_the_dashboard_pick(local_mode, fresh_llm_clients):
