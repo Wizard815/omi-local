@@ -14534,45 +14534,45 @@ class AppLocalizationsKn extends AppLocalizations {
   String get deviceControls => 'ನಿಯಂತ್ರಣಗಳು';
 
   @override
-  String get dayReviewTitle => 'Day review';
+  String get dayReviewTitle => 'ದಿನದ ಪರಿಶೀಲನೆ';
 
   @override
-  String get dayReviewsTitle => 'Day reviews';
+  String get dayReviewsTitle => 'ದಿನದ ಪರಿಶೀಲನೆಗಳು';
 
   @override
-  String get dayReviewLoadFailed => 'Couldn\'t load this day';
+  String get dayReviewLoadFailed => 'ಈ ದಿನವನ್ನು ಲೋಡ್ ಮಾಡಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ';
 
   @override
-  String get dayReviewActionFailed => 'Something went wrong. Try again.';
+  String get dayReviewActionFailed => 'ಏನೋ ತಪ್ಪಾಗಿದೆ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.';
 
   @override
   String get dayReviewSortHint =>
-      'Star the conversations you want to keep. Everything else becomes one day summary you can correct.';
+      'ನೀವು ಇರಿಸಿಕೊಳ್ಳಲು ಬಯಸುವ ಸಂವಾದಗಳಿಗೆ ನಕ್ಷತ್ರ ಹಾಕಿ. ಉಳಿದೆಲ್ಲವೂ ನೀವು ತಿದ್ದಬಹುದಾದ ಒಂದೇ ದಿನದ ಸಾರಾಂಶವಾಗುತ್ತದೆ.';
 
   @override
   String dayReviewProcessing(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count conversations are still processing and are not included.',
-      one: '1 conversation is still processing and is not included.',
+      other: '$count ಸಂವಾದಗಳು ಇನ್ನೂ ಪ್ರಕ್ರಿಯೆಯಲ್ಲಿವೆ ಮತ್ತು ಸೇರಿಸಲಾಗಿಲ್ಲ.',
+      one: '$count ಸಂವಾದ ಇನ್ನೂ ಪ್ರಕ್ರಿಯೆಯಲ್ಲಿದೆ ಮತ್ತು ಸೇರಿಸಲಾಗಿಲ್ಲ.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewEmpty => 'No finished conversations on this day.';
+  String get dayReviewEmpty => 'ಈ ದಿನ ಪೂರ್ಣಗೊಂಡ ಯಾವುದೇ ಸಂವಾದಗಳಿಲ್ಲ.';
 
   @override
-  String get dayReviewKeepTooltip => 'Keep as a conversation';
+  String get dayReviewKeepTooltip => 'ಸಂವಾದವಾಗಿ ಇರಿಸಿ';
 
   @override
   String dayReviewFinalizeButton(int kept, int rolled) {
-    return 'Keep $kept · Summarize $rolled';
+    return '$kept ಇರಿಸಿ · $rolled ಸಾರಾಂಶಗೊಳಿಸಿ';
   }
 
   @override
-  String get dayReviewConfirmTitle => 'Build the day summary?';
+  String get dayReviewConfirmTitle => 'ದಿನದ ಸಾರಾಂಶವನ್ನು ರಚಿಸಬೇಕೇ?';
 
   @override
   String dayReviewConfirmBody(int count) {
@@ -14580,235 +14580,236 @@ class AppLocalizationsKn extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '$count conversations will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          '$count ಸಂವಾದಗಳನ್ನು ದಿನದ ಸಾರಾಂಶದಲ್ಲಿ ಸೇರಿಸಲಾಗುತ್ತದೆ ಮತ್ತು ಅವು ನಿಮ್ಮ ಸಂವಾದ ಪಟ್ಟಿಯಿಂದ ಹೊರಹೋಗುತ್ತವೆ. “ಮತ್ತೆ ತೆರೆಯಿರಿ” ಬಳಸಿ ನೀವು ಇದನ್ನು ರದ್ದುಗೊಳಿಸಬಹುದು.',
       one:
-          '1 conversation will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          '$count ಸಂವಾದವನ್ನು ದಿನದ ಸಾರಾಂಶದಲ್ಲಿ ಸೇರಿಸಲಾಗುತ್ತದೆ ಮತ್ತು ಅದು ನಿಮ್ಮ ಸಂವಾದ ಪಟ್ಟಿಯಿಂದ ಹೊರಹೋಗುತ್ತದೆ. “ಮತ್ತೆ ತೆರೆಯಿರಿ” ಬಳಸಿ ನೀವು ಇದನ್ನು ರದ್ದುಗೊಳಿಸಬಹುದು.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewConfirmAction => 'Summarize';
+  String get dayReviewConfirmAction => 'ಸಾರಾಂಶಗೊಳಿಸಿ';
 
   @override
-  String get dayReviewWriting => 'Writing your day summary… this can take a minute on a local model.';
+  String get dayReviewWriting => 'ನಿಮ್ಮ ದಿನದ ಸಾರಾಂಶವನ್ನು ಬರೆಯಲಾಗುತ್ತಿದೆ… ಸ್ಥಳೀಯ ಮಾದರಿಯಲ್ಲಿ ಇದಕ್ಕೆ ಒಂದು ನಿಮಿಷ ತಗಲಬಹುದು.';
 
   @override
-  String get dayReviewApplying => 'Rewriting the summary with your corrections…';
+  String get dayReviewApplying => 'ನಿಮ್ಮ ತಿದ್ದುಪಡಿಗಳೊಂದಿಗೆ ಸಾರಾಂಶವನ್ನು ಮರುಬರೆಯಲಾಗುತ್ತಿದೆ…';
 
   @override
-  String get dayReviewReopening => 'Restoring the conversations…';
+  String get dayReviewReopening => 'ಸಂವಾದಗಳನ್ನು ಮರುಸ್ಥಾಪಿಸಲಾಗುತ್ತಿದೆ…';
 
   @override
-  String get dayReviewReopenTitle => 'Reopen this day?';
+  String get dayReviewReopenTitle => 'ಈ ದಿನವನ್ನು ಮತ್ತೆ ತೆರೆಯಬೇಕೇ?';
 
   @override
   String get dayReviewReopenBody =>
-      'The summarized conversations come back to your list and this summary (with its corrections) is deleted.';
+      'ಸಾರಾಂಶಗೊಳಿಸಿದ ಸಂವಾದಗಳು ನಿಮ್ಮ ಪಟ್ಟಿಗೆ ಮರಳುತ್ತವೆ ಮತ್ತು ಈ ಸಾರಾಂಶವನ್ನು (ಅದರ ತಿದ್ದುಪಡಿಗಳೊಂದಿಗೆ) ಅಳಿಸಲಾಗುತ್ತದೆ.';
 
   @override
-  String get dayReviewReopenAction => 'Reopen day';
+  String get dayReviewReopenAction => 'ದಿನವನ್ನು ಮತ್ತೆ ತೆರೆಯಿರಿ';
 
   @override
-  String get dayReviewCopy => 'Copy summary';
+  String get dayReviewCopy => 'ಸಾರಾಂಶ ನಕಲಿಸಿ';
 
   @override
-  String get dayReviewCopied => 'Day summary copied';
+  String get dayReviewCopied => 'ದಿನದ ಸಾರಾಂಶವನ್ನು ನಕಲಿಸಲಾಗಿದೆ';
 
   @override
-  String get dayReviewUntitled => 'Untitled conversation';
+  String get dayReviewUntitled => 'ಶೀರ್ಷಿಕೆ ರಹಿತ ಸಂವಾದ';
 
   @override
   String dayReviewCounts(int rolled, int kept) {
-    return '$rolled summarized · $kept kept';
+    return '$rolled ಸಾರಾಂಶಗೊಳಿಸಲಾಗಿದೆ · $kept ಇರಿಸಲಾಗಿದೆ';
   }
 
   @override
-  String get dayReviewEditHint => 'Select text to correct or redact it. Use + to add a paragraph.';
+  String get dayReviewEditHint => 'ಪಠ್ಯವನ್ನು ತಿದ್ದಲು ಅಥವಾ ಮರೆಮಾಡಲು ಅದನ್ನು ಆಯ್ಕೆಮಾಡಿ. ಪ್ಯಾರಾಗ್ರಾಫ್ ಸೇರಿಸಲು + ಬಳಸಿ.';
 
   @override
-  String get dayReviewCorrectAction => 'Correct';
+  String get dayReviewCorrectAction => 'ತಿದ್ದಿ';
 
   @override
-  String get dayReviewRedactAction => 'Redact';
+  String get dayReviewRedactAction => 'ಮರೆಮಾಡಿ';
 
   @override
-  String get dayReviewCorrectTitle => 'Correction';
+  String get dayReviewCorrectTitle => 'ತಿದ್ದುಪಡಿ';
 
   @override
-  String get dayReviewCorrectHint => 'What is right? e.g. \"It was Wednesday, not Tuesday\"';
+  String get dayReviewCorrectHint => 'ಯಾವುದು ಸರಿ? ಉದಾ. “ಅದು ಮಂಗಳವಾರವಲ್ಲ, ಬುಧವಾರವಾಗಿತ್ತು”';
 
   @override
-  String get dayReviewAddParagraph => 'Add paragraph';
+  String get dayReviewAddParagraph => 'ಪ್ಯಾರಾಗ್ರಾಫ್ ಸೇರಿಸಿ';
 
   @override
-  String get dayReviewAddParagraphTitle => 'Add a paragraph';
+  String get dayReviewAddParagraphTitle => 'ಒಂದು ಪ್ಯಾರಾಗ್ರಾಫ್ ಸೇರಿಸಿ';
 
   @override
-  String get dayReviewAddParagraphHint => 'Write what the summary is missing';
+  String get dayReviewAddParagraphHint => 'ಸಾರಾಂಶದಲ್ಲಿ ಏನು ಕಾಣೆಯಾಗಿದೆ ಎಂದು ಬರೆಯಿರಿ';
 
   @override
-  String get dayReviewYourParagraph => 'Your paragraph';
+  String get dayReviewYourParagraph => 'ನಿಮ್ಮ ಪ್ಯಾರಾಗ್ರಾಫ್';
 
   @override
-  String get dayReviewCorrectionsTitle => 'Your corrections';
+  String get dayReviewCorrectionsTitle => 'ನಿಮ್ಮ ತಿದ್ದುಪಡಿಗಳು';
 
   @override
   String dayReviewRedactedQuote(String quote) {
-    return 'Redacted: “$quote”';
+    return 'ಮರೆಮಾಡಲಾಗಿದೆ: “$quote”';
   }
 
   @override
-  String get dayReviewCorrectionPending => 'Not applied yet';
+  String get dayReviewCorrectionPending => 'ಇನ್ನೂ ಅನ್ವಯಿಸಿಲ್ಲ';
 
   @override
-  String get dayReviewCorrectionApplied => 'Applied';
+  String get dayReviewCorrectionApplied => 'ಅನ್ವಯಿಸಲಾಗಿದೆ';
 
   @override
   String dayReviewApplyButton(int count) {
-    return 'Apply corrections ($count)';
+    return 'ತಿದ್ದುಪಡಿಗಳನ್ನು ಅನ್ವಯಿಸಿ ($count)';
   }
 
   @override
   String dayReviewKeptTitle(int count) {
-    return 'Kept as conversations ($count)';
+    return 'ಸಂವಾದಗಳಾಗಿ ಇರಿಸಲಾಗಿದೆ ($count)';
   }
 
   @override
   String dayReviewRolledTitle(int count) {
-    return 'In this summary ($count)';
+    return 'ಈ ಸಾರಾಂಶದಲ್ಲಿ ($count)';
   }
 
   @override
-  String get dayReviewBannerToday => 'Review today';
+  String get dayReviewBannerToday => 'ಇಂದಿನ ದಿನವನ್ನು ಪರಿಶೀಲಿಸಿ';
 
   @override
   String dayReviewBannerDay(String day) {
-    return 'Review $day';
+    return '$day ಪರಿಶೀಲಿಸಿ';
   }
 
   @override
-  String get dayReviewBannerBody => 'Star what to keep; the rest becomes one day summary.';
+  String get dayReviewBannerBody => 'ಇರಿಸಿಕೊಳ್ಳಬೇಕಾದವುಗಳಿಗೆ ನಕ್ಷತ್ರ ಹಾಕಿ; ಉಳಿದವು ಒಂದೇ ದಿನದ ಸಾರಾಂಶವಾಗುತ್ತವೆ.';
 
   @override
-  String get dayReviewPickDate => 'Review another day';
+  String get dayReviewPickDate => 'ಬೇರೊಂದು ದಿನವನ್ನು ಪರಿಶೀಲಿಸಿ';
 
   @override
-  String get dayReviewsToSort => 'Waiting to be sorted';
+  String get dayReviewsToSort => 'ವಿಂಗಡಿಸಲು ಕಾಯುತ್ತಿವೆ';
 
   @override
-  String get dayReviewsDone => 'Reviewed days';
+  String get dayReviewsDone => 'ಪರಿಶೀಲಿಸಿದ ದಿನಗಳು';
 
   @override
-  String get dayReviewsNone => 'No reviewed days yet.';
+  String get dayReviewsNone => 'ಇನ್ನೂ ಯಾವುದೇ ಪರಿಶೀಲಿಸಿದ ದಿನಗಳಿಲ್ಲ.';
 
   @override
   String slashSendWithShortcut(String shortcut, String model) {
-    return 'Answer this message with the /$shortcut model ($model)';
+    return 'ಈ ಸಂದೇಶಕ್ಕೆ /$shortcut ಮಾದರಿಯಿಂದ ಉತ್ತರಿಸಿ ($model)';
   }
 
   @override
   String slashSendWithShortcutUnset(String shortcut) {
-    return 'Answer this message with the /$shortcut model (not set yet)';
+    return 'ಈ ಸಂದೇಶಕ್ಕೆ /$shortcut ಮಾದರಿಯಿಂದ ಉತ್ತರಿಸಿ (ಇನ್ನೂ ಹೊಂದಿಸಿಲ್ಲ)';
   }
 
   @override
   String slashToggleShortcutOn(String shortcut) {
-    return 'Keep using the /$shortcut model until you toggle it off';
+    return 'ನೀವು ಆಫ್ ಮಾಡುವವರೆಗೆ /$shortcut ಮಾದರಿಯನ್ನು ಬಳಸುತ್ತಿರಿ';
   }
 
   @override
   String slashToggleShortcutOff(String shortcut) {
-    return 'Turn the /$shortcut model off (it is on now)';
+    return '/$shortcut ಮಾದರಿಯನ್ನು ಆಫ್ ಮಾಡಿ (ಈಗ ಆನ್ ಆಗಿದೆ)';
   }
 
   @override
-  String get slashModelCommand => 'Choose which model each shortcut uses';
+  String get slashModelCommand => 'ಪ್ರತಿ ಶಾರ್ಟ್‌ಕಟ್ ಯಾವ ಮಾದರಿಯನ್ನು ಬಳಸಬೇಕು ಎಂದು ಆಯ್ಕೆಮಾಡಿ';
 
   @override
-  String get slashClearCommand => 'Clear this chat';
+  String get slashClearCommand => 'ಈ ಚ್ಯಾಟ್ ತೆರವುಗೊಳಿಸಿ';
 
   @override
-  String get slashAppsCommand => 'Open chat apps';
+  String get slashAppsCommand => 'ಚ್ಯಾಟ್ ಅಪ್ಲಿಕೇಶನ್‌ಗಳನ್ನು ತೆರೆಯಿರಿ';
 
   @override
-  String get slashReviewCommand => 'Review today: keep the conversations you star, summarize the rest';
+  String get slashReviewCommand =>
+      'ಇಂದಿನ ದಿನವನ್ನು ಪರಿಶೀಲಿಸಿ: ನಕ್ಷತ್ರ ಹಾಕಿದ ಸಂವಾದಗಳನ್ನು ಇರಿಸಿ, ಉಳಿದವುಗಳನ್ನು ಸಾರಾಂಶಗೊಳಿಸಿ';
 
   @override
-  String get slashHelpCommand => 'Show all chat commands';
+  String get slashHelpCommand => 'ಎಲ್ಲಾ ಚ್ಯಾಟ್ ಆಜ್ಞೆಗಳನ್ನು ತೋರಿಸಿ';
 
   @override
-  String get slashCommandsHelpTitle => 'Chat commands';
+  String get slashCommandsHelpTitle => 'ಚ್ಯಾಟ್ ಆಜ್ಞೆಗಳು';
 
   @override
   String chatShortcutActive(String shortcut) {
-    return '/$shortcut model on';
+    return '/$shortcut ಮಾದರಿ ಆನ್ ಆಗಿದೆ';
   }
 
   @override
   String chatShortcutTurnedOn(String shortcut) {
-    return '/$shortcut model on: every message uses it until you send /$shortcut toggle again';
+    return '/$shortcut ಮಾದರಿ ಆನ್ ಆಗಿದೆ: ನೀವು ಮತ್ತೆ /$shortcut toggle ಕಳುಹಿಸುವವರೆಗೆ ಪ್ರತಿ ಸಂದೇಶವೂ ಇದನ್ನೇ ಬಳಸುತ್ತದೆ';
   }
 
   @override
   String chatShortcutTurnedOff(String shortcut) {
-    return '/$shortcut model off: back to the base model';
+    return '/$shortcut ಮಾದರಿ ಆಫ್ ಆಗಿದೆ: ಮೂಲ ಮಾದರಿಗೆ ಮರಳಲಾಗಿದೆ';
   }
 
   @override
   String chatShortcutPickModelFirst(String shortcut) {
-    return 'Pick a model for /$shortcut first';
+    return 'ಮೊದಲು /$shortcut ಗಾಗಿ ಮಾದರಿಯನ್ನು ಆಯ್ಕೆಮಾಡಿ';
   }
 
   @override
   String chatShortcutNeedsMessage(String shortcut) {
-    return 'Type a message after /$shortcut, or /$shortcut toggle to keep it on';
+    return '/$shortcut ನಂತರ ಸಂದೇಶವನ್ನು ಟೈಪ್ ಮಾಡಿ, ಅಥವಾ ಅದನ್ನು ಆನ್ ಆಗಿರಿಸಲು /$shortcut toggle ಕಳುಹಿಸಿ';
   }
 
   @override
-  String get chatShortcutsUnavailable => 'Model shortcuts need the self-hosted local LLM backend.';
+  String get chatShortcutsUnavailable => 'ಮಾದರಿ ಶಾರ್ಟ್‌ಕಟ್‌ಗಳಿಗೆ ಸ್ವಯಂ-ಹೋಸ್ಟ್ ಮಾಡಿದ ಸ್ಥಳೀಯ LLM ಬ್ಯಾಕೆಂಡ್ ಅಗತ್ಯವಿದೆ.';
 
   @override
-  String get chatModelShortcutsTitle => 'Chat model shortcuts';
+  String get chatModelShortcutsTitle => 'ಚ್ಯಾಟ್ ಮಾದರಿ ಶಾರ್ಟ್‌ಕಟ್‌ಗಳು';
 
   @override
   String get chatModelShortcutsHint =>
-      'Type /name your question to answer one message with that model, or /name toggle to keep using it.';
+      'ಒಂದು ಸಂದೇಶಕ್ಕೆ ಆ ಮಾದರಿಯಿಂದ ಉತ್ತರ ಪಡೆಯಲು /name ನಿಮ್ಮ ಪ್ರಶ್ನೆ ಎಂದು ಟೈಪ್ ಮಾಡಿ, ಅಥವಾ ಅದನ್ನು ಬಳಸುತ್ತಲೇ ಇರಲು /name toggle ಎಂದು ಟೈಪ್ ಮಾಡಿ.';
 
   @override
   String chatModelShortcutsBaseModel(String model) {
-    return 'Base model: $model';
+    return 'ಮೂಲ ಮಾದರಿ: $model';
   }
 
   @override
-  String get chatModelShortcutsNotSet => 'Not set';
+  String get chatModelShortcutsNotSet => 'ಹೊಂದಿಸಿಲ್ಲ';
 
   @override
-  String get chatModelShortcutsAddLabel => 'name';
+  String get chatModelShortcutsAddLabel => 'ಹೆಸರು';
 
   @override
-  String get chatModelShortcutsAddButton => 'Add';
+  String get chatModelShortcutsAddButton => 'ಸೇರಿಸಿ';
 
   @override
-  String get chatModelShortcutsSaveFailed => 'Couldn\'t save the shortcut';
+  String get chatModelShortcutsSaveFailed => 'ಶಾರ್ಟ್‌ಕಟ್ ಉಳಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ';
 
   @override
-  String get folderInside => 'Inside';
+  String get folderInside => 'ಒಳಗೆ';
 
   @override
-  String get folderTopLevel => 'Top level';
+  String get folderTopLevel => 'ಮೇಲಿನ ಹಂತ';
 
   @override
-  String get newSubfolder => 'New subfolder';
+  String get newSubfolder => 'ಹೊಸ ಉಪಫೋಲ್ಡರ್';
 
   @override
-  String get folderTreeTitle => 'Folders';
+  String get folderTreeTitle => 'ಫೋಲ್ಡರ್‌ಗಳು';
 
   @override
-  String get moveFolder => 'Move…';
+  String get moveFolder => 'ಸರಿಸಿ…';
 
   @override
   String moveFolderTo(String name) {
-    return 'Move \"$name\" into…';
+    return '“$name” ಅನ್ನು ಇದರೊಳಗೆ ಸರಿಸಿ…';
   }
 }

@@ -14581,45 +14581,45 @@ class AppLocalizationsEl extends AppLocalizations {
   String get deviceControls => 'Χειριστήρια';
 
   @override
-  String get dayReviewTitle => 'Day review';
+  String get dayReviewTitle => 'Ανασκόπηση ημέρας';
 
   @override
-  String get dayReviewsTitle => 'Day reviews';
+  String get dayReviewsTitle => 'Ανασκοπήσεις ημερών';
 
   @override
-  String get dayReviewLoadFailed => 'Couldn\'t load this day';
+  String get dayReviewLoadFailed => 'Δεν ήταν δυνατή η φόρτωση αυτής της ημέρας';
 
   @override
-  String get dayReviewActionFailed => 'Something went wrong. Try again.';
+  String get dayReviewActionFailed => 'Κάτι πήγε στραβά. Δοκιμάστε ξανά.';
 
   @override
   String get dayReviewSortHint =>
-      'Star the conversations you want to keep. Everything else becomes one day summary you can correct.';
+      'Βάλτε αστέρι στις συνομιλίες που θέλετε να κρατήσετε. Όλες οι υπόλοιπες γίνονται μία περίληψη ημέρας, την οποία μπορείτε να διορθώσετε.';
 
   @override
   String dayReviewProcessing(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count conversations are still processing and are not included.',
-      one: '1 conversation is still processing and is not included.',
+      other: '$count συνομιλίες βρίσκονται ακόμη σε επεξεργασία και δεν περιλαμβάνονται.',
+      one: '1 συνομιλία βρίσκεται ακόμη σε επεξεργασία και δεν περιλαμβάνεται.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewEmpty => 'No finished conversations on this day.';
+  String get dayReviewEmpty => 'Δεν υπάρχουν ολοκληρωμένες συνομιλίες αυτήν την ημέρα.';
 
   @override
-  String get dayReviewKeepTooltip => 'Keep as a conversation';
+  String get dayReviewKeepTooltip => 'Διατήρηση ως συνομιλία';
 
   @override
   String dayReviewFinalizeButton(int kept, int rolled) {
-    return 'Keep $kept · Summarize $rolled';
+    return 'Διατήρηση $kept · Περίληψη $rolled';
   }
 
   @override
-  String get dayReviewConfirmTitle => 'Build the day summary?';
+  String get dayReviewConfirmTitle => 'Δημιουργία περίληψης ημέρας;';
 
   @override
   String dayReviewConfirmBody(int count) {
@@ -14627,235 +14627,238 @@ class AppLocalizationsEl extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '$count conversations will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          '$count συνομιλίες θα ενσωματωθούν στην περίληψη ημέρας και θα αφαιρεθούν από τη λίστα συνομιλιών σας. Μπορείτε να το αναιρέσετε με το Επανάνοιγμα ημέρας.',
       one:
-          '1 conversation will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          '1 συνομιλία θα ενσωματωθεί στην περίληψη ημέρας και θα αφαιρεθεί από τη λίστα συνομιλιών σας. Μπορείτε να το αναιρέσετε με το Επανάνοιγμα ημέρας.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewConfirmAction => 'Summarize';
+  String get dayReviewConfirmAction => 'Περίληψη';
 
   @override
-  String get dayReviewWriting => 'Writing your day summary… this can take a minute on a local model.';
+  String get dayReviewWriting => 'Γράφεται η περίληψη της ημέρας σας… με τοπικό μοντέλο μπορεί να διαρκέσει ένα λεπτό.';
 
   @override
-  String get dayReviewApplying => 'Rewriting the summary with your corrections…';
+  String get dayReviewApplying => 'Η περίληψη ξαναγράφεται με τις διορθώσεις σας…';
 
   @override
-  String get dayReviewReopening => 'Restoring the conversations…';
+  String get dayReviewReopening => 'Επαναφορά των συνομιλιών…';
 
   @override
-  String get dayReviewReopenTitle => 'Reopen this day?';
+  String get dayReviewReopenTitle => 'Επανάνοιγμα αυτής της ημέρας;';
 
   @override
   String get dayReviewReopenBody =>
-      'The summarized conversations come back to your list and this summary (with its corrections) is deleted.';
+      'Οι συνομιλίες της περίληψης επιστρέφουν στη λίστα σας και αυτή η περίληψη (μαζί με τις διορθώσεις της) διαγράφεται.';
 
   @override
-  String get dayReviewReopenAction => 'Reopen day';
+  String get dayReviewReopenAction => 'Επανάνοιγμα ημέρας';
 
   @override
-  String get dayReviewCopy => 'Copy summary';
+  String get dayReviewCopy => 'Αντιγραφή περίληψης';
 
   @override
-  String get dayReviewCopied => 'Day summary copied';
+  String get dayReviewCopied => 'Η περίληψη ημέρας αντιγράφηκε';
 
   @override
-  String get dayReviewUntitled => 'Untitled conversation';
+  String get dayReviewUntitled => 'Συνομιλία χωρίς τίτλο';
 
   @override
   String dayReviewCounts(int rolled, int kept) {
-    return '$rolled summarized · $kept kept';
+    return '$rolled στην περίληψη · $kept διατηρήθηκαν';
   }
 
   @override
-  String get dayReviewEditHint => 'Select text to correct or redact it. Use + to add a paragraph.';
+  String get dayReviewEditHint =>
+      'Επιλέξτε κείμενο για να το διορθώσετε ή να το αποκρύψετε. Πατήστε + για να προσθέσετε παράγραφο.';
 
   @override
-  String get dayReviewCorrectAction => 'Correct';
+  String get dayReviewCorrectAction => 'Διόρθωση';
 
   @override
-  String get dayReviewRedactAction => 'Redact';
+  String get dayReviewRedactAction => 'Απόκρυψη';
 
   @override
-  String get dayReviewCorrectTitle => 'Correction';
+  String get dayReviewCorrectTitle => 'Διόρθωση';
 
   @override
-  String get dayReviewCorrectHint => 'What is right? e.g. \"It was Wednesday, not Tuesday\"';
+  String get dayReviewCorrectHint => 'Τι ισχύει; Π.χ. «Ήταν Τετάρτη, όχι Τρίτη»';
 
   @override
-  String get dayReviewAddParagraph => 'Add paragraph';
+  String get dayReviewAddParagraph => 'Προσθήκη παραγράφου';
 
   @override
-  String get dayReviewAddParagraphTitle => 'Add a paragraph';
+  String get dayReviewAddParagraphTitle => 'Προσθήκη παραγράφου';
 
   @override
-  String get dayReviewAddParagraphHint => 'Write what the summary is missing';
+  String get dayReviewAddParagraphHint => 'Γράψτε τι λείπει από την περίληψη';
 
   @override
-  String get dayReviewYourParagraph => 'Your paragraph';
+  String get dayReviewYourParagraph => 'Η παράγραφός σας';
 
   @override
-  String get dayReviewCorrectionsTitle => 'Your corrections';
+  String get dayReviewCorrectionsTitle => 'Οι διορθώσεις σας';
 
   @override
   String dayReviewRedactedQuote(String quote) {
-    return 'Redacted: “$quote”';
+    return 'Αποκρύφθηκε: «$quote»';
   }
 
   @override
-  String get dayReviewCorrectionPending => 'Not applied yet';
+  String get dayReviewCorrectionPending => 'Δεν έχει εφαρμοστεί ακόμη';
 
   @override
-  String get dayReviewCorrectionApplied => 'Applied';
+  String get dayReviewCorrectionApplied => 'Εφαρμόστηκε';
 
   @override
   String dayReviewApplyButton(int count) {
-    return 'Apply corrections ($count)';
+    return 'Εφαρμογή διορθώσεων ($count)';
   }
 
   @override
   String dayReviewKeptTitle(int count) {
-    return 'Kept as conversations ($count)';
+    return 'Διατηρήθηκαν ως συνομιλίες ($count)';
   }
 
   @override
   String dayReviewRolledTitle(int count) {
-    return 'In this summary ($count)';
+    return 'Σε αυτήν την περίληψη ($count)';
   }
 
   @override
-  String get dayReviewBannerToday => 'Review today';
+  String get dayReviewBannerToday => 'Ανασκόπηση της σημερινής ημέρας';
 
   @override
   String dayReviewBannerDay(String day) {
-    return 'Review $day';
+    return 'Ανασκόπηση: $day';
   }
 
   @override
-  String get dayReviewBannerBody => 'Star what to keep; the rest becomes one day summary.';
+  String get dayReviewBannerBody =>
+      'Βάλτε αστέρι σε ό,τι θέλετε να κρατήσετε· τα υπόλοιπα γίνονται μία περίληψη ημέρας.';
 
   @override
-  String get dayReviewPickDate => 'Review another day';
+  String get dayReviewPickDate => 'Ανασκόπηση άλλης ημέρας';
 
   @override
-  String get dayReviewsToSort => 'Waiting to be sorted';
+  String get dayReviewsToSort => 'Αναμένουν ταξινόμηση';
 
   @override
-  String get dayReviewsDone => 'Reviewed days';
+  String get dayReviewsDone => 'Ημέρες με ανασκόπηση';
 
   @override
-  String get dayReviewsNone => 'No reviewed days yet.';
+  String get dayReviewsNone => 'Δεν υπάρχουν ακόμη ημέρες με ανασκόπηση.';
 
   @override
   String slashSendWithShortcut(String shortcut, String model) {
-    return 'Answer this message with the /$shortcut model ($model)';
+    return 'Απάντηση σε αυτό το μήνυμα με το μοντέλο /$shortcut ($model)';
   }
 
   @override
   String slashSendWithShortcutUnset(String shortcut) {
-    return 'Answer this message with the /$shortcut model (not set yet)';
+    return 'Απάντηση σε αυτό το μήνυμα με το μοντέλο /$shortcut (δεν έχει οριστεί ακόμη)';
   }
 
   @override
   String slashToggleShortcutOn(String shortcut) {
-    return 'Keep using the /$shortcut model until you toggle it off';
+    return 'Συνεχής χρήση του μοντέλου /$shortcut μέχρι να το απενεργοποιήσετε';
   }
 
   @override
   String slashToggleShortcutOff(String shortcut) {
-    return 'Turn the /$shortcut model off (it is on now)';
+    return 'Απενεργοποίηση του μοντέλου /$shortcut (είναι ενεργό τώρα)';
   }
 
   @override
-  String get slashModelCommand => 'Choose which model each shortcut uses';
+  String get slashModelCommand => 'Επιλέξτε ποιο μοντέλο χρησιμοποιεί κάθε συντόμευση';
 
   @override
-  String get slashClearCommand => 'Clear this chat';
+  String get slashClearCommand => 'Εκκαθάριση αυτής της συνομιλίας';
 
   @override
-  String get slashAppsCommand => 'Open chat apps';
+  String get slashAppsCommand => 'Άνοιγμα εφαρμογών συνομιλίας';
 
   @override
-  String get slashReviewCommand => 'Review today: keep the conversations you star, summarize the rest';
+  String get slashReviewCommand =>
+      'Ανασκόπηση της σημερινής ημέρας: κρατήστε τις συνομιλίες με αστέρι, συνοψίστε τις υπόλοιπες';
 
   @override
-  String get slashHelpCommand => 'Show all chat commands';
+  String get slashHelpCommand => 'Εμφάνιση όλων των εντολών συνομιλίας';
 
   @override
-  String get slashCommandsHelpTitle => 'Chat commands';
+  String get slashCommandsHelpTitle => 'Εντολές συνομιλίας';
 
   @override
   String chatShortcutActive(String shortcut) {
-    return '/$shortcut model on';
+    return 'Μοντέλο /$shortcut ενεργό';
   }
 
   @override
   String chatShortcutTurnedOn(String shortcut) {
-    return '/$shortcut model on: every message uses it until you send /$shortcut toggle again';
+    return 'Μοντέλο /$shortcut ενεργό: κάθε μήνυμα το χρησιμοποιεί μέχρι να στείλετε ξανά /$shortcut toggle';
   }
 
   @override
   String chatShortcutTurnedOff(String shortcut) {
-    return '/$shortcut model off: back to the base model';
+    return 'Μοντέλο /$shortcut ανενεργό: επιστροφή στο βασικό μοντέλο';
   }
 
   @override
   String chatShortcutPickModelFirst(String shortcut) {
-    return 'Pick a model for /$shortcut first';
+    return 'Επιλέξτε πρώτα ένα μοντέλο για το /$shortcut';
   }
 
   @override
   String chatShortcutNeedsMessage(String shortcut) {
-    return 'Type a message after /$shortcut, or /$shortcut toggle to keep it on';
+    return 'Πληκτρολογήστε ένα μήνυμα μετά το /$shortcut ή /$shortcut toggle για να παραμείνει ενεργό';
   }
 
   @override
-  String get chatShortcutsUnavailable => 'Model shortcuts need the self-hosted local LLM backend.';
+  String get chatShortcutsUnavailable => 'Οι συντομεύσεις μοντέλων απαιτούν το αυτο-φιλοξενούμενο backend τοπικού LLM.';
 
   @override
-  String get chatModelShortcutsTitle => 'Chat model shortcuts';
+  String get chatModelShortcutsTitle => 'Συντομεύσεις μοντέλων συνομιλίας';
 
   @override
   String get chatModelShortcutsHint =>
-      'Type /name your question to answer one message with that model, or /name toggle to keep using it.';
+      'Πληκτρολογήστε /name ακολουθούμενο από την ερώτησή σας για να απαντήσει αυτό το μοντέλο σε ένα μήνυμα ή /name toggle για να το χρησιμοποιείτε συνεχώς.';
 
   @override
   String chatModelShortcutsBaseModel(String model) {
-    return 'Base model: $model';
+    return 'Βασικό μοντέλο: $model';
   }
 
   @override
-  String get chatModelShortcutsNotSet => 'Not set';
+  String get chatModelShortcutsNotSet => 'Δεν έχει οριστεί';
 
   @override
-  String get chatModelShortcutsAddLabel => 'name';
+  String get chatModelShortcutsAddLabel => 'όνομα';
 
   @override
-  String get chatModelShortcutsAddButton => 'Add';
+  String get chatModelShortcutsAddButton => 'Προσθήκη';
 
   @override
-  String get chatModelShortcutsSaveFailed => 'Couldn\'t save the shortcut';
+  String get chatModelShortcutsSaveFailed => 'Δεν ήταν δυνατή η αποθήκευση της συντόμευσης';
 
   @override
-  String get folderInside => 'Inside';
+  String get folderInside => 'Μέσα σε';
 
   @override
-  String get folderTopLevel => 'Top level';
+  String get folderTopLevel => 'Ανώτατο επίπεδο';
 
   @override
-  String get newSubfolder => 'New subfolder';
+  String get newSubfolder => 'Νέος υποφάκελος';
 
   @override
-  String get folderTreeTitle => 'Folders';
+  String get folderTreeTitle => 'Φάκελοι';
 
   @override
-  String get moveFolder => 'Move…';
+  String get moveFolder => 'Μετακίνηση…';
 
   @override
   String moveFolderTo(String name) {
-    return 'Move \"$name\" into…';
+    return 'Μετακίνηση του «$name» σε…';
   }
 }

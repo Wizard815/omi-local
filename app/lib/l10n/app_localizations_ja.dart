@@ -14283,281 +14283,276 @@ class AppLocalizationsJa extends AppLocalizations {
   String get deviceControls => 'コントロール';
 
   @override
-  String get dayReviewTitle => 'Day review';
+  String get dayReviewTitle => '1日の振り返り';
 
   @override
-  String get dayReviewsTitle => 'Day reviews';
+  String get dayReviewsTitle => '振り返り一覧';
 
   @override
-  String get dayReviewLoadFailed => 'Couldn\'t load this day';
+  String get dayReviewLoadFailed => 'この日を読み込めませんでした';
 
   @override
-  String get dayReviewActionFailed => 'Something went wrong. Try again.';
+  String get dayReviewActionFailed => '問題が発生しました。もう一度お試しください。';
 
   @override
-  String get dayReviewSortHint =>
-      'Star the conversations you want to keep. Everything else becomes one day summary you can correct.';
+  String get dayReviewSortHint => '残したい会話にスターを付けてください。それ以外は、あとから修正できる1つの日次の要約にまとめられます。';
 
   @override
   String dayReviewProcessing(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count conversations are still processing and are not included.',
-      one: '1 conversation is still processing and is not included.',
+      other: '$count件の会話がまだ処理中のため、含まれていません。',
+      one: '1件の会話がまだ処理中のため、含まれていません。',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewEmpty => 'No finished conversations on this day.';
+  String get dayReviewEmpty => 'この日に完了した会話はありません。';
 
   @override
-  String get dayReviewKeepTooltip => 'Keep as a conversation';
+  String get dayReviewKeepTooltip => '会話として残す';
 
   @override
   String dayReviewFinalizeButton(int kept, int rolled) {
-    return 'Keep $kept · Summarize $rolled';
+    return '$kept件を残す · $rolled件を要約';
   }
 
   @override
-  String get dayReviewConfirmTitle => 'Build the day summary?';
+  String get dayReviewConfirmTitle => '日次の要約を作成しますか？';
 
   @override
   String dayReviewConfirmBody(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other:
-          '$count conversations will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
-      one:
-          '1 conversation will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+      other: '$count件の会話が日次の要約にまとめられ、会話リストから外れます。「この日を再度開く」で元に戻せます。',
+      one: '1件の会話が日次の要約にまとめられ、会話リストから外れます。「この日を再度開く」で元に戻せます。',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewConfirmAction => 'Summarize';
+  String get dayReviewConfirmAction => '要約する';
 
   @override
-  String get dayReviewWriting => 'Writing your day summary… this can take a minute on a local model.';
+  String get dayReviewWriting => '日次の要約を作成しています… ローカルモデルでは1分ほどかかることがあります。';
 
   @override
-  String get dayReviewApplying => 'Rewriting the summary with your corrections…';
+  String get dayReviewApplying => '修正内容を反映して要約を書き直しています…';
 
   @override
-  String get dayReviewReopening => 'Restoring the conversations…';
+  String get dayReviewReopening => '会話を復元しています…';
 
   @override
-  String get dayReviewReopenTitle => 'Reopen this day?';
+  String get dayReviewReopenTitle => 'この日を再度開きますか？';
 
   @override
-  String get dayReviewReopenBody =>
-      'The summarized conversations come back to your list and this summary (with its corrections) is deleted.';
+  String get dayReviewReopenBody => '要約された会話はリストに戻り、この要約（修正内容を含む）は削除されます。';
 
   @override
-  String get dayReviewReopenAction => 'Reopen day';
+  String get dayReviewReopenAction => 'この日を再度開く';
 
   @override
-  String get dayReviewCopy => 'Copy summary';
+  String get dayReviewCopy => '要約をコピー';
 
   @override
-  String get dayReviewCopied => 'Day summary copied';
+  String get dayReviewCopied => '日次の要約をコピーしました';
 
   @override
-  String get dayReviewUntitled => 'Untitled conversation';
+  String get dayReviewUntitled => '無題の会話';
 
   @override
   String dayReviewCounts(int rolled, int kept) {
-    return '$rolled summarized · $kept kept';
+    return '要約 $rolled件 · 保持 $kept件';
   }
 
   @override
-  String get dayReviewEditHint => 'Select text to correct or redact it. Use + to add a paragraph.';
+  String get dayReviewEditHint => 'テキストを選択すると、修正または黒塗りができます。+ で段落を追加できます。';
 
   @override
-  String get dayReviewCorrectAction => 'Correct';
+  String get dayReviewCorrectAction => '修正';
 
   @override
-  String get dayReviewRedactAction => 'Redact';
+  String get dayReviewRedactAction => '黒塗り';
 
   @override
-  String get dayReviewCorrectTitle => 'Correction';
+  String get dayReviewCorrectTitle => '修正';
 
   @override
-  String get dayReviewCorrectHint => 'What is right? e.g. \"It was Wednesday, not Tuesday\"';
+  String get dayReviewCorrectHint => '正しい内容は？ 例：「火曜日ではなく水曜日でした」';
 
   @override
-  String get dayReviewAddParagraph => 'Add paragraph';
+  String get dayReviewAddParagraph => '段落を追加';
 
   @override
-  String get dayReviewAddParagraphTitle => 'Add a paragraph';
+  String get dayReviewAddParagraphTitle => '段落を追加';
 
   @override
-  String get dayReviewAddParagraphHint => 'Write what the summary is missing';
+  String get dayReviewAddParagraphHint => '要約に足りない内容を書いてください';
 
   @override
-  String get dayReviewYourParagraph => 'Your paragraph';
+  String get dayReviewYourParagraph => 'あなたの段落';
 
   @override
-  String get dayReviewCorrectionsTitle => 'Your corrections';
+  String get dayReviewCorrectionsTitle => 'あなたの修正';
 
   @override
   String dayReviewRedactedQuote(String quote) {
-    return 'Redacted: “$quote”';
+    return '黒塗り済み：「$quote」';
   }
 
   @override
-  String get dayReviewCorrectionPending => 'Not applied yet';
+  String get dayReviewCorrectionPending => '未反映';
 
   @override
-  String get dayReviewCorrectionApplied => 'Applied';
+  String get dayReviewCorrectionApplied => '反映済み';
 
   @override
   String dayReviewApplyButton(int count) {
-    return 'Apply corrections ($count)';
+    return '修正を反映（$count）';
   }
 
   @override
   String dayReviewKeptTitle(int count) {
-    return 'Kept as conversations ($count)';
+    return '会話として保持（$count）';
   }
 
   @override
   String dayReviewRolledTitle(int count) {
-    return 'In this summary ($count)';
+    return 'この要約に含まれる会話（$count）';
   }
 
   @override
-  String get dayReviewBannerToday => 'Review today';
+  String get dayReviewBannerToday => '今日を振り返る';
 
   @override
   String dayReviewBannerDay(String day) {
-    return 'Review $day';
+    return '$dayを振り返る';
   }
 
   @override
-  String get dayReviewBannerBody => 'Star what to keep; the rest becomes one day summary.';
+  String get dayReviewBannerBody => '残すものにスターを付けてください。残りは1つの日次の要約になります。';
 
   @override
-  String get dayReviewPickDate => 'Review another day';
+  String get dayReviewPickDate => '別の日を振り返る';
 
   @override
-  String get dayReviewsToSort => 'Waiting to be sorted';
+  String get dayReviewsToSort => '仕分け待ち';
 
   @override
-  String get dayReviewsDone => 'Reviewed days';
+  String get dayReviewsDone => '振り返り済みの日';
 
   @override
-  String get dayReviewsNone => 'No reviewed days yet.';
+  String get dayReviewsNone => '振り返り済みの日はまだありません。';
 
   @override
   String slashSendWithShortcut(String shortcut, String model) {
-    return 'Answer this message with the /$shortcut model ($model)';
+    return '/$shortcut モデル（$model）でこのメッセージに回答';
   }
 
   @override
   String slashSendWithShortcutUnset(String shortcut) {
-    return 'Answer this message with the /$shortcut model (not set yet)';
+    return '/$shortcut モデル（未設定）でこのメッセージに回答';
   }
 
   @override
   String slashToggleShortcutOn(String shortcut) {
-    return 'Keep using the /$shortcut model until you toggle it off';
+    return 'オフにするまで /$shortcut モデルを使い続ける';
   }
 
   @override
   String slashToggleShortcutOff(String shortcut) {
-    return 'Turn the /$shortcut model off (it is on now)';
+    return '/$shortcut モデルをオフにする（現在オン）';
   }
 
   @override
-  String get slashModelCommand => 'Choose which model each shortcut uses';
+  String get slashModelCommand => '各ショートカットで使うモデルを選択';
 
   @override
-  String get slashClearCommand => 'Clear this chat';
+  String get slashClearCommand => 'このチャットをクリア';
 
   @override
-  String get slashAppsCommand => 'Open chat apps';
+  String get slashAppsCommand => 'チャットアプリを開く';
 
   @override
-  String get slashReviewCommand => 'Review today: keep the conversations you star, summarize the rest';
+  String get slashReviewCommand => '今日を振り返る：スターを付けた会話を残し、残りを要約';
 
   @override
-  String get slashHelpCommand => 'Show all chat commands';
+  String get slashHelpCommand => 'すべてのチャットコマンドを表示';
 
   @override
-  String get slashCommandsHelpTitle => 'Chat commands';
+  String get slashCommandsHelpTitle => 'チャットコマンド';
 
   @override
   String chatShortcutActive(String shortcut) {
-    return '/$shortcut model on';
+    return '/$shortcut モデル：オン';
   }
 
   @override
   String chatShortcutTurnedOn(String shortcut) {
-    return '/$shortcut model on: every message uses it until you send /$shortcut toggle again';
+    return '/$shortcut モデルをオンにしました：もう一度 /$shortcut toggle を送信するまで、すべてのメッセージでこのモデルを使います';
   }
 
   @override
   String chatShortcutTurnedOff(String shortcut) {
-    return '/$shortcut model off: back to the base model';
+    return '/$shortcut モデルをオフにしました：ベースモデルに戻ります';
   }
 
   @override
   String chatShortcutPickModelFirst(String shortcut) {
-    return 'Pick a model for /$shortcut first';
+    return '先に /$shortcut のモデルを選択してください';
   }
 
   @override
   String chatShortcutNeedsMessage(String shortcut) {
-    return 'Type a message after /$shortcut, or /$shortcut toggle to keep it on';
+    return '/$shortcut の後にメッセージを入力するか、/$shortcut toggle でオンのままにしてください';
   }
 
   @override
-  String get chatShortcutsUnavailable => 'Model shortcuts need the self-hosted local LLM backend.';
+  String get chatShortcutsUnavailable => 'モデルショートカットには、セルフホストのローカル LLM バックエンドが必要です。';
 
   @override
-  String get chatModelShortcutsTitle => 'Chat model shortcuts';
+  String get chatModelShortcutsTitle => 'チャットモデルのショートカット';
 
   @override
-  String get chatModelShortcutsHint =>
-      'Type /name your question to answer one message with that model, or /name toggle to keep using it.';
+  String get chatModelShortcutsHint => '「/name 質問」と入力するとそのモデルが1件のメッセージに回答し、「/name toggle」と入力するとそのモデルを使い続けます。';
 
   @override
   String chatModelShortcutsBaseModel(String model) {
-    return 'Base model: $model';
+    return 'ベースモデル：$model';
   }
 
   @override
-  String get chatModelShortcutsNotSet => 'Not set';
+  String get chatModelShortcutsNotSet => '未設定';
 
   @override
-  String get chatModelShortcutsAddLabel => 'name';
+  String get chatModelShortcutsAddLabel => '名前';
 
   @override
-  String get chatModelShortcutsAddButton => 'Add';
+  String get chatModelShortcutsAddButton => '追加';
 
   @override
-  String get chatModelShortcutsSaveFailed => 'Couldn\'t save the shortcut';
+  String get chatModelShortcutsSaveFailed => 'ショートカットを保存できませんでした';
 
   @override
-  String get folderInside => 'Inside';
+  String get folderInside => '親フォルダ';
 
   @override
-  String get folderTopLevel => 'Top level';
+  String get folderTopLevel => '最上位';
 
   @override
-  String get newSubfolder => 'New subfolder';
+  String get newSubfolder => '新しいサブフォルダ';
 
   @override
-  String get folderTreeTitle => 'Folders';
+  String get folderTreeTitle => 'フォルダ';
 
   @override
-  String get moveFolder => 'Move…';
+  String get moveFolder => '移動…';
 
   @override
   String moveFolderTo(String name) {
-    return 'Move \"$name\" into…';
+    return '「$name」の移動先…';
   }
 }

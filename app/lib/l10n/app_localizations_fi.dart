@@ -14492,45 +14492,45 @@ class AppLocalizationsFi extends AppLocalizations {
   String get deviceControls => 'Säätimet';
 
   @override
-  String get dayReviewTitle => 'Day review';
+  String get dayReviewTitle => 'Päivän katsaus';
 
   @override
-  String get dayReviewsTitle => 'Day reviews';
+  String get dayReviewsTitle => 'Päivän katsaukset';
 
   @override
-  String get dayReviewLoadFailed => 'Couldn\'t load this day';
+  String get dayReviewLoadFailed => 'Päivää ei voitu ladata';
 
   @override
-  String get dayReviewActionFailed => 'Something went wrong. Try again.';
+  String get dayReviewActionFailed => 'Jokin meni pieleen. Yritä uudelleen.';
 
   @override
   String get dayReviewSortHint =>
-      'Star the conversations you want to keep. Everything else becomes one day summary you can correct.';
+      'Merkitse tähdellä keskustelut, jotka haluat säilyttää. Kaikesta muusta tulee yksi päivän yhteenveto, jota voit korjata.';
 
   @override
   String dayReviewProcessing(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count conversations are still processing and are not included.',
-      one: '1 conversation is still processing and is not included.',
+      other: '$count keskustelua on vielä käsittelyssä, eikä niitä ole otettu mukaan.',
+      one: '1 keskustelu on vielä käsittelyssä, eikä sitä ole otettu mukaan.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewEmpty => 'No finished conversations on this day.';
+  String get dayReviewEmpty => 'Tältä päivältä ei ole valmiita keskusteluja.';
 
   @override
-  String get dayReviewKeepTooltip => 'Keep as a conversation';
+  String get dayReviewKeepTooltip => 'Säilytä keskusteluna';
 
   @override
   String dayReviewFinalizeButton(int kept, int rolled) {
-    return 'Keep $kept · Summarize $rolled';
+    return 'Säilytä $kept · Tiivistä $rolled';
   }
 
   @override
-  String get dayReviewConfirmTitle => 'Build the day summary?';
+  String get dayReviewConfirmTitle => 'Luodaanko päivän yhteenveto?';
 
   @override
   String dayReviewConfirmBody(int count) {
@@ -14538,235 +14538,236 @@ class AppLocalizationsFi extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '$count conversations will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          '$count keskustelua yhdistetään päivän yhteenvetoon, ja ne poistuvat keskustelulistastasi. Voit perua tämän Avaa päivä uudelleen -toiminnolla.',
       one:
-          '1 conversation will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          '1 keskustelu yhdistetään päivän yhteenvetoon, ja se poistuu keskustelulistastasi. Voit perua tämän Avaa päivä uudelleen -toiminnolla.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewConfirmAction => 'Summarize';
+  String get dayReviewConfirmAction => 'Tiivistä';
 
   @override
-  String get dayReviewWriting => 'Writing your day summary… this can take a minute on a local model.';
+  String get dayReviewWriting => 'Kirjoitetaan päivän yhteenvetoa… paikallisella mallilla tämä voi kestää minuutin.';
 
   @override
-  String get dayReviewApplying => 'Rewriting the summary with your corrections…';
+  String get dayReviewApplying => 'Kirjoitetaan yhteenvetoa uudelleen korjaustesi mukaan…';
 
   @override
-  String get dayReviewReopening => 'Restoring the conversations…';
+  String get dayReviewReopening => 'Palautetaan keskusteluja…';
 
   @override
-  String get dayReviewReopenTitle => 'Reopen this day?';
+  String get dayReviewReopenTitle => 'Avataanko tämä päivä uudelleen?';
 
   @override
   String get dayReviewReopenBody =>
-      'The summarized conversations come back to your list and this summary (with its corrections) is deleted.';
+      'Tiivistetyt keskustelut palaavat listaasi, ja tämä yhteenveto (korjauksineen) poistetaan.';
 
   @override
-  String get dayReviewReopenAction => 'Reopen day';
+  String get dayReviewReopenAction => 'Avaa päivä uudelleen';
 
   @override
-  String get dayReviewCopy => 'Copy summary';
+  String get dayReviewCopy => 'Kopioi yhteenveto';
 
   @override
-  String get dayReviewCopied => 'Day summary copied';
+  String get dayReviewCopied => 'Päivän yhteenveto kopioitu';
 
   @override
-  String get dayReviewUntitled => 'Untitled conversation';
+  String get dayReviewUntitled => 'Nimetön keskustelu';
 
   @override
   String dayReviewCounts(int rolled, int kept) {
-    return '$rolled summarized · $kept kept';
+    return '$rolled tiivistetty · $kept säilytetty';
   }
 
   @override
-  String get dayReviewEditHint => 'Select text to correct or redact it. Use + to add a paragraph.';
+  String get dayReviewEditHint => 'Valitse tekstiä korjataksesi tai peittääksesi sen. Lisää kappale painikkeella +.';
 
   @override
-  String get dayReviewCorrectAction => 'Correct';
+  String get dayReviewCorrectAction => 'Korjaa';
 
   @override
-  String get dayReviewRedactAction => 'Redact';
+  String get dayReviewRedactAction => 'Peitä';
 
   @override
-  String get dayReviewCorrectTitle => 'Correction';
+  String get dayReviewCorrectTitle => 'Korjaus';
 
   @override
-  String get dayReviewCorrectHint => 'What is right? e.g. \"It was Wednesday, not Tuesday\"';
+  String get dayReviewCorrectHint => 'Mikä on oikein? Esim. ”Se oli keskiviikko, ei tiistai”';
 
   @override
-  String get dayReviewAddParagraph => 'Add paragraph';
+  String get dayReviewAddParagraph => 'Lisää kappale';
 
   @override
-  String get dayReviewAddParagraphTitle => 'Add a paragraph';
+  String get dayReviewAddParagraphTitle => 'Lisää kappale';
 
   @override
-  String get dayReviewAddParagraphHint => 'Write what the summary is missing';
+  String get dayReviewAddParagraphHint => 'Kirjoita, mitä yhteenvedosta puuttuu';
 
   @override
-  String get dayReviewYourParagraph => 'Your paragraph';
+  String get dayReviewYourParagraph => 'Oma kappaleesi';
 
   @override
-  String get dayReviewCorrectionsTitle => 'Your corrections';
+  String get dayReviewCorrectionsTitle => 'Korjauksesi';
 
   @override
   String dayReviewRedactedQuote(String quote) {
-    return 'Redacted: “$quote”';
+    return 'Peitetty: ”$quote”';
   }
 
   @override
-  String get dayReviewCorrectionPending => 'Not applied yet';
+  String get dayReviewCorrectionPending => 'Ei vielä sovellettu';
 
   @override
-  String get dayReviewCorrectionApplied => 'Applied';
+  String get dayReviewCorrectionApplied => 'Sovellettu';
 
   @override
   String dayReviewApplyButton(int count) {
-    return 'Apply corrections ($count)';
+    return 'Sovella korjaukset ($count)';
   }
 
   @override
   String dayReviewKeptTitle(int count) {
-    return 'Kept as conversations ($count)';
+    return 'Säilytetty keskusteluina ($count)';
   }
 
   @override
   String dayReviewRolledTitle(int count) {
-    return 'In this summary ($count)';
+    return 'Tässä yhteenvedossa ($count)';
   }
 
   @override
-  String get dayReviewBannerToday => 'Review today';
+  String get dayReviewBannerToday => 'Käy tämä päivä läpi';
 
   @override
   String dayReviewBannerDay(String day) {
-    return 'Review $day';
+    return 'Käy läpi: $day';
   }
 
   @override
-  String get dayReviewBannerBody => 'Star what to keep; the rest becomes one day summary.';
+  String get dayReviewBannerBody => 'Merkitse tähdellä säilytettävät; muista tulee yksi päivän yhteenveto.';
 
   @override
-  String get dayReviewPickDate => 'Review another day';
+  String get dayReviewPickDate => 'Käy läpi toinen päivä';
 
   @override
-  String get dayReviewsToSort => 'Waiting to be sorted';
+  String get dayReviewsToSort => 'Odottaa lajittelua';
 
   @override
-  String get dayReviewsDone => 'Reviewed days';
+  String get dayReviewsDone => 'Läpikäydyt päivät';
 
   @override
-  String get dayReviewsNone => 'No reviewed days yet.';
+  String get dayReviewsNone => 'Ei vielä läpikäytyjä päiviä.';
 
   @override
   String slashSendWithShortcut(String shortcut, String model) {
-    return 'Answer this message with the /$shortcut model ($model)';
+    return 'Vastaa tähän viestiin /$shortcut-mallilla ($model)';
   }
 
   @override
   String slashSendWithShortcutUnset(String shortcut) {
-    return 'Answer this message with the /$shortcut model (not set yet)';
+    return 'Vastaa tähän viestiin /$shortcut-mallilla (ei vielä asetettu)';
   }
 
   @override
   String slashToggleShortcutOn(String shortcut) {
-    return 'Keep using the /$shortcut model until you toggle it off';
+    return 'Käytä /$shortcut-mallia, kunnes kytket sen pois';
   }
 
   @override
   String slashToggleShortcutOff(String shortcut) {
-    return 'Turn the /$shortcut model off (it is on now)';
+    return 'Kytke /$shortcut-malli pois (se on nyt päällä)';
   }
 
   @override
-  String get slashModelCommand => 'Choose which model each shortcut uses';
+  String get slashModelCommand => 'Valitse, mitä mallia kukin pikavalinta käyttää';
 
   @override
-  String get slashClearCommand => 'Clear this chat';
+  String get slashClearCommand => 'Tyhjennä tämä chat';
 
   @override
-  String get slashAppsCommand => 'Open chat apps';
+  String get slashAppsCommand => 'Avaa chat-sovellukset';
 
   @override
-  String get slashReviewCommand => 'Review today: keep the conversations you star, summarize the rest';
+  String get slashReviewCommand => 'Käy tämä päivä läpi: säilytä tähdellä merkityt keskustelut, tiivistä loput';
 
   @override
-  String get slashHelpCommand => 'Show all chat commands';
+  String get slashHelpCommand => 'Näytä kaikki chat-komennot';
 
   @override
-  String get slashCommandsHelpTitle => 'Chat commands';
+  String get slashCommandsHelpTitle => 'Chat-komennot';
 
   @override
   String chatShortcutActive(String shortcut) {
-    return '/$shortcut model on';
+    return '/$shortcut-malli päällä';
   }
 
   @override
   String chatShortcutTurnedOn(String shortcut) {
-    return '/$shortcut model on: every message uses it until you send /$shortcut toggle again';
+    return '/$shortcut-malli päällä: jokainen viesti käyttää sitä, kunnes lähetät taas /$shortcut toggle';
   }
 
   @override
   String chatShortcutTurnedOff(String shortcut) {
-    return '/$shortcut model off: back to the base model';
+    return '/$shortcut-malli pois: takaisin perusmalliin';
   }
 
   @override
   String chatShortcutPickModelFirst(String shortcut) {
-    return 'Pick a model for /$shortcut first';
+    return 'Valitse ensin malli komennolle /$shortcut';
   }
 
   @override
   String chatShortcutNeedsMessage(String shortcut) {
-    return 'Type a message after /$shortcut, or /$shortcut toggle to keep it on';
+    return 'Kirjoita viesti komennon /$shortcut perään, tai pidä malli päällä komennolla /$shortcut toggle';
   }
 
   @override
-  String get chatShortcutsUnavailable => 'Model shortcuts need the self-hosted local LLM backend.';
+  String get chatShortcutsUnavailable =>
+      'Mallien pikavalinnat vaativat itse ylläpidetyn paikallisen LLM-taustapalvelun.';
 
   @override
-  String get chatModelShortcutsTitle => 'Chat model shortcuts';
+  String get chatModelShortcutsTitle => 'Chat-mallien pikavalinnat';
 
   @override
   String get chatModelShortcutsHint =>
-      'Type /name your question to answer one message with that model, or /name toggle to keep using it.';
+      'Kirjoita /name kysymyksesi, niin malli vastaa siihen yhteen viestiin, tai /name toggle, niin käytät mallia jatkuvasti.';
 
   @override
   String chatModelShortcutsBaseModel(String model) {
-    return 'Base model: $model';
+    return 'Perusmalli: $model';
   }
 
   @override
-  String get chatModelShortcutsNotSet => 'Not set';
+  String get chatModelShortcutsNotSet => 'Ei asetettu';
 
   @override
-  String get chatModelShortcutsAddLabel => 'name';
+  String get chatModelShortcutsAddLabel => 'nimi';
 
   @override
-  String get chatModelShortcutsAddButton => 'Add';
+  String get chatModelShortcutsAddButton => 'Lisää';
 
   @override
-  String get chatModelShortcutsSaveFailed => 'Couldn\'t save the shortcut';
+  String get chatModelShortcutsSaveFailed => 'Pikavalintaa ei voitu tallentaa';
 
   @override
-  String get folderInside => 'Inside';
+  String get folderInside => 'Yläkansio';
 
   @override
-  String get folderTopLevel => 'Top level';
+  String get folderTopLevel => 'Ylin taso';
 
   @override
-  String get newSubfolder => 'New subfolder';
+  String get newSubfolder => 'Uusi alikansio';
 
   @override
-  String get folderTreeTitle => 'Folders';
+  String get folderTreeTitle => 'Kansiot';
 
   @override
-  String get moveFolder => 'Move…';
+  String get moveFolder => 'Siirrä…';
 
   @override
   String moveFolderTo(String name) {
-    return 'Move \"$name\" into…';
+    return 'Siirrä ”$name” kansioon…';
   }
 }

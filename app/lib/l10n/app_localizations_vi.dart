@@ -14488,45 +14488,45 @@ class AppLocalizationsVi extends AppLocalizations {
   String get deviceControls => 'Điều khiển';
 
   @override
-  String get dayReviewTitle => 'Day review';
+  String get dayReviewTitle => 'Xem lại ngày';
 
   @override
-  String get dayReviewsTitle => 'Day reviews';
+  String get dayReviewsTitle => 'Xem lại các ngày';
 
   @override
-  String get dayReviewLoadFailed => 'Couldn\'t load this day';
+  String get dayReviewLoadFailed => 'Không thể tải ngày này';
 
   @override
-  String get dayReviewActionFailed => 'Something went wrong. Try again.';
+  String get dayReviewActionFailed => 'Đã có lỗi xảy ra. Hãy thử lại.';
 
   @override
   String get dayReviewSortHint =>
-      'Star the conversations you want to keep. Everything else becomes one day summary you can correct.';
+      'Gắn sao cho các cuộc trò chuyện bạn muốn giữ lại. Mọi thứ khác sẽ gộp thành một bản tóm tắt ngày mà bạn có thể đính chính.';
 
   @override
   String dayReviewProcessing(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count conversations are still processing and are not included.',
-      one: '1 conversation is still processing and is not included.',
+      other: '$count cuộc trò chuyện vẫn đang được xử lý và chưa được đưa vào.',
+      one: '1 cuộc trò chuyện vẫn đang được xử lý và chưa được đưa vào.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewEmpty => 'No finished conversations on this day.';
+  String get dayReviewEmpty => 'Không có cuộc trò chuyện nào đã hoàn tất trong ngày này.';
 
   @override
-  String get dayReviewKeepTooltip => 'Keep as a conversation';
+  String get dayReviewKeepTooltip => 'Giữ lại dưới dạng cuộc trò chuyện';
 
   @override
   String dayReviewFinalizeButton(int kept, int rolled) {
-    return 'Keep $kept · Summarize $rolled';
+    return 'Giữ $kept · Tóm tắt $rolled';
   }
 
   @override
-  String get dayReviewConfirmTitle => 'Build the day summary?';
+  String get dayReviewConfirmTitle => 'Tạo bản tóm tắt ngày?';
 
   @override
   String dayReviewConfirmBody(int count) {
@@ -14534,235 +14534,235 @@ class AppLocalizationsVi extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '$count conversations will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          '$count cuộc trò chuyện sẽ được gộp vào bản tóm tắt ngày và rời khỏi danh sách cuộc trò chuyện của bạn. Bạn có thể hoàn tác bằng Mở lại.',
       one:
-          '1 conversation will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          '1 cuộc trò chuyện sẽ được gộp vào bản tóm tắt ngày và rời khỏi danh sách cuộc trò chuyện của bạn. Bạn có thể hoàn tác bằng Mở lại.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewConfirmAction => 'Summarize';
+  String get dayReviewConfirmAction => 'Tóm tắt';
 
   @override
-  String get dayReviewWriting => 'Writing your day summary… this can take a minute on a local model.';
+  String get dayReviewWriting => 'Đang viết bản tóm tắt ngày của bạn… việc này có thể mất một phút với mô hình cục bộ.';
 
   @override
-  String get dayReviewApplying => 'Rewriting the summary with your corrections…';
+  String get dayReviewApplying => 'Đang viết lại bản tóm tắt theo các đính chính của bạn…';
 
   @override
-  String get dayReviewReopening => 'Restoring the conversations…';
+  String get dayReviewReopening => 'Đang khôi phục các cuộc trò chuyện…';
 
   @override
-  String get dayReviewReopenTitle => 'Reopen this day?';
+  String get dayReviewReopenTitle => 'Mở lại ngày này?';
 
   @override
   String get dayReviewReopenBody =>
-      'The summarized conversations come back to your list and this summary (with its corrections) is deleted.';
+      'Các cuộc trò chuyện đã tóm tắt sẽ quay lại danh sách của bạn và bản tóm tắt này (cùng các đính chính) sẽ bị xóa.';
 
   @override
-  String get dayReviewReopenAction => 'Reopen day';
+  String get dayReviewReopenAction => 'Mở lại ngày';
 
   @override
-  String get dayReviewCopy => 'Copy summary';
+  String get dayReviewCopy => 'Sao chép bản tóm tắt';
 
   @override
-  String get dayReviewCopied => 'Day summary copied';
+  String get dayReviewCopied => 'Đã sao chép bản tóm tắt ngày';
 
   @override
-  String get dayReviewUntitled => 'Untitled conversation';
+  String get dayReviewUntitled => 'Cuộc trò chuyện không có tiêu đề';
 
   @override
   String dayReviewCounts(int rolled, int kept) {
-    return '$rolled summarized · $kept kept';
+    return '$rolled đã tóm tắt · $kept đã giữ';
   }
 
   @override
-  String get dayReviewEditHint => 'Select text to correct or redact it. Use + to add a paragraph.';
+  String get dayReviewEditHint => 'Chọn văn bản để đính chính hoặc che đi. Dùng + để thêm đoạn văn.';
 
   @override
-  String get dayReviewCorrectAction => 'Correct';
+  String get dayReviewCorrectAction => 'Đính chính';
 
   @override
-  String get dayReviewRedactAction => 'Redact';
+  String get dayReviewRedactAction => 'Che đi';
 
   @override
-  String get dayReviewCorrectTitle => 'Correction';
+  String get dayReviewCorrectTitle => 'Đính chính';
 
   @override
-  String get dayReviewCorrectHint => 'What is right? e.g. \"It was Wednesday, not Tuesday\"';
+  String get dayReviewCorrectHint => 'Điều gì mới đúng? Ví dụ: “Đó là thứ Tư, không phải thứ Ba”';
 
   @override
-  String get dayReviewAddParagraph => 'Add paragraph';
+  String get dayReviewAddParagraph => 'Thêm đoạn văn';
 
   @override
-  String get dayReviewAddParagraphTitle => 'Add a paragraph';
+  String get dayReviewAddParagraphTitle => 'Thêm một đoạn văn';
 
   @override
-  String get dayReviewAddParagraphHint => 'Write what the summary is missing';
+  String get dayReviewAddParagraphHint => 'Viết những gì bản tóm tắt còn thiếu';
 
   @override
-  String get dayReviewYourParagraph => 'Your paragraph';
+  String get dayReviewYourParagraph => 'Đoạn văn của bạn';
 
   @override
-  String get dayReviewCorrectionsTitle => 'Your corrections';
+  String get dayReviewCorrectionsTitle => 'Các đính chính của bạn';
 
   @override
   String dayReviewRedactedQuote(String quote) {
-    return 'Redacted: “$quote”';
+    return 'Đã che: “$quote”';
   }
 
   @override
-  String get dayReviewCorrectionPending => 'Not applied yet';
+  String get dayReviewCorrectionPending => 'Chưa áp dụng';
 
   @override
-  String get dayReviewCorrectionApplied => 'Applied';
+  String get dayReviewCorrectionApplied => 'Đã áp dụng';
 
   @override
   String dayReviewApplyButton(int count) {
-    return 'Apply corrections ($count)';
+    return 'Áp dụng đính chính ($count)';
   }
 
   @override
   String dayReviewKeptTitle(int count) {
-    return 'Kept as conversations ($count)';
+    return 'Giữ lại dưới dạng cuộc trò chuyện ($count)';
   }
 
   @override
   String dayReviewRolledTitle(int count) {
-    return 'In this summary ($count)';
+    return 'Trong bản tóm tắt này ($count)';
   }
 
   @override
-  String get dayReviewBannerToday => 'Review today';
+  String get dayReviewBannerToday => 'Xem lại hôm nay';
 
   @override
   String dayReviewBannerDay(String day) {
-    return 'Review $day';
+    return 'Xem lại $day';
   }
 
   @override
-  String get dayReviewBannerBody => 'Star what to keep; the rest becomes one day summary.';
+  String get dayReviewBannerBody => 'Gắn sao những gì cần giữ; phần còn lại sẽ thành một bản tóm tắt ngày.';
 
   @override
-  String get dayReviewPickDate => 'Review another day';
+  String get dayReviewPickDate => 'Xem lại ngày khác';
 
   @override
-  String get dayReviewsToSort => 'Waiting to be sorted';
+  String get dayReviewsToSort => 'Đang chờ phân loại';
 
   @override
-  String get dayReviewsDone => 'Reviewed days';
+  String get dayReviewsDone => 'Các ngày đã xem lại';
 
   @override
-  String get dayReviewsNone => 'No reviewed days yet.';
+  String get dayReviewsNone => 'Chưa có ngày nào được xem lại.';
 
   @override
   String slashSendWithShortcut(String shortcut, String model) {
-    return 'Answer this message with the /$shortcut model ($model)';
+    return 'Trả lời tin nhắn này bằng mô hình /$shortcut ($model)';
   }
 
   @override
   String slashSendWithShortcutUnset(String shortcut) {
-    return 'Answer this message with the /$shortcut model (not set yet)';
+    return 'Trả lời tin nhắn này bằng mô hình /$shortcut (chưa thiết lập)';
   }
 
   @override
   String slashToggleShortcutOn(String shortcut) {
-    return 'Keep using the /$shortcut model until you toggle it off';
+    return 'Tiếp tục dùng mô hình /$shortcut cho đến khi bạn tắt';
   }
 
   @override
   String slashToggleShortcutOff(String shortcut) {
-    return 'Turn the /$shortcut model off (it is on now)';
+    return 'Tắt mô hình /$shortcut (hiện đang bật)';
   }
 
   @override
-  String get slashModelCommand => 'Choose which model each shortcut uses';
+  String get slashModelCommand => 'Chọn mô hình cho từng lối tắt';
 
   @override
-  String get slashClearCommand => 'Clear this chat';
+  String get slashClearCommand => 'Xóa cuộc trò chuyện này';
 
   @override
-  String get slashAppsCommand => 'Open chat apps';
+  String get slashAppsCommand => 'Mở ứng dụng chat';
 
   @override
-  String get slashReviewCommand => 'Review today: keep the conversations you star, summarize the rest';
+  String get slashReviewCommand => 'Xem lại hôm nay: giữ các cuộc trò chuyện bạn gắn sao, tóm tắt phần còn lại';
 
   @override
-  String get slashHelpCommand => 'Show all chat commands';
+  String get slashHelpCommand => 'Hiển thị tất cả lệnh chat';
 
   @override
-  String get slashCommandsHelpTitle => 'Chat commands';
+  String get slashCommandsHelpTitle => 'Lệnh chat';
 
   @override
   String chatShortcutActive(String shortcut) {
-    return '/$shortcut model on';
+    return 'Đã bật mô hình /$shortcut';
   }
 
   @override
   String chatShortcutTurnedOn(String shortcut) {
-    return '/$shortcut model on: every message uses it until you send /$shortcut toggle again';
+    return 'Đã bật mô hình /$shortcut: mọi tin nhắn sẽ dùng mô hình này cho đến khi bạn gửi lại /$shortcut toggle';
   }
 
   @override
   String chatShortcutTurnedOff(String shortcut) {
-    return '/$shortcut model off: back to the base model';
+    return 'Đã tắt mô hình /$shortcut: quay về mô hình cơ sở';
   }
 
   @override
   String chatShortcutPickModelFirst(String shortcut) {
-    return 'Pick a model for /$shortcut first';
+    return 'Hãy chọn mô hình cho /$shortcut trước';
   }
 
   @override
   String chatShortcutNeedsMessage(String shortcut) {
-    return 'Type a message after /$shortcut, or /$shortcut toggle to keep it on';
+    return 'Nhập tin nhắn sau /$shortcut, hoặc /$shortcut toggle để giữ chế độ bật';
   }
 
   @override
-  String get chatShortcutsUnavailable => 'Model shortcuts need the self-hosted local LLM backend.';
+  String get chatShortcutsUnavailable => 'Lối tắt mô hình cần backend LLM cục bộ tự lưu trữ.';
 
   @override
-  String get chatModelShortcutsTitle => 'Chat model shortcuts';
+  String get chatModelShortcutsTitle => 'Lối tắt mô hình chat';
 
   @override
   String get chatModelShortcutsHint =>
-      'Type /name your question to answer one message with that model, or /name toggle to keep using it.';
+      'Nhập /name câu hỏi của bạn để trả lời một tin nhắn bằng mô hình đó, hoặc /name toggle để tiếp tục dùng mô hình đó.';
 
   @override
   String chatModelShortcutsBaseModel(String model) {
-    return 'Base model: $model';
+    return 'Mô hình cơ sở: $model';
   }
 
   @override
-  String get chatModelShortcutsNotSet => 'Not set';
+  String get chatModelShortcutsNotSet => 'Chưa thiết lập';
 
   @override
-  String get chatModelShortcutsAddLabel => 'name';
+  String get chatModelShortcutsAddLabel => 'tên';
 
   @override
-  String get chatModelShortcutsAddButton => 'Add';
+  String get chatModelShortcutsAddButton => 'Thêm';
 
   @override
-  String get chatModelShortcutsSaveFailed => 'Couldn\'t save the shortcut';
+  String get chatModelShortcutsSaveFailed => 'Không thể lưu lối tắt';
 
   @override
-  String get folderInside => 'Inside';
+  String get folderInside => 'Bên trong';
 
   @override
-  String get folderTopLevel => 'Top level';
+  String get folderTopLevel => 'Cấp cao nhất';
 
   @override
-  String get newSubfolder => 'New subfolder';
+  String get newSubfolder => 'Thư mục con mới';
 
   @override
-  String get folderTreeTitle => 'Folders';
+  String get folderTreeTitle => 'Thư mục';
 
   @override
-  String get moveFolder => 'Move…';
+  String get moveFolder => 'Di chuyển…';
 
   @override
   String moveFolderTo(String name) {
-    return 'Move \"$name\" into…';
+    return 'Di chuyển “$name” vào…';
   }
 }

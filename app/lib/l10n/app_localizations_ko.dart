@@ -14289,281 +14289,276 @@ class AppLocalizationsKo extends AppLocalizations {
   String get deviceControls => '제어';
 
   @override
-  String get dayReviewTitle => 'Day review';
+  String get dayReviewTitle => '하루 리뷰';
 
   @override
-  String get dayReviewsTitle => 'Day reviews';
+  String get dayReviewsTitle => '하루 리뷰 목록';
 
   @override
-  String get dayReviewLoadFailed => 'Couldn\'t load this day';
+  String get dayReviewLoadFailed => '이 날을 불러올 수 없습니다';
 
   @override
-  String get dayReviewActionFailed => 'Something went wrong. Try again.';
+  String get dayReviewActionFailed => '문제가 발생했습니다. 다시 시도해 주세요.';
 
   @override
-  String get dayReviewSortHint =>
-      'Star the conversations you want to keep. Everything else becomes one day summary you can correct.';
+  String get dayReviewSortHint => '보관할 대화에 별표를 표시하세요. 나머지는 모두 직접 수정할 수 있는 하루 요약 하나로 합쳐집니다.';
 
   @override
   String dayReviewProcessing(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count conversations are still processing and are not included.',
-      one: '1 conversation is still processing and is not included.',
+      other: '대화 $count개가 아직 처리 중이라 포함되지 않았습니다.',
+      one: '대화 1개가 아직 처리 중이라 포함되지 않았습니다.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewEmpty => 'No finished conversations on this day.';
+  String get dayReviewEmpty => '이 날에는 완료된 대화가 없습니다.';
 
   @override
-  String get dayReviewKeepTooltip => 'Keep as a conversation';
+  String get dayReviewKeepTooltip => '대화로 보관';
 
   @override
   String dayReviewFinalizeButton(int kept, int rolled) {
-    return 'Keep $kept · Summarize $rolled';
+    return '$kept개 보관 · $rolled개 요약';
   }
 
   @override
-  String get dayReviewConfirmTitle => 'Build the day summary?';
+  String get dayReviewConfirmTitle => '하루 요약을 만들까요?';
 
   @override
   String dayReviewConfirmBody(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other:
-          '$count conversations will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
-      one:
-          '1 conversation will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+      other: '대화 $count개가 하루 요약에 합쳐지고 대화 목록에서 사라집니다. 다시 열기로 되돌릴 수 있습니다.',
+      one: '대화 1개가 하루 요약에 합쳐지고 대화 목록에서 사라집니다. 다시 열기로 되돌릴 수 있습니다.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewConfirmAction => 'Summarize';
+  String get dayReviewConfirmAction => '요약하기';
 
   @override
-  String get dayReviewWriting => 'Writing your day summary… this can take a minute on a local model.';
+  String get dayReviewWriting => '하루 요약을 작성하는 중… 로컬 모델에서는 1분 정도 걸릴 수 있습니다.';
 
   @override
-  String get dayReviewApplying => 'Rewriting the summary with your corrections…';
+  String get dayReviewApplying => '수정 사항을 반영해 요약을 다시 작성하는 중…';
 
   @override
-  String get dayReviewReopening => 'Restoring the conversations…';
+  String get dayReviewReopening => '대화를 복원하는 중…';
 
   @override
-  String get dayReviewReopenTitle => 'Reopen this day?';
+  String get dayReviewReopenTitle => '이 날을 다시 열까요?';
 
   @override
-  String get dayReviewReopenBody =>
-      'The summarized conversations come back to your list and this summary (with its corrections) is deleted.';
+  String get dayReviewReopenBody => '요약된 대화가 목록으로 돌아오고 이 요약(수정 사항 포함)은 삭제됩니다.';
 
   @override
-  String get dayReviewReopenAction => 'Reopen day';
+  String get dayReviewReopenAction => '하루 다시 열기';
 
   @override
-  String get dayReviewCopy => 'Copy summary';
+  String get dayReviewCopy => '요약 복사';
 
   @override
-  String get dayReviewCopied => 'Day summary copied';
+  String get dayReviewCopied => '하루 요약이 복사되었습니다';
 
   @override
-  String get dayReviewUntitled => 'Untitled conversation';
+  String get dayReviewUntitled => '제목 없는 대화';
 
   @override
   String dayReviewCounts(int rolled, int kept) {
-    return '$rolled summarized · $kept kept';
+    return '$rolled개 요약됨 · $kept개 보관됨';
   }
 
   @override
-  String get dayReviewEditHint => 'Select text to correct or redact it. Use + to add a paragraph.';
+  String get dayReviewEditHint => '텍스트를 선택해 수정하거나 가릴 수 있습니다. +를 눌러 문단을 추가하세요.';
 
   @override
-  String get dayReviewCorrectAction => 'Correct';
+  String get dayReviewCorrectAction => '수정';
 
   @override
-  String get dayReviewRedactAction => 'Redact';
+  String get dayReviewRedactAction => '가리기';
 
   @override
-  String get dayReviewCorrectTitle => 'Correction';
+  String get dayReviewCorrectTitle => '수정 사항';
 
   @override
-  String get dayReviewCorrectHint => 'What is right? e.g. \"It was Wednesday, not Tuesday\"';
+  String get dayReviewCorrectHint => '무엇이 맞나요? 예: \"화요일이 아니라 수요일이었어요\"';
 
   @override
-  String get dayReviewAddParagraph => 'Add paragraph';
+  String get dayReviewAddParagraph => '문단 추가';
 
   @override
-  String get dayReviewAddParagraphTitle => 'Add a paragraph';
+  String get dayReviewAddParagraphTitle => '문단 추가';
 
   @override
-  String get dayReviewAddParagraphHint => 'Write what the summary is missing';
+  String get dayReviewAddParagraphHint => '요약에 빠진 내용을 작성하세요';
 
   @override
-  String get dayReviewYourParagraph => 'Your paragraph';
+  String get dayReviewYourParagraph => '내 문단';
 
   @override
-  String get dayReviewCorrectionsTitle => 'Your corrections';
+  String get dayReviewCorrectionsTitle => '내 수정 사항';
 
   @override
   String dayReviewRedactedQuote(String quote) {
-    return 'Redacted: “$quote”';
+    return '가림 처리됨: “$quote”';
   }
 
   @override
-  String get dayReviewCorrectionPending => 'Not applied yet';
+  String get dayReviewCorrectionPending => '아직 적용되지 않음';
 
   @override
-  String get dayReviewCorrectionApplied => 'Applied';
+  String get dayReviewCorrectionApplied => '적용됨';
 
   @override
   String dayReviewApplyButton(int count) {
-    return 'Apply corrections ($count)';
+    return '수정 사항 적용 ($count)';
   }
 
   @override
   String dayReviewKeptTitle(int count) {
-    return 'Kept as conversations ($count)';
+    return '대화로 보관됨 ($count)';
   }
 
   @override
   String dayReviewRolledTitle(int count) {
-    return 'In this summary ($count)';
+    return '이 요약에 포함됨 ($count)';
   }
 
   @override
-  String get dayReviewBannerToday => 'Review today';
+  String get dayReviewBannerToday => '오늘 리뷰하기';
 
   @override
   String dayReviewBannerDay(String day) {
-    return 'Review $day';
+    return '$day 리뷰하기';
   }
 
   @override
-  String get dayReviewBannerBody => 'Star what to keep; the rest becomes one day summary.';
+  String get dayReviewBannerBody => '보관할 항목에 별표를 표시하세요. 나머지는 하루 요약 하나로 합쳐집니다.';
 
   @override
-  String get dayReviewPickDate => 'Review another day';
+  String get dayReviewPickDate => '다른 날 리뷰하기';
 
   @override
-  String get dayReviewsToSort => 'Waiting to be sorted';
+  String get dayReviewsToSort => '정리 대기 중';
 
   @override
-  String get dayReviewsDone => 'Reviewed days';
+  String get dayReviewsDone => '리뷰한 날';
 
   @override
-  String get dayReviewsNone => 'No reviewed days yet.';
+  String get dayReviewsNone => '아직 리뷰한 날이 없습니다.';
 
   @override
   String slashSendWithShortcut(String shortcut, String model) {
-    return 'Answer this message with the /$shortcut model ($model)';
+    return '이 메시지에 /$shortcut 모델($model)로 답변';
   }
 
   @override
   String slashSendWithShortcutUnset(String shortcut) {
-    return 'Answer this message with the /$shortcut model (not set yet)';
+    return '이 메시지에 /$shortcut 모델로 답변(아직 설정되지 않음)';
   }
 
   @override
   String slashToggleShortcutOn(String shortcut) {
-    return 'Keep using the /$shortcut model until you toggle it off';
+    return '끌 때까지 /$shortcut 모델 계속 사용';
   }
 
   @override
   String slashToggleShortcutOff(String shortcut) {
-    return 'Turn the /$shortcut model off (it is on now)';
+    return '/$shortcut 모델 끄기(현재 켜져 있음)';
   }
 
   @override
-  String get slashModelCommand => 'Choose which model each shortcut uses';
+  String get slashModelCommand => '각 단축 명령이 사용할 모델 선택';
 
   @override
-  String get slashClearCommand => 'Clear this chat';
+  String get slashClearCommand => '이 채팅 지우기';
 
   @override
-  String get slashAppsCommand => 'Open chat apps';
+  String get slashAppsCommand => '채팅 앱 열기';
 
   @override
-  String get slashReviewCommand => 'Review today: keep the conversations you star, summarize the rest';
+  String get slashReviewCommand => '오늘 리뷰하기: 별표한 대화는 보관하고 나머지는 요약';
 
   @override
-  String get slashHelpCommand => 'Show all chat commands';
+  String get slashHelpCommand => '모든 채팅 명령어 보기';
 
   @override
-  String get slashCommandsHelpTitle => 'Chat commands';
+  String get slashCommandsHelpTitle => '채팅 명령어';
 
   @override
   String chatShortcutActive(String shortcut) {
-    return '/$shortcut model on';
+    return '/$shortcut 모델 켜짐';
   }
 
   @override
   String chatShortcutTurnedOn(String shortcut) {
-    return '/$shortcut model on: every message uses it until you send /$shortcut toggle again';
+    return '/$shortcut 모델 켜짐: /$shortcut toggle을 다시 보낼 때까지 모든 메시지에 이 모델을 사용합니다';
   }
 
   @override
   String chatShortcutTurnedOff(String shortcut) {
-    return '/$shortcut model off: back to the base model';
+    return '/$shortcut 모델 꺼짐: 기본 모델로 돌아갑니다';
   }
 
   @override
   String chatShortcutPickModelFirst(String shortcut) {
-    return 'Pick a model for /$shortcut first';
+    return '먼저 /$shortcut에 사용할 모델을 선택하세요';
   }
 
   @override
   String chatShortcutNeedsMessage(String shortcut) {
-    return 'Type a message after /$shortcut, or /$shortcut toggle to keep it on';
+    return '/$shortcut 뒤에 메시지를 입력하거나, 계속 켜 두려면 /$shortcut toggle을 입력하세요';
   }
 
   @override
-  String get chatShortcutsUnavailable => 'Model shortcuts need the self-hosted local LLM backend.';
+  String get chatShortcutsUnavailable => '모델 단축 명령을 사용하려면 셀프 호스팅 로컬 LLM 백엔드가 필요합니다.';
 
   @override
-  String get chatModelShortcutsTitle => 'Chat model shortcuts';
+  String get chatModelShortcutsTitle => '채팅 모델 단축 명령';
 
   @override
-  String get chatModelShortcutsHint =>
-      'Type /name your question to answer one message with that model, or /name toggle to keep using it.';
+  String get chatModelShortcutsHint => '/name 다음에 질문을 입력하면 해당 모델이 메시지 하나에 답변하고, /name toggle을 입력하면 그 모델을 계속 사용합니다.';
 
   @override
   String chatModelShortcutsBaseModel(String model) {
-    return 'Base model: $model';
+    return '기본 모델: $model';
   }
 
   @override
-  String get chatModelShortcutsNotSet => 'Not set';
+  String get chatModelShortcutsNotSet => '설정 안 됨';
 
   @override
-  String get chatModelShortcutsAddLabel => 'name';
+  String get chatModelShortcutsAddLabel => '이름';
 
   @override
-  String get chatModelShortcutsAddButton => 'Add';
+  String get chatModelShortcutsAddButton => '추가';
 
   @override
-  String get chatModelShortcutsSaveFailed => 'Couldn\'t save the shortcut';
+  String get chatModelShortcutsSaveFailed => '단축 명령을 저장할 수 없습니다';
 
   @override
-  String get folderInside => 'Inside';
+  String get folderInside => '위치';
 
   @override
-  String get folderTopLevel => 'Top level';
+  String get folderTopLevel => '최상위';
 
   @override
-  String get newSubfolder => 'New subfolder';
+  String get newSubfolder => '새 하위 폴더';
 
   @override
-  String get folderTreeTitle => 'Folders';
+  String get folderTreeTitle => '폴더';
 
   @override
-  String get moveFolder => 'Move…';
+  String get moveFolder => '이동…';
 
   @override
   String moveFolderTo(String name) {
-    return 'Move \"$name\" into…';
+    return '\"$name\" 이동할 위치…';
   }
 }

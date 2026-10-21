@@ -14546,45 +14546,45 @@ class AppLocalizationsTe extends AppLocalizations {
   String get deviceControls => 'నియంత్రణలు';
 
   @override
-  String get dayReviewTitle => 'Day review';
+  String get dayReviewTitle => 'రోజు సమీక్ష';
 
   @override
-  String get dayReviewsTitle => 'Day reviews';
+  String get dayReviewsTitle => 'రోజు సమీక్షలు';
 
   @override
-  String get dayReviewLoadFailed => 'Couldn\'t load this day';
+  String get dayReviewLoadFailed => 'ఈ రోజును లోడ్ చేయలేకపోయాం';
 
   @override
-  String get dayReviewActionFailed => 'Something went wrong. Try again.';
+  String get dayReviewActionFailed => 'ఏదో తప్పు జరిగింది. మళ్లీ ప్రయత్నించండి.';
 
   @override
   String get dayReviewSortHint =>
-      'Star the conversations you want to keep. Everything else becomes one day summary you can correct.';
+      'మీరు ఉంచుకోవాలనుకునే సంభాషణలను స్టార్ చేయండి. మిగతావన్నీ మీరు సరిదిద్దగల ఒకే రోజు సారాంశంగా మారతాయి.';
 
   @override
   String dayReviewProcessing(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count conversations are still processing and are not included.',
-      one: '1 conversation is still processing and is not included.',
+      other: '$count సంభాషణలు ఇంకా ప్రాసెస్ అవుతున్నాయి, కాబట్టి చేర్చలేదు.',
+      one: '1 సంభాషణ ఇంకా ప్రాసెస్ అవుతోంది, కాబట్టి చేర్చలేదు.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewEmpty => 'No finished conversations on this day.';
+  String get dayReviewEmpty => 'ఈ రోజున పూర్తయిన సంభాషణలు లేవు.';
 
   @override
-  String get dayReviewKeepTooltip => 'Keep as a conversation';
+  String get dayReviewKeepTooltip => 'సంభాషణగా ఉంచండి';
 
   @override
   String dayReviewFinalizeButton(int kept, int rolled) {
-    return 'Keep $kept · Summarize $rolled';
+    return '$kept ఉంచండి · $rolled సారాంశం చేయండి';
   }
 
   @override
-  String get dayReviewConfirmTitle => 'Build the day summary?';
+  String get dayReviewConfirmTitle => 'రోజు సారాంశాన్ని రూపొందించాలా?';
 
   @override
   String dayReviewConfirmBody(int count) {
@@ -14592,235 +14592,236 @@ class AppLocalizationsTe extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '$count conversations will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          '$count సంభాషణలు రోజు సారాంశంలో కలిసిపోయి మీ సంభాషణల జాబితా నుండి తొలగిపోతాయి. “మళ్లీ తెరవండి”తో దీన్ని రద్దు చేయవచ్చు.',
       one:
-          '1 conversation will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          '1 సంభాషణ రోజు సారాంశంలో కలిసిపోయి మీ సంభాషణల జాబితా నుండి తొలగిపోతుంది. “మళ్లీ తెరవండి”తో దీన్ని రద్దు చేయవచ్చు.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewConfirmAction => 'Summarize';
+  String get dayReviewConfirmAction => 'సారాంశం చేయండి';
 
   @override
-  String get dayReviewWriting => 'Writing your day summary… this can take a minute on a local model.';
+  String get dayReviewWriting => 'మీ రోజు సారాంశాన్ని రాస్తోంది… లోకల్ మోడల్‌లో దీనికి ఒక నిమిషం పట్టవచ్చు.';
 
   @override
-  String get dayReviewApplying => 'Rewriting the summary with your corrections…';
+  String get dayReviewApplying => 'మీ సవరణలతో సారాంశాన్ని మళ్లీ రాస్తోంది…';
 
   @override
-  String get dayReviewReopening => 'Restoring the conversations…';
+  String get dayReviewReopening => 'సంభాషణలను పునరుద్ధరిస్తోంది…';
 
   @override
-  String get dayReviewReopenTitle => 'Reopen this day?';
+  String get dayReviewReopenTitle => 'ఈ రోజును మళ్లీ తెరవాలా?';
 
   @override
   String get dayReviewReopenBody =>
-      'The summarized conversations come back to your list and this summary (with its corrections) is deleted.';
+      'సారాంశం చేసిన సంభాషణలు మీ జాబితాకు తిరిగి వస్తాయి, ఈ సారాంశం (దాని సవరణలతో సహా) తొలగించబడుతుంది.';
 
   @override
-  String get dayReviewReopenAction => 'Reopen day';
+  String get dayReviewReopenAction => 'రోజును మళ్లీ తెరవండి';
 
   @override
-  String get dayReviewCopy => 'Copy summary';
+  String get dayReviewCopy => 'సారాంశాన్ని కాపీ చేయండి';
 
   @override
-  String get dayReviewCopied => 'Day summary copied';
+  String get dayReviewCopied => 'రోజు సారాంశం కాపీ అయింది';
 
   @override
-  String get dayReviewUntitled => 'Untitled conversation';
+  String get dayReviewUntitled => 'శీర్షిక లేని సంభాషణ';
 
   @override
   String dayReviewCounts(int rolled, int kept) {
-    return '$rolled summarized · $kept kept';
+    return '$rolled సారాంశంలో · $kept ఉంచినవి';
   }
 
   @override
-  String get dayReviewEditHint => 'Select text to correct or redact it. Use + to add a paragraph.';
+  String get dayReviewEditHint =>
+      'సవరించడానికి లేదా తొలగించడానికి టెక్స్ట్‌ను ఎంచుకోండి. పేరా జోడించడానికి + ఉపయోగించండి.';
 
   @override
-  String get dayReviewCorrectAction => 'Correct';
+  String get dayReviewCorrectAction => 'సవరించండి';
 
   @override
-  String get dayReviewRedactAction => 'Redact';
+  String get dayReviewRedactAction => 'తొలగించండి';
 
   @override
-  String get dayReviewCorrectTitle => 'Correction';
+  String get dayReviewCorrectTitle => 'సవరణ';
 
   @override
-  String get dayReviewCorrectHint => 'What is right? e.g. \"It was Wednesday, not Tuesday\"';
+  String get dayReviewCorrectHint => 'ఏది సరైనది? ఉదా. “అది బుధవారం, మంగళవారం కాదు”';
 
   @override
-  String get dayReviewAddParagraph => 'Add paragraph';
+  String get dayReviewAddParagraph => 'పేరా జోడించండి';
 
   @override
-  String get dayReviewAddParagraphTitle => 'Add a paragraph';
+  String get dayReviewAddParagraphTitle => 'ఒక పేరా జోడించండి';
 
   @override
-  String get dayReviewAddParagraphHint => 'Write what the summary is missing';
+  String get dayReviewAddParagraphHint => 'సారాంశంలో ఏమి లేదో రాయండి';
 
   @override
-  String get dayReviewYourParagraph => 'Your paragraph';
+  String get dayReviewYourParagraph => 'మీ పేరా';
 
   @override
-  String get dayReviewCorrectionsTitle => 'Your corrections';
+  String get dayReviewCorrectionsTitle => 'మీ సవరణలు';
 
   @override
   String dayReviewRedactedQuote(String quote) {
-    return 'Redacted: “$quote”';
+    return 'తొలగించబడింది: “$quote”';
   }
 
   @override
-  String get dayReviewCorrectionPending => 'Not applied yet';
+  String get dayReviewCorrectionPending => 'ఇంకా వర్తింపజేయలేదు';
 
   @override
-  String get dayReviewCorrectionApplied => 'Applied';
+  String get dayReviewCorrectionApplied => 'వర్తింపజేయబడింది';
 
   @override
   String dayReviewApplyButton(int count) {
-    return 'Apply corrections ($count)';
+    return 'సవరణలను వర్తింపజేయండి ($count)';
   }
 
   @override
   String dayReviewKeptTitle(int count) {
-    return 'Kept as conversations ($count)';
+    return 'సంభాషణలుగా ఉంచినవి ($count)';
   }
 
   @override
   String dayReviewRolledTitle(int count) {
-    return 'In this summary ($count)';
+    return 'ఈ సారాంశంలో ($count)';
   }
 
   @override
-  String get dayReviewBannerToday => 'Review today';
+  String get dayReviewBannerToday => 'ఈ రోజును సమీక్షించండి';
 
   @override
   String dayReviewBannerDay(String day) {
-    return 'Review $day';
+    return 'సమీక్షించండి: $day';
   }
 
   @override
-  String get dayReviewBannerBody => 'Star what to keep; the rest becomes one day summary.';
+  String get dayReviewBannerBody => 'ఉంచాల్సినవాటిని స్టార్ చేయండి; మిగతావి ఒకే రోజు సారాంశంగా మారతాయి.';
 
   @override
-  String get dayReviewPickDate => 'Review another day';
+  String get dayReviewPickDate => 'మరో రోజును సమీక్షించండి';
 
   @override
-  String get dayReviewsToSort => 'Waiting to be sorted';
+  String get dayReviewsToSort => 'క్రమబద్ధీకరణ కోసం వేచి ఉన్నవి';
 
   @override
-  String get dayReviewsDone => 'Reviewed days';
+  String get dayReviewsDone => 'సమీక్షించిన రోజులు';
 
   @override
-  String get dayReviewsNone => 'No reviewed days yet.';
+  String get dayReviewsNone => 'ఇంకా సమీక్షించిన రోజులు లేవు.';
 
   @override
   String slashSendWithShortcut(String shortcut, String model) {
-    return 'Answer this message with the /$shortcut model ($model)';
+    return 'ఈ సందేశానికి /$shortcut మోడల్‌తో ($model) సమాధానం ఇవ్వండి';
   }
 
   @override
   String slashSendWithShortcutUnset(String shortcut) {
-    return 'Answer this message with the /$shortcut model (not set yet)';
+    return 'ఈ సందేశానికి /$shortcut మోడల్‌తో సమాధానం ఇవ్వండి (ఇంకా సెట్ చేయలేదు)';
   }
 
   @override
   String slashToggleShortcutOn(String shortcut) {
-    return 'Keep using the /$shortcut model until you toggle it off';
+    return 'మీరు ఆఫ్ చేసే వరకు /$shortcut మోడల్‌నే ఉపయోగించండి';
   }
 
   @override
   String slashToggleShortcutOff(String shortcut) {
-    return 'Turn the /$shortcut model off (it is on now)';
+    return '/$shortcut మోడల్‌ను ఆఫ్ చేయండి (ప్రస్తుతం ఆన్‌లో ఉంది)';
   }
 
   @override
-  String get slashModelCommand => 'Choose which model each shortcut uses';
+  String get slashModelCommand => 'ప్రతి షార్ట్‌కట్ ఏ మోడల్‌ను ఉపయోగించాలో ఎంచుకోండి';
 
   @override
-  String get slashClearCommand => 'Clear this chat';
+  String get slashClearCommand => 'ఈ చాట్‌ను క్లియర్ చేయండి';
 
   @override
-  String get slashAppsCommand => 'Open chat apps';
+  String get slashAppsCommand => 'చాట్ ఆప్‌లను తెరవండి';
 
   @override
-  String get slashReviewCommand => 'Review today: keep the conversations you star, summarize the rest';
+  String get slashReviewCommand => 'ఈ రోజును సమీక్షించండి: స్టార్ చేసిన సంభాషణలను ఉంచి, మిగతావాటిని సారాంశం చేయండి';
 
   @override
-  String get slashHelpCommand => 'Show all chat commands';
+  String get slashHelpCommand => 'అన్ని చాట్ కమాండ్‌లను చూపించు';
 
   @override
-  String get slashCommandsHelpTitle => 'Chat commands';
+  String get slashCommandsHelpTitle => 'చాట్ కమాండ్‌లు';
 
   @override
   String chatShortcutActive(String shortcut) {
-    return '/$shortcut model on';
+    return '/$shortcut మోడల్ ఆన్‌లో ఉంది';
   }
 
   @override
   String chatShortcutTurnedOn(String shortcut) {
-    return '/$shortcut model on: every message uses it until you send /$shortcut toggle again';
+    return '/$shortcut మోడల్ ఆన్: మీరు మళ్లీ /$shortcut toggle పంపే వరకు ప్రతి సందేశం దీన్నే ఉపయోగిస్తుంది';
   }
 
   @override
   String chatShortcutTurnedOff(String shortcut) {
-    return '/$shortcut model off: back to the base model';
+    return '/$shortcut మోడల్ ఆఫ్: బేస్ మోడల్‌కు తిరిగి వచ్చింది';
   }
 
   @override
   String chatShortcutPickModelFirst(String shortcut) {
-    return 'Pick a model for /$shortcut first';
+    return 'ముందుగా /$shortcut కోసం ఒక మోడల్‌ను ఎంచుకోండి';
   }
 
   @override
   String chatShortcutNeedsMessage(String shortcut) {
-    return 'Type a message after /$shortcut, or /$shortcut toggle to keep it on';
+    return '/$shortcut తర్వాత సందేశాన్ని టైప్ చేయండి, లేదా ఆన్‌లో ఉంచడానికి /$shortcut toggle పంపండి';
   }
 
   @override
-  String get chatShortcutsUnavailable => 'Model shortcuts need the self-hosted local LLM backend.';
+  String get chatShortcutsUnavailable => 'మోడల్ షార్ట్‌కట్‌లకు సెల్ఫ్-హోస్టెడ్ లోకల్ LLM బ్యాకెండ్ అవసరం.';
 
   @override
-  String get chatModelShortcutsTitle => 'Chat model shortcuts';
+  String get chatModelShortcutsTitle => 'చాట్ మోడల్ షార్ట్‌కట్‌లు';
 
   @override
   String get chatModelShortcutsHint =>
-      'Type /name your question to answer one message with that model, or /name toggle to keep using it.';
+      'ఒక సందేశానికి ఆ మోడల్‌తో సమాధానం పొందడానికి /name మీ ప్రశ్న అని టైప్ చేయండి, లేదా దాన్నే ఉపయోగిస్తూ ఉండటానికి /name toggle అని టైప్ చేయండి.';
 
   @override
   String chatModelShortcutsBaseModel(String model) {
-    return 'Base model: $model';
+    return 'బేస్ మోడల్: $model';
   }
 
   @override
-  String get chatModelShortcutsNotSet => 'Not set';
+  String get chatModelShortcutsNotSet => 'సెట్ చేయలేదు';
 
   @override
-  String get chatModelShortcutsAddLabel => 'name';
+  String get chatModelShortcutsAddLabel => 'పేరు';
 
   @override
-  String get chatModelShortcutsAddButton => 'Add';
+  String get chatModelShortcutsAddButton => 'జోడించు';
 
   @override
-  String get chatModelShortcutsSaveFailed => 'Couldn\'t save the shortcut';
+  String get chatModelShortcutsSaveFailed => 'షార్ట్‌కట్‌ను సేవ్ చేయలేకపోయాం';
 
   @override
-  String get folderInside => 'Inside';
+  String get folderInside => 'లోపల';
 
   @override
-  String get folderTopLevel => 'Top level';
+  String get folderTopLevel => 'అగ్ర స్థాయి';
 
   @override
-  String get newSubfolder => 'New subfolder';
+  String get newSubfolder => 'కొత్త సబ్‌ఫోల్డర్';
 
   @override
-  String get folderTreeTitle => 'Folders';
+  String get folderTreeTitle => 'ఫోల్డర్‌లు';
 
   @override
-  String get moveFolder => 'Move…';
+  String get moveFolder => 'తరలించు…';
 
   @override
   String moveFolderTo(String name) {
-    return 'Move \"$name\" into…';
+    return '“$name”ను ఎక్కడికి తరలించాలి…';
   }
 }

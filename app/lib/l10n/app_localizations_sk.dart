@@ -14483,45 +14483,46 @@ class AppLocalizationsSk extends AppLocalizations {
   String get deviceControls => 'Ovládanie';
 
   @override
-  String get dayReviewTitle => 'Day review';
+  String get dayReviewTitle => 'Prehľad dňa';
 
   @override
-  String get dayReviewsTitle => 'Day reviews';
+  String get dayReviewsTitle => 'Prehľady dní';
 
   @override
-  String get dayReviewLoadFailed => 'Couldn\'t load this day';
+  String get dayReviewLoadFailed => 'Tento deň sa nepodarilo načítať';
 
   @override
-  String get dayReviewActionFailed => 'Something went wrong. Try again.';
+  String get dayReviewActionFailed => 'Niečo sa pokazilo. Skúste to znova.';
 
   @override
   String get dayReviewSortHint =>
-      'Star the conversations you want to keep. Everything else becomes one day summary you can correct.';
+      'Označte hviezdičkou konverzácie, ktoré si chcete ponechať. Všetko ostatné sa zmení na jedno zhrnutie dňa, ktoré môžete opraviť.';
 
   @override
   String dayReviewProcessing(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count conversations are still processing and are not included.',
-      one: '1 conversation is still processing and is not included.',
+      other: '$count konverzácií sa ešte spracúva a nie je zahrnutých.',
+      few: '$count konverzácie sa ešte spracúvajú a nie sú zahrnuté.',
+      one: '1 konverzácia sa ešte spracúva a nie je zahrnutá.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewEmpty => 'No finished conversations on this day.';
+  String get dayReviewEmpty => 'V tento deň nie sú žiadne dokončené konverzácie.';
 
   @override
-  String get dayReviewKeepTooltip => 'Keep as a conversation';
+  String get dayReviewKeepTooltip => 'Ponechať ako konverzáciu';
 
   @override
   String dayReviewFinalizeButton(int kept, int rolled) {
-    return 'Keep $kept · Summarize $rolled';
+    return 'Ponechať $kept · Zhrnúť $rolled';
   }
 
   @override
-  String get dayReviewConfirmTitle => 'Build the day summary?';
+  String get dayReviewConfirmTitle => 'Vytvoriť zhrnutie dňa?';
 
   @override
   String dayReviewConfirmBody(int count) {
@@ -14529,235 +14530,238 @@ class AppLocalizationsSk extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '$count conversations will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          '$count konverzácií bude zahrnutých do zhrnutia dňa a zmizne z vášho zoznamu konverzácií. Môžete to vrátiť späť pomocou Znova otvoriť.',
+      few:
+          '$count konverzácie budú zahrnuté do zhrnutia dňa a zmiznú z vášho zoznamu konverzácií. Môžete to vrátiť späť pomocou Znova otvoriť.',
       one:
-          '1 conversation will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          '1 konverzácia bude zahrnutá do zhrnutia dňa a zmizne z vášho zoznamu konverzácií. Môžete to vrátiť späť pomocou Znova otvoriť.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewConfirmAction => 'Summarize';
+  String get dayReviewConfirmAction => 'Zhrnúť';
 
   @override
-  String get dayReviewWriting => 'Writing your day summary… this can take a minute on a local model.';
+  String get dayReviewWriting => 'Vytvára sa zhrnutie vášho dňa… s lokálnym modelom to môže trvať minútu.';
 
   @override
-  String get dayReviewApplying => 'Rewriting the summary with your corrections…';
+  String get dayReviewApplying => 'Zhrnutie sa prepisuje s vašimi opravami…';
 
   @override
-  String get dayReviewReopening => 'Restoring the conversations…';
+  String get dayReviewReopening => 'Obnovujú sa konverzácie…';
 
   @override
-  String get dayReviewReopenTitle => 'Reopen this day?';
+  String get dayReviewReopenTitle => 'Znova otvoriť tento deň?';
 
   @override
   String get dayReviewReopenBody =>
-      'The summarized conversations come back to your list and this summary (with its corrections) is deleted.';
+      'Zhrnuté konverzácie sa vrátia do vášho zoznamu a toto zhrnutie (aj s opravami) sa odstráni.';
 
   @override
-  String get dayReviewReopenAction => 'Reopen day';
+  String get dayReviewReopenAction => 'Znova otvoriť deň';
 
   @override
-  String get dayReviewCopy => 'Copy summary';
+  String get dayReviewCopy => 'Kopírovať zhrnutie';
 
   @override
-  String get dayReviewCopied => 'Day summary copied';
+  String get dayReviewCopied => 'Zhrnutie dňa skopírované';
 
   @override
-  String get dayReviewUntitled => 'Untitled conversation';
+  String get dayReviewUntitled => 'Konverzácia bez názvu';
 
   @override
   String dayReviewCounts(int rolled, int kept) {
-    return '$rolled summarized · $kept kept';
+    return 'Zhrnuté: $rolled · Ponechané: $kept';
   }
 
   @override
-  String get dayReviewEditHint => 'Select text to correct or redact it. Use + to add a paragraph.';
+  String get dayReviewEditHint => 'Označte text, ktorý chcete opraviť alebo skryť. Pomocou + pridáte odsek.';
 
   @override
-  String get dayReviewCorrectAction => 'Correct';
+  String get dayReviewCorrectAction => 'Opraviť';
 
   @override
-  String get dayReviewRedactAction => 'Redact';
+  String get dayReviewRedactAction => 'Skryť';
 
   @override
-  String get dayReviewCorrectTitle => 'Correction';
+  String get dayReviewCorrectTitle => 'Oprava';
 
   @override
-  String get dayReviewCorrectHint => 'What is right? e.g. \"It was Wednesday, not Tuesday\"';
+  String get dayReviewCorrectHint => 'Čo je správne? Napr. „Bola to streda, nie utorok“';
 
   @override
-  String get dayReviewAddParagraph => 'Add paragraph';
+  String get dayReviewAddParagraph => 'Pridať odsek';
 
   @override
-  String get dayReviewAddParagraphTitle => 'Add a paragraph';
+  String get dayReviewAddParagraphTitle => 'Pridať odsek';
 
   @override
-  String get dayReviewAddParagraphHint => 'Write what the summary is missing';
+  String get dayReviewAddParagraphHint => 'Napíšte, čo v zhrnutí chýba';
 
   @override
-  String get dayReviewYourParagraph => 'Your paragraph';
+  String get dayReviewYourParagraph => 'Váš odsek';
 
   @override
-  String get dayReviewCorrectionsTitle => 'Your corrections';
+  String get dayReviewCorrectionsTitle => 'Vaše opravy';
 
   @override
   String dayReviewRedactedQuote(String quote) {
-    return 'Redacted: “$quote”';
+    return 'Skryté: „$quote“';
   }
 
   @override
-  String get dayReviewCorrectionPending => 'Not applied yet';
+  String get dayReviewCorrectionPending => 'Zatiaľ nepoužité';
 
   @override
-  String get dayReviewCorrectionApplied => 'Applied';
+  String get dayReviewCorrectionApplied => 'Použité';
 
   @override
   String dayReviewApplyButton(int count) {
-    return 'Apply corrections ($count)';
+    return 'Použiť opravy ($count)';
   }
 
   @override
   String dayReviewKeptTitle(int count) {
-    return 'Kept as conversations ($count)';
+    return 'Ponechané ako konverzácie ($count)';
   }
 
   @override
   String dayReviewRolledTitle(int count) {
-    return 'In this summary ($count)';
+    return 'V tomto zhrnutí ($count)';
   }
 
   @override
-  String get dayReviewBannerToday => 'Review today';
+  String get dayReviewBannerToday => 'Skontrolovať dnešok';
 
   @override
   String dayReviewBannerDay(String day) {
-    return 'Review $day';
+    return 'Skontrolovať deň: $day';
   }
 
   @override
-  String get dayReviewBannerBody => 'Star what to keep; the rest becomes one day summary.';
+  String get dayReviewBannerBody =>
+      'Označte hviezdičkou, čo si chcete ponechať; zvyšok sa zmení na jedno zhrnutie dňa.';
 
   @override
-  String get dayReviewPickDate => 'Review another day';
+  String get dayReviewPickDate => 'Skontrolovať iný deň';
 
   @override
-  String get dayReviewsToSort => 'Waiting to be sorted';
+  String get dayReviewsToSort => 'Čaká na roztriedenie';
 
   @override
-  String get dayReviewsDone => 'Reviewed days';
+  String get dayReviewsDone => 'Skontrolované dni';
 
   @override
-  String get dayReviewsNone => 'No reviewed days yet.';
+  String get dayReviewsNone => 'Zatiaľ žiadne skontrolované dni.';
 
   @override
   String slashSendWithShortcut(String shortcut, String model) {
-    return 'Answer this message with the /$shortcut model ($model)';
+    return 'Odpovedať na túto správu modelom /$shortcut ($model)';
   }
 
   @override
   String slashSendWithShortcutUnset(String shortcut) {
-    return 'Answer this message with the /$shortcut model (not set yet)';
+    return 'Odpovedať na túto správu modelom /$shortcut (zatiaľ nenastavený)';
   }
 
   @override
   String slashToggleShortcutOn(String shortcut) {
-    return 'Keep using the /$shortcut model until you toggle it off';
+    return 'Používať model /$shortcut, kým ho nevypnete';
   }
 
   @override
   String slashToggleShortcutOff(String shortcut) {
-    return 'Turn the /$shortcut model off (it is on now)';
+    return 'Vypnúť model /$shortcut (teraz je zapnutý)';
   }
 
   @override
-  String get slashModelCommand => 'Choose which model each shortcut uses';
+  String get slashModelCommand => 'Vybrať, ktorý model používa každá skratka';
 
   @override
-  String get slashClearCommand => 'Clear this chat';
+  String get slashClearCommand => 'Vymazať tento chat';
 
   @override
-  String get slashAppsCommand => 'Open chat apps';
+  String get slashAppsCommand => 'Otvoriť chatové aplikácie';
 
   @override
-  String get slashReviewCommand => 'Review today: keep the conversations you star, summarize the rest';
+  String get slashReviewCommand => 'Skontrolovať dnešok: ponechať konverzácie označené hviezdičkou, zvyšok zhrnúť';
 
   @override
-  String get slashHelpCommand => 'Show all chat commands';
+  String get slashHelpCommand => 'Zobraziť všetky príkazy chatu';
 
   @override
-  String get slashCommandsHelpTitle => 'Chat commands';
+  String get slashCommandsHelpTitle => 'Príkazy chatu';
 
   @override
   String chatShortcutActive(String shortcut) {
-    return '/$shortcut model on';
+    return 'Model /$shortcut zapnutý';
   }
 
   @override
   String chatShortcutTurnedOn(String shortcut) {
-    return '/$shortcut model on: every message uses it until you send /$shortcut toggle again';
+    return 'Model /$shortcut zapnutý: každá správa ho bude používať, kým znova nepošlete /$shortcut toggle';
   }
 
   @override
   String chatShortcutTurnedOff(String shortcut) {
-    return '/$shortcut model off: back to the base model';
+    return 'Model /$shortcut vypnutý: späť na základný model';
   }
 
   @override
   String chatShortcutPickModelFirst(String shortcut) {
-    return 'Pick a model for /$shortcut first';
+    return 'Najprv vyberte model pre /$shortcut';
   }
 
   @override
   String chatShortcutNeedsMessage(String shortcut) {
-    return 'Type a message after /$shortcut, or /$shortcut toggle to keep it on';
+    return 'Napíšte správu za /$shortcut alebo /$shortcut toggle, aby zostal zapnutý';
   }
 
   @override
-  String get chatShortcutsUnavailable => 'Model shortcuts need the self-hosted local LLM backend.';
+  String get chatShortcutsUnavailable => 'Skratky modelov vyžadujú vlastný hostovaný lokálny LLM backend.';
 
   @override
-  String get chatModelShortcutsTitle => 'Chat model shortcuts';
+  String get chatModelShortcutsTitle => 'Skratky modelov chatu';
 
   @override
   String get chatModelShortcutsHint =>
-      'Type /name your question to answer one message with that model, or /name toggle to keep using it.';
+      'Napíšte /name a svoju otázku, ak má na jednu správu odpovedať tento model, alebo /name toggle, ak ho chcete používať ďalej.';
 
   @override
   String chatModelShortcutsBaseModel(String model) {
-    return 'Base model: $model';
+    return 'Základný model: $model';
   }
 
   @override
-  String get chatModelShortcutsNotSet => 'Not set';
+  String get chatModelShortcutsNotSet => 'Nenastavené';
 
   @override
-  String get chatModelShortcutsAddLabel => 'name';
+  String get chatModelShortcutsAddLabel => 'názov';
 
   @override
-  String get chatModelShortcutsAddButton => 'Add';
+  String get chatModelShortcutsAddButton => 'Pridať';
 
   @override
-  String get chatModelShortcutsSaveFailed => 'Couldn\'t save the shortcut';
+  String get chatModelShortcutsSaveFailed => 'Skratku sa nepodarilo uložiť';
 
   @override
-  String get folderInside => 'Inside';
+  String get folderInside => 'V priečinku';
 
   @override
-  String get folderTopLevel => 'Top level';
+  String get folderTopLevel => 'Najvyššia úroveň';
 
   @override
-  String get newSubfolder => 'New subfolder';
+  String get newSubfolder => 'Nový podpriečinok';
 
   @override
-  String get folderTreeTitle => 'Folders';
+  String get folderTreeTitle => 'Priečinky';
 
   @override
-  String get moveFolder => 'Move…';
+  String get moveFolder => 'Presunúť…';
 
   @override
   String moveFolderTo(String name) {
-    return 'Move \"$name\" into…';
+    return 'Presunúť „$name“ do…';
   }
 }
