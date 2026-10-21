@@ -3,6 +3,7 @@ ChromaDB vector database replacement for Pinecone.
 Activated when LOCAL_VECTOR_DB=chroma and no Pinecone key is set.
 Implements the same interface as the Pinecone paths in vector_db.py.
 """
+
 import logging
 import os
 import uuid
@@ -45,6 +46,17 @@ def _init_chroma() -> None:
         _chroma_enabled = False
 
 
+def _ready() -> bool:
+    """Open the store on first use; True once the collection is usable.
+
+    Every function used to return on `not _chroma_enabled` before calling
+    _init_chroma(), the only thing that sets it, so the store never opened:
+    with LOCAL_VECTOR_DB=chroma nothing was stored and every search was empty.
+    """
+    _init_chroma()
+    return _chroma_enabled
+
+
 def is_chroma_enabled() -> bool:
     return os.environ.get("LOCAL_VECTOR_DB", "").lower() == "chroma"
 
@@ -55,9 +67,8 @@ def chroma_upsert(
     metadata: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Upsert a single vector into Chroma."""
-    if not _chroma_enabled:
+    if not _ready():
         return
-    _init_chroma()
     try:
         _chroma_collection.upsert(
             ids=[doc_id],
@@ -74,9 +85,8 @@ def chroma_upsert_batch(
     metadatas: Optional[List[Dict[str, Any]]] = None,
 ) -> None:
     """Upsert multiple vectors into Chroma."""
-    if not _chroma_enabled or not ids:
+    if not ids or not _ready():
         return
-    _init_chroma()
     try:
         _chroma_collection.upsert(
             ids=ids,
@@ -96,24 +106,26 @@ def chroma_query(
     filter_created_before: Optional[int] = None,
 ) -> List[str]:
     """Query Chroma and return matching document IDs."""
-    if not _chroma_enabled:
+    if not _ready():
         return []
-    _init_chroma()
 
     try:
-        where: Dict[str, Any] = {}
+        # Chroma takes one condition, or several under a single "$and": mixing
+        # "uid" with a sibling "$and" is rejected, which used to empty every
+        # uid + date-range search.
+        conditions: List[Dict[str, Any]] = []
         if uid:
-            where["uid"] = uid
+            conditions.append({"uid": uid})
         if filter_created_after is not None:
-            where.setdefault("$and", [])
-            where["$and"].append({"created_at": {"$gte": filter_created_after}})
+            conditions.append({"created_at": {"$gte": filter_created_after}})
         if filter_created_before is not None:
-            where.setdefault("$and", [])
-            where["$and"].append({"created_at": {"$lte": filter_created_before}})
+            conditions.append({"created_at": {"$lte": filter_created_before}})
 
         kwargs: Dict[str, Any] = {"n_results": top_k}
-        if where:
-            kwargs["where"] = where
+        if len(conditions) == 1:
+            kwargs["where"] = conditions[0]
+        elif conditions:
+            kwargs["where"] = {"$and": conditions}
 
         if query_vector is not None:
             results = _chroma_collection.query(query_embeddings=[query_vector], **kwargs)
@@ -132,9 +144,8 @@ def chroma_query(
 
 def chroma_delete(ids: List[str]) -> None:
     """Delete vectors by ID."""
-    if not _chroma_enabled or not ids:
+    if not ids or not _ready():
         return
-    _init_chroma()
     try:
         _chroma_collection.delete(ids=ids)
     except Exception as e:
@@ -143,9 +154,8 @@ def chroma_delete(ids: List[str]) -> None:
 
 def chroma_delete_by_uid(uid: str) -> None:
     """Delete all vectors for a user."""
-    if not _chroma_enabled:
+    if not _ready():
         return
-    _init_chroma()
     try:
         _chroma_collection.delete(where={"uid": uid})
     except Exception as e:
@@ -154,9 +164,8 @@ def chroma_delete_by_uid(uid: str) -> None:
 
 def chroma_count() -> int:
     """Return number of vectors stored."""
-    if not _chroma_enabled:
+    if not _ready():
         return 0
-    _init_chroma()
     try:
         return _chroma_collection.count()
     except Exception:
