@@ -347,10 +347,37 @@ async def test_provider_error_status_is_returned_as_none_and_not_cached(monkeypa
 
 
 @pytest.mark.asyncio
-async def test_missing_api_key_returns_none(monkeypatch):
-    _patch_environment(monkeypatch)
+async def test_missing_api_key_renders_from_osm_and_caches(monkeypatch):
+    redis, captured = _patch_environment(monkeypatch)
     monkeypatch.delenv('GOOGLE_MAPS_API_KEY', raising=False)
+    osm_calls = []
+
+    def _fake_osm(pins, width, height):
+        osm_calls.append((pins, width, height))
+        return b'osm-png'
+
+    monkeypatch.setattr(static_map_mod, '_render_osm_png', _fake_osm)
+
+    result = await static_map_mod.fetch_static_map([(37.7749, -122.4194)], 300, 150)
+
+    assert result == b'osm-png'
+    assert len(osm_calls) == 1
+    assert captured['provider_calls'] == 0  # Google is never called without a key
+    assert redis.store[static_map_mod._cache_key([(37.7749, -122.4194)], 300, 150)] == b'osm-png'
+
+
+@pytest.mark.asyncio
+async def test_missing_api_key_osm_failure_returns_none_and_is_not_cached(monkeypatch):
+    redis, _ = _patch_environment(monkeypatch)
+    monkeypatch.delenv('GOOGLE_MAPS_API_KEY', raising=False)
+
+    def _tile_fetch_fails(*_args):
+        raise OSError('tile server unreachable')
+
+    monkeypatch.setattr(static_map_mod, '_render_osm_png', _tile_fetch_fails)
+
     assert await static_map_mod.fetch_static_map([(37.7749, -122.4194)], 300, 150) is None
+    assert redis.store == {}  # failures are never cached
 
 
 @pytest.mark.asyncio

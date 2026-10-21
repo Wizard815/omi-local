@@ -305,10 +305,13 @@ class _OnboardingWrapperState extends State<OnboardingWrapper> with TickerProvid
       NameWidget(
         goNext: () {
           _goNext(); // Go to Primary Language page
+          // Self-hosted remote-login sessions never touch FirebaseAuth (see
+          // AuthService.establishRemoteSession), so currentUser is null there —
+          // ?. rather than ! avoids crashing this synchronous callback mid-onboarding.
           IntercomManager.instance.updateUser(
-            FirebaseAuth.instance.currentUser!.email,
-            FirebaseAuth.instance.currentUser!.displayName,
-            FirebaseAuth.instance.currentUser!.uid,
+            FirebaseAuth.instance.currentUser?.email,
+            FirebaseAuth.instance.currentUser?.displayName,
+            FirebaseAuth.instance.currentUser?.uid,
           );
           PlatformManager.instance.analytics.onboardingStepCompleted('Name');
         },

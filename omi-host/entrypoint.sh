@@ -46,6 +46,25 @@ for name, emu in cfg.get('emulators', {}).items():
 cfg.setdefault('emulators', {})['ui'] = {'enabled': True, 'host': '0.0.0.0', 'port': 4000}
 json.dump(cfg, open('/app/firebase.docker.json', 'w'), indent=2)
 PY
+# The Firestore emulator is a separate JVM subprocess the Node CLI supervises
+# -- its own crash/GC/stack-trace output goes to firestore-debug.log in the
+# CLI's cwd (/app, the image's writable layer), not through the CLI's stdout
+# above. That means it's lost every time this container is recreated, which
+# is exactly when you'd want it most: if the JVM died and silently came back
+# empty mid-session (no connection-refused, no restart, just empty
+# collections), the container recreation that "fixes" it also destroys the
+# only evidence of why. Symlink it into the persisted volume so it survives.
+mkdir -p "$STATE/logs"
+# Rotate rather than truncate: if this start follows exactly the kind of
+# silent mid-session data loss this is here to catch, the previous run's log
+# is the only evidence -- overwriting it on the "fix" (a restart) would
+# destroy it. Keep one prior copy.
+if [ -f "$STATE/logs/firestore-debug.log" ]; then
+  mv "$STATE/logs/firestore-debug.log" "$STATE/logs/firestore-debug.log.previous"
+fi
+: > "$STATE/logs/firestore-debug.log"
+ln -sf "$STATE/logs/firestore-debug.log" /app/firestore-debug.log
+
 firebase emulators:start --config /app/firebase.docker.json --only firestore,auth,ui --project demo-omi-local \
   --import "$STATE/firebase-export" --export-on-exit "$STATE/firebase-export" \
   > "$STATE/logs/firebase-emulators.log" 2>&1 &
@@ -94,7 +113,18 @@ export FIRESTORE_EMULATOR_HOST=127.0.0.1:8085
 export FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099
 export FIREBASE_AUTH_PROJECT_ID=demo-omi-local
 export FIREBASE_PROJECT_ID=demo-omi-local
-export FIRESTORE_DATABASE_ID=default
+# The emulator's special default database is the literal sentinel "(default)",
+# not a database named "default" -- those are two different databases in
+# Firestore's multi-database model. The emulator auto-provisions a "default"-
+# named one on first write with no complaint, so reads/writes worked fine all
+# along; but `firebase emulators:export`/`--import` only ever serializes
+# "(default)", which stayed permanently empty. Every restart "worked" (clean
+# shutdown, clean re-import, no errors) while silently re-importing nothing,
+# because the emulator was always exporting the wrong (perpetually-empty)
+# database. Confirmed directly: querying database="default" during a live
+# session showed real documents; querying "(default)" at the same moment
+# showed zero.
+export FIRESTORE_DATABASE_ID="(default)"
 export FIREBASE_API_KEY="${FIREBASE_API_KEY:-local-firebase-auth-emulator-api-key}"
 export MEMORY_MODE=read
 export MEMORY_CANONICAL_CONSOLIDATION_ENABLED=true
