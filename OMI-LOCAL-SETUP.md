@@ -193,6 +193,17 @@ corresponding cloud path becomes available again — that's the optional fallbac
 - The service code is copied into the image: after pulling changes, rerun
   `bash omi-host/run-omi-local-host.sh`, which rebuilds the images and restarts them.
 
+### Transcribing somewhere else
+
+The default above stays self-contained. `omi-audio` can instead send each utterance
+to any OpenAI-compatible `/v1/audio/transcriptions` engine (`OMI_ASR_ENGINE=openai`,
+`OMI_ASR_URL`). That engine can be a local speaches or LocalAI box, or a frontier API.
+`omi-audio` keeps the Omi-specific endpoints, VAD, diarization and TTS, so speaker
+identification and synced recordings keep working. `OMI_AUDIO_URL` on `omi-local`
+moves the whole audio service to another machine, or `off` turns it off for cloud
+STT only. Recipes, with what each one changes and why:
+[`omi-host/examples/audio/`](omi-host/examples/audio/README.md).
+
 ## Self-hosted extras (October 2026)
 
 ### Chat model shortcuts — `/adult`
@@ -229,9 +240,11 @@ this: upstream's own test stacks run with it and still expect those gates.
 
 ### Settings the entrypoint now derives (upstream sync, October 2026)
 - `STT_SERVICE_MODELS`: built from the keys you set (`MODULATE_API_KEY`, `SONIOX_API_KEY`,
-  `DEEPGRAM_API_KEY`), always ending in the local `parakeet` from omi-audio. Upstream's default chain
-  lists Soniox, and the backend refuses to start when Soniox is listed without its key. Set
-  `STT_SERVICE_MODELS` yourself to override.
+  `DEEPGRAM_API_KEY`), ending in the local `parakeet` from omi-audio unless `OMI_AUDIO_URL=off`.
+  Upstream's default chain lists Soniox, and the backend refuses to start when Soniox is listed
+  without its key. Set `STT_SERVICE_MODELS` yourself to override. The logic lives in
+  `omi-host/audio-env.sh`, which also points `HOSTED_PARAKEET_API_URL`,
+  `HOSTED_SPEAKER_EMBEDDING_API_URL` and `TTS_LOCAL_BASE_URL` at `OMI_AUDIO_URL`.
 - `MEMORY_ENABLED=on`: upstream's single memory switch. The old `MEMORY_MODE` and
   `MEMORY_CANONICAL_CONSOLIDATION_ENABLED` are retired; with `MEMORY_ENABLED` unset every memory write
   is paused.
