@@ -25,6 +25,11 @@ with ZERO backend code changes:
 No cloud calls, ever. ASR runs on the MI50 (gfx906) by default; everything else is CPU.
 
   ASR            whisper.cpp (HIP/ROCm, gfx906), OMI_ASR_ENGINE=whispercpp (default).
+                 OMI_ASR_ENGINE=openai instead sends each utterance to any
+                 OpenAI-compatible POST {OMI_ASR_URL}/audio/transcriptions (a local
+                 speaches/faster-whisper-server/LocalAI box, or a frontier API); VAD,
+                 timestamps, diarization and every endpoint above stay here.
+                 Examples: omi-host/examples/audio/.
                  This file OWNS the whisper-server process: it starts it on the first
                  ASR call, stops it once the model has been idle for
                  OMI_ASR_IDLE_UNLOAD_S, and starts it again on the next call. Stopping
@@ -40,6 +45,7 @@ No cloud calls, ever. ASR runs on the MI50 (gfx906) by default; everything else 
                  labelled SPEAKER_00 and /v2/embedding returns 503 — the backend
                  degrades gracefully to a single speaker in both cases.
   TTS            Piper (rhasspy) — OMI_PIPER_VOICE path. Serves mp3 when ffmpeg exists.
+                 OMI_TTS_ENGINE=openai uses POST {OMI_TTS_URL}/audio/speech instead.
 """
 
 import asyncio
@@ -87,8 +93,26 @@ WHISPER_CPP_START_TIMEOUT_S = float(os.getenv("OMI_ASR_START_TIMEOUT_S", "240"))
 # either to 1 to fall back to the server's plain greedy decode.
 WHISPER_CPP_BEAM_SIZE = int(os.getenv("OMI_ASR_BEAM_SIZE", "5"))
 WHISPER_CPP_BEST_OF = int(os.getenv("OMI_ASR_BEST_OF", "5"))
+# Language for every transcription: "en" (the default) or "auto" to let the engine
+# detect it. The backend's stream and upload calls don't carry a language.
+ASR_LANGUAGE = (os.getenv("OMI_ASR_LANGUAGE") or "en").strip().lower()
+# OpenAI-compatible engine (OMI_ASR_ENGINE=openai). Compose passes unset values as
+# empty strings, hence `or default`.
+OPENAI_ASR_URL = (os.getenv("OMI_ASR_URL") or "").strip().rstrip("/")
+OPENAI_ASR_MODEL = (os.getenv("OMI_ASR_MODEL") or "whisper-1").strip()
+OPENAI_ASR_API_KEY = (os.getenv("OMI_ASR_API_KEY") or "").strip()
+# verbose_json carries per-segment timestamps; models that only answer "json" (e.g.
+# gpt-4o-transcribe) are detected on the first 400 and served as one segment per
+# utterance, which VAD already bounds.
+OPENAI_ASR_RESPONSE_FORMAT = (os.getenv("OMI_ASR_RESPONSE_FORMAT") or "verbose_json").strip()
+OPENAI_ASR_TIMEOUT_S = float(os.getenv("OMI_ASR_TIMEOUT_S") or "120")
+OMI_TTS_ENGINE = (os.getenv("OMI_TTS_ENGINE") or "piper").strip().lower()
+OPENAI_TTS_URL = (os.getenv("OMI_TTS_URL") or "").strip().rstrip("/")
+OPENAI_TTS_MODEL = (os.getenv("OMI_TTS_MODEL") or "tts-1").strip()
+OPENAI_TTS_VOICE = (os.getenv("OMI_TTS_VOICE") or "alloy").strip()
+OPENAI_TTS_API_KEY = (os.getenv("OMI_TTS_API_KEY") or "").strip()
 # faster-whisper fallback path (OMI_ASR_ENGINE=fasterwhisper) — unused on the GPU path.
-WHISPER_MODEL = os.getenv("OMI_ASR_MODEL", "Systran/faster-whisper-small")
+WHISPER_MODEL = (os.getenv("OMI_ASR_MODEL") or "Systran/faster-whisper-small").strip()
 WHISPER_DEVICE = os.getenv("OMI_ASR_DEVICE", "cpu")
 WHISPER_COMPUTE = os.getenv("OMI_ASR_COMPUTE", "int8")
 WHISPER_THREADS = int(os.getenv("OMI_ASR_THREADS", "8"))
@@ -275,7 +299,11 @@ class Models:
         self.ready = False
 
     def load(self) -> None:
-        if OMI_ASR_ENGINE == "whispercpp":
+        if OMI_ASR_ENGINE == "openai":
+            if not OPENAI_ASR_URL:
+                raise RuntimeError("OMI_ASR_ENGINE=openai needs OMI_ASR_URL (e.g. http://host:8000/v1)")
+            log.info("ASR engine: OpenAI-compatible %s/audio/transcriptions (model=%s)", OPENAI_ASR_URL, OPENAI_ASR_MODEL)
+        elif OMI_ASR_ENGINE == "whispercpp":
             # whisper-server is started on demand by the first ASR call, so the
             # container boots without holding GPU memory (see WhisperCppServer).
             log.info(
@@ -291,6 +319,10 @@ class Models:
             self.whisper = WhisperModel(WHISPER_MODEL, device=WHISPER_DEVICE,
                                         compute_type=WHISPER_COMPUTE, cpu_threads=WHISPER_THREADS)
             log.info("whisper ready in %.1fs", time.time() - t0)
+        if OMI_TTS_ENGINE == "openai":
+            if not OPENAI_TTS_URL:
+                raise RuntimeError("OMI_TTS_ENGINE=openai needs OMI_TTS_URL (e.g. https://api.openai.com/v1)")
+            log.info("TTS engine: OpenAI-compatible %s/audio/speech (model=%s)", OPENAI_TTS_URL, OPENAI_TTS_MODEL)
         if DIA_ON:
             try:
                 import torch
@@ -499,14 +531,17 @@ app = FastAPI(lifespan=lifespan)
 
 
 # --------------------------------------------------------------------------- inference helpers
-def transcribe(audio16: np.ndarray, language: str = "en") -> List[Dict[str, Any]]:
+def transcribe(audio16: np.ndarray, language: Optional[str] = None) -> List[Dict[str, Any]]:
     """Return [{text,start,end}] in seconds for 16k float audio."""
     if len(audio16) < 1600:
         return []
+    language = language or ASR_LANGUAGE
+    if OMI_ASR_ENGINE == "openai":
+        return _transcribe_openai(audio16, language)
     if OMI_ASR_ENGINE == "whispercpp":
         return _transcribe_whispercpp(audio16, language)
     seg_iter, _info = MODELS.whisper.transcribe(
-        audio16, language=language, vad_filter=False,
+        audio16, language=None if language == "auto" else language, vad_filter=False,
         beam_size=1, condition_on_previous_text=False)
     out: List[Dict[str, Any]] = []
     for s in seg_iter:
@@ -560,6 +595,57 @@ def _transcribe_whispercpp(audio16: np.ndarray, language: str) -> List[Dict[str,
     return out
 
 
+_openai_asr_format = OPENAI_ASR_RESPONSE_FORMAT
+
+
+def _auth_headers(api_key: str) -> Dict[str, str]:
+    return {"Authorization": f"Bearer {api_key}"} if api_key else {}
+
+
+def _transcribe_openai(audio16: np.ndarray, language: str) -> List[Dict[str, Any]]:
+    """POST one VAD-bounded utterance to an OpenAI-compatible
+    /audio/transcriptions endpoint and return the same {text,start,end} shape as
+    the other engines. Segment times are relative to the clip; an engine that
+    answers plain text (no segments) gets one segment spanning the clip."""
+    global _openai_asr_format
+    wav = wav_bytes(float_to_pcm16(audio16), 16000)
+    data = {"model": OPENAI_ASR_MODEL}
+    if language and language not in ("auto", "multi"):
+        data["language"] = language
+    try:
+        resp = None
+        for response_format in dict.fromkeys((_openai_asr_format, "json")):
+            resp = requests.post(
+                f"{OPENAI_ASR_URL}/audio/transcriptions",
+                files={"file": ("audio.wav", wav, "audio/wav")},
+                data={**data, "response_format": response_format},
+                headers=_auth_headers(OPENAI_ASR_API_KEY),
+                timeout=OPENAI_ASR_TIMEOUT_S,
+            )
+            if resp.status_code != 400 or response_format == "json":
+                break
+            log.warning("ASR engine rejected response_format=%s (%s); using json from now on",
+                        response_format, resp.text[:200])
+            _openai_asr_format = "json"
+        resp.raise_for_status()
+        body = resp.json()
+    except Exception as e:  # noqa: BLE001
+        log.error("ASR engine request failed: %s", e)
+        return []
+    out: List[Dict[str, Any]] = []
+    for seg in body.get("segments") or []:
+        t = (seg.get("text") or "").strip()
+        if t:
+            out.append({
+                "text": t,
+                "start": round(float(seg.get("start", 0.0)), 3),
+                "end": round(float(seg.get("end", 0.0)), 3),
+            })
+    if not out and (body.get("text") or "").strip():
+        out.append({"text": body["text"].strip(), "start": 0.0, "end": round(len(audio16) / 16000, 3)})
+    return out
+
+
 def embed(audio16: np.ndarray) -> Optional[np.ndarray]:
     if MODELS.encoder is None or len(audio16) < EMBED_MIN_S * 16000:
         return None
@@ -583,6 +669,11 @@ def embed(audio16: np.ndarray) -> Optional[np.ndarray]:
 @app.get("/health")
 async def health():
     body: Dict[str, Any] = {"status": "healthy" if MODELS.ready else "loading", "ready": MODELS.ready}
+    body["asr_engine"] = OMI_ASR_ENGINE
+    body["tts_engine"] = OMI_TTS_ENGINE
+    if OMI_ASR_ENGINE == "openai":
+        body["asr_url"] = OPENAI_ASR_URL
+        body["asr_model"] = OPENAI_ASR_MODEL
     if OMI_ASR_ENGINE == "whispercpp":
         # Lets an operator check the idle unload without rocm-smi:
         # curl -s 127.0.0.1:8790/health
@@ -709,7 +800,7 @@ async def do_transcribe(file_bytes: bytes, diarize: bool) -> Dict[str, Any]:
                 "start": round(a / 16000 + s["start"], 3),
                 "end": round(a / 16000 + s["end"], 3),
                 "speaker": speaker_label(spk) if diarize else "SPEAKER_00",
-                "detected_language": "en",
+                "detected_language": "en" if ASR_LANGUAGE in ("auto", "multi") else ASR_LANGUAGE,
             })
     text = " ".join(s["text"] for s in segments).strip()
     return {"text": text, "segments": segments}
@@ -757,6 +848,23 @@ def _has_ffmpeg() -> bool:
     return _ffmpeg
 
 
+async def _tts_openai(text: str) -> Response:
+    """Speak through an OpenAI-compatible POST {OMI_TTS_URL}/audio/speech."""
+    loop = asyncio.get_running_loop()
+    try:
+        resp = await loop.run_in_executor(None, lambda: requests.post(
+            f"{OPENAI_TTS_URL}/audio/speech",
+            json={"model": OPENAI_TTS_MODEL, "input": text, "voice": OPENAI_TTS_VOICE, "response_format": "mp3"},
+            headers=_auth_headers(OPENAI_TTS_API_KEY),
+            timeout=OPENAI_ASR_TIMEOUT_S,
+        ))
+        resp.raise_for_status()
+    except Exception as e:  # noqa: BLE001
+        log.error("TTS engine request failed: %s", e)
+        return JSONResponse({"error": "tts engine unavailable"}, status_code=502)
+    return Response(resp.content, media_type=resp.headers.get("content-type", "audio/mpeg"))
+
+
 @app.post("/v1/tts")
 async def tts(req: Request):
     if not MODELS.ready:
@@ -765,6 +873,8 @@ async def tts(req: Request):
     text = (body.get("text") or "").strip()
     if not text:
         return JSONResponse({"error": "empty text"}, status_code=400)
+    if OMI_TTS_ENGINE == "openai":
+        return await _tts_openai(text)
     if not os.path.exists(PIPER_VOICE):
         return JSONResponse({"error": f"piper voice not found: {PIPER_VOICE}"}, status_code=503)
     t0 = time.time()
