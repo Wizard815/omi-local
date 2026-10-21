@@ -794,6 +794,7 @@ reason:
 | `forceParakeetFail` | Local QA failure override, not remote rollout authority | — | — | — | — |
 | `OMI_YOLO_MODE` | Local agent override restricted to non-production builds; not remote rollout authority | — | — | — | — |
 | `PROVIDER_MODE` | Local offline provider harness, not a product flag | — | — | — | — |
+| `FIRESTORE_UI_ENABLED` | omi-local self-hosting: links the dashboard to the Firestore emulator UI sidecar when the operator enables it; deployment config, not rollout authority | — | — | — | — |
 
 ## Retired names — do not reuse
 

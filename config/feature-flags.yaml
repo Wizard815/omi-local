@@ -441,6 +441,7 @@ ignore:
   - {"key":"forceParakeetFail","reason":"Local QA failure override, not remote rollout authority"}
   - {"key":"OMI_YOLO_MODE","reason":"Local agent override restricted to non-production builds; not remote rollout authority"}
   - {"key":"PROVIDER_MODE","reason":"Local offline provider harness, not a product flag"}
+  - {"key":"FIRESTORE_UI_ENABLED","reason":"omi-local self-hosting: links the dashboard to the Firestore emulator UI sidecar when the operator enables it; deployment config, not rollout authority"}
 
 
 retired:
