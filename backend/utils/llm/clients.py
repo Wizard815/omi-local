@@ -151,6 +151,7 @@ except ImportError:
 from utils.llm.usage_tracker import get_usage_callback
 from utils.generated_compute import require_current_generated_compute, generated_compute_configured
 from utils.executors import db_executor, run_blocking
+from utils.self_hosting import is_self_hosted
 
 logger = logging.getLogger(__name__)
 
@@ -826,11 +827,15 @@ def get_llm(
             byok_route_through_gateway = False
 
     effective_provider = _effective_byok_provider(model, provider)
-    # Self-hosted local mode: _get_model_config already resolved this feature to
-    # the local model served at OPENAI_BASE_URL, and there is no Omi gateway to
-    # dispatch managed generation to, so it stays on the direct client.
+    # A self-hosted stack has no Omi gateway to dispatch managed generation to.
+    # In local mode _get_model_config already resolved this feature to the local
+    # model served at OPENAI_BASE_URL; a self-hosted stack on cloud keys
+    # (PROVIDER_MODE=real) calls the provider directly. Both stay on the direct client.
     route_through_gateway = (
-        should_route_company_paid_features_through_gateway() and not byok_key and not is_local_mode()
+        should_route_company_paid_features_through_gateway()
+        and not byok_key
+        and not is_local_mode()
+        and not is_self_hosted()
     ) or (bool(byok_key) and byok_route_through_gateway)
     # VertexGeminiProvider._reject_byok() — Gemini BYOK must use the direct
     # OpenAI-compatible client, not the gateway lane.
