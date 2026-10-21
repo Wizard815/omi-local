@@ -227,6 +227,15 @@ cutover fence, the Cloud Tasks queue for historical sync (backfill runs inline) 
 `MODULATE_API_KEY`, the Modulate cloud STT provider. `PROVIDER_MODE=offline` alone no longer does
 this: upstream's own test stacks run with it and still expect those gates.
 
+### Settings the entrypoint now derives (upstream sync, October 2026)
+- `STT_SERVICE_MODELS`: built from the keys you set (`MODULATE_API_KEY`, `SONIOX_API_KEY`,
+  `DEEPGRAM_API_KEY`), always ending in the local `parakeet` from omi-audio. Upstream's default chain
+  lists Soniox, and the backend refuses to start when Soniox is listed without its key. Set
+  `STT_SERVICE_MODELS` yourself to override.
+- `MEMORY_ENABLED=on`: upstream's single memory switch. The old `MEMORY_MODE` and
+  `MEMORY_CANONICAL_CONSOLIDATION_ENABLED` are retired; with `MEMORY_ENABLED` unset every memory write
+  is paused.
+
 ### Daily recap
 The backend now runs the hourly recap job itself (`OMI_LOCAL_SCHEDULER=1`, default on) at your
 chosen local hour, and the app reports its time zone on start-up, so recaps and day reviews use
