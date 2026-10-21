@@ -14263,281 +14263,276 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deviceControls => '控制';
 
   @override
-  String get dayReviewTitle => 'Day review';
+  String get dayReviewTitle => '当日回顾';
 
   @override
-  String get dayReviewsTitle => 'Day reviews';
+  String get dayReviewsTitle => '每日回顾';
 
   @override
-  String get dayReviewLoadFailed => 'Couldn\'t load this day';
+  String get dayReviewLoadFailed => '无法加载这一天';
 
   @override
-  String get dayReviewActionFailed => 'Something went wrong. Try again.';
+  String get dayReviewActionFailed => '出了点问题，请重试。';
 
   @override
-  String get dayReviewSortHint =>
-      'Star the conversations you want to keep. Everything else becomes one day summary you can correct.';
+  String get dayReviewSortHint => '为想保留的对话加星标。其余内容将合并为一份可修改的当日摘要。';
 
   @override
   String dayReviewProcessing(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count conversations are still processing and are not included.',
-      one: '1 conversation is still processing and is not included.',
+      other: '有 $count 个对话仍在处理中，未包含在内。',
+      one: '有 1 个对话仍在处理中，未包含在内。',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewEmpty => 'No finished conversations on this day.';
+  String get dayReviewEmpty => '这一天没有已完成的对话。';
 
   @override
-  String get dayReviewKeepTooltip => 'Keep as a conversation';
+  String get dayReviewKeepTooltip => '保留为对话';
 
   @override
   String dayReviewFinalizeButton(int kept, int rolled) {
-    return 'Keep $kept · Summarize $rolled';
+    return '保留 $kept · 摘要 $rolled';
   }
 
   @override
-  String get dayReviewConfirmTitle => 'Build the day summary?';
+  String get dayReviewConfirmTitle => '生成当日摘要？';
 
   @override
   String dayReviewConfirmBody(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other:
-          '$count conversations will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
-      one:
-          '1 conversation will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+      other: '$count 个对话将并入当日摘要，并从您的对话列表中移除。您可以通过“重新打开”撤销此操作。',
+      one: '1 个对话将并入当日摘要，并从您的对话列表中移除。您可以通过“重新打开”撤销此操作。',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewConfirmAction => 'Summarize';
+  String get dayReviewConfirmAction => '生成摘要';
 
   @override
-  String get dayReviewWriting => 'Writing your day summary… this can take a minute on a local model.';
+  String get dayReviewWriting => '正在撰写当日摘要……使用本地模型可能需要一分钟。';
 
   @override
-  String get dayReviewApplying => 'Rewriting the summary with your corrections…';
+  String get dayReviewApplying => '正在根据您的更正重写摘要……';
 
   @override
-  String get dayReviewReopening => 'Restoring the conversations…';
+  String get dayReviewReopening => '正在恢复对话……';
 
   @override
-  String get dayReviewReopenTitle => 'Reopen this day?';
+  String get dayReviewReopenTitle => '重新打开这一天？';
 
   @override
-  String get dayReviewReopenBody =>
-      'The summarized conversations come back to your list and this summary (with its corrections) is deleted.';
+  String get dayReviewReopenBody => '已摘要的对话将回到您的列表中，此摘要（及其更正）将被删除。';
 
   @override
-  String get dayReviewReopenAction => 'Reopen day';
+  String get dayReviewReopenAction => '重新打开';
 
   @override
-  String get dayReviewCopy => 'Copy summary';
+  String get dayReviewCopy => '复制摘要';
 
   @override
-  String get dayReviewCopied => 'Day summary copied';
+  String get dayReviewCopied => '当日摘要已复制';
 
   @override
-  String get dayReviewUntitled => 'Untitled conversation';
+  String get dayReviewUntitled => '无标题对话';
 
   @override
   String dayReviewCounts(int rolled, int kept) {
-    return '$rolled summarized · $kept kept';
+    return '已摘要 $rolled · 已保留 $kept';
   }
 
   @override
-  String get dayReviewEditHint => 'Select text to correct or redact it. Use + to add a paragraph.';
+  String get dayReviewEditHint => '选择文本即可更正或遮盖。点按 + 可添加段落。';
 
   @override
-  String get dayReviewCorrectAction => 'Correct';
+  String get dayReviewCorrectAction => '更正';
 
   @override
-  String get dayReviewRedactAction => 'Redact';
+  String get dayReviewRedactAction => '遮盖';
 
   @override
-  String get dayReviewCorrectTitle => 'Correction';
+  String get dayReviewCorrectTitle => '更正';
 
   @override
-  String get dayReviewCorrectHint => 'What is right? e.g. \"It was Wednesday, not Tuesday\"';
+  String get dayReviewCorrectHint => '正确的是什么？例如“是星期三，不是星期二”';
 
   @override
-  String get dayReviewAddParagraph => 'Add paragraph';
+  String get dayReviewAddParagraph => '添加段落';
 
   @override
-  String get dayReviewAddParagraphTitle => 'Add a paragraph';
+  String get dayReviewAddParagraphTitle => '添加段落';
 
   @override
-  String get dayReviewAddParagraphHint => 'Write what the summary is missing';
+  String get dayReviewAddParagraphHint => '写下摘要中遗漏的内容';
 
   @override
-  String get dayReviewYourParagraph => 'Your paragraph';
+  String get dayReviewYourParagraph => '您的段落';
 
   @override
-  String get dayReviewCorrectionsTitle => 'Your corrections';
+  String get dayReviewCorrectionsTitle => '您的更正';
 
   @override
   String dayReviewRedactedQuote(String quote) {
-    return 'Redacted: “$quote”';
+    return '已遮盖：“$quote”';
   }
 
   @override
-  String get dayReviewCorrectionPending => 'Not applied yet';
+  String get dayReviewCorrectionPending => '尚未应用';
 
   @override
-  String get dayReviewCorrectionApplied => 'Applied';
+  String get dayReviewCorrectionApplied => '已应用';
 
   @override
   String dayReviewApplyButton(int count) {
-    return 'Apply corrections ($count)';
+    return '应用更正（$count）';
   }
 
   @override
   String dayReviewKeptTitle(int count) {
-    return 'Kept as conversations ($count)';
+    return '保留为对话（$count）';
   }
 
   @override
   String dayReviewRolledTitle(int count) {
-    return 'In this summary ($count)';
+    return '在此摘要中（$count）';
   }
 
   @override
-  String get dayReviewBannerToday => 'Review today';
+  String get dayReviewBannerToday => '回顾今天';
 
   @override
   String dayReviewBannerDay(String day) {
-    return 'Review $day';
+    return '回顾 $day';
   }
 
   @override
-  String get dayReviewBannerBody => 'Star what to keep; the rest becomes one day summary.';
+  String get dayReviewBannerBody => '为要保留的内容加星标；其余内容将合并为一份当日摘要。';
 
   @override
-  String get dayReviewPickDate => 'Review another day';
+  String get dayReviewPickDate => '回顾其他日期';
 
   @override
-  String get dayReviewsToSort => 'Waiting to be sorted';
+  String get dayReviewsToSort => '等待整理';
 
   @override
-  String get dayReviewsDone => 'Reviewed days';
+  String get dayReviewsDone => '已回顾的日期';
 
   @override
-  String get dayReviewsNone => 'No reviewed days yet.';
+  String get dayReviewsNone => '还没有已回顾的日期。';
 
   @override
   String slashSendWithShortcut(String shortcut, String model) {
-    return 'Answer this message with the /$shortcut model ($model)';
+    return '用 /$shortcut 模型（$model）回答这条消息';
   }
 
   @override
   String slashSendWithShortcutUnset(String shortcut) {
-    return 'Answer this message with the /$shortcut model (not set yet)';
+    return '用 /$shortcut 模型回答这条消息（尚未设置）';
   }
 
   @override
   String slashToggleShortcutOn(String shortcut) {
-    return 'Keep using the /$shortcut model until you toggle it off';
+    return '持续使用 /$shortcut 模型，直到您将其关闭';
   }
 
   @override
   String slashToggleShortcutOff(String shortcut) {
-    return 'Turn the /$shortcut model off (it is on now)';
+    return '关闭 /$shortcut 模型（当前已开启）';
   }
 
   @override
-  String get slashModelCommand => 'Choose which model each shortcut uses';
+  String get slashModelCommand => '选择每个快捷指令使用的模型';
 
   @override
-  String get slashClearCommand => 'Clear this chat';
+  String get slashClearCommand => '清除此聊天';
 
   @override
-  String get slashAppsCommand => 'Open chat apps';
+  String get slashAppsCommand => '打开聊天应用';
 
   @override
-  String get slashReviewCommand => 'Review today: keep the conversations you star, summarize the rest';
+  String get slashReviewCommand => '回顾今天：保留加星标的对话，其余对话生成摘要';
 
   @override
-  String get slashHelpCommand => 'Show all chat commands';
+  String get slashHelpCommand => '显示所有聊天命令';
 
   @override
-  String get slashCommandsHelpTitle => 'Chat commands';
+  String get slashCommandsHelpTitle => '聊天命令';
 
   @override
   String chatShortcutActive(String shortcut) {
-    return '/$shortcut model on';
+    return '/$shortcut 模型已开启';
   }
 
   @override
   String chatShortcutTurnedOn(String shortcut) {
-    return '/$shortcut model on: every message uses it until you send /$shortcut toggle again';
+    return '/$shortcut 模型已开启：在您再次发送 /$shortcut toggle 之前，每条消息都会使用它';
   }
 
   @override
   String chatShortcutTurnedOff(String shortcut) {
-    return '/$shortcut model off: back to the base model';
+    return '/$shortcut 模型已关闭：已恢复为基础模型';
   }
 
   @override
   String chatShortcutPickModelFirst(String shortcut) {
-    return 'Pick a model for /$shortcut first';
+    return '请先为 /$shortcut 选择模型';
   }
 
   @override
   String chatShortcutNeedsMessage(String shortcut) {
-    return 'Type a message after /$shortcut, or /$shortcut toggle to keep it on';
+    return '请在 /$shortcut 后输入消息，或输入 /$shortcut toggle 以保持开启';
   }
 
   @override
-  String get chatShortcutsUnavailable => 'Model shortcuts need the self-hosted local LLM backend.';
+  String get chatShortcutsUnavailable => '模型快捷指令需要自托管的本地 LLM 后端。';
 
   @override
-  String get chatModelShortcutsTitle => 'Chat model shortcuts';
+  String get chatModelShortcutsTitle => '聊天模型快捷指令';
 
   @override
-  String get chatModelShortcutsHint =>
-      'Type /name your question to answer one message with that model, or /name toggle to keep using it.';
+  String get chatModelShortcutsHint => '输入 /name 加上您的问题，即可用该模型回答一条消息；输入 /name toggle 可持续使用该模型。';
 
   @override
   String chatModelShortcutsBaseModel(String model) {
-    return 'Base model: $model';
+    return '基础模型：$model';
   }
 
   @override
-  String get chatModelShortcutsNotSet => 'Not set';
+  String get chatModelShortcutsNotSet => '未设置';
 
   @override
-  String get chatModelShortcutsAddLabel => 'name';
+  String get chatModelShortcutsAddLabel => '名称';
 
   @override
-  String get chatModelShortcutsAddButton => 'Add';
+  String get chatModelShortcutsAddButton => '添加';
 
   @override
-  String get chatModelShortcutsSaveFailed => 'Couldn\'t save the shortcut';
+  String get chatModelShortcutsSaveFailed => '无法保存快捷指令';
 
   @override
-  String get folderInside => 'Inside';
+  String get folderInside => '位置';
 
   @override
-  String get folderTopLevel => 'Top level';
+  String get folderTopLevel => '顶层';
 
   @override
-  String get newSubfolder => 'New subfolder';
+  String get newSubfolder => '新建子文件夹';
 
   @override
-  String get folderTreeTitle => 'Folders';
+  String get folderTreeTitle => '文件夹';
 
   @override
-  String get moveFolder => 'Move…';
+  String get moveFolder => '移动…';
 
   @override
   String moveFolderTo(String name) {
-    return 'Move \"$name\" into…';
+    return '将“$name”移动到…';
   }
 }

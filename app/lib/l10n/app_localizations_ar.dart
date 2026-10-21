@@ -14407,45 +14407,45 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deviceControls => 'عناصر التحكم';
 
   @override
-  String get dayReviewTitle => 'Day review';
+  String get dayReviewTitle => 'مراجعة اليوم';
 
   @override
-  String get dayReviewsTitle => 'Day reviews';
+  String get dayReviewsTitle => 'مراجعات الأيام';
 
   @override
-  String get dayReviewLoadFailed => 'Couldn\'t load this day';
+  String get dayReviewLoadFailed => 'تعذّر تحميل هذا اليوم';
 
   @override
-  String get dayReviewActionFailed => 'Something went wrong. Try again.';
+  String get dayReviewActionFailed => 'حدث خطأ ما. حاول مرة أخرى.';
 
   @override
   String get dayReviewSortHint =>
-      'Star the conversations you want to keep. Everything else becomes one day summary you can correct.';
+      'ميّز بنجمة المحادثات التي تريد الاحتفاظ بها. كل ما عداها يصبح ملخصًا واحدًا لليوم يمكنك تصحيحه.';
 
   @override
   String dayReviewProcessing(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count conversations are still processing and are not included.',
-      one: '1 conversation is still processing and is not included.',
+      other: 'لا تزال $count من المحادثات قيد المعالجة ولم تُضمَّن.',
+      one: 'لا تزال محادثة واحدة قيد المعالجة ولم تُضمَّن.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewEmpty => 'No finished conversations on this day.';
+  String get dayReviewEmpty => 'لا توجد محادثات مكتملة في هذا اليوم.';
 
   @override
-  String get dayReviewKeepTooltip => 'Keep as a conversation';
+  String get dayReviewKeepTooltip => 'الاحتفاظ كمحادثة';
 
   @override
   String dayReviewFinalizeButton(int kept, int rolled) {
-    return 'Keep $kept · Summarize $rolled';
+    return 'الاحتفاظ بـ $kept · تلخيص $rolled';
   }
 
   @override
-  String get dayReviewConfirmTitle => 'Build the day summary?';
+  String get dayReviewConfirmTitle => 'إنشاء ملخص اليوم؟';
 
   @override
   String dayReviewConfirmBody(int count) {
@@ -14453,235 +14453,233 @@ class AppLocalizationsAr extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '$count conversations will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
-      one:
-          '1 conversation will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          'سيتم دمج $count من المحادثات في ملخص اليوم وستختفي من قائمة محادثاتك. يمكنك التراجع عن ذلك عبر «إعادة الفتح».',
+      one: 'سيتم دمج محادثة واحدة في ملخص اليوم وستختفي من قائمة محادثاتك. يمكنك التراجع عن ذلك عبر «إعادة الفتح».',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewConfirmAction => 'Summarize';
+  String get dayReviewConfirmAction => 'تلخيص';
 
   @override
-  String get dayReviewWriting => 'Writing your day summary… this can take a minute on a local model.';
+  String get dayReviewWriting => 'جارٍ كتابة ملخص يومك… قد يستغرق ذلك دقيقة مع نموذج محلي.';
 
   @override
-  String get dayReviewApplying => 'Rewriting the summary with your corrections…';
+  String get dayReviewApplying => 'جارٍ إعادة كتابة الملخص وفق تصحيحاتك…';
 
   @override
-  String get dayReviewReopening => 'Restoring the conversations…';
+  String get dayReviewReopening => 'جارٍ استعادة المحادثات…';
 
   @override
-  String get dayReviewReopenTitle => 'Reopen this day?';
+  String get dayReviewReopenTitle => 'إعادة فتح هذا اليوم؟';
 
   @override
-  String get dayReviewReopenBody =>
-      'The summarized conversations come back to your list and this summary (with its corrections) is deleted.';
+  String get dayReviewReopenBody => 'ستعود المحادثات الملخَّصة إلى قائمتك وسيُحذف هذا الملخص (مع تصحيحاته).';
 
   @override
-  String get dayReviewReopenAction => 'Reopen day';
+  String get dayReviewReopenAction => 'إعادة فتح اليوم';
 
   @override
-  String get dayReviewCopy => 'Copy summary';
+  String get dayReviewCopy => 'نسخ الملخص';
 
   @override
-  String get dayReviewCopied => 'Day summary copied';
+  String get dayReviewCopied => 'تم نسخ ملخص اليوم';
 
   @override
-  String get dayReviewUntitled => 'Untitled conversation';
+  String get dayReviewUntitled => 'محادثة بدون عنوان';
 
   @override
   String dayReviewCounts(int rolled, int kept) {
-    return '$rolled summarized · $kept kept';
+    return '$rolled ملخَّصة · $kept محتفَظ بها';
   }
 
   @override
-  String get dayReviewEditHint => 'Select text to correct or redact it. Use + to add a paragraph.';
+  String get dayReviewEditHint => 'حدّد نصًا لتصحيحه أو حجبه. استخدم + لإضافة فقرة.';
 
   @override
-  String get dayReviewCorrectAction => 'Correct';
+  String get dayReviewCorrectAction => 'تصحيح';
 
   @override
-  String get dayReviewRedactAction => 'Redact';
+  String get dayReviewRedactAction => 'حجب';
 
   @override
-  String get dayReviewCorrectTitle => 'Correction';
+  String get dayReviewCorrectTitle => 'تصحيح';
 
   @override
-  String get dayReviewCorrectHint => 'What is right? e.g. \"It was Wednesday, not Tuesday\"';
+  String get dayReviewCorrectHint => 'ما الصحيح؟ مثلًا: «كان يوم الأربعاء، لا الثلاثاء»';
 
   @override
-  String get dayReviewAddParagraph => 'Add paragraph';
+  String get dayReviewAddParagraph => 'إضافة فقرة';
 
   @override
-  String get dayReviewAddParagraphTitle => 'Add a paragraph';
+  String get dayReviewAddParagraphTitle => 'أضف فقرة';
 
   @override
-  String get dayReviewAddParagraphHint => 'Write what the summary is missing';
+  String get dayReviewAddParagraphHint => 'اكتب ما ينقص الملخص';
 
   @override
-  String get dayReviewYourParagraph => 'Your paragraph';
+  String get dayReviewYourParagraph => 'فقرتك';
 
   @override
-  String get dayReviewCorrectionsTitle => 'Your corrections';
+  String get dayReviewCorrectionsTitle => 'تصحيحاتك';
 
   @override
   String dayReviewRedactedQuote(String quote) {
-    return 'Redacted: “$quote”';
+    return 'محجوب: «$quote»';
   }
 
   @override
-  String get dayReviewCorrectionPending => 'Not applied yet';
+  String get dayReviewCorrectionPending => 'لم يُطبَّق بعد';
 
   @override
-  String get dayReviewCorrectionApplied => 'Applied';
+  String get dayReviewCorrectionApplied => 'مُطبَّق';
 
   @override
   String dayReviewApplyButton(int count) {
-    return 'Apply corrections ($count)';
+    return 'تطبيق التصحيحات ($count)';
   }
 
   @override
   String dayReviewKeptTitle(int count) {
-    return 'Kept as conversations ($count)';
+    return 'محفوظة كمحادثات ($count)';
   }
 
   @override
   String dayReviewRolledTitle(int count) {
-    return 'In this summary ($count)';
+    return 'في هذا الملخص ($count)';
   }
 
   @override
-  String get dayReviewBannerToday => 'Review today';
+  String get dayReviewBannerToday => 'راجع اليوم';
 
   @override
   String dayReviewBannerDay(String day) {
-    return 'Review $day';
+    return 'راجع $day';
   }
 
   @override
-  String get dayReviewBannerBody => 'Star what to keep; the rest becomes one day summary.';
+  String get dayReviewBannerBody => 'ميّز بنجمة ما تريد الاحتفاظ به؛ والباقي يصبح ملخصًا واحدًا لليوم.';
 
   @override
-  String get dayReviewPickDate => 'Review another day';
+  String get dayReviewPickDate => 'مراجعة يوم آخر';
 
   @override
-  String get dayReviewsToSort => 'Waiting to be sorted';
+  String get dayReviewsToSort => 'بانتظار الفرز';
 
   @override
-  String get dayReviewsDone => 'Reviewed days';
+  String get dayReviewsDone => 'الأيام المُراجَعة';
 
   @override
-  String get dayReviewsNone => 'No reviewed days yet.';
+  String get dayReviewsNone => 'لا توجد أيام مُراجَعة بعد.';
 
   @override
   String slashSendWithShortcut(String shortcut, String model) {
-    return 'Answer this message with the /$shortcut model ($model)';
+    return 'الرد على هذه الرسالة بنموذج /$shortcut ($model)';
   }
 
   @override
   String slashSendWithShortcutUnset(String shortcut) {
-    return 'Answer this message with the /$shortcut model (not set yet)';
+    return 'الرد على هذه الرسالة بنموذج /$shortcut (لم يُحدَّد بعد)';
   }
 
   @override
   String slashToggleShortcutOn(String shortcut) {
-    return 'Keep using the /$shortcut model until you toggle it off';
+    return 'مواصلة استخدام نموذج /$shortcut حتى توقفه';
   }
 
   @override
   String slashToggleShortcutOff(String shortcut) {
-    return 'Turn the /$shortcut model off (it is on now)';
+    return 'إيقاف نموذج /$shortcut (مفعّل الآن)';
   }
 
   @override
-  String get slashModelCommand => 'Choose which model each shortcut uses';
+  String get slashModelCommand => 'اختر النموذج الذي يستخدمه كل اختصار';
 
   @override
-  String get slashClearCommand => 'Clear this chat';
+  String get slashClearCommand => 'مسح هذه الدردشة';
 
   @override
-  String get slashAppsCommand => 'Open chat apps';
+  String get slashAppsCommand => 'فتح تطبيقات الدردشة';
 
   @override
-  String get slashReviewCommand => 'Review today: keep the conversations you star, summarize the rest';
+  String get slashReviewCommand => 'راجع اليوم: احتفظ بالمحادثات المميزة بنجمة ولخّص الباقي';
 
   @override
-  String get slashHelpCommand => 'Show all chat commands';
+  String get slashHelpCommand => 'عرض جميع أوامر الدردشة';
 
   @override
-  String get slashCommandsHelpTitle => 'Chat commands';
+  String get slashCommandsHelpTitle => 'أوامر الدردشة';
 
   @override
   String chatShortcutActive(String shortcut) {
-    return '/$shortcut model on';
+    return 'نموذج /$shortcut مفعّل';
   }
 
   @override
   String chatShortcutTurnedOn(String shortcut) {
-    return '/$shortcut model on: every message uses it until you send /$shortcut toggle again';
+    return 'نموذج /$shortcut مفعّل: تستخدمه كل رسالة حتى ترسل /$shortcut toggle مرة أخرى';
   }
 
   @override
   String chatShortcutTurnedOff(String shortcut) {
-    return '/$shortcut model off: back to the base model';
+    return 'نموذج /$shortcut متوقف: العودة إلى النموذج الأساسي';
   }
 
   @override
   String chatShortcutPickModelFirst(String shortcut) {
-    return 'Pick a model for /$shortcut first';
+    return 'اختر نموذجًا لـ /$shortcut أولًا';
   }
 
   @override
   String chatShortcutNeedsMessage(String shortcut) {
-    return 'Type a message after /$shortcut, or /$shortcut toggle to keep it on';
+    return 'اكتب رسالة بعد /$shortcut، أو /$shortcut toggle لإبقائه مفعّلًا';
   }
 
   @override
-  String get chatShortcutsUnavailable => 'Model shortcuts need the self-hosted local LLM backend.';
+  String get chatShortcutsUnavailable => 'تتطلب اختصارات النماذج خادمًا مستضافًا ذاتيًا مع LLM محلي.';
 
   @override
-  String get chatModelShortcutsTitle => 'Chat model shortcuts';
+  String get chatModelShortcutsTitle => 'اختصارات نماذج الدردشة';
 
   @override
   String get chatModelShortcutsHint =>
-      'Type /name your question to answer one message with that model, or /name toggle to keep using it.';
+      'اكتب /name سؤالك للرد على رسالة واحدة بذلك النموذج، أو /name toggle لمواصلة استخدامه.';
 
   @override
   String chatModelShortcutsBaseModel(String model) {
-    return 'Base model: $model';
+    return 'النموذج الأساسي: $model';
   }
 
   @override
-  String get chatModelShortcutsNotSet => 'Not set';
+  String get chatModelShortcutsNotSet => 'غير محدد';
 
   @override
-  String get chatModelShortcutsAddLabel => 'name';
+  String get chatModelShortcutsAddLabel => 'الاسم';
 
   @override
-  String get chatModelShortcutsAddButton => 'Add';
+  String get chatModelShortcutsAddButton => 'إضافة';
 
   @override
-  String get chatModelShortcutsSaveFailed => 'Couldn\'t save the shortcut';
+  String get chatModelShortcutsSaveFailed => 'تعذّر حفظ الاختصار';
 
   @override
-  String get folderInside => 'Inside';
+  String get folderInside => 'داخل';
 
   @override
-  String get folderTopLevel => 'Top level';
+  String get folderTopLevel => 'المستوى الأعلى';
 
   @override
-  String get newSubfolder => 'New subfolder';
+  String get newSubfolder => 'مجلد فرعي جديد';
 
   @override
-  String get folderTreeTitle => 'Folders';
+  String get folderTreeTitle => 'المجلدات';
 
   @override
-  String get moveFolder => 'Move…';
+  String get moveFolder => 'نقل…';
 
   @override
   String moveFolderTo(String name) {
-    return 'Move \"$name\" into…';
+    return 'نقل «$name» إلى…';
   }
 }

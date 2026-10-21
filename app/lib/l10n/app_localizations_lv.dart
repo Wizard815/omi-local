@@ -14519,45 +14519,45 @@ class AppLocalizationsLv extends AppLocalizations {
   String get deviceControls => 'Vadīklas';
 
   @override
-  String get dayReviewTitle => 'Day review';
+  String get dayReviewTitle => 'Dienas pārskats';
 
   @override
-  String get dayReviewsTitle => 'Day reviews';
+  String get dayReviewsTitle => 'Dienu pārskati';
 
   @override
-  String get dayReviewLoadFailed => 'Couldn\'t load this day';
+  String get dayReviewLoadFailed => 'Neizdevās ielādēt šo dienu';
 
   @override
-  String get dayReviewActionFailed => 'Something went wrong. Try again.';
+  String get dayReviewActionFailed => 'Radās kļūda. Mēģiniet vēlreiz.';
 
   @override
   String get dayReviewSortHint =>
-      'Star the conversations you want to keep. Everything else becomes one day summary you can correct.';
+      'Atzīmējiet ar zvaigznīti sarunas, kuras vēlaties paturēt. Viss pārējais kļūs par vienu dienas kopsavilkumu, ko varat labot.';
 
   @override
   String dayReviewProcessing(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count conversations are still processing and are not included.',
-      one: '1 conversation is still processing and is not included.',
+      other: 'Sarunas, kas vēl tiek apstrādātas un nav iekļautas: $count',
+      one: '1 saruna vēl tiek apstrādāta un nav iekļauta.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewEmpty => 'No finished conversations on this day.';
+  String get dayReviewEmpty => 'Šajā dienā nav pabeigtu sarunu.';
 
   @override
-  String get dayReviewKeepTooltip => 'Keep as a conversation';
+  String get dayReviewKeepTooltip => 'Paturēt kā sarunu';
 
   @override
   String dayReviewFinalizeButton(int kept, int rolled) {
-    return 'Keep $kept · Summarize $rolled';
+    return 'Paturēt: $kept · Apkopot: $rolled';
   }
 
   @override
-  String get dayReviewConfirmTitle => 'Build the day summary?';
+  String get dayReviewConfirmTitle => 'Izveidot dienas kopsavilkumu?';
 
   @override
   String dayReviewConfirmBody(int count) {
@@ -14565,235 +14565,237 @@ class AppLocalizationsLv extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '$count conversations will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          'Sarunas, kas tiks iekļautas dienas kopsavilkumā un pazudīs no jūsu sarunu saraksta: $count. To var atsaukt ar „Atvērt dienu atkārtoti”.',
       one:
-          '1 conversation will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          '1 saruna tiks iekļauta dienas kopsavilkumā un pazudīs no jūsu sarunu saraksta. To var atsaukt ar „Atvērt dienu atkārtoti”.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewConfirmAction => 'Summarize';
+  String get dayReviewConfirmAction => 'Apkopot';
 
   @override
-  String get dayReviewWriting => 'Writing your day summary… this can take a minute on a local model.';
+  String get dayReviewWriting => 'Tiek rakstīts jūsu dienas kopsavilkums… ar lokālu modeli tas var aizņemt minūti.';
 
   @override
-  String get dayReviewApplying => 'Rewriting the summary with your corrections…';
+  String get dayReviewApplying => 'Kopsavilkums tiek pārrakstīts ar jūsu labojumiem…';
 
   @override
-  String get dayReviewReopening => 'Restoring the conversations…';
+  String get dayReviewReopening => 'Tiek atjaunotas sarunas…';
 
   @override
-  String get dayReviewReopenTitle => 'Reopen this day?';
+  String get dayReviewReopenTitle => 'Atvērt šo dienu atkārtoti?';
 
   @override
   String get dayReviewReopenBody =>
-      'The summarized conversations come back to your list and this summary (with its corrections) is deleted.';
+      'Apkopotās sarunas atgriezīsies jūsu sarakstā, un šis kopsavilkums (ar tā labojumiem) tiks dzēsts.';
 
   @override
-  String get dayReviewReopenAction => 'Reopen day';
+  String get dayReviewReopenAction => 'Atvērt dienu atkārtoti';
 
   @override
-  String get dayReviewCopy => 'Copy summary';
+  String get dayReviewCopy => 'Kopēt kopsavilkumu';
 
   @override
-  String get dayReviewCopied => 'Day summary copied';
+  String get dayReviewCopied => 'Dienas kopsavilkums nokopēts';
 
   @override
-  String get dayReviewUntitled => 'Untitled conversation';
+  String get dayReviewUntitled => 'Saruna bez nosaukuma';
 
   @override
   String dayReviewCounts(int rolled, int kept) {
-    return '$rolled summarized · $kept kept';
+    return 'Apkopotas: $rolled · Paturētas: $kept';
   }
 
   @override
-  String get dayReviewEditHint => 'Select text to correct or redact it. Use + to add a paragraph.';
+  String get dayReviewEditHint =>
+      'Atlasiet tekstu, lai to labotu vai aizklātu. Izmantojiet +, lai pievienotu rindkopu.';
 
   @override
-  String get dayReviewCorrectAction => 'Correct';
+  String get dayReviewCorrectAction => 'Labot';
 
   @override
-  String get dayReviewRedactAction => 'Redact';
+  String get dayReviewRedactAction => 'Aizklāt';
 
   @override
-  String get dayReviewCorrectTitle => 'Correction';
+  String get dayReviewCorrectTitle => 'Labojums';
 
   @override
-  String get dayReviewCorrectHint => 'What is right? e.g. \"It was Wednesday, not Tuesday\"';
+  String get dayReviewCorrectHint => 'Kas ir pareizi? Piem., „Tā bija trešdiena, nevis otrdiena”';
 
   @override
-  String get dayReviewAddParagraph => 'Add paragraph';
+  String get dayReviewAddParagraph => 'Pievienot rindkopu';
 
   @override
-  String get dayReviewAddParagraphTitle => 'Add a paragraph';
+  String get dayReviewAddParagraphTitle => 'Pievienojiet rindkopu';
 
   @override
-  String get dayReviewAddParagraphHint => 'Write what the summary is missing';
+  String get dayReviewAddParagraphHint => 'Uzrakstiet, kā trūkst kopsavilkumā';
 
   @override
-  String get dayReviewYourParagraph => 'Your paragraph';
+  String get dayReviewYourParagraph => 'Jūsu rindkopa';
 
   @override
-  String get dayReviewCorrectionsTitle => 'Your corrections';
+  String get dayReviewCorrectionsTitle => 'Jūsu labojumi';
 
   @override
   String dayReviewRedactedQuote(String quote) {
-    return 'Redacted: “$quote”';
+    return 'Aizklāts: „$quote”';
   }
 
   @override
-  String get dayReviewCorrectionPending => 'Not applied yet';
+  String get dayReviewCorrectionPending => 'Vēl nav piemērots';
 
   @override
-  String get dayReviewCorrectionApplied => 'Applied';
+  String get dayReviewCorrectionApplied => 'Piemērots';
 
   @override
   String dayReviewApplyButton(int count) {
-    return 'Apply corrections ($count)';
+    return 'Piemērot labojumus ($count)';
   }
 
   @override
   String dayReviewKeptTitle(int count) {
-    return 'Kept as conversations ($count)';
+    return 'Paturētas kā sarunas ($count)';
   }
 
   @override
   String dayReviewRolledTitle(int count) {
-    return 'In this summary ($count)';
+    return 'Šajā kopsavilkumā ($count)';
   }
 
   @override
-  String get dayReviewBannerToday => 'Review today';
+  String get dayReviewBannerToday => 'Pārskatīt šodienu';
 
   @override
   String dayReviewBannerDay(String day) {
-    return 'Review $day';
+    return 'Pārskatīt: $day';
   }
 
   @override
-  String get dayReviewBannerBody => 'Star what to keep; the rest becomes one day summary.';
+  String get dayReviewBannerBody =>
+      'Atzīmējiet ar zvaigznīti to, ko paturēt; pārējais kļūs par vienu dienas kopsavilkumu.';
 
   @override
-  String get dayReviewPickDate => 'Review another day';
+  String get dayReviewPickDate => 'Pārskatīt citu dienu';
 
   @override
-  String get dayReviewsToSort => 'Waiting to be sorted';
+  String get dayReviewsToSort => 'Gaida šķirošanu';
 
   @override
-  String get dayReviewsDone => 'Reviewed days';
+  String get dayReviewsDone => 'Pārskatītās dienas';
 
   @override
-  String get dayReviewsNone => 'No reviewed days yet.';
+  String get dayReviewsNone => 'Vēl nav pārskatītu dienu.';
 
   @override
   String slashSendWithShortcut(String shortcut, String model) {
-    return 'Answer this message with the /$shortcut model ($model)';
+    return 'Atbildēt uz šo ziņojumu ar /$shortcut modeli ($model)';
   }
 
   @override
   String slashSendWithShortcutUnset(String shortcut) {
-    return 'Answer this message with the /$shortcut model (not set yet)';
+    return 'Atbildēt uz šo ziņojumu ar /$shortcut modeli (vēl nav iestatīts)';
   }
 
   @override
   String slashToggleShortcutOn(String shortcut) {
-    return 'Keep using the /$shortcut model until you toggle it off';
+    return 'Turpināt lietot /$shortcut modeli, līdz to izslēgsiet';
   }
 
   @override
   String slashToggleShortcutOff(String shortcut) {
-    return 'Turn the /$shortcut model off (it is on now)';
+    return 'Izslēgt /$shortcut modeli (pašlaik tas ir ieslēgts)';
   }
 
   @override
-  String get slashModelCommand => 'Choose which model each shortcut uses';
+  String get slashModelCommand => 'Izvēlieties, kuru modeli izmanto katra saīsne';
 
   @override
-  String get slashClearCommand => 'Clear this chat';
+  String get slashClearCommand => 'Notīrīt šo tērzēšanu';
 
   @override
-  String get slashAppsCommand => 'Open chat apps';
+  String get slashAppsCommand => 'Atvērt tērzēšanas lietotnes';
 
   @override
-  String get slashReviewCommand => 'Review today: keep the conversations you star, summarize the rest';
+  String get slashReviewCommand => 'Pārskatīt šodienu: paturiet ar zvaigznīti atzīmētās sarunas, pārējās apkopojiet';
 
   @override
-  String get slashHelpCommand => 'Show all chat commands';
+  String get slashHelpCommand => 'Rādīt visas tērzēšanas komandas';
 
   @override
-  String get slashCommandsHelpTitle => 'Chat commands';
+  String get slashCommandsHelpTitle => 'Tērzēšanas komandas';
 
   @override
   String chatShortcutActive(String shortcut) {
-    return '/$shortcut model on';
+    return '/$shortcut modelis ieslēgts';
   }
 
   @override
   String chatShortcutTurnedOn(String shortcut) {
-    return '/$shortcut model on: every message uses it until you send /$shortcut toggle again';
+    return '/$shortcut modelis ieslēgts: katrs ziņojums to izmanto, līdz atkal nosūtīsiet /$shortcut toggle';
   }
 
   @override
   String chatShortcutTurnedOff(String shortcut) {
-    return '/$shortcut model off: back to the base model';
+    return '/$shortcut modelis izslēgts: atpakaļ pie pamatmodeļa';
   }
 
   @override
   String chatShortcutPickModelFirst(String shortcut) {
-    return 'Pick a model for /$shortcut first';
+    return 'Vispirms izvēlieties modeli komandai /$shortcut';
   }
 
   @override
   String chatShortcutNeedsMessage(String shortcut) {
-    return 'Type a message after /$shortcut, or /$shortcut toggle to keep it on';
+    return 'Ierakstiet ziņojumu pēc /$shortcut vai /$shortcut toggle, lai modelis paliktu ieslēgts';
   }
 
   @override
-  String get chatShortcutsUnavailable => 'Model shortcuts need the self-hosted local LLM backend.';
+  String get chatShortcutsUnavailable => 'Modeļu saīsnēm nepieciešama pašmitināta lokālā LLM aizmugursistēma.';
 
   @override
-  String get chatModelShortcutsTitle => 'Chat model shortcuts';
+  String get chatModelShortcutsTitle => 'Tērzēšanas modeļu saīsnes';
 
   @override
   String get chatModelShortcutsHint =>
-      'Type /name your question to answer one message with that model, or /name toggle to keep using it.';
+      'Ierakstiet /name un pēc tam jautājumu, lai uz vienu ziņojumu atbildētu šis modelis, vai /name toggle, lai to izmantotu pastāvīgi.';
 
   @override
   String chatModelShortcutsBaseModel(String model) {
-    return 'Base model: $model';
+    return 'Pamatmodelis: $model';
   }
 
   @override
-  String get chatModelShortcutsNotSet => 'Not set';
+  String get chatModelShortcutsNotSet => 'Nav iestatīts';
 
   @override
-  String get chatModelShortcutsAddLabel => 'name';
+  String get chatModelShortcutsAddLabel => 'nosaukums';
 
   @override
-  String get chatModelShortcutsAddButton => 'Add';
+  String get chatModelShortcutsAddButton => 'Pievienot';
 
   @override
-  String get chatModelShortcutsSaveFailed => 'Couldn\'t save the shortcut';
+  String get chatModelShortcutsSaveFailed => 'Neizdevās saglabāt saīsni';
 
   @override
-  String get folderInside => 'Inside';
+  String get folderInside => 'Mapē';
 
   @override
-  String get folderTopLevel => 'Top level';
+  String get folderTopLevel => 'Augšējais līmenis';
 
   @override
-  String get newSubfolder => 'New subfolder';
+  String get newSubfolder => 'Jauna apakšmape';
 
   @override
-  String get folderTreeTitle => 'Folders';
+  String get folderTreeTitle => 'Mapes';
 
   @override
-  String get moveFolder => 'Move…';
+  String get moveFolder => 'Pārvietot…';
 
   @override
   String moveFolderTo(String name) {
-    return 'Move \"$name\" into…';
+    return 'Pārvietot „$name” uz…';
   }
 }

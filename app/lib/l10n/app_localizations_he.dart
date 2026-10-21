@@ -14385,281 +14385,277 @@ class AppLocalizationsHe extends AppLocalizations {
   String get deviceControls => 'פקדים';
 
   @override
-  String get dayReviewTitle => 'Day review';
+  String get dayReviewTitle => 'סקירת יום';
 
   @override
-  String get dayReviewsTitle => 'Day reviews';
+  String get dayReviewsTitle => 'סקירות יום';
 
   @override
-  String get dayReviewLoadFailed => 'Couldn\'t load this day';
+  String get dayReviewLoadFailed => 'לא ניתן היה לטעון את היום הזה';
 
   @override
-  String get dayReviewActionFailed => 'Something went wrong. Try again.';
+  String get dayReviewActionFailed => 'משהו השתבש. נסה שוב.';
 
   @override
-  String get dayReviewSortHint =>
-      'Star the conversations you want to keep. Everything else becomes one day summary you can correct.';
+  String get dayReviewSortHint => 'סמן בכוכב את השיחות שברצונך לשמור. כל השאר יהפוך לסיכום יום אחד שתוכל לתקן.';
 
   @override
   String dayReviewProcessing(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count conversations are still processing and are not included.',
-      one: '1 conversation is still processing and is not included.',
+      other: '$count שיחות עדיין בעיבוד ואינן כלולות.',
+      one: 'שיחה אחת עדיין בעיבוד ואינה כלולה.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewEmpty => 'No finished conversations on this day.';
+  String get dayReviewEmpty => 'אין שיחות שהסתיימו ביום הזה.';
 
   @override
-  String get dayReviewKeepTooltip => 'Keep as a conversation';
+  String get dayReviewKeepTooltip => 'שמור כשיחה';
 
   @override
   String dayReviewFinalizeButton(int kept, int rolled) {
-    return 'Keep $kept · Summarize $rolled';
+    return 'שמור $kept · סכם $rolled';
   }
 
   @override
-  String get dayReviewConfirmTitle => 'Build the day summary?';
+  String get dayReviewConfirmTitle => 'ליצור את סיכום היום?';
 
   @override
   String dayReviewConfirmBody(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other:
-          '$count conversations will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
-      one:
-          '1 conversation will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+      other: '$count שיחות ישולבו בסיכום היום ויוסרו מרשימת השיחות שלך. ניתן לבטל זאת באמצעות פתיחה מחדש.',
+      one: 'שיחה אחת תשולב בסיכום היום ותוסר מרשימת השיחות שלך. ניתן לבטל זאת באמצעות פתיחה מחדש.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewConfirmAction => 'Summarize';
+  String get dayReviewConfirmAction => 'סכם';
 
   @override
-  String get dayReviewWriting => 'Writing your day summary… this can take a minute on a local model.';
+  String get dayReviewWriting => 'כותב את סיכום היום שלך… זה עשוי לקחת דקה במודל מקומי.';
 
   @override
-  String get dayReviewApplying => 'Rewriting the summary with your corrections…';
+  String get dayReviewApplying => 'משכתב את הסיכום עם התיקונים שלך…';
 
   @override
-  String get dayReviewReopening => 'Restoring the conversations…';
+  String get dayReviewReopening => 'משחזר את השיחות…';
 
   @override
-  String get dayReviewReopenTitle => 'Reopen this day?';
+  String get dayReviewReopenTitle => 'לפתוח מחדש את היום הזה?';
 
   @override
-  String get dayReviewReopenBody =>
-      'The summarized conversations come back to your list and this summary (with its corrections) is deleted.';
+  String get dayReviewReopenBody => 'השיחות שסוכמו יחזרו לרשימה שלך, והסיכום הזה (כולל התיקונים שלו) יימחק.';
 
   @override
-  String get dayReviewReopenAction => 'Reopen day';
+  String get dayReviewReopenAction => 'פתח מחדש את היום';
 
   @override
-  String get dayReviewCopy => 'Copy summary';
+  String get dayReviewCopy => 'העתק סיכום';
 
   @override
-  String get dayReviewCopied => 'Day summary copied';
+  String get dayReviewCopied => 'סיכום היום הועתק';
 
   @override
-  String get dayReviewUntitled => 'Untitled conversation';
+  String get dayReviewUntitled => 'שיחה ללא כותרת';
 
   @override
   String dayReviewCounts(int rolled, int kept) {
-    return '$rolled summarized · $kept kept';
+    return '$rolled סוכמו · $kept נשמרו';
   }
 
   @override
-  String get dayReviewEditHint => 'Select text to correct or redact it. Use + to add a paragraph.';
+  String get dayReviewEditHint => 'בחר טקסט כדי לתקן או להשחיר אותו. השתמש ב-+ כדי להוסיף פסקה.';
 
   @override
-  String get dayReviewCorrectAction => 'Correct';
+  String get dayReviewCorrectAction => 'תקן';
 
   @override
-  String get dayReviewRedactAction => 'Redact';
+  String get dayReviewRedactAction => 'השחר';
 
   @override
-  String get dayReviewCorrectTitle => 'Correction';
+  String get dayReviewCorrectTitle => 'תיקון';
 
   @override
-  String get dayReviewCorrectHint => 'What is right? e.g. \"It was Wednesday, not Tuesday\"';
+  String get dayReviewCorrectHint => 'מה נכון? לדוגמה: \"זה היה ביום רביעי, לא שלישי\"';
 
   @override
-  String get dayReviewAddParagraph => 'Add paragraph';
+  String get dayReviewAddParagraph => 'הוסף פסקה';
 
   @override
-  String get dayReviewAddParagraphTitle => 'Add a paragraph';
+  String get dayReviewAddParagraphTitle => 'הוספת פסקה';
 
   @override
-  String get dayReviewAddParagraphHint => 'Write what the summary is missing';
+  String get dayReviewAddParagraphHint => 'כתוב מה חסר בסיכום';
 
   @override
-  String get dayReviewYourParagraph => 'Your paragraph';
+  String get dayReviewYourParagraph => 'הפסקה שלך';
 
   @override
-  String get dayReviewCorrectionsTitle => 'Your corrections';
+  String get dayReviewCorrectionsTitle => 'התיקונים שלך';
 
   @override
   String dayReviewRedactedQuote(String quote) {
-    return 'Redacted: “$quote”';
+    return 'הושחר: “$quote”';
   }
 
   @override
-  String get dayReviewCorrectionPending => 'Not applied yet';
+  String get dayReviewCorrectionPending => 'טרם הוחל';
 
   @override
-  String get dayReviewCorrectionApplied => 'Applied';
+  String get dayReviewCorrectionApplied => 'הוחל';
 
   @override
   String dayReviewApplyButton(int count) {
-    return 'Apply corrections ($count)';
+    return 'החל תיקונים ($count)';
   }
 
   @override
   String dayReviewKeptTitle(int count) {
-    return 'Kept as conversations ($count)';
+    return 'נשמרו כשיחות ($count)';
   }
 
   @override
   String dayReviewRolledTitle(int count) {
-    return 'In this summary ($count)';
+    return 'בסיכום הזה ($count)';
   }
 
   @override
-  String get dayReviewBannerToday => 'Review today';
+  String get dayReviewBannerToday => 'סקור את היום';
 
   @override
   String dayReviewBannerDay(String day) {
-    return 'Review $day';
+    return 'סקור את $day';
   }
 
   @override
-  String get dayReviewBannerBody => 'Star what to keep; the rest becomes one day summary.';
+  String get dayReviewBannerBody => 'סמן בכוכב את מה שברצונך לשמור; השאר יהפוך לסיכום יום אחד.';
 
   @override
-  String get dayReviewPickDate => 'Review another day';
+  String get dayReviewPickDate => 'סקור יום אחר';
 
   @override
-  String get dayReviewsToSort => 'Waiting to be sorted';
+  String get dayReviewsToSort => 'ממתינים למיון';
 
   @override
-  String get dayReviewsDone => 'Reviewed days';
+  String get dayReviewsDone => 'ימים שנסקרו';
 
   @override
-  String get dayReviewsNone => 'No reviewed days yet.';
+  String get dayReviewsNone => 'עדיין אין ימים שנסקרו.';
 
   @override
   String slashSendWithShortcut(String shortcut, String model) {
-    return 'Answer this message with the /$shortcut model ($model)';
+    return 'ענה להודעה הזו עם מודל /$shortcut ($model)';
   }
 
   @override
   String slashSendWithShortcutUnset(String shortcut) {
-    return 'Answer this message with the /$shortcut model (not set yet)';
+    return 'ענה להודעה הזו עם מודל /$shortcut (עדיין לא הוגדר)';
   }
 
   @override
   String slashToggleShortcutOn(String shortcut) {
-    return 'Keep using the /$shortcut model until you toggle it off';
+    return 'המשך להשתמש במודל /$shortcut עד שתכבה אותו';
   }
 
   @override
   String slashToggleShortcutOff(String shortcut) {
-    return 'Turn the /$shortcut model off (it is on now)';
+    return 'כבה את מודל /$shortcut (הוא פעיל כעת)';
   }
 
   @override
-  String get slashModelCommand => 'Choose which model each shortcut uses';
+  String get slashModelCommand => 'בחר באיזה מודל משתמש כל קיצור';
 
   @override
-  String get slashClearCommand => 'Clear this chat';
+  String get slashClearCommand => 'נקה את הצ\'אט הזה';
 
   @override
-  String get slashAppsCommand => 'Open chat apps';
+  String get slashAppsCommand => 'פתח אפליקציות צ\'אט';
 
   @override
-  String get slashReviewCommand => 'Review today: keep the conversations you star, summarize the rest';
+  String get slashReviewCommand => 'סקור את היום: שמור את השיחות שסימנת בכוכב וסכם את השאר';
 
   @override
-  String get slashHelpCommand => 'Show all chat commands';
+  String get slashHelpCommand => 'הצג את כל פקודות הצ\'אט';
 
   @override
-  String get slashCommandsHelpTitle => 'Chat commands';
+  String get slashCommandsHelpTitle => 'פקודות צ\'אט';
 
   @override
   String chatShortcutActive(String shortcut) {
-    return '/$shortcut model on';
+    return 'מודל /$shortcut פעיל';
   }
 
   @override
   String chatShortcutTurnedOn(String shortcut) {
-    return '/$shortcut model on: every message uses it until you send /$shortcut toggle again';
+    return 'מודל /$shortcut פעיל: כל הודעה תשתמש בו עד שתשלח שוב /$shortcut toggle';
   }
 
   @override
   String chatShortcutTurnedOff(String shortcut) {
-    return '/$shortcut model off: back to the base model';
+    return 'מודל /$shortcut כבוי: חזרה למודל הבסיס';
   }
 
   @override
   String chatShortcutPickModelFirst(String shortcut) {
-    return 'Pick a model for /$shortcut first';
+    return 'בחר קודם מודל עבור /$shortcut';
   }
 
   @override
   String chatShortcutNeedsMessage(String shortcut) {
-    return 'Type a message after /$shortcut, or /$shortcut toggle to keep it on';
+    return 'הקלד הודעה אחרי /$shortcut, או /$shortcut toggle כדי להשאיר אותו פעיל';
   }
 
   @override
-  String get chatShortcutsUnavailable => 'Model shortcuts need the self-hosted local LLM backend.';
+  String get chatShortcutsUnavailable => 'קיצורי מודלים דורשים את שרת ה-LLM המקומי באירוח עצמי.';
 
   @override
-  String get chatModelShortcutsTitle => 'Chat model shortcuts';
+  String get chatModelShortcutsTitle => 'קיצורי מודלים לצ\'אט';
 
   @override
   String get chatModelShortcutsHint =>
-      'Type /name your question to answer one message with that model, or /name toggle to keep using it.';
+      'הקלד /name ואת השאלה שלך כדי שהמודל הזה יענה על הודעה אחת, או /name toggle כדי להמשיך להשתמש בו.';
 
   @override
   String chatModelShortcutsBaseModel(String model) {
-    return 'Base model: $model';
+    return 'מודל בסיס: $model';
   }
 
   @override
-  String get chatModelShortcutsNotSet => 'Not set';
+  String get chatModelShortcutsNotSet => 'לא הוגדר';
 
   @override
-  String get chatModelShortcutsAddLabel => 'name';
+  String get chatModelShortcutsAddLabel => 'שם';
 
   @override
-  String get chatModelShortcutsAddButton => 'Add';
+  String get chatModelShortcutsAddButton => 'הוסף';
 
   @override
-  String get chatModelShortcutsSaveFailed => 'Couldn\'t save the shortcut';
+  String get chatModelShortcutsSaveFailed => 'לא ניתן היה לשמור את הקיצור';
 
   @override
-  String get folderInside => 'Inside';
+  String get folderInside => 'בתוך';
 
   @override
-  String get folderTopLevel => 'Top level';
+  String get folderTopLevel => 'רמה עליונה';
 
   @override
-  String get newSubfolder => 'New subfolder';
+  String get newSubfolder => 'תת-תיקייה חדשה';
 
   @override
-  String get folderTreeTitle => 'Folders';
+  String get folderTreeTitle => 'תיקיות';
 
   @override
-  String get moveFolder => 'Move…';
+  String get moveFolder => 'העבר…';
 
   @override
   String moveFolderTo(String name) {
-    return 'Move \"$name\" into…';
+    return 'העבר את \"$name\" אל…';
   }
 }

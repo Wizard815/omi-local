@@ -14523,45 +14523,45 @@ class AppLocalizationsBe extends AppLocalizations {
   String get deviceControls => 'Кіраванне';
 
   @override
-  String get dayReviewTitle => 'Day review';
+  String get dayReviewTitle => 'Агляд дня';
 
   @override
-  String get dayReviewsTitle => 'Day reviews';
+  String get dayReviewsTitle => 'Агляды дзён';
 
   @override
-  String get dayReviewLoadFailed => 'Couldn\'t load this day';
+  String get dayReviewLoadFailed => 'Не ўдалося загрузіць гэты дзень';
 
   @override
-  String get dayReviewActionFailed => 'Something went wrong. Try again.';
+  String get dayReviewActionFailed => 'Нешта пайшло не так. Паспрабуйце яшчэ раз.';
 
   @override
   String get dayReviewSortHint =>
-      'Star the conversations you want to keep. Everything else becomes one day summary you can correct.';
+      'Адзначце зоркай размовы, якія хочаце захаваць. Усё астатняе стане адной зводкай дня, якую можна выправіць.';
 
   @override
   String dayReviewProcessing(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count conversations are still processing and are not included.',
-      one: '1 conversation is still processing and is not included.',
+      other: 'Размоў, якія яшчэ апрацоўваюцца і не ўключаны: $count',
+      one: '1 размова яшчэ апрацоўваецца і не ўключана.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewEmpty => 'No finished conversations on this day.';
+  String get dayReviewEmpty => 'Няма завершаных размоў за гэты дзень.';
 
   @override
-  String get dayReviewKeepTooltip => 'Keep as a conversation';
+  String get dayReviewKeepTooltip => 'Захаваць як размову';
 
   @override
   String dayReviewFinalizeButton(int kept, int rolled) {
-    return 'Keep $kept · Summarize $rolled';
+    return 'Захаваць: $kept · Рэзюмаваць: $rolled';
   }
 
   @override
-  String get dayReviewConfirmTitle => 'Build the day summary?';
+  String get dayReviewConfirmTitle => 'Скласці зводку дня?';
 
   @override
   String dayReviewConfirmBody(int count) {
@@ -14569,235 +14569,236 @@ class AppLocalizationsBe extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '$count conversations will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          'Размоў, якія ўвойдуць у зводку дня і знікнуць з вашага спіса размоў: $count. Гэта можна адмяніць кнопкай «Адкрыць дзень зноў».',
       one:
-          '1 conversation will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          '1 размова ўвойдзе ў зводку дня і знікне з вашага спіса размоў. Гэта можна адмяніць кнопкай «Адкрыць дзень зноў».',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewConfirmAction => 'Summarize';
+  String get dayReviewConfirmAction => 'Рэзюмаваць';
 
   @override
-  String get dayReviewWriting => 'Writing your day summary… this can take a minute on a local model.';
+  String get dayReviewWriting => 'Складаем зводку вашага дня… на лакальнай мадэлі гэта можа заняць хвіліну.';
 
   @override
-  String get dayReviewApplying => 'Rewriting the summary with your corrections…';
+  String get dayReviewApplying => 'Перапісваем зводку з улікам вашых выпраўленняў…';
 
   @override
-  String get dayReviewReopening => 'Restoring the conversations…';
+  String get dayReviewReopening => 'Аднаўляем размовы…';
 
   @override
-  String get dayReviewReopenTitle => 'Reopen this day?';
+  String get dayReviewReopenTitle => 'Адкрыць гэты дзень зноў?';
 
   @override
   String get dayReviewReopenBody =>
-      'The summarized conversations come back to your list and this summary (with its corrections) is deleted.';
+      'Размовы са зводкі вернуцца ў ваш спіс, а гэта зводка (разам з выпраўленнямі) будзе выдалена.';
 
   @override
-  String get dayReviewReopenAction => 'Reopen day';
+  String get dayReviewReopenAction => 'Адкрыць дзень зноў';
 
   @override
-  String get dayReviewCopy => 'Copy summary';
+  String get dayReviewCopy => 'Капіяваць зводку';
 
   @override
-  String get dayReviewCopied => 'Day summary copied';
+  String get dayReviewCopied => 'Зводка дня скапіявана';
 
   @override
-  String get dayReviewUntitled => 'Untitled conversation';
+  String get dayReviewUntitled => 'Размова без назвы';
 
   @override
   String dayReviewCounts(int rolled, int kept) {
-    return '$rolled summarized · $kept kept';
+    return 'У зводцы: $rolled · Захавана: $kept';
   }
 
   @override
-  String get dayReviewEditHint => 'Select text to correct or redact it. Use + to add a paragraph.';
+  String get dayReviewEditHint => 'Вылучыце тэкст, каб выправіць або схаваць яго. Націсніце +, каб дадаць абзац.';
 
   @override
-  String get dayReviewCorrectAction => 'Correct';
+  String get dayReviewCorrectAction => 'Выправіць';
 
   @override
-  String get dayReviewRedactAction => 'Redact';
+  String get dayReviewRedactAction => 'Схаваць';
 
   @override
-  String get dayReviewCorrectTitle => 'Correction';
+  String get dayReviewCorrectTitle => 'Выпраўленне';
 
   @override
-  String get dayReviewCorrectHint => 'What is right? e.g. \"It was Wednesday, not Tuesday\"';
+  String get dayReviewCorrectHint => 'Як правільна? Напр. «Была серада, а не аўторак»';
 
   @override
-  String get dayReviewAddParagraph => 'Add paragraph';
+  String get dayReviewAddParagraph => 'Дадаць абзац';
 
   @override
-  String get dayReviewAddParagraphTitle => 'Add a paragraph';
+  String get dayReviewAddParagraphTitle => 'Дадайце абзац';
 
   @override
-  String get dayReviewAddParagraphHint => 'Write what the summary is missing';
+  String get dayReviewAddParagraphHint => 'Напішыце, чаго не хапае ў зводцы';
 
   @override
-  String get dayReviewYourParagraph => 'Your paragraph';
+  String get dayReviewYourParagraph => 'Ваш абзац';
 
   @override
-  String get dayReviewCorrectionsTitle => 'Your corrections';
+  String get dayReviewCorrectionsTitle => 'Вашы выпраўленні';
 
   @override
   String dayReviewRedactedQuote(String quote) {
-    return 'Redacted: “$quote”';
+    return 'Схавана: «$quote»';
   }
 
   @override
-  String get dayReviewCorrectionPending => 'Not applied yet';
+  String get dayReviewCorrectionPending => 'Яшчэ не ўжыта';
 
   @override
-  String get dayReviewCorrectionApplied => 'Applied';
+  String get dayReviewCorrectionApplied => 'Ужыта';
 
   @override
   String dayReviewApplyButton(int count) {
-    return 'Apply corrections ($count)';
+    return 'Ужыць выпраўленні ($count)';
   }
 
   @override
   String dayReviewKeptTitle(int count) {
-    return 'Kept as conversations ($count)';
+    return 'Захавана як размовы ($count)';
   }
 
   @override
   String dayReviewRolledTitle(int count) {
-    return 'In this summary ($count)';
+    return 'У гэтай зводцы ($count)';
   }
 
   @override
-  String get dayReviewBannerToday => 'Review today';
+  String get dayReviewBannerToday => 'Агляд сённяшняга дня';
 
   @override
   String dayReviewBannerDay(String day) {
-    return 'Review $day';
+    return 'Агляд: $day';
   }
 
   @override
-  String get dayReviewBannerBody => 'Star what to keep; the rest becomes one day summary.';
+  String get dayReviewBannerBody => 'Адзначце зоркай тое, што трэба захаваць; астатняе стане адной зводкай дня.';
 
   @override
-  String get dayReviewPickDate => 'Review another day';
+  String get dayReviewPickDate => 'Агляд іншага дня';
 
   @override
-  String get dayReviewsToSort => 'Waiting to be sorted';
+  String get dayReviewsToSort => 'Чакаюць сартавання';
 
   @override
-  String get dayReviewsDone => 'Reviewed days';
+  String get dayReviewsDone => 'Прагледжаныя дні';
 
   @override
-  String get dayReviewsNone => 'No reviewed days yet.';
+  String get dayReviewsNone => 'Прагледжаных дзён пакуль няма.';
 
   @override
   String slashSendWithShortcut(String shortcut, String model) {
-    return 'Answer this message with the /$shortcut model ($model)';
+    return 'Адказаць на гэта паведамленне мадэллю /$shortcut ($model)';
   }
 
   @override
   String slashSendWithShortcutUnset(String shortcut) {
-    return 'Answer this message with the /$shortcut model (not set yet)';
+    return 'Адказаць на гэта паведамленне мадэллю /$shortcut (яшчэ не зададзена)';
   }
 
   @override
   String slashToggleShortcutOn(String shortcut) {
-    return 'Keep using the /$shortcut model until you toggle it off';
+    return 'Карыстацца мадэллю /$shortcut, пакуль вы яе не выключыце';
   }
 
   @override
   String slashToggleShortcutOff(String shortcut) {
-    return 'Turn the /$shortcut model off (it is on now)';
+    return 'Выключыць мадэль /$shortcut (зараз яна ўключана)';
   }
 
   @override
-  String get slashModelCommand => 'Choose which model each shortcut uses';
+  String get slashModelCommand => 'Выберыце, якую мадэль выкарыстоўвае кожны ярлык';
 
   @override
-  String get slashClearCommand => 'Clear this chat';
+  String get slashClearCommand => 'Ачысціць гэты чат';
 
   @override
-  String get slashAppsCommand => 'Open chat apps';
+  String get slashAppsCommand => 'Адкрыць дадаткі чата';
 
   @override
-  String get slashReviewCommand => 'Review today: keep the conversations you star, summarize the rest';
+  String get slashReviewCommand =>
+      'Агляд сённяшняга дня: захавайце адзначаныя зоркай размовы, астатнія пойдуць у зводку';
 
   @override
-  String get slashHelpCommand => 'Show all chat commands';
+  String get slashHelpCommand => 'Паказаць усе каманды чата';
 
   @override
-  String get slashCommandsHelpTitle => 'Chat commands';
+  String get slashCommandsHelpTitle => 'Каманды чата';
 
   @override
   String chatShortcutActive(String shortcut) {
-    return '/$shortcut model on';
+    return 'Мадэль /$shortcut уключана';
   }
 
   @override
   String chatShortcutTurnedOn(String shortcut) {
-    return '/$shortcut model on: every message uses it until you send /$shortcut toggle again';
+    return 'Мадэль /$shortcut уключана: кожнае паведамленне выкарыстоўвае яе, пакуль вы зноў не адправіце /$shortcut toggle';
   }
 
   @override
   String chatShortcutTurnedOff(String shortcut) {
-    return '/$shortcut model off: back to the base model';
+    return 'Мадэль /$shortcut выключана: вяртаемся да базавай мадэлі';
   }
 
   @override
   String chatShortcutPickModelFirst(String shortcut) {
-    return 'Pick a model for /$shortcut first';
+    return 'Спачатку выберыце мадэль для /$shortcut';
   }
 
   @override
   String chatShortcutNeedsMessage(String shortcut) {
-    return 'Type a message after /$shortcut, or /$shortcut toggle to keep it on';
+    return 'Увядзіце паведамленне пасля /$shortcut або /$shortcut toggle, каб пакінуць мадэль уключанай';
   }
 
   @override
-  String get chatShortcutsUnavailable => 'Model shortcuts need the self-hosted local LLM backend.';
+  String get chatShortcutsUnavailable => 'Для ярлыкоў мадэляў патрэбны лакальны LLM-бэкенд на ўласным серверы.';
 
   @override
-  String get chatModelShortcutsTitle => 'Chat model shortcuts';
+  String get chatModelShortcutsTitle => 'Ярлыкі мадэляў чата';
 
   @override
   String get chatModelShortcutsHint =>
-      'Type /name your question to answer one message with that model, or /name toggle to keep using it.';
+      'Увядзіце /name, а потым пытанне, каб гэтая мадэль адказала на адно паведамленне, або /name toggle, каб карыстацца ёй пастаянна.';
 
   @override
   String chatModelShortcutsBaseModel(String model) {
-    return 'Base model: $model';
+    return 'Базавая мадэль: $model';
   }
 
   @override
-  String get chatModelShortcutsNotSet => 'Not set';
+  String get chatModelShortcutsNotSet => 'Не ўсталявана';
 
   @override
-  String get chatModelShortcutsAddLabel => 'name';
+  String get chatModelShortcutsAddLabel => 'назва';
 
   @override
-  String get chatModelShortcutsAddButton => 'Add';
+  String get chatModelShortcutsAddButton => 'Дадаць';
 
   @override
-  String get chatModelShortcutsSaveFailed => 'Couldn\'t save the shortcut';
+  String get chatModelShortcutsSaveFailed => 'Не ўдалося захаваць ярлык';
 
   @override
-  String get folderInside => 'Inside';
+  String get folderInside => 'Унутры';
 
   @override
-  String get folderTopLevel => 'Top level';
+  String get folderTopLevel => 'Верхні ўзровень';
 
   @override
-  String get newSubfolder => 'New subfolder';
+  String get newSubfolder => 'Новая падпапка';
 
   @override
-  String get folderTreeTitle => 'Folders';
+  String get folderTreeTitle => 'Папкі';
 
   @override
-  String get moveFolder => 'Move…';
+  String get moveFolder => 'Перамясціць…';
 
   @override
   String moveFolderTo(String name) {
-    return 'Move \"$name\" into…';
+    return 'Перамясціць «$name» у…';
   }
 }

@@ -14545,45 +14545,45 @@ class AppLocalizationsHu extends AppLocalizations {
   String get deviceControls => 'Vezérlők';
 
   @override
-  String get dayReviewTitle => 'Day review';
+  String get dayReviewTitle => 'Napi áttekintés';
 
   @override
-  String get dayReviewsTitle => 'Day reviews';
+  String get dayReviewsTitle => 'Napi áttekintések';
 
   @override
-  String get dayReviewLoadFailed => 'Couldn\'t load this day';
+  String get dayReviewLoadFailed => 'Nem sikerült betölteni ezt a napot';
 
   @override
-  String get dayReviewActionFailed => 'Something went wrong. Try again.';
+  String get dayReviewActionFailed => 'Valami hiba történt. Próbáld újra.';
 
   @override
   String get dayReviewSortHint =>
-      'Star the conversations you want to keep. Everything else becomes one day summary you can correct.';
+      'Csillagozd meg a megtartani kívánt beszélgetéseket. Minden más egyetlen napi összefoglalóvá válik, amelyet javíthatsz.';
 
   @override
   String dayReviewProcessing(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count conversations are still processing and are not included.',
-      one: '1 conversation is still processing and is not included.',
+      other: '$count beszélgetés feldolgozása még folyamatban van, ezért ezek kimaradtak.',
+      one: '1 beszélgetés feldolgozása még folyamatban van, ezért kimaradt.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewEmpty => 'No finished conversations on this day.';
+  String get dayReviewEmpty => 'Ezen a napon nincs befejezett beszélgetés.';
 
   @override
-  String get dayReviewKeepTooltip => 'Keep as a conversation';
+  String get dayReviewKeepTooltip => 'Megtartás beszélgetésként';
 
   @override
   String dayReviewFinalizeButton(int kept, int rolled) {
-    return 'Keep $kept · Summarize $rolled';
+    return 'Megtartás: $kept · Összefoglalás: $rolled';
   }
 
   @override
-  String get dayReviewConfirmTitle => 'Build the day summary?';
+  String get dayReviewConfirmTitle => 'Elkészíted a napi összefoglalót?';
 
   @override
   String dayReviewConfirmBody(int count) {
@@ -14591,235 +14591,238 @@ class AppLocalizationsHu extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '$count conversations will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          '$count beszélgetés bekerül a napi összefoglalóba, és eltűnik a beszélgetéslistádról. Ezt az Újranyitás gombbal visszavonhatod.',
       one:
-          '1 conversation will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          '1 beszélgetés bekerül a napi összefoglalóba, és eltűnik a beszélgetéslistádról. Ezt az Újranyitás gombbal visszavonhatod.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewConfirmAction => 'Summarize';
+  String get dayReviewConfirmAction => 'Összefoglalás';
 
   @override
-  String get dayReviewWriting => 'Writing your day summary… this can take a minute on a local model.';
+  String get dayReviewWriting => 'Készül a napi összefoglalód… helyi modellel ez egy percig is eltarthat.';
 
   @override
-  String get dayReviewApplying => 'Rewriting the summary with your corrections…';
+  String get dayReviewApplying => 'Az összefoglaló átírása a javításaid alapján…';
 
   @override
-  String get dayReviewReopening => 'Restoring the conversations…';
+  String get dayReviewReopening => 'Beszélgetések visszaállítása…';
 
   @override
-  String get dayReviewReopenTitle => 'Reopen this day?';
+  String get dayReviewReopenTitle => 'Újranyitod ezt a napot?';
 
   @override
   String get dayReviewReopenBody =>
-      'The summarized conversations come back to your list and this summary (with its corrections) is deleted.';
+      'Az összefoglalt beszélgetések visszakerülnek a listádba, ez az összefoglaló (a javításaival együtt) pedig törlődik.';
 
   @override
-  String get dayReviewReopenAction => 'Reopen day';
+  String get dayReviewReopenAction => 'Nap újranyitása';
 
   @override
-  String get dayReviewCopy => 'Copy summary';
+  String get dayReviewCopy => 'Összefoglaló másolása';
 
   @override
-  String get dayReviewCopied => 'Day summary copied';
+  String get dayReviewCopied => 'Napi összefoglaló másolva';
 
   @override
-  String get dayReviewUntitled => 'Untitled conversation';
+  String get dayReviewUntitled => 'Névtelen beszélgetés';
 
   @override
   String dayReviewCounts(int rolled, int kept) {
-    return '$rolled summarized · $kept kept';
+    return '$rolled összefoglalva · $kept megtartva';
   }
 
   @override
-  String get dayReviewEditHint => 'Select text to correct or redact it. Use + to add a paragraph.';
+  String get dayReviewEditHint =>
+      'Jelölj ki szöveget a javításhoz vagy kitakaráshoz. Bekezdés hozzáadásához használd a + gombot.';
 
   @override
-  String get dayReviewCorrectAction => 'Correct';
+  String get dayReviewCorrectAction => 'Javítás';
 
   @override
-  String get dayReviewRedactAction => 'Redact';
+  String get dayReviewRedactAction => 'Kitakarás';
 
   @override
-  String get dayReviewCorrectTitle => 'Correction';
+  String get dayReviewCorrectTitle => 'Javítás';
 
   @override
-  String get dayReviewCorrectHint => 'What is right? e.g. \"It was Wednesday, not Tuesday\"';
+  String get dayReviewCorrectHint => 'Mi a helyes? pl. „Szerda volt, nem kedd”';
 
   @override
-  String get dayReviewAddParagraph => 'Add paragraph';
+  String get dayReviewAddParagraph => 'Bekezdés hozzáadása';
 
   @override
-  String get dayReviewAddParagraphTitle => 'Add a paragraph';
+  String get dayReviewAddParagraphTitle => 'Bekezdés hozzáadása';
 
   @override
-  String get dayReviewAddParagraphHint => 'Write what the summary is missing';
+  String get dayReviewAddParagraphHint => 'Írd le, mi hiányzik az összefoglalóból';
 
   @override
-  String get dayReviewYourParagraph => 'Your paragraph';
+  String get dayReviewYourParagraph => 'Saját bekezdés';
 
   @override
-  String get dayReviewCorrectionsTitle => 'Your corrections';
+  String get dayReviewCorrectionsTitle => 'Javításaid';
 
   @override
   String dayReviewRedactedQuote(String quote) {
-    return 'Redacted: “$quote”';
+    return 'Kitakarva: „$quote”';
   }
 
   @override
-  String get dayReviewCorrectionPending => 'Not applied yet';
+  String get dayReviewCorrectionPending => 'Még nincs alkalmazva';
 
   @override
-  String get dayReviewCorrectionApplied => 'Applied';
+  String get dayReviewCorrectionApplied => 'Alkalmazva';
 
   @override
   String dayReviewApplyButton(int count) {
-    return 'Apply corrections ($count)';
+    return 'Javítások alkalmazása ($count)';
   }
 
   @override
   String dayReviewKeptTitle(int count) {
-    return 'Kept as conversations ($count)';
+    return 'Beszélgetésként megtartva ($count)';
   }
 
   @override
   String dayReviewRolledTitle(int count) {
-    return 'In this summary ($count)';
+    return 'Ebben az összefoglalóban ($count)';
   }
 
   @override
-  String get dayReviewBannerToday => 'Review today';
+  String get dayReviewBannerToday => 'A mai nap áttekintése';
 
   @override
   String dayReviewBannerDay(String day) {
-    return 'Review $day';
+    return '$day áttekintése';
   }
 
   @override
-  String get dayReviewBannerBody => 'Star what to keep; the rest becomes one day summary.';
+  String get dayReviewBannerBody => 'Csillagozd meg, amit megtartanál; a többi egyetlen napi összefoglalóvá válik.';
 
   @override
-  String get dayReviewPickDate => 'Review another day';
+  String get dayReviewPickDate => 'Másik nap áttekintése';
 
   @override
-  String get dayReviewsToSort => 'Waiting to be sorted';
+  String get dayReviewsToSort => 'Rendezésre vár';
 
   @override
-  String get dayReviewsDone => 'Reviewed days';
+  String get dayReviewsDone => 'Áttekintett napok';
 
   @override
-  String get dayReviewsNone => 'No reviewed days yet.';
+  String get dayReviewsNone => 'Még nincs áttekintett nap.';
 
   @override
   String slashSendWithShortcut(String shortcut, String model) {
-    return 'Answer this message with the /$shortcut model ($model)';
+    return 'Válasz erre az üzenetre a /$shortcut modellel ($model)';
   }
 
   @override
   String slashSendWithShortcutUnset(String shortcut) {
-    return 'Answer this message with the /$shortcut model (not set yet)';
+    return 'Válasz erre az üzenetre a /$shortcut modellel (még nincs beállítva)';
   }
 
   @override
   String slashToggleShortcutOn(String shortcut) {
-    return 'Keep using the /$shortcut model until you toggle it off';
+    return 'A /$shortcut modell használata, amíg ki nem kapcsolod';
   }
 
   @override
   String slashToggleShortcutOff(String shortcut) {
-    return 'Turn the /$shortcut model off (it is on now)';
+    return 'A /$shortcut modell kikapcsolása (jelenleg be van kapcsolva)';
   }
 
   @override
-  String get slashModelCommand => 'Choose which model each shortcut uses';
+  String get slashModelCommand => 'Válaszd ki, melyik gyorsparancs melyik modellt használja';
 
   @override
-  String get slashClearCommand => 'Clear this chat';
+  String get slashClearCommand => 'Csevegés törlése';
 
   @override
-  String get slashAppsCommand => 'Open chat apps';
+  String get slashAppsCommand => 'Csevegőalkalmazások megnyitása';
 
   @override
-  String get slashReviewCommand => 'Review today: keep the conversations you star, summarize the rest';
+  String get slashReviewCommand =>
+      'A mai nap áttekintése: a csillagozott beszélgetések maradnak, a többiből összefoglaló készül';
 
   @override
-  String get slashHelpCommand => 'Show all chat commands';
+  String get slashHelpCommand => 'Az összes csevegőparancs megjelenítése';
 
   @override
-  String get slashCommandsHelpTitle => 'Chat commands';
+  String get slashCommandsHelpTitle => 'Csevegőparancsok';
 
   @override
   String chatShortcutActive(String shortcut) {
-    return '/$shortcut model on';
+    return '/$shortcut modell bekapcsolva';
   }
 
   @override
   String chatShortcutTurnedOn(String shortcut) {
-    return '/$shortcut model on: every message uses it until you send /$shortcut toggle again';
+    return '/$shortcut modell bekapcsolva: minden üzenet ezt használja, amíg újra el nem küldöd a /$shortcut toggle parancsot';
   }
 
   @override
   String chatShortcutTurnedOff(String shortcut) {
-    return '/$shortcut model off: back to the base model';
+    return '/$shortcut modell kikapcsolva: vissza az alapmodellhez';
   }
 
   @override
   String chatShortcutPickModelFirst(String shortcut) {
-    return 'Pick a model for /$shortcut first';
+    return 'Előbb válassz modellt a /$shortcut számára';
   }
 
   @override
   String chatShortcutNeedsMessage(String shortcut) {
-    return 'Type a message after /$shortcut, or /$shortcut toggle to keep it on';
+    return 'Írj üzenetet a /$shortcut után, vagy küldd el a /$shortcut toggle parancsot, hogy bekapcsolva maradjon';
   }
 
   @override
-  String get chatShortcutsUnavailable => 'Model shortcuts need the self-hosted local LLM backend.';
+  String get chatShortcutsUnavailable =>
+      'A modell-gyorsparancsokhoz saját üzemeltetésű, helyi LLM-háttérrendszer szükséges.';
 
   @override
-  String get chatModelShortcutsTitle => 'Chat model shortcuts';
+  String get chatModelShortcutsTitle => 'Csevegési modell-gyorsparancsok';
 
   @override
   String get chatModelShortcutsHint =>
-      'Type /name your question to answer one message with that model, or /name toggle to keep using it.';
+      'Írd be: /name kérdésed, hogy egy üzenetre ez a modell válaszoljon, vagy /name toggle, hogy tovább használd.';
 
   @override
   String chatModelShortcutsBaseModel(String model) {
-    return 'Base model: $model';
+    return 'Alapmodell: $model';
   }
 
   @override
-  String get chatModelShortcutsNotSet => 'Not set';
+  String get chatModelShortcutsNotSet => 'Nincs beállítva';
 
   @override
-  String get chatModelShortcutsAddLabel => 'name';
+  String get chatModelShortcutsAddLabel => 'név';
 
   @override
-  String get chatModelShortcutsAddButton => 'Add';
+  String get chatModelShortcutsAddButton => 'Hozzáadás';
 
   @override
-  String get chatModelShortcutsSaveFailed => 'Couldn\'t save the shortcut';
+  String get chatModelShortcutsSaveFailed => 'Nem sikerült menteni a gyorsparancsot';
 
   @override
-  String get folderInside => 'Inside';
+  String get folderInside => 'Szülőmappa';
 
   @override
-  String get folderTopLevel => 'Top level';
+  String get folderTopLevel => 'Legfelső szint';
 
   @override
-  String get newSubfolder => 'New subfolder';
+  String get newSubfolder => 'Új almappa';
 
   @override
-  String get folderTreeTitle => 'Folders';
+  String get folderTreeTitle => 'Mappák';
 
   @override
-  String get moveFolder => 'Move…';
+  String get moveFolder => 'Áthelyezés…';
 
   @override
   String moveFolderTo(String name) {
-    return 'Move \"$name\" into…';
+    return '„$name” áthelyezése ide…';
   }
 }

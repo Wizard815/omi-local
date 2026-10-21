@@ -14415,45 +14415,45 @@ class AppLocalizationsTh extends AppLocalizations {
   String get deviceControls => 'การควบคุม';
 
   @override
-  String get dayReviewTitle => 'Day review';
+  String get dayReviewTitle => 'ทบทวนประจำวัน';
 
   @override
-  String get dayReviewsTitle => 'Day reviews';
+  String get dayReviewsTitle => 'การทบทวนประจำวัน';
 
   @override
-  String get dayReviewLoadFailed => 'Couldn\'t load this day';
+  String get dayReviewLoadFailed => 'ไม่สามารถโหลดข้อมูลของวันนั้นได้';
 
   @override
-  String get dayReviewActionFailed => 'Something went wrong. Try again.';
+  String get dayReviewActionFailed => 'เกิดข้อผิดพลาดบางอย่าง ลองอีกครั้ง';
 
   @override
   String get dayReviewSortHint =>
-      'Star the conversations you want to keep. Everything else becomes one day summary you can correct.';
+      'ติดดาวบทสนทนาที่คุณต้องการเก็บไว้ ส่วนที่เหลือจะรวมเป็นสรุปประจำวันหนึ่งรายการที่คุณแก้ไขได้';
 
   @override
   String dayReviewProcessing(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count conversations are still processing and are not included.',
-      one: '1 conversation is still processing and is not included.',
+      other: 'มีบทสนทนา $count รายการที่ยังประมวลผลอยู่และไม่ได้รวมไว้',
+      one: 'มีบทสนทนา 1 รายการที่ยังประมวลผลอยู่และไม่ได้รวมไว้',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewEmpty => 'No finished conversations on this day.';
+  String get dayReviewEmpty => 'ไม่มีบทสนทนาที่เสร็จสมบูรณ์ในวันนั้น';
 
   @override
-  String get dayReviewKeepTooltip => 'Keep as a conversation';
+  String get dayReviewKeepTooltip => 'เก็บไว้เป็นบทสนทนา';
 
   @override
   String dayReviewFinalizeButton(int kept, int rolled) {
-    return 'Keep $kept · Summarize $rolled';
+    return 'เก็บ $kept · สรุป $rolled';
   }
 
   @override
-  String get dayReviewConfirmTitle => 'Build the day summary?';
+  String get dayReviewConfirmTitle => 'สร้างสรุปประจำวันไหม?';
 
   @override
   String dayReviewConfirmBody(int count) {
@@ -14461,235 +14461,234 @@ class AppLocalizationsTh extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '$count conversations will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          'บทสนทนา $count รายการจะถูกรวมเข้าในสรุปประจำวันและนำออกจากรายการบทสนทนาของคุณ คุณยกเลิกได้ด้วย “เปิดวันอีกครั้ง”',
       one:
-          '1 conversation will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          'บทสนทนา 1 รายการจะถูกรวมเข้าในสรุปประจำวันและนำออกจากรายการบทสนทนาของคุณ คุณยกเลิกได้ด้วย “เปิดวันอีกครั้ง”',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewConfirmAction => 'Summarize';
+  String get dayReviewConfirmAction => 'สรุป';
 
   @override
-  String get dayReviewWriting => 'Writing your day summary… this can take a minute on a local model.';
+  String get dayReviewWriting => 'กำลังเขียนสรุปประจำวันของคุณ… อาจใช้เวลาประมาณหนึ่งนาทีเมื่อใช้โมเดลในเครื่อง';
 
   @override
-  String get dayReviewApplying => 'Rewriting the summary with your corrections…';
+  String get dayReviewApplying => 'กำลังเขียนสรุปใหม่ตามการแก้ไขของคุณ…';
 
   @override
-  String get dayReviewReopening => 'Restoring the conversations…';
+  String get dayReviewReopening => 'กำลังกู้คืนบทสนทนา…';
 
   @override
-  String get dayReviewReopenTitle => 'Reopen this day?';
+  String get dayReviewReopenTitle => 'เปิดวันนั้นอีกครั้งไหม?';
 
   @override
-  String get dayReviewReopenBody =>
-      'The summarized conversations come back to your list and this summary (with its corrections) is deleted.';
+  String get dayReviewReopenBody => 'บทสนทนาที่ถูกสรุปจะกลับมาอยู่ในรายการของคุณ และสรุปนี้ (รวมถึงการแก้ไข) จะถูกลบ';
 
   @override
-  String get dayReviewReopenAction => 'Reopen day';
+  String get dayReviewReopenAction => 'เปิดวันอีกครั้ง';
 
   @override
-  String get dayReviewCopy => 'Copy summary';
+  String get dayReviewCopy => 'คัดลอกสรุป';
 
   @override
-  String get dayReviewCopied => 'Day summary copied';
+  String get dayReviewCopied => 'คัดลอกสรุปประจำวันแล้ว';
 
   @override
-  String get dayReviewUntitled => 'Untitled conversation';
+  String get dayReviewUntitled => 'การสนทนาที่ไม่มีชื่อ';
 
   @override
   String dayReviewCounts(int rolled, int kept) {
-    return '$rolled summarized · $kept kept';
+    return 'สรุปแล้ว $rolled · เก็บไว้ $kept';
   }
 
   @override
-  String get dayReviewEditHint => 'Select text to correct or redact it. Use + to add a paragraph.';
+  String get dayReviewEditHint => 'เลือกข้อความเพื่อแก้ไขหรือปกปิด ใช้ + เพื่อเพิ่มย่อหน้า';
 
   @override
-  String get dayReviewCorrectAction => 'Correct';
+  String get dayReviewCorrectAction => 'แก้ไข';
 
   @override
-  String get dayReviewRedactAction => 'Redact';
+  String get dayReviewRedactAction => 'ปกปิด';
 
   @override
-  String get dayReviewCorrectTitle => 'Correction';
+  String get dayReviewCorrectTitle => 'การแก้ไข';
 
   @override
-  String get dayReviewCorrectHint => 'What is right? e.g. \"It was Wednesday, not Tuesday\"';
+  String get dayReviewCorrectHint => 'ที่ถูกต้องคืออะไร? เช่น “เป็นวันพุธ ไม่ใช่วันอังคาร”';
 
   @override
-  String get dayReviewAddParagraph => 'Add paragraph';
+  String get dayReviewAddParagraph => 'เพิ่มย่อหน้า';
 
   @override
-  String get dayReviewAddParagraphTitle => 'Add a paragraph';
+  String get dayReviewAddParagraphTitle => 'เพิ่มย่อหน้า';
 
   @override
-  String get dayReviewAddParagraphHint => 'Write what the summary is missing';
+  String get dayReviewAddParagraphHint => 'เขียนสิ่งที่สรุปยังขาดไป';
 
   @override
-  String get dayReviewYourParagraph => 'Your paragraph';
+  String get dayReviewYourParagraph => 'ย่อหน้าของคุณ';
 
   @override
-  String get dayReviewCorrectionsTitle => 'Your corrections';
+  String get dayReviewCorrectionsTitle => 'การแก้ไขของคุณ';
 
   @override
   String dayReviewRedactedQuote(String quote) {
-    return 'Redacted: “$quote”';
+    return 'ปกปิดแล้ว: “$quote”';
   }
 
   @override
-  String get dayReviewCorrectionPending => 'Not applied yet';
+  String get dayReviewCorrectionPending => 'ยังไม่ได้นำไปใช้';
 
   @override
-  String get dayReviewCorrectionApplied => 'Applied';
+  String get dayReviewCorrectionApplied => 'นำไปใช้แล้ว';
 
   @override
   String dayReviewApplyButton(int count) {
-    return 'Apply corrections ($count)';
+    return 'นำการแก้ไขไปใช้ ($count)';
   }
 
   @override
   String dayReviewKeptTitle(int count) {
-    return 'Kept as conversations ($count)';
+    return 'เก็บไว้เป็นบทสนทนา ($count)';
   }
 
   @override
   String dayReviewRolledTitle(int count) {
-    return 'In this summary ($count)';
+    return 'ในสรุปนี้ ($count)';
   }
 
   @override
-  String get dayReviewBannerToday => 'Review today';
+  String get dayReviewBannerToday => 'ทบทวนวันนี้';
 
   @override
   String dayReviewBannerDay(String day) {
-    return 'Review $day';
+    return 'ทบทวน $day';
   }
 
   @override
-  String get dayReviewBannerBody => 'Star what to keep; the rest becomes one day summary.';
+  String get dayReviewBannerBody => 'ติดดาวสิ่งที่ต้องการเก็บไว้ ส่วนที่เหลือจะรวมเป็นสรุปประจำวันหนึ่งรายการ';
 
   @override
-  String get dayReviewPickDate => 'Review another day';
+  String get dayReviewPickDate => 'ทบทวนวันอื่น';
 
   @override
-  String get dayReviewsToSort => 'Waiting to be sorted';
+  String get dayReviewsToSort => 'รอการคัดแยก';
 
   @override
-  String get dayReviewsDone => 'Reviewed days';
+  String get dayReviewsDone => 'วันที่ทบทวนแล้ว';
 
   @override
-  String get dayReviewsNone => 'No reviewed days yet.';
+  String get dayReviewsNone => 'ยังไม่มีวันที่ทบทวนแล้ว';
 
   @override
   String slashSendWithShortcut(String shortcut, String model) {
-    return 'Answer this message with the /$shortcut model ($model)';
+    return 'ตอบข้อความนี้ด้วยโมเดล /$shortcut ($model)';
   }
 
   @override
   String slashSendWithShortcutUnset(String shortcut) {
-    return 'Answer this message with the /$shortcut model (not set yet)';
+    return 'ตอบข้อความนี้ด้วยโมเดล /$shortcut (ยังไม่ได้ตั้งค่า)';
   }
 
   @override
   String slashToggleShortcutOn(String shortcut) {
-    return 'Keep using the /$shortcut model until you toggle it off';
+    return 'ใช้โมเดล /$shortcut ต่อไปจนกว่าคุณจะปิด';
   }
 
   @override
   String slashToggleShortcutOff(String shortcut) {
-    return 'Turn the /$shortcut model off (it is on now)';
+    return 'ปิดโมเดล /$shortcut (ขณะนี้เปิดอยู่)';
   }
 
   @override
-  String get slashModelCommand => 'Choose which model each shortcut uses';
+  String get slashModelCommand => 'เลือกโมเดลที่แต่ละทางลัดใช้';
 
   @override
-  String get slashClearCommand => 'Clear this chat';
+  String get slashClearCommand => 'ล้างแชทนี้';
 
   @override
-  String get slashAppsCommand => 'Open chat apps';
+  String get slashAppsCommand => 'เปิดแอปแชท';
 
   @override
-  String get slashReviewCommand => 'Review today: keep the conversations you star, summarize the rest';
+  String get slashReviewCommand => 'ทบทวนวันนี้: เก็บบทสนทนาที่คุณติดดาว และสรุปส่วนที่เหลือ';
 
   @override
-  String get slashHelpCommand => 'Show all chat commands';
+  String get slashHelpCommand => 'แสดงคำสั่งแชททั้งหมด';
 
   @override
-  String get slashCommandsHelpTitle => 'Chat commands';
+  String get slashCommandsHelpTitle => 'คำสั่งแชท';
 
   @override
   String chatShortcutActive(String shortcut) {
-    return '/$shortcut model on';
+    return 'เปิดโมเดล /$shortcut อยู่';
   }
 
   @override
   String chatShortcutTurnedOn(String shortcut) {
-    return '/$shortcut model on: every message uses it until you send /$shortcut toggle again';
+    return 'เปิดโมเดล /$shortcut แล้ว: ทุกข้อความจะใช้โมเดลนี้จนกว่าคุณจะส่ง /$shortcut toggle อีกครั้ง';
   }
 
   @override
   String chatShortcutTurnedOff(String shortcut) {
-    return '/$shortcut model off: back to the base model';
+    return 'ปิดโมเดล /$shortcut แล้ว: กลับไปใช้โมเดลพื้นฐาน';
   }
 
   @override
   String chatShortcutPickModelFirst(String shortcut) {
-    return 'Pick a model for /$shortcut first';
+    return 'เลือกโมเดลสำหรับ /$shortcut ก่อน';
   }
 
   @override
   String chatShortcutNeedsMessage(String shortcut) {
-    return 'Type a message after /$shortcut, or /$shortcut toggle to keep it on';
+    return 'พิมพ์ข้อความต่อท้าย /$shortcut หรือใช้ /$shortcut toggle เพื่อเปิดไว้ต่อ';
   }
 
   @override
-  String get chatShortcutsUnavailable => 'Model shortcuts need the self-hosted local LLM backend.';
+  String get chatShortcutsUnavailable => 'ทางลัดโมเดลต้องใช้แบ็กเอนด์ LLM ในเครื่องแบบโฮสต์เอง';
 
   @override
-  String get chatModelShortcutsTitle => 'Chat model shortcuts';
+  String get chatModelShortcutsTitle => 'ทางลัดโมเดลแชท';
 
   @override
   String get chatModelShortcutsHint =>
-      'Type /name your question to answer one message with that model, or /name toggle to keep using it.';
+      'พิมพ์ /name ตามด้วยคำถามของคุณเพื่อให้โมเดลนั้นตอบข้อความเดียว หรือพิมพ์ /name toggle เพื่อใช้โมเดลนั้นต่อไป';
 
   @override
   String chatModelShortcutsBaseModel(String model) {
-    return 'Base model: $model';
+    return 'โมเดลพื้นฐาน: $model';
   }
 
   @override
-  String get chatModelShortcutsNotSet => 'Not set';
+  String get chatModelShortcutsNotSet => 'ไม่ได้ตั้งค่า';
 
   @override
-  String get chatModelShortcutsAddLabel => 'name';
+  String get chatModelShortcutsAddLabel => 'ชื่อ';
 
   @override
-  String get chatModelShortcutsAddButton => 'Add';
+  String get chatModelShortcutsAddButton => 'เพิ่ม';
 
   @override
-  String get chatModelShortcutsSaveFailed => 'Couldn\'t save the shortcut';
+  String get chatModelShortcutsSaveFailed => 'ไม่สามารถบันทึกทางลัดได้';
 
   @override
-  String get folderInside => 'Inside';
+  String get folderInside => 'อยู่ใน';
 
   @override
-  String get folderTopLevel => 'Top level';
+  String get folderTopLevel => 'ระดับบนสุด';
 
   @override
-  String get newSubfolder => 'New subfolder';
+  String get newSubfolder => 'โฟลเดอร์ย่อยใหม่';
 
   @override
-  String get folderTreeTitle => 'Folders';
+  String get folderTreeTitle => 'โฟลเดอร์';
 
   @override
-  String get moveFolder => 'Move…';
+  String get moveFolder => 'ย้าย…';
 
   @override
   String moveFolderTo(String name) {
-    return 'Move \"$name\" into…';
+    return 'ย้าย “$name” ไปยัง…';
   }
 }

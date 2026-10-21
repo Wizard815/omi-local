@@ -14601,45 +14601,45 @@ class AppLocalizationsTl extends AppLocalizations {
   String get deviceControls => 'Mga Kontrol';
 
   @override
-  String get dayReviewTitle => 'Day review';
+  String get dayReviewTitle => 'Review ng araw';
 
   @override
-  String get dayReviewsTitle => 'Day reviews';
+  String get dayReviewsTitle => 'Mga review ng araw';
 
   @override
-  String get dayReviewLoadFailed => 'Couldn\'t load this day';
+  String get dayReviewLoadFailed => 'Hindi ma-load ang araw na ito';
 
   @override
-  String get dayReviewActionFailed => 'Something went wrong. Try again.';
+  String get dayReviewActionFailed => 'May nangyaring mali. Subukan ulit.';
 
   @override
   String get dayReviewSortHint =>
-      'Star the conversations you want to keep. Everything else becomes one day summary you can correct.';
+      'I-star ang mga conversation na gusto mong itago. Lahat ng iba ay magiging iisang buod ng araw na puwede mong itama.';
 
   @override
   String dayReviewProcessing(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count conversations are still processing and are not included.',
-      one: '1 conversation is still processing and is not included.',
+      other: '$count conversation ang pinoproseso pa at hindi kasama.',
+      one: '$count conversation ang pinoproseso pa at hindi kasama.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewEmpty => 'No finished conversations on this day.';
+  String get dayReviewEmpty => 'Walang tapos na conversation sa araw na ito.';
 
   @override
-  String get dayReviewKeepTooltip => 'Keep as a conversation';
+  String get dayReviewKeepTooltip => 'Itago bilang conversation';
 
   @override
   String dayReviewFinalizeButton(int kept, int rolled) {
-    return 'Keep $kept · Summarize $rolled';
+    return 'Itago ang $kept · Ibuod ang $rolled';
   }
 
   @override
-  String get dayReviewConfirmTitle => 'Build the day summary?';
+  String get dayReviewConfirmTitle => 'Gawin ang buod ng araw?';
 
   @override
   String dayReviewConfirmBody(int count) {
@@ -14647,200 +14647,201 @@ class AppLocalizationsTl extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '$count conversations will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          '$count conversation ang isasama sa buod ng araw at aalisin sa iyong listahan ng conversation. Puwede mo itong i-undo gamit ang Buksan Muli.',
       one:
-          '1 conversation will be folded into the day summary and leave your conversation list. You can undo this with Reopen.',
+          '$count conversation ang isasama sa buod ng araw at aalisin sa iyong listahan ng conversation. Puwede mo itong i-undo gamit ang Buksan Muli.',
     );
     return '$_temp0';
   }
 
   @override
-  String get dayReviewConfirmAction => 'Summarize';
+  String get dayReviewConfirmAction => 'Ibuod';
 
   @override
-  String get dayReviewWriting => 'Writing your day summary… this can take a minute on a local model.';
+  String get dayReviewWriting =>
+      'Isinusulat ang iyong buod ng araw… puwede itong tumagal nang isang minuto sa local model.';
 
   @override
-  String get dayReviewApplying => 'Rewriting the summary with your corrections…';
+  String get dayReviewApplying => 'Isinusulat muli ang buod gamit ang iyong mga pagtatama…';
 
   @override
-  String get dayReviewReopening => 'Restoring the conversations…';
+  String get dayReviewReopening => 'Ibinabalik ang mga conversation…';
 
   @override
-  String get dayReviewReopenTitle => 'Reopen this day?';
+  String get dayReviewReopenTitle => 'Buksan muli ang araw na ito?';
 
   @override
   String get dayReviewReopenBody =>
-      'The summarized conversations come back to your list and this summary (with its corrections) is deleted.';
+      'Babalik sa iyong listahan ang mga naibuod na conversation at buburahin ang buod na ito (kasama ang mga pagtatama nito).';
 
   @override
-  String get dayReviewReopenAction => 'Reopen day';
+  String get dayReviewReopenAction => 'Buksan muli ang araw';
 
   @override
-  String get dayReviewCopy => 'Copy summary';
+  String get dayReviewCopy => 'Kopyahin ang buod';
 
   @override
-  String get dayReviewCopied => 'Day summary copied';
+  String get dayReviewCopied => 'Nakopya ang buod ng araw';
 
   @override
-  String get dayReviewUntitled => 'Untitled conversation';
+  String get dayReviewUntitled => 'Conversation na walang pamagat';
 
   @override
   String dayReviewCounts(int rolled, int kept) {
-    return '$rolled summarized · $kept kept';
+    return '$rolled naibuod · $kept itinago';
   }
 
   @override
-  String get dayReviewEditHint => 'Select text to correct or redact it. Use + to add a paragraph.';
+  String get dayReviewEditHint => 'Pumili ng text para itama o i-redact ito. Gamitin ang + para magdagdag ng talata.';
 
   @override
-  String get dayReviewCorrectAction => 'Correct';
+  String get dayReviewCorrectAction => 'Itama';
 
   @override
-  String get dayReviewRedactAction => 'Redact';
+  String get dayReviewRedactAction => 'I-redact';
 
   @override
-  String get dayReviewCorrectTitle => 'Correction';
+  String get dayReviewCorrectTitle => 'Pagtatama';
 
   @override
-  String get dayReviewCorrectHint => 'What is right? e.g. \"It was Wednesday, not Tuesday\"';
+  String get dayReviewCorrectHint => 'Ano ang tama? hal. \"Miyerkules iyon, hindi Martes\"';
 
   @override
-  String get dayReviewAddParagraph => 'Add paragraph';
+  String get dayReviewAddParagraph => 'Magdagdag ng talata';
 
   @override
-  String get dayReviewAddParagraphTitle => 'Add a paragraph';
+  String get dayReviewAddParagraphTitle => 'Magdagdag ng talata';
 
   @override
-  String get dayReviewAddParagraphHint => 'Write what the summary is missing';
+  String get dayReviewAddParagraphHint => 'Isulat kung ano ang kulang sa buod';
 
   @override
-  String get dayReviewYourParagraph => 'Your paragraph';
+  String get dayReviewYourParagraph => 'Iyong talata';
 
   @override
-  String get dayReviewCorrectionsTitle => 'Your corrections';
+  String get dayReviewCorrectionsTitle => 'Iyong mga pagtatama';
 
   @override
   String dayReviewRedactedQuote(String quote) {
-    return 'Redacted: “$quote”';
+    return 'Na-redact: “$quote”';
   }
 
   @override
-  String get dayReviewCorrectionPending => 'Not applied yet';
+  String get dayReviewCorrectionPending => 'Hindi pa na-apply';
 
   @override
-  String get dayReviewCorrectionApplied => 'Applied';
+  String get dayReviewCorrectionApplied => 'Na-apply';
 
   @override
   String dayReviewApplyButton(int count) {
-    return 'Apply corrections ($count)';
+    return 'I-apply ang mga pagtatama ($count)';
   }
 
   @override
   String dayReviewKeptTitle(int count) {
-    return 'Kept as conversations ($count)';
+    return 'Itinago bilang conversation ($count)';
   }
 
   @override
   String dayReviewRolledTitle(int count) {
-    return 'In this summary ($count)';
+    return 'Nasa buod na ito ($count)';
   }
 
   @override
-  String get dayReviewBannerToday => 'Review today';
+  String get dayReviewBannerToday => 'I-review ang araw na ito';
 
   @override
   String dayReviewBannerDay(String day) {
-    return 'Review $day';
+    return 'I-review ang $day';
   }
 
   @override
-  String get dayReviewBannerBody => 'Star what to keep; the rest becomes one day summary.';
+  String get dayReviewBannerBody => 'I-star ang gusto mong itago; ang iba ay magiging iisang buod ng araw.';
 
   @override
-  String get dayReviewPickDate => 'Review another day';
+  String get dayReviewPickDate => 'Mag-review ng ibang araw';
 
   @override
-  String get dayReviewsToSort => 'Waiting to be sorted';
+  String get dayReviewsToSort => 'Naghihintay na ma-sort';
 
   @override
-  String get dayReviewsDone => 'Reviewed days';
+  String get dayReviewsDone => 'Mga na-review na araw';
 
   @override
-  String get dayReviewsNone => 'No reviewed days yet.';
+  String get dayReviewsNone => 'Wala pang na-review na araw.';
 
   @override
   String slashSendWithShortcut(String shortcut, String model) {
-    return 'Answer this message with the /$shortcut model ($model)';
+    return 'Sagutin ang mensaheng ito gamit ang /$shortcut model ($model)';
   }
 
   @override
   String slashSendWithShortcutUnset(String shortcut) {
-    return 'Answer this message with the /$shortcut model (not set yet)';
+    return 'Sagutin ang mensaheng ito gamit ang /$shortcut model (hindi pa naka-set)';
   }
 
   @override
   String slashToggleShortcutOn(String shortcut) {
-    return 'Keep using the /$shortcut model until you toggle it off';
+    return 'Patuloy na gamitin ang /$shortcut model hanggang i-off mo ito';
   }
 
   @override
   String slashToggleShortcutOff(String shortcut) {
-    return 'Turn the /$shortcut model off (it is on now)';
+    return 'I-off ang /$shortcut model (naka-on ito ngayon)';
   }
 
   @override
-  String get slashModelCommand => 'Choose which model each shortcut uses';
+  String get slashModelCommand => 'Piliin kung aling model ang gagamitin ng bawat shortcut';
 
   @override
-  String get slashClearCommand => 'Clear this chat';
+  String get slashClearCommand => 'I-clear ang chat na ito';
 
   @override
-  String get slashAppsCommand => 'Open chat apps';
+  String get slashAppsCommand => 'Buksan ang Chat Apps';
 
   @override
-  String get slashReviewCommand => 'Review today: keep the conversations you star, summarize the rest';
+  String get slashReviewCommand => 'I-review ang araw na ito: itago ang mga conversation na ini-star mo, ibuod ang iba';
 
   @override
-  String get slashHelpCommand => 'Show all chat commands';
+  String get slashHelpCommand => 'Ipakita ang lahat ng chat command';
 
   @override
-  String get slashCommandsHelpTitle => 'Chat commands';
+  String get slashCommandsHelpTitle => 'Mga chat command';
 
   @override
   String chatShortcutActive(String shortcut) {
-    return '/$shortcut model on';
+    return 'Naka-on ang /$shortcut model';
   }
 
   @override
   String chatShortcutTurnedOn(String shortcut) {
-    return '/$shortcut model on: every message uses it until you send /$shortcut toggle again';
+    return 'Naka-on ang /$shortcut model: gagamitin ito ng bawat mensahe hanggang ipadala mo ulit ang /$shortcut toggle';
   }
 
   @override
   String chatShortcutTurnedOff(String shortcut) {
-    return '/$shortcut model off: back to the base model';
+    return 'Naka-off ang /$shortcut model: balik sa base model';
   }
 
   @override
   String chatShortcutPickModelFirst(String shortcut) {
-    return 'Pick a model for /$shortcut first';
+    return 'Pumili muna ng model para sa /$shortcut';
   }
 
   @override
   String chatShortcutNeedsMessage(String shortcut) {
-    return 'Type a message after /$shortcut, or /$shortcut toggle to keep it on';
+    return 'Mag-type ng mensahe pagkatapos ng /$shortcut, o /$shortcut toggle para manatili itong naka-on';
   }
 
   @override
-  String get chatShortcutsUnavailable => 'Model shortcuts need the self-hosted local LLM backend.';
+  String get chatShortcutsUnavailable => 'Kailangan ng model shortcuts ang self-hosted na local LLM backend.';
 
   @override
-  String get chatModelShortcutsTitle => 'Chat model shortcuts';
+  String get chatModelShortcutsTitle => 'Mga chat model shortcut';
 
   @override
   String get chatModelShortcutsHint =>
-      'Type /name your question to answer one message with that model, or /name toggle to keep using it.';
+      'I-type ang /name kasunod ang iyong tanong para sagutin ng model na iyon ang isang mensahe, o /name toggle para patuloy itong gamitin.';
 
   @override
   String chatModelShortcutsBaseModel(String model) {
@@ -14848,34 +14849,34 @@ class AppLocalizationsTl extends AppLocalizations {
   }
 
   @override
-  String get chatModelShortcutsNotSet => 'Not set';
+  String get chatModelShortcutsNotSet => 'Hindi naka-set';
 
   @override
-  String get chatModelShortcutsAddLabel => 'name';
+  String get chatModelShortcutsAddLabel => 'pangalan';
 
   @override
-  String get chatModelShortcutsAddButton => 'Add';
+  String get chatModelShortcutsAddButton => 'Magdagdag';
 
   @override
-  String get chatModelShortcutsSaveFailed => 'Couldn\'t save the shortcut';
+  String get chatModelShortcutsSaveFailed => 'Hindi ma-save ang shortcut';
 
   @override
-  String get folderInside => 'Inside';
+  String get folderInside => 'Nasa loob ng';
 
   @override
-  String get folderTopLevel => 'Top level';
+  String get folderTopLevel => 'Pinakamataas na antas';
 
   @override
-  String get newSubfolder => 'New subfolder';
+  String get newSubfolder => 'Bagong subfolder';
 
   @override
-  String get folderTreeTitle => 'Folders';
+  String get folderTreeTitle => 'Mga Folder';
 
   @override
-  String get moveFolder => 'Move…';
+  String get moveFolder => 'Ilipat…';
 
   @override
   String moveFolderTo(String name) {
-    return 'Move \"$name\" into…';
+    return 'Ilipat ang \"$name\" sa…';
   }
 }
