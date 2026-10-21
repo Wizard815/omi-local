@@ -604,6 +604,20 @@ surfaces:
   gateway_lane_capability_needed: generated omi:auto:daily-summary lane
   migration_status: get_llm_routed; S1 allowlists daily_summary; this route does not call authorize_managed_compute
   test_guardrail_coverage: backend/tests/unit/test_conversation_test_prompt_provider_failure.py
+- surface: day_review_summary
+  code_path: backend/utils/day_review_service.py:generate_summary
+  entrypoint: POST /v1/users/day-reviews/{date}/finalize and /regenerate (self-hosted end-of-day review)
+  feature: daily_summary
+  plan_gating: free_allowlist
+  funding_owner: omi
+  fallback_on_deny: n/a_allowed
+  call_sites:
+  - utils/day_review_service.py::feature:daily_summary
+  current_provider_model: get_llm('daily_summary') via day_review_service.generate_summary
+  request_shape: one long day summary over the day's unstarred conversations plus the user's corrections
+  gateway_lane_capability_needed: generated omi:auto:daily-summary lane
+  migration_status: get_llm_routed; S1 allowlists daily_summary; the self-hosted day review does not call authorize_managed_compute
+  test_guardrail_coverage: backend/tests/unit/test_day_review_service.py
 - surface: phone_call_processing
   funded_budget_gate: utils/llm/clients.py:get_llm
   code_path: backend/routers/developer.py:_create_conversation_from_segments
