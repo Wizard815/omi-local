@@ -183,11 +183,8 @@ if [ "${PROVIDER_MODE:-offline}" = "offline" ]; then
   export OPENAI_API_KEY="${OPENAI_API_KEY:-sk-omi-local-harness-offline-openai-not-real}"
   export GEMINI_API_KEY="${GEMINI_API_KEY:-omi-local-harness-offline-gemini-not-real}"
   export ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-omi-local-harness-offline-anthropic-not-real}"
-  # Fully-local audio (default): point STT/diarization/TTS at the omi-audio
-  # sibling container. DEEPGRAM_API_KEY and MODULATE_API_KEY are intentionally
-  # LEFT UNSET so the provider policy never selects a cloud engine — selection
-  # falls through to the local Parakeet protocol served by omi-audio. Set
-  # DEEPGRAM_API_KEY / MODULATE_API_KEY to fall back to cloud if you want.
+  # Audio stays fully local unless you add cloud STT keys or move it with
+  # OMI_AUDIO_URL: audio-env.sh, sourced below, does the routing.
   echo "NOTE: offline mode — no cloud AI keys. LLM via OPENAI_BASE_URL (llama.cpp)."
 fi
 
