@@ -353,29 +353,12 @@ class AuthService {
     }
   }
 
-  /// Self-hosted local-account sign-in. The UI collects a plain username
-  /// (no email), which we map to a synthetic address here since Firebase
-  /// Auth's password provider requires an email-shaped identifier — this
-  /// stays an internal implementation detail, never shown to the user.
-  static String usernameToLocalEmail(String username) => '${username.trim().toLowerCase()}@local.omi';
-
-  Future<UserCredential?> signInWithLocalUsername(String username, String password) async {
-    final result = await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: usernameToLocalEmail(username),
-      password: password,
-    );
-    await _updateUserPreferences(result, 'local');
-    return result;
-  }
-
-  /// Remote (internet-facing) counterpart to [signInWithLocalUsername]: hits
-  /// the backend's own /v1/auth/local-login instead of the Auth emulator
-  /// directly, since a raw emulator connection on :9099 can't be reached
-  /// through a standard Cloudflare-Tunnel-style HTTPS reverse proxy. No
-  /// Firebase/Google is involved at any point — the backend checks the
-  /// password itself and returns a session token it signed itself (see
-  /// backend/utils/local_auth.py), which [establishRemoteSession] stores
-  /// directly as this app's session, bypassing FirebaseAuth entirely.
+  /// Self-hosted sign-in, on the LAN or through a tunnel: hits the backend's
+  /// own /v1/auth/local-login. No Firebase/Google is involved at any point —
+  /// the backend checks the password itself and returns a session token it
+  /// signed itself (see backend/utils/local_auth.py), which
+  /// [establishRemoteSession] stores directly as this app's session,
+  /// bypassing FirebaseAuth entirely.
   ///
   /// Returns the account's uid on success (null on failure — callers should
   /// treat any thrown exception as authentication failure, its message is
