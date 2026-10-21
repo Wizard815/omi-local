@@ -449,20 +449,28 @@ def test_the_paywall_only_fires_for_the_desktop_source(monkeypatch, sub) -> None
     assert sub.get_remaining_transcription_seconds('uid', source='omi') == BASIC_CAP
 
 
-def test_provider_mode_offline_bypasses_the_billing_plane_entirely(monkeypatch, sub) -> None:
-    """Self-hosted offline deployments have no Stripe subscription to check — same bypass
+def test_self_hosted_bypasses_the_billing_plane_entirely(monkeypatch, sub) -> None:
+    """Self-hosted deployments have no Stripe subscription to check — same bypass
     `enforce_chat_quota` already has. Without it, `subscription_inactive` blocked every
     self-hosted user's managed transcription at 0 seconds (SELF_HOSTING_ROADMAP.md #1)."""
-    monkeypatch.setenv('PROVIDER_MODE', 'offline')
+    monkeypatch.setenv('OMI_SELF_HOSTED', '1')
     _situate(monkeypatch, sub, plan=None, used_seconds=0, paywalled=True)
     allowance = sub.resolve_transcription_allowance('uid', source='desktop')
     assert (allowance.mode, allowance.remaining_seconds, allowance.reason) == (
         'managed',
         None,
-        'provider_mode_offline',
+        'self_hosted',
     )
     assert sub.has_transcription_credits('uid', source='desktop') is True
     assert sub.get_remaining_transcription_seconds('uid', source='desktop') is None
+
+
+def test_provider_mode_offline_alone_keeps_the_billing_plane(monkeypatch, sub) -> None:
+    """Upstream's hermetic stacks run with PROVIDER_MODE=offline and expect the paywall."""
+    monkeypatch.delenv('OMI_SELF_HOSTED', raising=False)
+    monkeypatch.setenv('PROVIDER_MODE', 'offline')
+    _situate(monkeypatch, sub, plan=None, used_seconds=0, paywalled=True)
+    assert sub.resolve_transcription_allowance('uid', source='desktop').reason != 'self_hosted'
 
 
 def test_the_answer_serialises_for_the_plan_endpoint(monkeypatch, sub) -> None:

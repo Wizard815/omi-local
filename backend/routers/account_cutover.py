@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
@@ -11,6 +10,7 @@ from database import account_cutover as account_cutover_db
 from database.read_boundary import MalformedDocError
 from models.account_cutover import AccountCutoverControl
 from utils.account_cutover.control import build_account_cutover_control
+from utils.self_hosting import is_self_hosted
 from utils.executors import db_executor, run_blocking
 from utils.other import endpoints as auth
 
@@ -39,12 +39,11 @@ async def get_account_cutover_control(
         try:
             record = account_cutover_db.get_account_cutover_record(uid)
         except MalformedDocError as error:
-            # Self-hosted offline deployments have no whole-account cutover to
-            # run — this record can only be a Firestore-emulator hiccup (e.g.
-            # a restart), never a real migration. Fail open to the legacy
-            # projection instead of fencing the whole app, same bypass
-            # PROVIDER_MODE=='offline' already gets in subscription.py.
-            if os.getenv('PROVIDER_MODE', '').strip().lower() == 'offline':
+            # Self-hosted deployments have no whole-account cutover to run —
+            # this record can only be a Firestore-emulator hiccup (e.g. a
+            # restart), never a real migration. Fail open to the legacy
+            # projection instead of fencing the whole app.
+            if is_self_hosted():
                 record = account_cutover_db.default_legacy_record(uid)
             else:
                 raise HTTPException(

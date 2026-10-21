@@ -3690,6 +3690,45 @@ async def test_backfill_requires_isolated_dispatch(dispatch_enabled, byok):
 
 
 @pytest.mark.asyncio
+async def test_self_hosted_backfill_without_byok_runs_inline(monkeypatch):
+    """omi-local has no Cloud Tasks queue. With OMI_SELF_HOSTED and no BYOK keys a
+    backfill upload must run on the inline pipeline instead of being refused."""
+    from starlette.datastructures import UploadFile
+
+    monkeypatch.setenv('OMI_SELF_HOSTED', '1')
+    module, saved_modules, _, BytesIO, _, _ = _load_sync_router_for_fast_path()
+    module.start_background_task = MagicMock()
+    module.is_cloud_tasks_dispatch_enabled = MagicMock(return_value=False)
+    module.has_byok_keys = MagicMock(return_value=False)
+    module.classify_sync_lane = MagicMock(
+        return_value=types.SimpleNamespace(
+            lane=module.SyncLane.BACKFILL,
+            trust=types.SimpleNamespace(value='device_bound'),
+            reason='historical_capture',
+            maximum_age_seconds=8 * 86400,
+            automatic_recovery_allowed=True,
+        )
+    )
+
+    try:
+        upload = UploadFile(filename='historical.opus', file=BytesIO(b'\x00' * 10))
+        response = await module.sync_local_files_v2(files=[upload], uid='test-uid')
+
+        assert response.status_code == 202
+        module.enqueue_sync_job.assert_not_called()
+        module.start_background_task.assert_called_once()
+    finally:
+        sys.modules.pop('routers.sync', None)
+        sys.modules.pop('utils.sync.pipeline', None)
+        sys.modules.pop('utils.sync.ledger_completion', None)
+        for mod_name, orig in saved_modules.items():
+            if orig is None:
+                sys.modules.pop(mod_name, None)
+            else:
+                sys.modules[mod_name] = orig
+
+
+@pytest.mark.asyncio
 async def test_oversized_backfill_upload_is_rejected_before_staging_or_custody_transfer():
     from starlette.datastructures import UploadFile
     from utils.sync.input_limits import MAX_BACKFILL_FILES

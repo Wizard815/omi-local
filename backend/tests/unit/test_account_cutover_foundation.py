@@ -474,12 +474,12 @@ def test_control_endpoint_projects_legacy_default(monkeypatch):
     assert body['migration']['destination_backend_bound'] is False
 
 
-def test_control_endpoint_offline_bypasses_malformed_doc_fence(monkeypatch):
+def test_control_endpoint_self_hosted_bypasses_malformed_doc_fence(monkeypatch):
     """SELF_HOSTING_ROADMAP.md #2: a self-hosted Firestore-emulator hiccup must not
     black-screen the whole app behind a migration fence with no escape — there is no
-    real whole-account cutover running on an offline deployment. Same PROVIDER_MODE
-    bypass shape as utils/subscription.py's resolve_transcription_allowance."""
-    monkeypatch.setenv('PROVIDER_MODE', 'offline')
+    real whole-account cutover running on a self-hosted deployment. Same
+    OMI_SELF_HOSTED bypass as utils/subscription.py's resolve_transcription_allowance."""
+    monkeypatch.setenv('OMI_SELF_HOSTED', '1')
     app = FastAPI()
     app.include_router(account_cutover_router.router)
     app.dependency_overrides[auth.get_current_user_uid] = lambda: 'uid-offline'
@@ -507,8 +507,11 @@ def test_control_endpoint_offline_bypasses_malformed_doc_fence(monkeypatch):
     assert body['client_action'] == 'none'
 
 
-def test_control_endpoint_still_fences_malformed_doc_when_not_offline(monkeypatch):
-    """The bypass above must not weaken the real hosted backend's fail-closed behavior."""
+def test_control_endpoint_still_fences_malformed_doc_when_not_self_hosted(monkeypatch):
+    """The bypass above must not weaken the real hosted backend's fail-closed behavior,
+    including upstream's hermetic stacks, which run with PROVIDER_MODE=offline."""
+    monkeypatch.delenv('OMI_SELF_HOSTED', raising=False)
+    monkeypatch.setenv('PROVIDER_MODE', 'offline')
     app = FastAPI()
     app.include_router(account_cutover_router.router)
     app.dependency_overrides[auth.get_current_user_uid] = lambda: 'uid-hosted'
