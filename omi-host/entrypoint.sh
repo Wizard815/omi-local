@@ -129,8 +129,10 @@ export FIREBASE_PROJECT_ID=demo-omi-local
 # showed zero.
 export FIRESTORE_DATABASE_ID="(default)"
 export FIREBASE_API_KEY="${FIREBASE_API_KEY:-local-firebase-auth-emulator-api-key}"
-export MEMORY_MODE=read
-export MEMORY_CANONICAL_CONSOLIDATION_ENABLED=true
+# Upstream's single memory switch (backend/config/memory_rollout.py). Unset reads
+# as off, which pauses every memory write; MEMORY_MODE and
+# MEMORY_CANONICAL_CONSOLIDATION_ENABLED are retired upstream.
+export MEMORY_ENABLED="${MEMORY_ENABLED:-on}"
 export REDIS_DB_HOST=127.0.0.1 REDIS_DB_PORT=6380 REDIS_DB_PASSWORD=
 export ENVIRONMENT=local-dev-harness
 export ENCRYPTION_SECRET="${ENCRYPTION_SECRET:-omi_local_dev_harness_32_byte_test_secret_not_prod}"
@@ -192,6 +194,19 @@ if [ "${PROVIDER_MODE:-offline}" = "offline" ]; then
   echo "Audio (STT/diarization/TTS) -> local CPU service at ${HOSTED_PARAKEET_API_URL}"
   echo "NOTE: offline mode — no cloud AI keys. LLM via OPENAI_BASE_URL (llama.cpp)."
 fi
+
+# Live-STT serving chain. Upstream's default is modulate-velma-2,soniox,dg-nova-3,parakeet,
+# and the backend refuses to start when soniox is listed without SONIOX_API_KEY
+# (utils/stt/streaming.py validate_streaming_stt_env). List only the cloud engines
+# whose key is set, in upstream's order, ahead of the local Parakeet from omi-audio.
+if [ -z "${STT_SERVICE_MODELS:-}" ]; then
+  STT_SERVICE_MODELS=""
+  [ -n "${MODULATE_API_KEY:-}" ] && STT_SERVICE_MODELS="${STT_SERVICE_MODELS}modulate-velma-2,"
+  [ -n "${SONIOX_API_KEY:-}" ] && STT_SERVICE_MODELS="${STT_SERVICE_MODELS}soniox,"
+  [ -n "${DEEPGRAM_API_KEY:-}" ] && STT_SERVICE_MODELS="${STT_SERVICE_MODELS}dg-nova-3,"
+  export STT_SERVICE_MODELS="${STT_SERVICE_MODELS}parakeet"
+fi
+echo "live STT chain: ${STT_SERVICE_MODELS}"
 
 echo "backend: starting"
 uvicorn main:app --host 0.0.0.0 --port 8000 &
