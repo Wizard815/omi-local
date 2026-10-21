@@ -1267,7 +1267,7 @@ class LocalLoginResponse(BaseModel):
 
 
 @router.post('/local-login', response_model=LocalLoginResponse)
-async def local_login(payload: LocalLoginRequest, request: Request) -> LocalLoginResponse:
+def local_login(payload: LocalLoginRequest, request: Request) -> LocalLoginResponse:
     client_ip = request.client.host if request.client else 'unknown'
     try:
         token = authenticate_local_account(payload.username, payload.password, client_ip=client_ip)
