@@ -158,11 +158,12 @@ ServerConversation _conversation({
 late CrashlyticsRecorder crashlytics;
 
 void _expectSingleReport(String exception) {
-  expect(crashlytics.recordErrors, hasLength(1));
-  final args = crashlytics.recordErrors.single.arguments as Map<dynamic, dynamic>;
-  expect(args['exception'], exception);
-  expect(args['fatal'], isFalse);
-  expect(args['stackTraceElements'], isNotEmpty);
+  expect(crashlytics.recordErrors, isEmpty);
+  expect(crashlytics.reports, hasLength(1));
+  final report = crashlytics.reports.single;
+  expect(report.error.toString(), exception);
+  expect(report.fatal, isFalse);
+  expect(report.stack.toString(), isNotEmpty);
 }
 
 void main() {
@@ -337,8 +338,7 @@ void main() {
     expect(outcome.harnessError, isNull);
     expect(outcome.unhandled, isEmpty);
     _expectSingleReport('capture_process_now: StateError');
-    final elements = crashlytics.recordErrors.single.arguments['stackTraceElements'] as List<dynamic>;
-    expect(elements.single['file'], 'package:omi/fake.dart');
+    expect(crashlytics.reports.single.stack.toString(), contains('package:omi/fake.dart'));
   });
 
   test('a throwing processing-list update does not escape as an unhandled zone error', () async {
@@ -390,7 +390,7 @@ void main() {
     _expectSingleReport('capture_process_now: StateError');
   });
 
-  test('a Crashlytics transport failure stays contained and the original error remains consumed', () async {
+  test('a failing report sink stays contained and the original error remains consumed', () async {
     final sentinel = StateError('process-boom');
     crashlytics.recordErrorFailure = PlatformException(code: 'unavailable', message: 'transport down');
     final finalize = Completer<void>();
@@ -409,6 +409,6 @@ void main() {
 
     expect(outcome.harnessError, isNull);
     expect(outcome.unhandled, isEmpty);
-    expect(crashlytics.recordErrors, hasLength(1));
+    expect(crashlytics.recordErrors, isEmpty);
   });
 }

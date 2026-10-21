@@ -3,14 +3,29 @@ import 'package:firebase_core_platform_interface/test.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:omi/utils/debugging/crashlytics_manager.dart';
+
+class LocalReport {
+  final Object error;
+  final StackTrace stack;
+  final bool fatal;
+
+  LocalReport(this.error, this.stack, this.fatal);
+}
+
+/// Records both what reaches the Crashlytics platform channel ([recordErrors],
+/// which must stay empty: this build sends nothing to Google) and what the app
+/// reports through CrashlyticsManager's on-device sink ([reports]).
 class CrashlyticsRecorder {
   final calls = <MethodCall>[];
+  final reports = <LocalReport>[];
   Object? recordErrorFailure;
 
   List<MethodCall> get recordErrors => calls.where((call) => call.method == 'Crashlytics#recordError').toList();
 
   void reset() {
     calls.clear();
+    reports.clear();
     recordErrorFailure = null;
   }
 }
@@ -50,6 +65,10 @@ Future<CrashlyticsRecorder> installCrashlyticsRecorder() async {
       return null;
     },
   );
+  CrashlyticsManager.localRecord = (error, stack, {required fatal}) async {
+    if (recorder.recordErrorFailure != null) throw recorder.recordErrorFailure!;
+    recorder.reports.add(LocalReport(error, stack, fatal));
+  };
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(
       options: const FirebaseOptions(
