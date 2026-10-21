@@ -605,6 +605,7 @@ surfaces:
   migration_status: get_llm_routed; S1 allowlists daily_summary; this route does not call authorize_managed_compute
   test_guardrail_coverage: backend/tests/unit/test_conversation_test_prompt_provider_failure.py
 - surface: day_review_summary
+  funded_budget_gate: utils/llm/clients.py:get_llm
   code_path: backend/utils/day_review_service.py:generate_summary
   entrypoint: POST /v1/users/day-reviews/{date}/finalize and /regenerate (self-hosted end-of-day review)
   feature: daily_summary
