@@ -24,6 +24,11 @@ class _Routes extends NavigatorObserver {
 }
 
 void main() {
+  // These surfaces only exist with a billing plane; self-hosted builds turn it
+  // off (UsageProvider.selfHosted). Run them with upstream's billing rules.
+  setUp(() => UsageProvider.selfHosted = false);
+  tearDown(() => UsageProvider.selfHosted = true);
+
   testWidgets('short waiting memory fits its status and action at 200% text', (tester) async {
     final provider = MemoriesProvider();
     final usage = UsageProvider();

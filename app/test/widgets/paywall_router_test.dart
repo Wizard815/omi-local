@@ -47,6 +47,11 @@ UserSubscriptionResponse _response(
     );
 
 void main() {
+  // These surfaces only exist with a billing plane; self-hosted builds turn it
+  // off (UsageProvider.selfHosted). Run them with upstream's billing rules.
+  setUp(() => UsageProvider.selfHosted = false);
+  tearDown(() => UsageProvider.selfHosted = true);
+
   testWidgets('a free reader in control is exposed as control and the opener keeps the sheet', (tester) async {
     final context = await _context(tester, UsageProvider());
     final exposures = <String>[];

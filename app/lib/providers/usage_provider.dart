@@ -105,8 +105,16 @@ class UsageProvider with ChangeNotifier {
   UserSubscriptionResponse? _subscription;
   UserSubscriptionResponse? get subscription => _subscription;
 
-  /// Self-hosted builds have no billing plane — never show subscription UI.
-  bool get showSubscriptionUI => false;
+  /// Self-hosted builds have no billing plane: no subscription UI, no metering,
+  /// no quota or paywall gates. Every billing getter below answers for that
+  /// first; upstream's rules after it only run when this is off, which tests of
+  /// the paywall surfaces do.
+  @visibleForTesting
+  static bool selfHosted = true;
+
+  /// Defaults to true when the subscription response hasn't loaded yet, so a
+  /// network blip doesn't silently hide paid surfaces from real users.
+  bool get showSubscriptionUI => !selfHosted && (_subscription?.showSubscriptionUi ?? true);
   UsageStats? _todayUsage;
   int? _todayCacheKey;
   UsageStats? get todayUsage => _todayUsage;
@@ -152,14 +160,32 @@ class UsageProvider with ChangeNotifier {
   double get chatQuotaUsed => _subscription?.chatQuotaUsed ?? 0.0;
   String? get chatQuotaUnit => _subscription?.chatQuotaUnit;
   double get chatQuotaPercent => _subscription?.chatQuotaPercent ?? 0.0;
-  // Self-hosted builds have no billing plane — nothing is ever quota-gated.
-  bool get chatQuotaAllowed => true;
+  bool get chatQuotaAllowed => selfHosted || (_subscription?.chatQuotaAllowed ?? true);
 
+  // Phone call feature — derived from subscription response. Only consult
+  // the server-driven quota when the user is on the free tier or the
+  // subscription UI is hidden; paid users with the paywall visible skip
+  // straight to the existing unlimited behavior.
   PhoneCallQuota? get phoneCallQuota => _subscription?.phoneCallQuota;
 
-  bool get canAccessPhoneCalls => true;
+  bool get _isPaidPlan => _subscription?.subscription.plan.isPaid ?? false;
 
-  bool get shouldShowPhoneCallsEntry => true;
+  bool get canAccessPhoneCalls {
+    if (selfHosted || _isPaidPlan) return true;
+    final quota = phoneCallQuota;
+    if (quota == null) return false;
+    return quota.hasAccess;
+  }
+
+  bool get shouldShowPhoneCallsEntry {
+    if (selfHosted || _isPaidPlan) return true;
+    final quota = phoneCallQuota;
+    final freeTierEnabled = quota != null && (quota.monthlyLimit ?? 0) > 0;
+    if (freeTierEnabled) return true;
+    // Free tier disabled → only surface the entry for real users who can still
+    // see the paywall. Hidden-paywall builds (App Review) keep it off-screen.
+    return showSubscriptionUI;
+  }
 
   // Payment-related state
   Map<String, dynamic>? _availablePlans;
@@ -167,8 +193,21 @@ class UsageProvider with ChangeNotifier {
   bool _isLoadingPlans = false;
   bool get isLoadingPlans => _isLoadingPlans;
 
-  // Self-hosted builds have no billing plane — transcription is never metered.
-  bool get isOutOfCredits => false;
+  bool get isOutOfCredits {
+    if (selfHosted) return false;
+    if (_forceOutOfCredits) return true;
+    if (_subscription == null) return false;
+    if (_subscription!.transcriptionAllowance?.reason == 'usage_budget_exhausted') return true;
+    final plan = _subscription!.subscription.plan;
+    // Plus is paid but metered, so it falls through to the usage check below.
+    if (plan.hasUnlimitedTranscription) return false;
+    // For metered plans, check if used is >= limit and limit is not 0 (unlimited).
+    if (_subscription!.transcriptionSecondsLimit > 0 &&
+        _subscription!.transcriptionSecondsUsed >= _subscription!.transcriptionSecondsLimit) {
+      return true;
+    }
+    return false;
+  }
 
   @visibleForTesting
   void debugSetSubscription(UserSubscriptionResponse? value) {
