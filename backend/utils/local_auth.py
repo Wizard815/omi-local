@@ -32,8 +32,11 @@ from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, InvalidHash
 from fastapi import HTTPException
 
-from database.redis_db import r as redis_client
-from database._client import get_firestore_client
+# Module references, resolved at call time: endpoints.verify_token imports this
+# module, and its isolated tests stub these database modules with only the names
+# they use.
+from database import _client as firestore_client_module
+from database import redis_db
 
 _LOCAL_ACCOUNTS_COLLECTION = 'local_login_accounts'
 
@@ -59,7 +62,11 @@ class LocalAccount:
 
 
 def _account_doc(username: str):
-    return get_firestore_client().collection(_LOCAL_ACCOUNTS_COLLECTION).document(username.strip().lower())
+    return (
+        firestore_client_module.get_firestore_client()
+        .collection(_LOCAL_ACCOUNTS_COLLECTION)
+        .document(username.strip().lower())
+    )
 
 
 def get_local_account(username: str) -> Optional[LocalAccount]:
@@ -109,14 +116,14 @@ def _check_and_record_attempt(identifier: str, *, kind: str) -> None:
     independently throttled."""
     key = _rate_limit_key(kind, identifier)
     lock_key = f'{key}:locked'
-    if redis_client.get(lock_key):
+    if redis_db.r.get(lock_key):
         raise HTTPException(status_code=429, detail='Too many attempts. Try again later.')
 
-    count = redis_client.incr(key)
+    count = redis_db.r.incr(key)
     if count == 1:
-        redis_client.expire(key, _WINDOW_SECONDS)
+        redis_db.r.expire(key, _WINDOW_SECONDS)
     if count > _MAX_ATTEMPTS_PER_WINDOW:
-        redis_client.set(lock_key, '1', ex=_LOCKOUT_SECONDS)
+        redis_db.r.set(lock_key, '1', ex=_LOCKOUT_SECONDS)
         raise HTTPException(status_code=429, detail='Too many attempts. Try again later.')
 
 
@@ -136,8 +143,8 @@ def enforce_login_rate_limit(*, client_ip: str, username: str) -> None:
 def _clear_rate_limit(*, client_ip: str, username: str) -> None:
     for kind, identifier in (('ip', client_ip), ('username', username.strip().lower())):
         key = _rate_limit_key(kind, identifier)
-        redis_client.delete(key)
-        redis_client.delete(f'{key}:locked')
+        redis_db.r.delete(key)
+        redis_db.r.delete(f'{key}:locked')
 
 
 _JWT_ALGORITHM = 'HS256'
