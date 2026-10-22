@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import 'package:omi/backend/http/api/day_reviews.dart';
 import 'package:omi/backend/schema/day_review.dart';
+import 'package:omi/ui/omi_tokens.dart';
 import 'package:omi/utils/alerts/app_snackbar.dart';
 import 'package:omi/utils/day_review/summary_segments.dart';
 import 'package:omi/utils/l10n_extensions.dart';
@@ -391,9 +392,8 @@ class _DayReviewPageState extends State<DayReviewPage> {
                   Text(c.overview.isNotEmpty ? c.overview : c.transcriptSnippet,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: OmiType.footnote.copyWith(
                           color: Colors.grey.shade400,
-                          fontSize: 13,
                           fontStyle: c.overview.isEmpty ? FontStyle.italic : FontStyle.normal)),
                 ],
               ],
@@ -447,7 +447,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(OmiRadius.lg),
         border: Border.all(color: Colors.white38),
       ),
       child: Column(
@@ -459,7 +459,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
               const SizedBox(width: 6),
               Expanded(
                 child: Text(context.l10n.dayReviewMergeGroupLabel,
-                    style: const TextStyle(color: Colors.white70, fontSize: 12.5)),
+                    style: OmiType.footnote.copyWith(color: Colors.white70)),
               ),
               TextButton(onPressed: () => _ungroup(group), child: Text(context.l10n.dayReviewUngroup)),
             ],
@@ -473,7 +473,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
 
   Widget _sectionTitle(String text) => Padding(
         padding: const EdgeInsets.only(top: 12, bottom: 8),
-        child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+        child: Text(text, style: OmiType.headline.copyWith(color: Colors.white)),
       );
 
   Widget _buildSortView(DayReviewDay day) {
@@ -502,7 +502,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
               if (day.droppedAutoCount > 0) ...[
                 const SizedBox(height: 4),
                 Text(l10n.dayReviewAutoDropped(day.droppedAutoCount),
-                    style: TextStyle(color: Colors.grey.shade500, fontSize: 12.5)),
+                    style: OmiType.footnote.copyWith(color: Colors.grey.shade500)),
               ],
               const SizedBox(height: 16),
               if (day.conversations.isEmpty)
@@ -529,7 +529,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
                   side: const BorderSide(color: Colors.white54),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(OmiRadius.md)),
                 ),
                 onPressed: _selected.length < 2 ? null : _mergeSelected,
                 icon: const Icon(Icons.call_merge_rounded),
