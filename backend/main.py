@@ -12,6 +12,7 @@ from utils.firebase_admin_runtime import (
 )
 from config.chat_first_e2e_fixture import is_chat_first_e2e_harness_runtime
 from utils.self_hosted_id_tokens import install_self_hosted_id_token_guard
+from utils.self_hosting import is_self_hosted
 
 load_backend_env()  # No-op if no env files exist (production); stage + local overrides otherwise
 install_google_adc_guard()
@@ -440,11 +441,15 @@ async def startup_event():
 
     app.state.messaging_runtime = await start_adapters(messaging.register_adapter)
     start_metrics_sidecar_server()
-    start_background_task(refresh_stt_cap_cohort_forever(), name='stt_cap_cohort_refresh')
-    start_background_task(live_stt_health.refresh_forever(), name='live_stt_fleet_health')
-    from utils.held_content_cohort import refresh_held_content_cohort_forever
+    # Fleet rollout plumbing: cohort polls (Firestore every minute) and the
+    # fleet STT health sampler (Redis every 5s). A self-hosted stack has one
+    # user and no rollout; the request-time reads behave as an empty cohort.
+    if not is_self_hosted():
+        from utils.held_content_cohort import refresh_held_content_cohort_forever
 
-    start_background_task(refresh_held_content_cohort_forever(), name='held_content_cohort_refresh')
+        start_background_task(refresh_stt_cap_cohort_forever(), name='stt_cap_cohort_refresh')
+        start_background_task(live_stt_health.refresh_forever(), name='live_stt_fleet_health')
+        start_background_task(refresh_held_content_cohort_forever(), name='held_content_cohort_refresh')
     batch_pressure.start_from_env()
     app.state.batch_pipeline_serving = start_serving_from_env()
     start_soniox_usage_if_configured(start_background_task)
@@ -477,7 +482,9 @@ async def startup_event():
         name='startup_byok_abandonment_reconcile',
     )
     start_background_task(_periodic_listen_finalization_reconcile(), name='periodic_listen_finalization_reconcile')
-    start_background_task(_periodic_durable_queue_age_publish(), name='periodic_durable_queue_age_publish')
+    if not is_self_hosted():
+        # Fleet telemetry only: nothing reads the published queue ages here.
+        start_background_task(_periodic_durable_queue_age_publish(), name='periodic_durable_queue_age_publish')
     start_background_task(
         proactive_message_dispatcher(),
         name='proactive_message_dispatcher',

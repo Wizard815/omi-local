@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 # Omi local backend stack (backend + Firebase emulators + Redis) in one container.
 # Mirrors the repo's local dev harness (scripts/dev-harness) with offline providers.
 # Base: node for firebase-tools emulators; python 3.11 via uv (backend pins 3.11).
@@ -24,11 +25,18 @@ ENV PATH="/opt/jre21/bin:$PATH"
 RUN npm install -g firebase-tools@15.28.2
 
 WORKDIR /app
+# Dependencies first, from the lock alone, so a code edit does not reinstall
+# ~300 packages: this layer only changes when the lock does. uv's download
+# cache is a build mount, kept between builds and out of the image.
+COPY backend/pylock.toml backend/.python-version ./backend/
+RUN --mount=type=cache,target=/root/.cache/uv \
+    cd backend && uv venv --python 3.11.15 .venv \
+ && uv pip sync pylock.toml --python .venv/bin/python --compile-bytecode
 COPY .github/scripts/desktop_release_manifest.py ./backend/desktop_release_manifest_contract.py
+# What lands here is bounded by Dockerfile.dockerignore (no tests, scratch
+# audio, stray venvs or the rest of the monorepo).
 COPY backend/ ./backend/
 COPY firebase.json firestore.rules firestore.indexes.json ./
-RUN cd backend && uv venv --python 3.11.15 .venv \
- && uv pip sync pylock.toml --python .venv/bin/python --compile-bytecode
 
 COPY omi-host/entrypoint.sh /entrypoint.sh
 COPY omi-host/local_llm_adapter.py /app/omi-host/local_llm_adapter.py

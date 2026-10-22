@@ -67,6 +67,9 @@ fi
 : > "$STATE/logs/firestore-debug.log"
 ln -sf "$STATE/logs/firestore-debug.log" /app/firestore-debug.log
 
+# The Firestore emulator is a JVM holding the whole dataset; left alone it
+# may claim a quarter of the host's RAM. OMI_FIRESTORE_HEAP bounds it.
+JAVA_TOOL_OPTIONS="-Xmx${OMI_FIRESTORE_HEAP:-2g} ${JAVA_TOOL_OPTIONS:-}" \
 firebase emulators:start --config /app/firebase.docker.json --only firestore,auth,ui --project demo-omi-local \
   --import "$STATE/firebase-export" --export-on-exit "$STATE/firebase-export" \
   > "$STATE/logs/firebase-emulators.log" 2>&1 &

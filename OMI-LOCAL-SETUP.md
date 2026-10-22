@@ -265,6 +265,20 @@ Moving over from the old **Local network** login:
 - **New app build:** the login screen is a single form, and a leftover emulator
   session is signed out at startup.
 
+### Host tuning (October 2026)
+- A code edit no longer reinstalls every backend package: the Dockerfile installs from the lock
+  first and copies the code after, and `omi-host/Dockerfile.dockerignore` keeps tests, scratch
+  audio and stray venvs out of the image.
+- The fleet-rollout pollers (cohort reads every minute, STT fleet health every 5 s, queue-age
+  telemetry) stay off on a self-hosted stack.
+- The Firestore emulator's JVM is capped at `OMI_FIRESTORE_HEAP` (2g).
+- The merge proxy keeps one connection pool to llama.cpp and remembers an empty model list
+  for a few seconds instead of re-asking a down upstream on every call.
+- Still per request by design: Piper reloads its voice on each spoken reply, and whisper
+  unloads after `OMI_ASR_IDLE_UNLOAD_S` (300) so the first words after a pause pay a cold
+  start; raise it if you'd rather keep the VRAM busy. `OMI_ASR_BEAM_SIZE=1` trades a little
+  accuracy for a much faster decode.
+
 ### Backups and what survives a crash
 The Firestore emulator holds all conversations, memories and accounts **in memory**; the
 data volume only has what was exported. Until October 2026 the only export was the clean

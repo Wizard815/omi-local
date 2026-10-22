@@ -1,0 +1,29 @@
+# Build context for omi-host/Dockerfile is the repo root (compose: context ./repo),
+# so the root .dockerignore applies too. BuildKit reads this file for this
+# Dockerfile only. The image needs backend/ plus a few root files; everything
+# else in the monorepo, and the scratch that a synced working tree carries,
+# stays out of the context and the layers.
+*
+!backend/
+!firebase.json
+!firestore.rules
+!firestore.indexes.json
+!.github/scripts/desktop_release_manifest.py
+!omi-host/entrypoint.sh
+!omi-host/local_llm_adapter.py
+!omi-host/audio-env.sh
+!omi-host/auth-env.sh
+!omi-host/maintenance.sh
+# Not needed at runtime: tests and evals (145M+), scratch audio (_temp, hundreds
+# of MB), tool venvs, caches, docs.
+backend/tests/
+backend/evals/
+backend/docs/
+backend/_temp/
+backend/.venv/
+backend/.openapi-venv/
+backend/.pytest_cache/
+backend/**/__pycache__/
+backend/charts/
+backend/edge/target/
+backend/google-credentials.json

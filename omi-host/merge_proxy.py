@@ -141,6 +141,22 @@ def _flush_cache() -> None:
 _merged_models: list[dict] = []
 _cache_expiry: float = 0.0
 _cache_lock = asyncio.Lock()
+# When every upstream came back empty (down, or still loading), don't ask
+# again on each call: the dashboard and the chat shortcuts poll /v1/models,
+# and each miss waited the full fetch timeout.
+EMPTY_CACHE_TTL = float(os.environ.get("MODEL_EMPTY_CACHE_TTL", "5"))
+
+# One client for every upstream call: keep-alive connections to llama.cpp
+# instead of a TCP handshake per request. Created on the first use so import
+# (and the tests) need no running event loop.
+_client: httpx.AsyncClient | None = None
+
+
+def _shared_client() -> httpx.AsyncClient:
+    global _client
+    if _client is None:
+        _client = httpx.AsyncClient(timeout=600.0)
+    return _client
 
 
 def _tagged_name(tag: str, raw_id: str) -> str:
@@ -168,22 +184,21 @@ async def _fetch_models(tag: str, base_url: str, allowlist: list[tuple[str, bool
         else:
             headers["Authorization"] = f"Bearer {DEFAULT_KEY}"
 
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(f"{base_url.rstrip('/')}/models", headers=headers)
-            if resp.status_code != 200:
-                return []
-            data = resp.json()
-            models: list[dict] = []
-            for m in data.get("data", []):
-                raw_id = m.get("id", "unknown")
-                if not _model_allowed(raw_id, allowlist):
-                    continue
-                models.append({
-                    "id": _tagged_name(tag, raw_id),
-                    "owned_by": tag,
-                    "raw_id": raw_id,
-                })
-            return models
+        resp = await _shared_client().get(f"{base_url.rstrip('/')}/models", headers=headers, timeout=10.0)
+        if resp.status_code != 200:
+            return []
+        data = resp.json()
+        models: list[dict] = []
+        for m in data.get("data", []):
+            raw_id = m.get("id", "unknown")
+            if not _model_allowed(raw_id, allowlist):
+                continue
+            models.append({
+                "id": _tagged_name(tag, raw_id),
+                "owned_by": tag,
+                "raw_id": raw_id,
+            })
+        return models
     except Exception:
         return []
 
@@ -192,7 +207,7 @@ async def refresh_models() -> list[dict]:
     global _merged_models, _cache_expiry
 
     async with _cache_lock:
-        if time.monotonic() < _cache_expiry and _merged_models:
+        if time.monotonic() < _cache_expiry:
             return _merged_models
 
         allowlist = _build_allowlist(_read_allowlist())
@@ -204,7 +219,7 @@ async def refresh_models() -> list[dict]:
             merged.extend(models)
 
         _merged_models = merged
-        _cache_expiry = time.monotonic() + CACHE_TTL
+        _cache_expiry = time.monotonic() + (CACHE_TTL if merged else EMPTY_CACHE_TTL)
         return _merged_models
 
 
@@ -277,8 +292,7 @@ async def _post_upstream(tag: str, url: str, payload: dict, headers: dict[str, s
     model that failed to load, a backend that is down — was lost.
     """
     try:
-        async with httpx.AsyncClient(timeout=600.0) as client:
-            resp = await client.post(url, json=payload, headers=headers)
+        resp = await _shared_client().post(url, json=payload, headers=headers)
     except Exception as exc:  # noqa: BLE001 - relayed to the caller as a 502
         return _upstream_unreachable(tag, exc)
     try:
