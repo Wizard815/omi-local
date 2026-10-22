@@ -101,6 +101,9 @@ services:
       # name=merge-proxy-model pairs, or set them in the dashboard / the app's
       # /model command (those win). Example: adult=llama/big-model,code=llama/coder
       OMI_CHAT_MODEL_SHORTCUTS: ${OMI_CHAT_MODEL_SHORTCUTS:-}
+      # Finished clips wait for the end-of-day review with no model call (on by
+      # default when self-hosted; "off" processes each clip as it ends).
+      OMI_CONVERSATION_HOLD: ${OMI_CONVERSATION_HOLD:-}
       # End-of-day review: how long one day summary may take on the local model,
       # and how much of the day's material (chars) it reads — lower the latter
       # for small-context models.

@@ -4,8 +4,11 @@ Rules (text handling, prompt, corrections) are in utils/day_review.py; this
 module owns the order of side effects so a failure never loses a conversation:
 
 finalize: generate the summary FIRST (nothing mutated if the model fails),
-then persist the review, then star the kept conversations and discard the
-rolled-up ones (tagged ``day_review_date``). ``reopen`` restores them.
+then persist the review, then star the kept conversations (enriching the ones
+the hold kept raw, config/conversation_hold.py), merge each group into one new
+conversation, and discard the dropped and rolled-up ones (tagged
+``day_review_date``). ``reopen`` restores the dropped and rolled-up ones; a
+merge deleted its sources and stays.
 """
 
 from __future__ import annotations
@@ -22,9 +25,12 @@ import pytz
 import database.conversations as conversations_db
 import database.day_reviews as day_reviews_db
 import database.notifications as notification_db
+from config import conversation_hold
 from models.conversation import Conversation
 from utils.conversations import lifecycle
 from utils.conversations.factory import deserialize_conversation
+from utils.conversations.processing_trigger import ProcessingTrigger
+from utils.executors import postprocess_executor
 from utils.day_review import (
     DEFAULT_MAX_INPUT_CHARS,
     MaterialItem,
@@ -39,6 +45,7 @@ from utils.llm.usage_tracker import Features, track_usage
 
 DAY_REVIEW_DATE_FIELD = 'day_review_date'
 _DAY_QUERY_LIMIT = 300
+_SNIPPET_CHARS = 240
 
 
 class DayReviewError(Exception):
@@ -92,7 +99,11 @@ def day_bounds_utc(day: date_cls, tz_name: Optional[str]) -> Tuple[datetime, dat
 class DayConversations:
     visible: List[Conversation]
     rolled_up: List[Conversation]
+    dropped: List[Conversation]
     processing_count: int
+    dropped_auto_count: int
+    # Stored row fields the model does not carry, by conversation id.
+    hold_rules: Dict[str, str]
 
 
 def _status(conversation: Conversation) -> str:
@@ -111,23 +122,39 @@ def load_day(uid: str, day: date_cls, tz_name: Optional[str]) -> DayConversation
         date_field='started_at',
     )
     date_str = day.isoformat()
+    review = day_reviews_db.get_day_review(uid, date_str) or {}
+    dropped_ids = set(review.get('dropped_conversation_ids') or [])
     visible: List[Conversation] = []
     rolled: List[Conversation] = []
+    dropped: List[Conversation] = []
     processing = 0
+    dropped_auto = 0
+    hold_rules: Dict[str, str] = {}
     for data in raw:
-        if data.get('is_locked'):
+        if data.get('is_locked') or data.get('deleted'):
             continue
         conversation = deserialize_conversation(data)
         if data.get('discarded'):
             if data.get(DAY_REVIEW_DATE_FIELD) == date_str:
-                rolled.append(conversation)
+                (dropped if conversation.id in dropped_ids else rolled).append(conversation)
+            else:
+                dropped_auto += 1
             continue
         if _status(conversation) != 'completed':
             processing += 1
             continue
+        if data.get('processing_deferred'):
+            hold_rules[conversation.id] = str(data.get(conversation_hold.HOLD_RULE_FIELD) or '')
         visible.append(conversation)
     key = lambda c: c.started_at or c.created_at  # noqa: E731
-    return DayConversations(sorted(visible, key=key), sorted(rolled, key=key), processing)
+    return DayConversations(
+        sorted(visible, key=key),
+        sorted(rolled, key=key),
+        sorted(dropped, key=key),
+        processing,
+        dropped_auto,
+        hold_rules,
+    )
 
 
 def _transcript(conversation: Conversation) -> str:
@@ -190,6 +217,15 @@ def generate_summary(
     return title, body
 
 
+def _snippet(conversation: Conversation) -> str:
+    text = ' '.join(str(getattr(s, 'text', '') or '') for s in (conversation.transcript_segments or []))
+    return ' '.join(text.split())[:_SNIPPET_CHARS]
+
+
+def _word_count(conversation: Conversation) -> int:
+    return sum(len(str(getattr(s, 'text', '') or '').split()) for s in (conversation.transcript_segments or []))
+
+
 def present(review: Dict[str, Any]) -> Dict[str, Any]:
     """Stored review + the derived reader-facing text."""
     corrections = list(review.get('corrections') or [])
@@ -202,8 +238,9 @@ def get_day(uid: str, date_str: str) -> Dict[str, Any]:
     loaded = load_day(uid, day, tz_name)
     review = day_reviews_db.get_day_review(uid, date_str)
 
-    def row(conversation: Conversation, rolled_up: bool) -> Dict[str, Any]:
+    def row(conversation: Conversation, *, rolled_up: bool = False, dropped: bool = False) -> Dict[str, Any]:
         structured = conversation.structured
+        held = conversation.id in loaded.hold_rules
         return {
             'id': conversation.id,
             'title': str(getattr(structured, 'title', '') or ''),
@@ -213,19 +250,67 @@ def get_day(uid: str, date_str: str) -> Dict[str, Any]:
             'finished_at': conversation.finished_at,
             'starred': bool(getattr(conversation, 'starred', False)),
             'rolled_up': rolled_up,
+            'dropped': dropped,
+            'held': held,
+            'hold_rule': loaded.hold_rules.get(conversation.id, ''),
+            'transcript_snippet': _snippet(conversation),
+            'word_count': _word_count(conversation),
         }
 
-    rows = [row(c, False) for c in loaded.visible] + [row(c, True) for c in loaded.rolled_up]
+    rows = (
+        [row(c) for c in loaded.visible]
+        + [row(c, rolled_up=True) for c in loaded.rolled_up]
+        + [row(c, dropped=True) for c in loaded.dropped]
+    )
     rows.sort(key=lambda r: r['started_at'] or datetime.min.replace(tzinfo=timezone.utc))
     return {
         'date': date_str,
         'review': present(review) if review else None,
         'conversations': rows,
         'processing_count': loaded.processing_count,
+        'dropped_auto_count': loaded.dropped_auto_count,
+        'hold_enabled': conversation_hold.hold_enabled(),
     }
 
 
-def finalize(uid: str, date_str: str, keep_ids: Sequence[str]) -> Dict[str, Any]:
+def _enrich_held(uid: str, conversation_id: str) -> None:
+    """Run the full pipeline on a clip the hold kept raw. Background work: the
+    review already answered, and the row shows as processing meanwhile."""
+    from utils.conversations.process_conversation import process_conversation
+
+    row = conversations_db.get_conversation(uid, conversation_id)
+    if not row or not row.get('processing_deferred'):
+        return
+    try:
+        process_conversation(
+            uid, row.get('language') or 'en', Conversation(**row), trigger=ProcessingTrigger.FIRST_OPEN
+        )
+    except Exception as e:  # noqa: BLE001 — the row stays held and can be reprocessed
+        import logging
+
+        logging.getLogger(__name__).warning(
+            'day review: enrichment failed uid=%s conv=%s %s', uid, conversation_id, type(e).__name__
+        )
+
+
+def _merge_group(uid: str, group: Sequence[str]) -> None:
+    """Merge a clump into one new conversation; the merge runs the full pipeline (trigger MERGE)."""
+    from utils.conversations.merge_conversations import perform_merge_async
+
+    perform_merge_async(uid=uid, conversation_ids=list(group), reprocess=True)
+
+
+def _submit(fn, *args) -> None:
+    postprocess_executor.submit(fn, *args)
+
+
+def finalize(
+    uid: str,
+    date_str: str,
+    keep_ids: Sequence[str],
+    merge_groups: Sequence[Sequence[str]] = (),
+    drop_ids: Sequence[str] = (),
+) -> Dict[str, Any]:
     day = parse_date(date_str)
     tz_name = notification_db.get_user_time_zone(uid)
     if day > local_today(tz_name):
@@ -237,11 +322,20 @@ def finalize(uid: str, date_str: str, keep_ids: Sequence[str]) -> Dict[str, Any]
     if not loaded.visible:
         raise DayReviewError(400, f'No conversations to review for {date_str}')
     visible_ids = {c.id for c in loaded.visible}
-    unknown = [cid for cid in keep_ids if cid not in visible_ids]
+    merge_groups = [list(dict.fromkeys(g)) for g in merge_groups]
+    merged_ids = {cid for g in merge_groups for cid in g}
+    chosen = [*keep_ids, *drop_ids, *merged_ids]
+    unknown = [cid for cid in chosen if cid not in visible_ids]
     if unknown:
         raise DayReviewError(422, f'Not conversations of {date_str}: {", ".join(unknown[:5])}')
+    if len(set(chosen)) != len(chosen):
+        raise DayReviewError(422, 'A conversation can only be kept, merged or dropped once')
+    if any(len(g) < 2 for g in merge_groups):
+        raise DayReviewError(422, 'A merge group needs at least 2 conversations')
     keep = [c for c in loaded.visible if c.id in set(keep_ids)]
-    rolled = [c for c in loaded.visible if c.id not in set(keep_ids)]
+    dropped = [c for c in loaded.visible if c.id in set(drop_ids)]
+    sorted_out = set(keep_ids) | set(drop_ids) | merged_ids
+    rolled = [c for c in loaded.visible if c.id not in sorted_out]
 
     # Generate before mutating anything: a model failure leaves the day untouched.
     if rolled:
@@ -257,6 +351,8 @@ def finalize(uid: str, date_str: str, keep_ids: Sequence[str]) -> Dict[str, Any]
         'corrections': [],
         'kept_conversation_ids': [c.id for c in keep],
         'rolled_up_conversation_ids': [c.id for c in rolled],
+        'merged_groups': [{'conversation_ids': list(g)} for g in merge_groups],
+        'dropped_conversation_ids': [c.id for c in dropped],
         'time_zone': tz_name,
         'created_at': now,
         'updated_at': now,
@@ -267,7 +363,13 @@ def finalize(uid: str, date_str: str, keep_ids: Sequence[str]) -> Dict[str, Any]
     for conversation in keep:
         if not getattr(conversation, 'starred', False):
             conversations_db.set_conversation_starred(uid, conversation.id, True)
-    for conversation in rolled:
+        if conversation.id in loaded.hold_rules:
+            _submit(_enrich_held, uid, conversation.id)
+    for group in merge_groups:
+        for cid in group:
+            lifecycle.begin_merge(uid, cid)
+        _submit(_merge_group, uid, group)
+    for conversation in [*dropped, *rolled]:
         conversations_db.update_conversation(uid, conversation.id, {DAY_REVIEW_DATE_FIELD: date_str})
         lifecycle.discard(uid, conversation.id)
     return present({**review, 'date': date_str})
@@ -359,18 +461,20 @@ def regenerate(uid: str, date_str: str) -> Dict[str, Any]:
     return present(review)
 
 
-def reopen(uid: str, date_str: str) -> int:
-    """Undo a review: restore every rolled-up conversation and delete the review."""
+def reopen(uid: str, date_str: str) -> Tuple[int, int]:
+    """Undo a review: restore the rolled-up and dropped conversations and delete
+    the review. Returns (restored, merged groups that stay merged)."""
     review = _require_review(uid, date_str)
     restored = 0
-    for conversation_id in review.get('rolled_up_conversation_ids') or []:
+    hidden = [*(review.get('rolled_up_conversation_ids') or []), *(review.get('dropped_conversation_ids') or [])]
+    for conversation_id in hidden:
         if not conversations_db.get_conversation(uid, conversation_id):
             continue
         lifecycle.restore_discarded(uid, conversation_id)
         conversations_db.update_conversation(uid, conversation_id, {DAY_REVIEW_DATE_FIELD: None})
         restored += 1
     day_reviews_db.delete_day_review(uid, date_str)
-    return restored
+    return restored, len(review.get('merged_groups') or [])
 
 
 def pending_dates(uid: str, days: int = 7) -> Dict[str, Any]:
@@ -386,7 +490,7 @@ def pending_dates(uid: str, days: int = 7) -> Dict[str, Any]:
     zone = _tz(tz_name)
     dates = set()
     for data in raw:
-        if data.get('is_locked') or str(data.get('status') or '') != 'completed':
+        if data.get('is_locked') or data.get('deleted') or str(data.get('status') or '') != 'completed':
             continue
         started = data.get('started_at') or data.get('created_at')
         if isinstance(started, datetime):

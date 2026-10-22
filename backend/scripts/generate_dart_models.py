@@ -32,6 +32,7 @@ SCHEMA_GROUPS = {
             'AvailableChatModel',
             'ChatModelShortcutsResponse',
             'DayReviewCorrection',
+            'DayReviewMergeGroup',
             'DayReview',
             'DayReviewConversation',
             'DayReviewDayResponse',

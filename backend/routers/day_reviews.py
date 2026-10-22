@@ -57,10 +57,16 @@ def finalize_day_review(
     uid: str = Depends(auth.get_current_user_uid),
     x_app_platform: Optional[str] = Header(None, alias='X-App-Platform'),
 ):
-    """Keep (star) the listed conversations; roll every other one into one day summary."""
+    """Keep (star) the listed conversations, merge each group into one, drop the noise; roll every other one into one day summary."""
     enforce_chat_quota(uid, platform=x_app_platform)
     try:
-        return service.finalize(uid, date, request.keep_conversation_ids)
+        return service.finalize(
+            uid,
+            date,
+            request.keep_conversation_ids,
+            [g.conversation_ids for g in request.merge_groups],
+            request.drop_conversation_ids,
+        )
     except service.DayReviewError as e:
         _raise(e)
 
@@ -101,8 +107,9 @@ def regenerate_day_review(
 
 @router.post('/v1/users/day-reviews/{date}/reopen', tags=['day-reviews'], response_model=ReopenDayReviewResponse)
 def reopen_day_review(date: str = _DATE, uid: str = Depends(auth.get_current_user_uid)):
-    """Undo the review: rolled-up conversations come back, the summary is deleted."""
+    """Undo the review: rolled-up and dropped conversations come back, the summary is deleted. Merges stay."""
     try:
-        return {'status': 'ok', 'restored_count': service.reopen(uid, date)}
+        restored, merged = service.reopen(uid, date)
+        return {'status': 'ok', 'restored_count': restored, 'merged_count': merged}
     except service.DayReviewError as e:
         _raise(e)

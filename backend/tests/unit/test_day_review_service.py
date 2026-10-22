@@ -54,9 +54,20 @@ def world(monkeypatch):
         'call': _conv('call', 19, 'Call with mom'),
         'live': _conv('live', 20, 'Still recording', status='in_progress'),
         'auto-discarded': _conv('auto-discarded', 21, 'Noise', discarded=True),
+        # Held by the omi-local hold: transcript, cheap title, no overview, a noise rule.
+        'held-a': _conv(
+            'held-a', 9, 'Quick coffee chat', processing_deferred=True, processing_hold_rule='model_withheld'
+        ),
+        'held-b': _conv(
+            'held-b', 10, 'Coffee continued', processing_deferred=True, processing_hold_rule='model_withheld'
+        ),
+        'held-c': _conv('held-c', 16, 'Hallway noise', processing_deferred=True, processing_hold_rule='model_withheld'),
     }
+    for cid in ('held-a', 'held-b', 'held-c'):
+        convs[cid]['structured']['overview'] = ''
     reviews = {}
     llm = _Llm()
+    submitted = []
 
     def get_conversations(uid, limit=100, include_discarded=False, start_date=None, end_date=None, **_):
         rows = [dict(c) for c in convs.values() if include_discarded or not c['discarded']]
@@ -78,6 +89,9 @@ def world(monkeypatch):
     )
     monkeypatch.setattr(service.conversations_db, 'update_conversation', update_conversation)
     monkeypatch.setattr(service.lifecycle, 'discard', lambda uid, cid: convs[cid].update(discarded=True))
+    monkeypatch.setattr(service.lifecycle, 'begin_merge', lambda uid, cid: convs[cid].update(status='merging'))
+    monkeypatch.setattr(service, '_submit', lambda fn, *args: submitted.append((fn.__name__, *args)))
+    monkeypatch.setenv('OMI_SELF_HOSTED', '1')
     monkeypatch.setattr(service.lifecycle, 'restore_discarded', lambda uid, cid: convs[cid].update(discarded=False))
     monkeypatch.setattr(
         service.day_reviews_db, 'get_day_review', lambda uid, d: dict(reviews[d]) if d in reviews else None
@@ -90,30 +104,40 @@ def world(monkeypatch):
     monkeypatch.setattr(service.notification_db, 'get_user_time_zone', lambda uid: 'UTC')
     monkeypatch.setattr(service, 'get_llm', lambda feature, request_timeout=None: llm)
     monkeypatch.setattr(service, 'track_usage', lambda uid, feature: contextlib.nullcontext())
-    return convs, reviews, llm
+    return convs, reviews, llm, submitted
 
 
 def test_the_day_lists_completed_conversations_and_counts_unfinished_ones(world):
     day = service.get_day('u1', DAY)
-    assert [c['id'] for c in day['conversations']] == ['lunch', 'budget', 'call']
+    assert [c['id'] for c in day['conversations']] == ['held-a', 'held-b', 'lunch', 'budget', 'held-c', 'call']
     assert day['processing_count'] == 1 and day['review'] is None
+    assert day['dropped_auto_count'] == 1 and day['hold_enabled'] is True
+    held = next(c for c in day['conversations'] if c['id'] == 'held-a')
+    assert held['held'] and held['hold_rule'] == 'model_withheld'
+    assert held['transcript_snippet'] == 'Quick coffee chat talk' and held['word_count'] == 4
+    assert not next(c for c in day['conversations'] if c['id'] == 'lunch')['held']
 
 
 def test_finalize_keeps_starred_and_rolls_the_rest_into_one_summary(world):
-    convs, reviews, llm = world
+    convs, reviews, llm, submitted = world
 
     review = service.finalize('u1', DAY, ['budget'])
 
     assert review['title'] == 'A full Saturday'
-    assert review['rolled_up_conversation_ids'] == ['lunch', 'call']
+    assert review['rolled_up_conversation_ids'] == ['held-a', 'held-b', 'lunch', 'held-c', 'call']
     assert convs['budget']['starred'] and not convs['budget']['discarded']
-    for cid in ('lunch', 'call'):
+    for cid in ('lunch', 'call', 'held-a'):
         assert convs[cid]['discarded'] and convs[cid]['day_review_date'] == DAY
     assert 'Lunch overview' in llm.prompts[0] and 'Budget overview' not in llm.prompts[0]
+    assert 'Quick coffee chat talk' in llm.prompts[0], 'a held clip is summarized from its transcript'
+    assert submitted == [], 'nothing kept was held, so no enrichment runs'
     # The reviewed day now shows the rolled-up conversations as such.
     assert {c['id']: c['rolled_up'] for c in service.get_day('u1', DAY)['conversations']} == {
+        'held-a': True,
+        'held-b': True,
         'lunch': True,
         'budget': False,
+        'held-c': True,
         'call': True,
     }
     with pytest.raises(service.DayReviewError) as again:
@@ -121,8 +145,37 @@ def test_finalize_keeps_starred_and_rolls_the_rest_into_one_summary(world):
     assert again.value.status_code == 409
 
 
+def test_finalize_enriches_kept_held_clips_merges_groups_and_drops_noise(world):
+    convs, reviews, llm, submitted = world
+
+    review = service.finalize('u1', DAY, ['held-c', 'budget'], [['held-a', 'held-b']], ['call'])
+
+    assert review['kept_conversation_ids'] == ['budget', 'held-c']
+    assert review['merged_groups'] == [{'conversation_ids': ['held-a', 'held-b']}]
+    assert review['dropped_conversation_ids'] == ['call']
+    assert review['rolled_up_conversation_ids'] == ['lunch']
+    # Only the kept held clip is enriched; the merge runs the pipeline on its result.
+    assert submitted == [('_enrich_held', 'u1', 'held-c'), ('_merge_group', 'u1', ['held-a', 'held-b'])]
+    assert convs['held-c']['starred'] and not convs['held-c']['discarded']
+    assert convs['held-a']['status'] == 'merging' and convs['held-b']['status'] == 'merging'
+    assert convs['call']['discarded'] and convs['call']['day_review_date'] == DAY
+    assert 'Call with mom' not in llm.prompts[0] and 'Lunch overview' in llm.prompts[0]
+    rows = {c['id']: c for c in service.get_day('u1', DAY)['conversations']}
+    assert rows['call']['dropped'] and not rows['call']['rolled_up']
+    assert rows['lunch']['rolled_up'] and not rows['lunch']['dropped']
+
+
+def test_a_clip_can_only_be_sorted_once(world):
+    with pytest.raises(service.DayReviewError) as exc:
+        service.finalize('u1', DAY, ['lunch'], [['lunch', 'call']])
+    assert exc.value.status_code == 422
+    with pytest.raises(service.DayReviewError) as exc:
+        service.finalize('u1', DAY, [], [['lunch']])
+    assert exc.value.status_code == 422
+
+
 def test_a_model_failure_changes_nothing(world):
-    convs, reviews, llm = world
+    convs, reviews, llm, submitted = world
     llm.fail = True
     with pytest.raises(service.DayReviewError) as exc:
         service.finalize('u1', DAY, [])
@@ -130,6 +183,7 @@ def test_a_model_failure_changes_nothing(world):
     assert reviews == {}
     assert not any(c.get('day_review_date') for c in convs.values())
     assert not convs['lunch']['discarded']
+    assert submitted == []
 
 
 def test_keep_ids_must_belong_to_the_day(world):
@@ -139,7 +193,7 @@ def test_keep_ids_must_belong_to_the_day(world):
 
 
 def test_corrections_then_regenerate_applies_them_and_keeps_redactions(world):
-    convs, reviews, llm = world
+    convs, reviews, llm, _ = world
     review = service.finalize('u1', DAY, [])
     summary = review['summary_text']
     start = summary.index('lunch')
@@ -167,12 +221,13 @@ def test_corrections_then_regenerate_applies_them_and_keeps_redactions(world):
     assert 'I also went running.' not in review['final_text']  # folded in, not re-appended
 
 
-def test_reopen_restores_everything(world):
-    convs, reviews, _ = world
-    service.finalize('u1', DAY, ['budget'])
-    assert service.reopen('u1', DAY) == 2
+def test_reopen_restores_rolled_and_dropped_but_not_merges(world):
+    convs, reviews, _, _ = world
+    service.finalize('u1', DAY, ['budget'], [['held-a', 'held-b']], ['call'])
+    assert service.reopen('u1', DAY) == (3, 1)  # lunch + held-c rolled, call dropped; one merge stays
     assert reviews == {}
-    assert not convs['lunch']['discarded'] and convs['lunch']['day_review_date'] is None
+    for cid in ('lunch', 'held-c', 'call'):
+        assert not convs[cid]['discarded'] and convs[cid]['day_review_date'] is None
 
 
 def test_pending_dates_skip_reviewed_days(world, monkeypatch):
