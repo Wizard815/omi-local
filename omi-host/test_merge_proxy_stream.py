@@ -155,6 +155,7 @@ def _patch_proxy_httpx(client_cls=_FakeAsyncClient):
     )
     fake_module.AsyncClient = client_cls
     merge_proxy.httpx = fake_module
+    merge_proxy._client = None  # the shared keep-alive client is built from the patched module on first use
 
 
 async def _stream_chat(client):
@@ -319,6 +320,40 @@ def test_redis_down_at_import_does_not_pin_env_allowlist() -> None:
         importlib.reload(merge_proxy)
 
 
+def test_an_empty_model_list_is_cached_briefly_instead_of_refetched() -> None:
+    """Every /v1/models call used to re-ask a down upstream and wait the full
+    fetch timeout, because an empty result was never cached."""
+    calls = {"n": 0}
+
+    async def _fetch(tag, base_url, allowlist):
+        calls["n"] += 1
+        return []
+
+    original = merge_proxy._fetch_models
+    merge_proxy._fetch_models = _fetch
+    merge_proxy._flush_cache()
+    try:
+        assert asyncio.run(merge_proxy.refresh_models()) == []
+        assert asyncio.run(merge_proxy.refresh_models()) == []
+        assert calls["n"] == 1, "the empty answer must be served from the cache for EMPTY_CACHE_TTL"
+        merge_proxy._cache_expiry = 0.0
+        asyncio.run(merge_proxy.refresh_models())
+        assert calls["n"] == 2
+    finally:
+        merge_proxy._fetch_models = original
+        merge_proxy._flush_cache()
+
+
+def test_upstream_calls_share_one_keep_alive_client() -> None:
+    """Non-streaming chat and model listing reuse one client (keep-alive to llama.cpp)."""
+    _patch_proxy_httpx()
+    _FakeAsyncClient.instances.clear()
+    first = merge_proxy._shared_client()
+    assert merge_proxy._shared_client() is first
+    assert _FakeAsyncClient.instances == [first]
+    merge_proxy._client = None
+
+
 if __name__ == "__main__":
     test_redis_down_at_import_does_not_pin_env_allowlist()
     test_streaming_chat_survives_the_handler_returning()
@@ -326,4 +361,6 @@ if __name__ == "__main__":
     test_unreachable_redis_falls_back_to_env_allowlist()
     test_non_streaming_unreachable_upstream_is_a_502_with_the_reason()
     test_non_streaming_plain_text_upstream_error_keeps_status_and_text()
+    test_an_empty_model_list_is_cached_briefly_instead_of_refetched()
+    test_upstream_calls_share_one_keep_alive_client()
     print("PASS: merge proxy streaming + non-streaming errors + allowlist fallback")

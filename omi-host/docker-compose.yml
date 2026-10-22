@@ -120,6 +120,8 @@ services:
       OMI_FIRESTORE_EXPORT_INTERVAL_S: ${OMI_FIRESTORE_EXPORT_INTERVAL_S:-900}
       OMI_BACKUP_INTERVAL_S: ${OMI_BACKUP_INTERVAL_S:-86400}
       OMI_BACKUP_KEEP: ${OMI_BACKUP_KEEP:-7}
+      # Max heap of the Firestore emulator's JVM (it holds the whole dataset).
+      OMI_FIRESTORE_HEAP: ${OMI_FIRESTORE_HEAP:-2g}
       DASHBOARD_USERNAME: ${DASHBOARD_USERNAME:-}
       DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD:-}
       # The dashboard (served by this container) reads these to decide
