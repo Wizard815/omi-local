@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import 'package:omi/utils/analytics/registry/events.g.dart';
 
@@ -24,11 +23,6 @@ SignInFailedProvider? signInFailedProvider(String provider) {
 
 /// Closed class for `Sign In Failed`. Raw exception text never leaves this function.
 SignInFailedErrorClass classifySignInFailure(Object error) {
-  if (error is SignInWithAppleAuthorizationException) {
-    return error.code == AuthorizationErrorCode.canceled
-        ? SignInFailedErrorClass.cancelled
-        : SignInFailedErrorClass.credential;
-  }
   if (error is FirebaseAuthException) {
     return switch (error.code) {
       'network-request-failed' || 'network-error' => SignInFailedErrorClass.network,

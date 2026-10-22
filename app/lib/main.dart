@@ -12,7 +12,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:omi/services/dev_controls/semantic_controls.dart';
-import 'package:marionette_flutter/marionette_flutter.dart';
 
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,7 +19,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:omi/gen/pigeon_communicator.g.dart';
 import 'package:omi/services/bridges/ble_bridge.dart';
-import 'package:omi/services/app_review_service.dart';
 import 'package:omi/services/account_cutover/account_cutover_runtime.dart';
 import 'package:omi/widgets/bluetooth_guidance_listener.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
@@ -210,7 +208,6 @@ Future<void> _reportBootCrash(
   String errorOrigin = 'boot',
 }) async {
   if (PhysicalQualification.enabled) return;
-  unawaited(AppReviewService().recordBadExperience(AppReviewBadExperience.fatalError));
   // Self-hosted: no Crashlytics. The boot journal stays local; the crash only
   // reaches the device log.
   try {
@@ -511,15 +508,12 @@ void main() {
   runZonedGuarded(
     () async {
       // Ensure
+      WidgetsFlutterBinding.ensureInitialized();
       if (kDebugMode) {
-        MarionetteBinding.ensureInitialized();
-        // Typed semantic controls for the seeded-journey lane: same debug VM
-        // service transport as Marionette, installed only in eligible
-        // local-dev test builds (inert everywhere else, including
+        // Typed semantic controls for the seeded-journey lane, installed only
+        // in eligible local-dev test builds (inert everywhere else, including
         // production-flavor debug builds).
         SemanticControls.instance.installIfEligible();
-      } else {
-        WidgetsFlutterBinding.ensureInitialized();
       }
       await _start();
     },

@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'package:in_app_review/in_app_review.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'package:omi/backend/preferences.dart';
@@ -21,7 +20,7 @@ import 'package:omi/pages/onboarding/variants/yinka/widgets/onboarding_card.dart
 const double _kTopRowHeight = 44;
 
 /// Space between that row and every title: low enough to feel centred, high enough that the title
-/// stays clear of the system prompts (microphone, App Store rating) that open mid-screen.
+/// stays clear of the system prompts (microphone) that open mid-screen.
 const double _kHeadingGap = 76;
 
 /// The area under the card on dictation, "Summarizing…", the summary and the tasks. One height
@@ -31,13 +30,13 @@ const double _kControlHeight = 172;
 /// The stages of the first-run activation, in order. Some are skipped: [microphone] with an Omi (or
 /// when already allowed), [taskList] when Omi found no tasks. How to wear and use an Omi is the
 /// device tutorial Home shows after onboarding.
-enum ActivationStage { intro, microphone, dictate, writing, summary, taskList, congrats, rating }
+enum ActivationStage { intro, microphone, dictate, writing, summary, taskList, congrats }
 
 /// Shows people what Omi does with their own words, then hands over to the paywall and Home.
 ///
 /// Everyone sees "Let's try Omi." and then says a few
 /// sentences. Omi turns them into a summary and to-dos (a real conversation, first on Home), then
-/// come a congratulations screen, the rating ask and the paywall. Skipping the dictation shows a
+/// come a congratulations screen and the paywall. Skipping the dictation shows a
 /// welcome card on Home instead.
 class ActivationFlow extends StatefulWidget {
   const ActivationFlow({
@@ -48,7 +47,6 @@ class ActivationFlow extends StatefulWidget {
     this.capture,
     this.microphoneGranted,
     this.requestMicrophone,
-    this.requestReview,
     this.notesDeadline = const Duration(seconds: 12),
   });
 
@@ -59,14 +57,13 @@ class ActivationFlow extends StatefulWidget {
   /// Saves onboarding as done and leaves for Home; false when the save failed (the reader can retry).
   final Future<bool> Function() onFinished;
 
-  /// Shows the paywall after the rating ask, last before Home; completes when it is closed.
+  /// Shows the paywall after the congratulations screen, last before Home; completes when it is closed.
   final Future<void> Function()? showPaywall;
 
   /// Defaults to the app's capture pipeline; replaceable in tests.
   final ActivationCapture Function(BuildContext context)? capture;
   final Future<bool> Function()? microphoneGranted;
   final Future<bool> Function()? requestMicrophone;
-  final Future<void> Function()? requestReview;
 
   /// How long "Summarizing…" waits for Omi's notes. A few sentences usually take seconds; past this
   /// the reader moves on with their own words, and the notes arrive on Home.
@@ -163,7 +160,9 @@ class _ActivationFlowState extends State<ActivationFlow> {
     return PipelineActivationCapture(context, expectDevice: widget.hasDevice && !_phoneInstead);
   }
 
-  Future<void> _afterRating() async {
+  /// Continue on the congratulations screen always reaches [widget.onFinished], so a failed save
+  /// can be retried from there.
+  Future<void> _afterCongrats() async {
     if (_finished) return;
     _finished = true;
     if (!_paywallShown) {
@@ -233,13 +232,7 @@ class _ActivationFlowState extends State<ActivationFlow> {
           bottom: _ContinueButton(stage: 'tasks', onPressed: () => _go(ActivationStage.congrats)),
           bottomHeight: _kControlHeight,
         ),
-      ActivationStage.congrats =>
-        _Hooray(key: const ValueKey('congrats'), onContinue: () => _go(ActivationStage.rating)),
-      ActivationStage.rating => _RatingAsk(
-          key: const ValueKey('rating'),
-          requestReview: widget.requestReview ?? InAppReview.instance.requestReview,
-          onDone: _afterRating,
-        ),
+      ActivationStage.congrats => _Hooray(key: const ValueKey('congrats'), onContinue: _afterCongrats),
     };
     final reduce = OmiMotion.of(context).emphasized == Duration.zero;
     return AnimatedSwitcher(
@@ -256,8 +249,7 @@ class _ActivationFlowState extends State<ActivationFlow> {
 
 /// Every titled activation screen. The title has one size and one height throughout, so moving from
 /// step to step only changes what is under it. [bottomHeight] fixes the area under the body (so the
-/// body sits in the same place on screens that share it); [bodyAtTop] puts the body right under
-/// the title instead of in the middle.
+/// body sits in the same place on screens that share it).
 class _Stage extends StatelessWidget {
   const _Stage({
     super.key,
@@ -269,7 +261,6 @@ class _Stage extends StatelessWidget {
     this.bottom,
     this.topRight,
     this.bottomHeight,
-    this.bodyAtTop = false,
   });
 
   final String title;
@@ -284,7 +275,6 @@ class _Stage extends StatelessWidget {
   final Widget? bottom;
   final Widget? topRight;
   final double? bottomHeight;
-  final bool bodyAtTop;
 
   @override
   Widget build(BuildContext context) {
@@ -322,19 +312,14 @@ class _Stage extends StatelessWidget {
               ),
             ],
             Expanded(
-              child: bodyAtTop
-                  ? Padding(
-                      padding: const EdgeInsets.only(top: OmiSpacing.md),
-                      child: Align(alignment: Alignment.topCenter, child: body),
-                    )
-                  : LayoutBuilder(
-                      builder: (context, constraints) => SingleChildScrollView(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                          child: Center(child: body),
-                        ),
-                      ),
-                    ),
+              child: LayoutBuilder(
+                builder: (context, constraints) => SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    child: Center(child: body),
+                  ),
+                ),
+              ),
             ),
             if (bottom != null)
               bottomHeight == null
@@ -1155,139 +1140,6 @@ class _HoorayState extends State<_Hooray> {
         ),
       ),
       bottom: _ContinueButton(stage: 'congrats', onPressed: widget.onContinue),
-    );
-  }
-}
-
-/// After the celebration: "Enjoying Omi so far?" with five gold stars popping in one by one under
-/// it, both above where the App Store rating pop-up opens by itself. The paywall follows once the
-/// pop-up is closed (or Continue, if it never showed).
-class _RatingAsk extends StatefulWidget {
-  const _RatingAsk({super.key, required this.requestReview, required this.onDone});
-
-  final Future<void> Function() requestReview;
-  final VoidCallback onDone;
-
-  @override
-  State<_RatingAsk> createState() => _RatingAskState();
-}
-
-class _RatingAskState extends State<_RatingAsk> with WidgetsBindingObserver {
-  static const _gold = Color(0xFFFFC53D); // omi-ux-allow: color-literal -- rating stars in App Store gold
-  Timer? _ask;
-  Timer? _starsLanded;
-  Timer? _offerContinue;
-  bool _promptShowing = false;
-  // Continue stays hidden until the App Store pop-up has had time to appear, so a quick tap can't
-  // skip past it.
-  bool _canContinue = false;
-  bool _asked = false;
-  bool _done = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    // A light tap as the stars land, then the App Store prompt.
-    _starsLanded = Timer(const Duration(milliseconds: 650), OmiHaptics.light);
-    _ask = Timer(const Duration(milliseconds: 1500), _requestReview);
-  }
-
-  @override
-  void dispose() {
-    _ask?.cancel();
-    _starsLanded?.cancel();
-    _offerContinue?.cancel();
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  Future<void> _requestReview() async {
-    PlatformManager.instance.analytics.track('Onboarding Rating Asked');
-    try {
-      await widget.requestReview();
-    } catch (_) {}
-    _asked = true;
-    // iOS gives no callback when its pop-up closes (and on many builds the app never goes
-    // inactive under it), so don't wait for it: once it is up, move on underneath it. Closing it
-    // then lands on the paywall instead of back on this screen.
-    _offerContinue = Timer(const Duration(milliseconds: 900), () {
-      if (!mounted) return;
-      // Continue stays as the way on if leaving fails (a failed save is retried from here).
-      setState(() => _canContinue = true);
-      _leave();
-    });
-  }
-
-  /// iOS gives no callback for its rating pop-up, but the app goes inactive while it is up and
-  /// becomes active again when it closes: that return is the cue to move on.
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.inactive) _promptShowing = true;
-    if (state == AppLifecycleState.resumed && _promptShowing) _leave();
-  }
-
-  void _leave() {
-    if (_done || !mounted) return;
-    _done = true;
-    widget.onDone();
-  }
-
-  /// Continue always reaches [widget.onDone], so a failed save can be retried.
-  void _continue() {
-    if (!mounted) return;
-    _done = true;
-    widget.onDone();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // Not every iOS build makes the app inactive under the pop-up (the simulator never does). The
-    // pop-up takes every touch while it is up, so the first tap here after asking means it closed.
-    return Listener(
-      behavior: HitTestBehavior.translucent,
-      // After the tap has been handled: a tap on Continue has then already moved on (or retried a
-      // failed save), and this cue must not count the same tap twice.
-      onPointerUp: (_) {
-        if (_asked && _canContinue) Future<void>(_leave);
-      },
-      child: _buildStage(context),
-    );
-  }
-
-  Widget _buildStage(BuildContext context) {
-    return _Stage(
-      title: context.l10n.onboardingActRateTitle,
-      bodyAtTop: true,
-      body: OneShot(
-        duration: const Duration(milliseconds: 1200),
-        builder: (context, t) => Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            for (var i = 0; i < 5; i++)
-              Transform.scale(
-                scale: Curves.elasticOut.transform(segment(t, i * 0.1, 0.45 + i * 0.1, Curves.linear)),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 3),
-                  child: Icon(Icons.star_rounded, size: 46, color: _gold),
-                ),
-              ),
-          ],
-        ),
-      ),
-      bottom: IgnorePointer(
-        ignoring: !_canContinue,
-        child: AnimatedOpacity(
-          opacity: _canContinue ? 1 : 0,
-          duration: const Duration(milliseconds: 300),
-          child: OmiButton(
-            key: const Key('activation_continue_rating'),
-            label: context.l10n.continueButton,
-            expand: true,
-            onPressed: _continue,
-          ),
-        ),
-      ),
     );
   }
 }

@@ -9,8 +9,7 @@ import 'package:omi/utils/enums.dart';
 
 /// Recording states in which a prompt would interrupt the person: phone-mic capture starting or
 /// running, system-audio capture, and a mic taken by another app. Passive wearable capture
-/// (`deviceRecord`) and a muted pendant (`pause`) are not busy — the same rule as the review
-/// prompt (`widgets/app_review_prompt.dart`).
+/// (`deviceRecord`) and a muted pendant (`pause`) are not busy.
 const Set<RecordingState> kPromptBlockingRecordingStates = {
   RecordingState.initialising,
   RecordingState.record,

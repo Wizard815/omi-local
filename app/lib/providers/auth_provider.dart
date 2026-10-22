@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:omi/services/proactivity/proactivity_runtime.dart';
-import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -23,7 +22,6 @@ import 'package:omi/utils/alerts/app_snackbar.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 import 'package:omi/utils/logger.dart';
 import 'package:omi/utils/platform/platform_manager.dart';
-import 'package:omi/utils/platform/platform_service.dart';
 
 /// Runs a provider-link helper, then migrates only the anonymous source proof
 /// it returned after the destination account has been established.
@@ -271,70 +269,6 @@ class AuthenticationProvider extends BaseProvider {
       AppSnackbar.showSnackbarError('$e');
     }
     setLoadingState(false);
-  }
-
-  Future<void> onGoogleSignIn(Function() onSignIn) async {
-    final useWebAuth = Env.useWebAuth;
-    if (!loading) {
-      setLoadingState(true);
-      PlatformManager.instance.analytics.signInStarted('google');
-      try {
-        UserCredential? credential;
-        if (PlatformService.isMobile && !useWebAuth) {
-          credential = await AuthService.instance.signInWithGoogleMobile();
-        } else {
-          credential = await AuthService.instance.authenticateWithProvider('google');
-        }
-        if (credential != null && _hasFirebaseUser) {
-          await _signIn(onSignIn, credential: credential, authProvider: 'google');
-        } else {
-          PlatformManager.instance.analytics.signInFailed('google', cancelled: true);
-          AppSnackbar.showSnackbarError(
-            globalNavigatorKey.currentContext?.l10n.authFailedToSignInWithGoogle ??
-                'Failed to sign in with Google, please try again.',
-          );
-        }
-      } catch (e) {
-        Logger.debug('OAuth Google sign in error: $e');
-        PlatformManager.instance.analytics.signInFailed('google', error: e);
-        AppSnackbar.showSnackbarError(
-          globalNavigatorKey.currentContext?.l10n.authenticationFailed ?? 'Authentication failed. Please try again.',
-        );
-      }
-      setLoadingState(false);
-    }
-  }
-
-  Future<void> onAppleSignIn(Function() onSignIn) async {
-    final useWebAuth = Env.useWebAuth;
-    if (!loading) {
-      setLoadingState(true);
-      PlatformManager.instance.analytics.signInStarted('apple');
-      try {
-        UserCredential? credential;
-        if (PlatformService.isMobile && !useWebAuth && !Platform.isAndroid) {
-          credential = await AuthService.instance.signInWithAppleMobile();
-        } else {
-          credential = await AuthService.instance.authenticateWithProvider('apple');
-        }
-        if (credential != null && _hasFirebaseUser) {
-          await _signIn(onSignIn, credential: credential, authProvider: 'apple');
-        } else {
-          PlatformManager.instance.analytics.signInFailed('apple', cancelled: true);
-          AppSnackbar.showSnackbarError(
-            globalNavigatorKey.currentContext?.l10n.authFailedToSignInWithApple ??
-                'Failed to sign in with Apple, please try again.',
-          );
-        }
-      } catch (e) {
-        Logger.debug('OAuth Apple sign in error: $e');
-        PlatformManager.instance.analytics.signInFailed('apple', error: e);
-        AppSnackbar.showSnackbarError(
-          globalNavigatorKey.currentContext?.l10n.authenticationFailed ?? 'Authentication failed. Please try again.',
-        );
-      }
-      setLoadingState(false);
-    }
   }
 
   Future<String?> _getIdToken() async {

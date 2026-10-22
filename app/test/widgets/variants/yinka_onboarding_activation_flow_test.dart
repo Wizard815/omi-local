@@ -98,7 +98,6 @@ void main() {
             },
             microphoneGranted: () async => true,
             requestMicrophone: requestMicrophone,
-            requestReview: () async => events.add('review'),
             showPaywall: () {
               events.add('paywall');
               return paywall?.future ?? Future.value();
@@ -119,7 +118,7 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
   }
 
-  testWidgets('the full path: intro, dictation, notes, tasks, hooray, rating, paywall, Home', (tester) async {
+  testWidgets('the full path: intro, dictation, notes, tasks, hooray, paywall, Home', (tester) async {
     final paywall = Completer<void>();
     final run = await pump(tester, paywall: paywall);
 
@@ -145,49 +144,14 @@ void main() {
     expect(find.text('Saved to your tasks'), findsOneWidget);
     await tapKey(tester, 'activation_continue_tasks');
 
-    // Hooray, then the rating ask, then the paywall.
+    // Hooray, then the paywall; closing that goes Home.
     expect(find.byKey(const Key('activation_continue_congrats')), findsOneWidget);
     expect(run.events, isEmpty);
     await tapKey(tester, 'activation_continue_congrats');
-    await tester.pump(const Duration(seconds: 2)); // The pop-up waits for the stars.
-    expect(find.text('Enjoying Omi so far?'), findsOneWidget);
-    expect(run.events, ['review'], reason: 'the App Store pop-up opens by itself');
-    // The stars sit right under the title, above where the pop-up opens.
-    final titleBottom = tester.getBottomLeft(find.text('Enjoying Omi so far?')).dy;
-    final starsTop = tester.getTopLeft(find.byIcon(Icons.star_rounded).first).dy;
-    expect(starsTop - titleBottom, lessThan(40));
-
-    // The pop-up makes the app inactive; its closing opens the paywall, and closing that goes Home.
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
-    await tester.pump();
-    expect(run.events, ['review', 'paywall']);
+    expect(run.events, ['paywall']);
     paywall.complete();
     await tester.pump();
-    expect(run.events, ['review', 'paywall', 'finished']);
-  });
-
-  testWidgets('rating: once the App Store pop-up is up, it moves on to the paywall by itself', (tester) async {
-    final run = await pump(tester);
-    await tester.pump(const Duration(seconds: 4));
-    run.capture.live.value = 'Remind me to send the deck';
-    await tester.pump();
-    await tapKey(tester, 'activation_dictation_done');
-    await tapKey(tester, 'activation_continue_summary');
-    await tapKey(tester, 'activation_continue_tasks');
-    await tapKey(tester, 'activation_continue_congrats');
-
-    // A tap before the pop-up has been asked for stays on the rating screen.
-    await tester.tapAt(tester.getCenter(find.text('Enjoying Omi so far?')));
-    await tester.pump();
-    expect(run.events, isEmpty);
-
-    await tester.pump(const Duration(seconds: 2));
-    expect(run.events, ['review'], reason: 'the pop-up is asked for, not yet on screen');
-
-    // iOS gives no cue when its pop-up closes: the paywall opens underneath it instead.
-    await tester.pump(const Duration(seconds: 1));
-    expect(run.events, ['review', 'paywall', 'finished']);
+    expect(run.events, ['paywall', 'finished']);
   });
 
   testWidgets('Omi owners go straight to the intro (how to wear it is the button tutorial before it)', (tester) async {
@@ -299,15 +263,10 @@ void main() {
     await tester.tap(find.text('Skip'));
     await tester.pump(const Duration(seconds: 5));
     await tapKey(tester, 'activation_continue_congrats');
-    await tester.pump(const Duration(seconds: 2));
-    await tester.tap(find.byKey(const Key('activation_continue_rating')), warnIfMissed: false);
-    await tester.pump();
-    expect(run.events, ['review'], reason: 'Continue waits for the App Store prompt');
-    await tester.pump(const Duration(seconds: 2));
-    expect(run.events, ['review', 'paywall', 'finished'], reason: 'moves on by itself; the first save fails');
+    expect(run.events, ['paywall', 'finished'], reason: 'the first save fails');
 
-    await tapKey(tester, 'activation_continue_rating');
-    expect(run.events, ['review', 'paywall', 'finished', 'finished'], reason: 'retried without a second paywall');
+    await tapKey(tester, 'activation_continue_congrats');
+    expect(run.events, ['paywall', 'finished', 'finished'], reason: 'retried without a second paywall');
     expect(attempts, 2);
   });
 

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:omi/backend/http/api/users.dart';
 import 'package:omi/l10n/app_localizations.dart';
 import 'package:omi/ui/ui.dart';
-import 'package:omi/utils/analytics/intercom.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 
 /// Which half of [MobileFeedbackReason] a feedback sheet offers: one population
@@ -47,8 +46,7 @@ String feedbackReasonLabel(AppLocalizations l10n, MobileFeedbackReason reason) =
 /// Picking a reason chip submits `-1` with that [MobileFeedbackReason] through
 /// [onSubmit] and closes; the "All good" chip submits `+1` with no reason.
 /// Free text is deliberately not offered — the `mobile_feedback.v1` schema has
-/// no text field — instead a secondary row opens the Intercom messenger when it
-/// is available. Dismissing the sheet without a choice submits nothing.
+/// no text field. Dismissing the sheet without a choice submits nothing.
 Future<void> showFeedbackReasonSheet(
   BuildContext context, {
   required String title,
@@ -77,7 +75,6 @@ class _FeedbackReasonSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final intercomEnabled = IntercomManager.instance.isIntercomEnabled;
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: OmiSpacing.xs),
@@ -119,29 +116,6 @@ class _FeedbackReasonSheet extends StatelessWidget {
               labelStyle: OmiType.subhead.copyWith(color: OmiColors.success, fontWeight: FontWeight.w600),
               onSelected: (_) => _choose(context, 1, null),
             ),
-            if (intercomEnabled) ...[
-              const SizedBox(height: OmiSpacing.md),
-              InkWell(
-                key: const ValueKey('feedback_chat_with_us'),
-                borderRadius: OmiRadius.mdAll,
-                onTap: () => IntercomManager.instance.intercom.displayMessenger(),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: OmiSpacing.xs),
-                  child: Row(
-                    children: [
-                      Icon(Icons.chat_bubble_outline_rounded, size: 18, color: OmiColors.textSecondary),
-                      const SizedBox(width: OmiSpacing.xs),
-                      Expanded(
-                        child: Text(
-                          l10n.feedbackChatWithUs,
-                          style: OmiType.subhead.copyWith(color: OmiColors.textSecondary),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
             const SizedBox(height: OmiSpacing.md),
           ],
         ),

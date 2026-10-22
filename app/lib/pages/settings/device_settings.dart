@@ -33,7 +33,6 @@ import 'package:omi/services/devices.dart';
 import 'package:omi/services/devices/connectors/rayban_meta_connection.dart';
 import 'package:omi/services/services.dart';
 import 'package:omi/ui/ui.dart';
-import 'package:omi/utils/analytics/intercom.dart';
 import 'package:omi/utils/device.dart';
 import 'package:omi/utils/error_message.dart';
 import 'package:omi/utils/firmware_update_build_policy.dart';
@@ -41,7 +40,6 @@ import 'package:omi/utils/l10n_extensions.dart';
 import 'package:omi/utils/logger.dart';
 import 'package:omi/utils/other/temp.dart';
 import 'package:omi/utils/platform/platform_manager.dart';
-import 'package:omi/utils/platform/platform_service.dart';
 
 /// The one device page: status, controls, sync, firmware, device information and Forget Device.
 ///
@@ -309,10 +307,6 @@ class _DeviceSettingsState extends State<DeviceSettings> {
 
   Future<void> _openChargingHelp(DeviceProvider provider) async {
     final deviceName = provider.pairedDevice?.name ?? 'DevKit1';
-    if (PlatformService.isIntercomSupported) {
-      await IntercomManager.instance.displayChargingArticle(deviceName);
-      return;
-    }
     final String url;
     if (deviceName == 'Omi DevKit 2') {
       url = 'https://www.omi.me/pages/charging-devkit2';

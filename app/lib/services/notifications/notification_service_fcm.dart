@@ -21,7 +21,6 @@ import 'package:omi/services/notifications/important_conversation_notification_h
 import 'package:omi/services/notifications/merge_notification_handler.dart';
 import 'package:omi/services/notifications/notification_interface.dart';
 import 'package:omi/services/voice_playback/omi_voice_playback_service.dart';
-import 'package:omi/utils/analytics/intercom.dart';
 import 'package:omi/utils/analytics/product_telemetry.dart';
 import 'package:omi/utils/logger.dart';
 import 'package:omi/utils/notification_channel_strings.dart';
@@ -141,12 +140,6 @@ class _FCMNotificationService implements NotificationInterface {
     String timeZone = await getTimeZone();
     if (FirebaseAuth.instance.currentUser != null && token.isNotEmpty) {
       await saveFcmTokenServer(token: token, timeZone: timeZone);
-
-      try {
-        await IntercomManager.instance.sendTokenToIntercom(token);
-      } catch (e) {
-        print(e);
-      }
     }
   }
 

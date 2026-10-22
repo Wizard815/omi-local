@@ -14,7 +14,6 @@ import 'package:omi/providers/device_provider.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 import 'package:omi/utils/logger.dart';
 import 'package:omi/ui/ui.dart';
-import 'package:omi/utils/analytics/intercom.dart';
 import 'package:provider/provider.dart';
 
 class OmiGlassOtaUpdate extends StatefulWidget {
@@ -659,12 +658,6 @@ class _OmiGlassOtaUpdateState extends State<OmiGlassOtaUpdate> {
             });
             if (wasConnectionProblem) _initializeAndCheck();
           },
-        ),
-        const SizedBox(height: OmiSpacing.xs),
-        OmiButton.secondary(
-          label: context.l10n.contactSupportAction,
-          expand: true,
-          onPressed: () => IntercomManager.instance.intercom.displayMessenger(),
         ),
       ],
     );

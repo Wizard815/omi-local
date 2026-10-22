@@ -4,10 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:omi/backend/schema/bt_device/bt_device.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:omi/backend/preferences.dart';
 import 'package:omi/utils/analytics/analytics_manager.dart';
-import 'package:omi/utils/analytics/adapters/posthog_adapter.dart';
+import 'package:omi/utils/analytics/analytics_adapter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:omi/utils/analytics/device_health_telemetry.dart';
 
@@ -974,23 +973,43 @@ void main() {
   });
 }
 
+/// In-memory stand-in for the analytics SDK boundary: records every delivered
+/// [DeviceHealthTelemetry.eventName] row the manager hands to the adapter.
+class _DeliveryAdapter implements AnalyticsAdapter, AnalyticsDeliveryAdapter, AnalyticsIdentityAdapter {
+  final delivered = <Map<String, dynamic>>[];
+  bool _initialized = false;
+
+  @override
+  bool get isInitialized => _initialized;
+
+  @override
+  Future<void> init() async => _initialized = true;
+
+  @override
+  Future<String> settleIdentity(String? identity, {required bool reset}) async => identity ?? 'delivery-user';
+
+  void _record(String eventName, Map<String, Object>? properties) {
+    if (eventName == DeviceHealthTelemetry.eventName) delivered.add(Map<String, dynamic>.from(properties ?? {}));
+  }
+
+  @override
+  void track({required String eventName, Map<String, Object>? properties}) => _record(eventName, properties);
+
+  @override
+  Future<void> deliver({required String eventName, required Map<String, Object> properties}) async =>
+      _record(eventName, properties);
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => null;
+}
+
 Future<List<Map<String, dynamic>>> setupDelivery() async {
   debugDefaultTargetPlatformOverride = TargetPlatform.android;
-  final delivered = <Map<String, dynamic>>[];
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(const MethodChannel('posthog_flutter'), (call) async {
-    if (call.method == 'distinctId') return 'delivery-user';
-    if (call.method == 'capture') {
-      final args = call.arguments as Map;
-      if (args['eventName'] == DeviceHealthTelemetry.eventName) {
-        delivered.add(Map<String, dynamic>.from(args['properties'] as Map));
-      }
-    }
-    return null;
-  });
+  final adapter = _DeliveryAdapter();
+  final delivered = adapter.delivered;
   PackageInfo.setMockInitialValues(
       appName: 'test', packageName: 'test', version: 'current', buildNumber: '3', buildSignature: '');
-  AnalyticsManager.configure(PostHogAnalyticsAdapter(apiKey: 'hermetic'));
+  AnalyticsManager.configure(adapter);
   AnalyticsManager().bindIdentity('delivery-user');
   await DeviceHealthTelemetry.policySettled;
   await AnalyticsManager.init();

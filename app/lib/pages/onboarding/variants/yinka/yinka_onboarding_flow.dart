@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -19,7 +18,6 @@ import 'package:omi/providers/device_provider.dart';
 import 'package:omi/providers/onboarding_provider.dart';
 import 'package:omi/providers/usage_provider.dart';
 import 'package:omi/ui/ui.dart';
-import 'package:omi/utils/analytics/intercom.dart';
 import 'package:omi/utils/device.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 import 'package:omi/utils/other/temp.dart';
@@ -152,11 +150,6 @@ class _YinkaOnboardingFlowState extends State<YinkaOnboardingFlow> {
         return NameWidget(
           goNext: () {
             _goNext();
-            IntercomManager.instance.updateUser(
-              FirebaseAuth.instance.currentUser!.email,
-              FirebaseAuth.instance.currentUser!.displayName,
-              FirebaseAuth.instance.currentUser!.uid,
-            );
             PlatformManager.instance.analytics.onboardingStepCompleted('Name');
           },
         );

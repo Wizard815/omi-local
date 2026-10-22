@@ -145,7 +145,6 @@ class ConversationDetailPageState extends State<ConversationDetailPage>
   /// Held for dispose, when the page can no longer look the provider up.
   late final ConversationDetailProvider _detailProvider;
   bool _isSharing = false;
-  bool _reviewInterrupted = false;
   bool _isTogglingStarred = false;
   bool _isDownloadingAudio = false;
   bool _providerInitialized = false;
@@ -1197,14 +1196,6 @@ class ConversationDetailPageState extends State<ConversationDetailPage>
                               _playbackController.updateSegments(segments);
                               _playbackController.seek(segment.start, strict: true);
                             },
-                            reviewEnabled: !widget.isFromOnboarding &&
-                                widget.initialSeekStart == null &&
-                                selectedTab == ConversationTab.summary &&
-                                !_controller!.indexIsChanging &&
-                                !_isSearching &&
-                                !_isSharing &&
-                                !_isDownloadingAudio &&
-                                !_reviewInterrupted,
                             searchQuery: _searchQuery,
                             currentResultIndex: getCurrentResultIndexForHighlighting(),
                             onTapWhenSearchEmpty: _closeSearchIfEmpty,
@@ -1255,9 +1246,6 @@ class ConversationDetailPageState extends State<ConversationDetailPage>
                   left: 0,
                   right: 0,
                   child: ConversationBottomBar(
-                    onAudioInteraction: () {
-                      if (mounted && !_reviewInterrupted) setState(() => _reviewInterrupted = true);
-                    },
                     mode: ConversationBottomBarMode.detail,
                     onAskOmi: () => _openAskOmi(detailProvider),
                     selectedTab: selectedTab,

@@ -1,0 +1,4 @@
+{
+  "change": "Self-hosted builds drop the cloud-only pieces (crash reporting, support chat, analytics, Google/Apple sign-in, store review and update prompts) for a smaller app",
+  "platforms": ["android"]
+}

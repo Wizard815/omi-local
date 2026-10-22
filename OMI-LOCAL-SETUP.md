@@ -27,12 +27,17 @@ waits for `http://192.168.20.5:8000/health`. It must run **on the host**
 (`ssh root@192.168.20.5`), because the phone can only reach `192.168.20.5`, not
 the Docker-bridge network this dev container sits on.
 
-**2. Install the APK on the phone:**
+**2. Build and install the APK on the phone:**
 
 ```bash
+# build: release, arm64 only, obfuscated — about half the size of the old
+# `flutter build apk --debug --flavor dev` (debug JIT, all ABIs). The dev flavor
+# is release-signed with the debug keystore (android/app/build.gradle), so no
+# release keystore is needed. Prints the APK path and size.
+app/scripts/build_local_apk.sh
 # from a machine that can reach the repo (or scp the apk straight to the phone):
-adb install -r omi-dev-local.apk
-# or: open omi-dev-local.apk on the phone and tap install
+adb install -r app/build/app/outputs/flutter-apk/app-dev-release.apk   # path printed by the script
+# or: copy app-dev-release.apk to the phone, open it and tap install
 #     (allow "install unknown apps" for your file manager)
 ```
 
@@ -101,7 +106,8 @@ The Omi app is architecturally a **Firebase-Auth + backend-API** client. To run 
   **Login**.) Created a user in the Auth emulator → its token verified by the backend →
   `GET /v1/conversations` and `GET /v1/users/onboarding` returned **200**
   (`/v1/users/profile` → `410 User not found`, the correct pre-onboarding state).
-- APK built (`flutter build apk --debug --flavor dev`), `aapt2` confirms
+- APK built (`app/scripts/build_local_apk.sh` — release, arm64-only, obfuscated; the earlier
+  `flutter build apk --debug --flavor dev` all-ABI debug build was ~2x larger), `aapt2` confirms
   `com.friend.ios.dev`, `usesCleartextTraffic=true`, `omi-dev://` callback,
   `RECORD_AUDIO` + BLE permissions, launchable `com.friend.ios.MainActivity`.
 - **Local audio service** (`omi-host/local_audio_service.py`) run end-to-end on the
