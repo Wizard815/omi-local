@@ -214,6 +214,9 @@ _ALLOWED_SCOPES: FrozenSet[tuple[str, str]] = frozenset(
         ('utils/conversations/process_conversation.py', '_store_deferred_conversation'),
         # Model-free backlog persistence: display projection never enters canonical structure.
         ('utils/conversations/process_conversation.py', '_store_budget_waiting'),
+        # Model-free hold for the day review (omi-local): the dump is stripped of the
+        # projection before persisting; nothing reads it.
+        ('utils/conversations/process_conversation.py', '_store_held_conversation'),
         # Storage-only budget-denial wrapper forwards validated display projection
         # to _store_budget_waiting; no model or intelligence reads it.
         ('utils/conversations/process_conversation.py', 'preserve_capture'),
@@ -510,6 +513,8 @@ PINNED_CONVERSATION_DUMPS: FrozenSet[DumpSite] = frozenset(
         DumpSite('utils/conversations/process_conversation.py', '_store_deferred_conversation', 'dict'),
         # Storage payload strips the projection before the initial-create-only mutation.
         DumpSite('utils/conversations/process_conversation.py', '_store_budget_waiting', 'model_dump'),
+        # Hold for the day review (omi-local): stripped of the projection before persisting.
+        DumpSite('utils/conversations/process_conversation.py', '_store_held_conversation', 'model_dump'),
         DumpSite('utils/conversations/process_conversation.py', '_normal_persist_payload', 'dict'),
         DumpSite('utils/conversations/meeting_context.py', 'store_meeting_context', 'model_dump'),
         DumpSite('utils/conversations/process_conversation.py', '_emit_derived_effects', 'dict'),

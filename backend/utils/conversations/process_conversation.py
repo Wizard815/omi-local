@@ -2239,11 +2239,13 @@ def _store_budget_waiting(uid, conversation, *, client_projection=None):
     return result, persisted
 
 
-def _store_held_conversation(uid, conversation, trigger, user_kept, *, client_projection=None):
+def _store_held_conversation(uid, conversation, trigger, user_kept):
     """omi-local hold (config/conversation_hold.py): persist the transcript with a
     model-free title and the rule-based noise verdict only. Rule-discarded noise is
     hidden like pipeline noise; everything else waits for the day review as a
-    completed, ``processing_deferred`` row carrying the rule that let it through."""
+    completed, ``processing_deferred`` row carrying the rule that let it through.
+    The client's display projection is not carried: the review enriches or
+    summarizes the row from its transcript."""
     initial = _is_ingress_create(conversation)
     decision = rules_only_relevance(
         uid,
@@ -2256,7 +2258,6 @@ def _store_held_conversation(uid, conversation, trigger, user_kept, *, client_pr
     )
     structured = _build_deferred_structured(conversation)
     result = _get_conversation_obj(uid, structured, conversation, relevance_discarded=decision.discard)
-    _attach_client_projection(result, getattr(conversation, 'client_processing', None))
     result.processing_deferred = not decision.discard
     result.deferred = False
     result.status = ConversationStatus.completed
@@ -2629,9 +2630,7 @@ def process_conversation(
         if waiting:
             conversation.processing_deferred = False
     if conversation_hold.holds(trigger) and not is_release_probe_uid(uid):
-        stored, persisted = _store_held_conversation(
-            uid, conversation, trigger, user_kept, client_projection=client_projection
-        )
+        stored, persisted = _store_held_conversation(uid, conversation, trigger, user_kept)
         report_persistence(persisted, derived_effects=DerivedEffectsDisposition.TERMINAL_NO_DERIVED_EFFECTS)
         return stored
     if getattr(conversation, 'processing_deferred', False) and conversation_hold.hold_enabled():
