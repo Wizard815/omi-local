@@ -7,10 +7,11 @@ services:
     container_name: omi-local
     restart: unless-stopped
     # The Firebase Auth/Firestore emulator only flushes --export-on-exit on a
-    # graceful shutdown, which needs a few seconds beyond Docker's 10s default
-    # (see entrypoint.sh's shutdown trap) — without this, `docker stop`/`restart`
-    # SIGKILLs it mid-export and every local account is silently lost.
-    stop_grace_period: 30s
+    # graceful shutdown, which takes seconds beyond Docker's 10s default and
+    # grows with the data (see entrypoint.sh's finish trap) — without this,
+    # `docker stop`/`restart` SIGKILLs it mid-export and the session's writes
+    # are lost (maintenance.sh's timed export bounds that loss to minutes).
+    stop_grace_period: 120s
     ports:
       # Host-side port is configurable (BACKEND_PORT) for when 8000 is
       # already taken by something else on the host — the container always
@@ -113,6 +114,12 @@ services:
       # recap is generated at each user's chosen local hour (default 22:00) —
       # set 0 to disable.
       OMI_LOCAL_SCHEDULER: ${OMI_LOCAL_SCHEDULER:-1}
+      # Data durability (maintenance.sh): the Firestore emulator lives in memory,
+      # so it is exported to the volume on a timer, and everything that can't
+      # be re-downloaded is tarred into /data/backups (0 turns either off).
+      OMI_FIRESTORE_EXPORT_INTERVAL_S: ${OMI_FIRESTORE_EXPORT_INTERVAL_S:-900}
+      OMI_BACKUP_INTERVAL_S: ${OMI_BACKUP_INTERVAL_S:-86400}
+      OMI_BACKUP_KEEP: ${OMI_BACKUP_KEEP:-7}
       DASHBOARD_USERNAME: ${DASHBOARD_USERNAME:-}
       DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD:-}
       # The dashboard (served by this container) reads these to decide

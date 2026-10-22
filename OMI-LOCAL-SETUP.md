@@ -265,6 +265,26 @@ Moving over from the old **Local network** login:
 - **New app build:** the login screen is a single form, and a leftover emulator
   session is signed out at startup.
 
+### Backups and what survives a crash
+The Firestore emulator holds all conversations, memories and accounts **in memory**; the
+data volume only has what was exported. Until October 2026 the only export was the clean
+stop, so a crash, a power cut or a `docker stop` that outran the grace period lost
+everything since the last start. Now (`omi-host/maintenance.sh`):
+- the emulator is exported every 15 minutes (`OMI_FIRESTORE_EXPORT_INTERVAL_S`), into a
+  scratch directory first, then swapped in; the previous export stays as
+  `firebase-export.prev`;
+- once a day (`OMI_BACKUP_INTERVAL_S`) a fresh export, a Redis snapshot and the local
+  storage, Chroma vectors and the login key are tarred into `/data/backups/omi-data-<utc
+  stamp>.tar.gz`; the newest `OMI_BACKUP_KEEP` (7) are kept. Model caches are not included:
+  they re-download;
+- if the backend process dies, the container exports and exits non-zero so Docker restarts
+  it, instead of exiting without an export.
+
+**Restore:** stop the stack, unpack a tarball over the data volume's root (on Unraid the
+volume is under Docker's `volumes/omi-host_omi-data/_data`; `tar xzf omi-data-<stamp>.tar.gz
+-C <that path>`), start the stack. Copy the tarballs somewhere off the box too: a
+`docker cp omi-local:/data/backups .` in a cron job on the host is enough.
+
 ### Self-hosting switch (`OMI_SELF_HOSTED`)
 omi-host's entrypoint exports `OMI_SELF_HOSTED=1`. The backend reads it (`backend/utils/self_hosting.py`)
 to turn off what a self-hosted install does not have: billing and quota gates, the whole-account

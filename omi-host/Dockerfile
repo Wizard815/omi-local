@@ -34,6 +34,7 @@ COPY omi-host/entrypoint.sh /entrypoint.sh
 COPY omi-host/local_llm_adapter.py /app/omi-host/local_llm_adapter.py
 COPY omi-host/audio-env.sh /app/omi-host/audio-env.sh
 COPY omi-host/auth-env.sh /app/omi-host/auth-env.sh
+COPY omi-host/maintenance.sh /app/omi-host/maintenance.sh
 RUN chmod +x /entrypoint.sh
 
 ENV PATH="/app/backend/.venv/bin:$PATH"
