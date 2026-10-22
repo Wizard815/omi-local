@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "id": "FC-durable-state-written-only-on-clean-exit",
+  "violated_contract": "State that lives in a process's memory and that users expect to keep must reach durable storage on a schedule, and on every exit path, not only on a graceful shutdown. omi-local's Firestore emulator held every conversation and account in memory and persisted them through --export-on-exit alone: a backend crash made PID 1 exit without that path, and a power loss, an OOM kill or a stop longer than the grace period lost everything written since the last clean start. No backup of the volume existed either.",
+  "canonical_prevention": "Give in-memory state a periodic persistence step that writes to a scratch location and swaps in atomically, keep the previous copy, make every exit path (signal trap and self-exit of the main process alike) run the same persistence, and keep a pruned set of full backups of the irreplaceable data. Prove it with a test that drives the real persistence functions against a fake of the external tool: atomic swap, a failed write leaves the current copy, backup members and retention.",
+  "canonical_prevention_artifact": [
+    "omi-host/maintenance.sh",
+    "omi-host/test_maintenance.py"
+  ],
+  "evidence_prs": [],
+  "scope_hints": [
+    "omi-host/entrypoint.sh",
+    "omi-host/maintenance.sh",
+    "omi-host/docker-compose.yml"
+  ],
+  "status": "open"
+}

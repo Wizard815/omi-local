@@ -83,7 +83,14 @@ echo "firebase emulators: pid $FIREBASE_PID"
 # (not TERM) for firebase specifically — the Node CLI is built and tested
 # against Ctrl-C far more than SIGTERM, and empirically this is what
 # actually triggers the export reliably.
-shutdown() {
+#
+# The same path runs when the backend itself dies (see the end of this
+# file): the emulator still exports, and the container exits non-zero so
+# Docker's restart policy brings it back. Between those, maintenance.sh
+# exports on a timer, so a crash that never reaches here loses minutes.
+finish() {
+  local code="${1:-0}"
+  [ -n "${MAINTENANCE_PID:-}" ] && kill -TERM "$MAINTENANCE_PID" 2>/dev/null
   echo "shutting down: signaling firebase emulators (pid $FIREBASE_PID) to export..."
   kill -INT "$FIREBASE_PID" 2>/dev/null
   wait "$FIREBASE_PID" 2>/dev/null
@@ -91,9 +98,9 @@ shutdown() {
   [ -n "${BACKEND_PID:-}" ] && kill -TERM "$BACKEND_PID" 2>/dev/null
   kill -TERM "$REDIS_PID" 2>/dev/null
   [ -n "${LLM_ADAPTER_PID:-}" ] && kill -TERM "$LLM_ADAPTER_PID" 2>/dev/null
-  exit 0
+  exit "$code"
 }
-trap shutdown TERM INT
+trap 'finish 0' TERM INT
 
 # wait for auth emulator
 for i in $(seq 1 90); do
@@ -101,6 +108,11 @@ for i in $(seq 1 90); do
   sleep 1
 done
 echo "auth emulator ready"
+
+# Timed exports and backups of the data volume (see maintenance.sh).
+. /app/omi-host/maintenance.sh
+omi_maintenance_loop &
+MAINTENANCE_PID=$!
 
 # ---- Backend ----
 cd /app/backend
@@ -200,3 +212,8 @@ echo "backend: starting"
 uvicorn main:app --host 0.0.0.0 --port 8000 &
 BACKEND_PID=$!
 wait "$BACKEND_PID"
+BACKEND_STATUS=$?
+# A stop signal lands in the trap above and never returns here. Reaching this
+# line means the backend died on its own: export, then let Docker restart us.
+echo "backend exited on its own (status $BACKEND_STATUS); exporting before restart" >&2
+finish 1
