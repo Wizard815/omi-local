@@ -14535,4 +14535,75 @@ class AppLocalizationsZh extends AppLocalizations {
   String moveFolderTo(String name) {
     return '将“$name”移动到…';
   }
+
+  @override
+  String get dayReviewSortHintHold => '尚未处理任何内容。为想保留的对话加星标，勾选片段可将它们合并为一个，丢弃噪音。其余内容将合并为一份可修改的当日摘要。';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已自动丢弃 $count 个没有实际语音的片段。',
+      one: '已自动丢弃 1 个没有实际语音的片段。',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => '过短或不清晰的片段';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return '已丢弃（$count）';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return '已合并为一个（$count）';
+  }
+
+  @override
+  String get dayReviewDropTooltip => '丢弃（噪音）';
+
+  @override
+  String get dayReviewRestoreTooltip => '放回';
+
+  @override
+  String get dayReviewMergeTooltip => '选择以合并';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '将 $count 个片段合并为一个',
+      one: '再选择一个片段以合并',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => '取消合并';
+
+  @override
+  String get dayReviewMergeGroupLabel => '已合并为一个对话';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return '保留 $kept · 合并 $merged · 丢弃 $dropped · 摘要 $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged 个将各自合并为一个对话，$dropped 个将被丢弃。';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '已摘要 $rolled · 已保留 $kept · 已合并 $merged · 已丢弃 $dropped';
+  }
+
+  @override
+  String get heldForDayReview => '等待您的当日回顾';
 }

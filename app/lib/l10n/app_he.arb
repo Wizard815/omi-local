@@ -11907,5 +11907,20 @@
     "newSubfolder": "תת-תיקייה חדשה",
     "folderTreeTitle": "תיקיות",
     "moveFolder": "העבר…",
-    "moveFolderTo": "העבר את \"{name}\" אל…"
+    "moveFolderTo": "העבר את \"{name}\" אל…",
+    "dayReviewSortHintHold": "עדיין לא עובד דבר. סמן בכוכב את מה שברצונך לשמור, סמן קטעים כדי למזג אותם לאחד, והשלך את הרעש. כל השאר יהפוך לסיכום יום אחד שתוכל לתקן.",
+    "dayReviewAutoDropped": "{count, plural, =1{קטע אחד ללא דיבור ממשי הושלך אוטומטית.} other{{count} קטעים ללא דיבור ממשי הושלכו אוטומטית.}}",
+    "dayReviewUnclearTitle": "קטעים קצרים או לא ברורים",
+    "dayReviewDroppedTitle": "הושלכו ({count})",
+    "dayReviewMergedTitle": "מוזגו לאחד ({count})",
+    "dayReviewDropTooltip": "השלך (רעש)",
+    "dayReviewRestoreTooltip": "החזר",
+    "dayReviewMergeTooltip": "בחר למיזוג",
+    "dayReviewMergeSelected": "{count, plural, =1{בחר קטע נוסף למיזוג} other{מזג {count} קטעים לאחד}}",
+    "dayReviewUngroup": "בטל קיבוץ",
+    "dayReviewMergeGroupLabel": "מוזגו לשיחה אחת",
+    "dayReviewFinalizeButtonFull": "שמור {kept} · מזג {merged} · השלך {dropped} · סכם {rolled}",
+    "dayReviewConfirmExtra": "{merged} ימוזגו לשיחה אחת כל אחד, ו-{dropped} יושלכו.",
+    "dayReviewCountsFull": "{rolled} סוכמו · {kept} נשמרו · {merged} מוזגו · {dropped} הושלכו",
+    "heldForDayReview": "ממתין לסיכום היום שלך"
 }

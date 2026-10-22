@@ -14749,4 +14749,76 @@ class AppLocalizationsEn extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'Move \"$name\" into…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'Nothing was processed yet. Star what to keep, tick clips to merge them into one, drop the noise. Everything else becomes one day summary you can correct.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count clips with no real speech were dropped automatically.',
+      one: '1 clip with no real speech was dropped automatically.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'Short or unclear clips';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'Dropped ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'Merged into one ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'Drop (noise)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'Put back';
+
+  @override
+  String get dayReviewMergeTooltip => 'Select to merge';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Merge $count clips into one',
+      one: 'Select another clip to merge',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'Ungroup';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'Merged into one conversation';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'Keep $kept · Merge $merged · Drop $dropped · Summarize $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged will be merged into one conversation each and $dropped dropped.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled summarized · $kept kept · $merged merged · $dropped dropped';
+  }
+
+  @override
+  String get heldForDayReview => 'Waiting for your day review';
 }

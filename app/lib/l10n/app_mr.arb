@@ -11907,5 +11907,20 @@
     "newSubfolder": "नवीन सबफोल्डर",
     "folderTreeTitle": "फोल्डर",
     "moveFolder": "हलवा…",
-    "moveFolderTo": "\"{name}\" येथे हलवा…"
+    "moveFolderTo": "\"{name}\" येथे हलवा…",
+    "dayReviewSortHintHold": "अजून काहीही प्रक्रिया केलेले नाही. जे ठेवायचे आहे ते तारांकित करा, क्लिप एकात विलीन करण्यासाठी त्यांना टिक करा, गोंगाट वगळा. बाकी सर्व एका दिवसाच्या सारांशात बदलेल, जो आपण दुरुस्त करू शकता.",
+    "dayReviewAutoDropped": "{count, plural, =1{प्रत्यक्ष बोलणे नसलेली 1 क्लिप आपोआप वगळली गेली.} other{प्रत्यक्ष बोलणे नसलेल्या {count} क्लिप आपोआप वगळल्या गेल्या.}}",
+    "dayReviewUnclearTitle": "लहान किंवा अस्पष्ट क्लिप",
+    "dayReviewDroppedTitle": "वगळलेल्या ({count})",
+    "dayReviewMergedTitle": "एकात विलीन केलेल्या ({count})",
+    "dayReviewDropTooltip": "वगळा (गोंगाट)",
+    "dayReviewRestoreTooltip": "परत ठेवा",
+    "dayReviewMergeTooltip": "विलीन करण्यासाठी निवडा",
+    "dayReviewMergeSelected": "{count, plural, =1{विलीन करण्यासाठी आणखी एक क्लिप निवडा} other{{count} क्लिप एकात विलीन करा}}",
+    "dayReviewUngroup": "गट रद्द करा",
+    "dayReviewMergeGroupLabel": "एका संभाषणात विलीन केले",
+    "dayReviewFinalizeButtonFull": "{kept} ठेवा · {merged} विलीन करा · {dropped} वगळा · {rolled} सारांशित करा",
+    "dayReviewConfirmExtra": "{merged} प्रत्येकी एका संभाषणात विलीन केले जातील आणि {dropped} वगळले जातील.",
+    "dayReviewCountsFull": "{rolled} सारांशित · {kept} ठेवले · {merged} विलीन केले · {dropped} वगळले",
+    "heldForDayReview": "आपल्या दिवसाच्या आढाव्याची वाट पाहत आहे"
 }

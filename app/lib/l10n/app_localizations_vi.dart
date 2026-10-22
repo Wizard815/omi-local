@@ -14765,4 +14765,76 @@ class AppLocalizationsVi extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'Di chuyển “$name” vào…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'Chưa có gì được xử lý. Gắn sao cho những gì bạn muốn giữ lại, tích chọn các đoạn ghi âm để gộp chúng thành một, và loại bỏ tạp âm. Mọi thứ khác sẽ gộp thành một bản tóm tắt ngày mà bạn có thể đính chính.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count đoạn ghi âm không có giọng nói thực sự đã được tự động loại bỏ.',
+      one: '1 đoạn ghi âm không có giọng nói thực sự đã được tự động loại bỏ.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'Các đoạn ghi âm ngắn hoặc không rõ';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'Đã loại bỏ ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'Đã gộp thành một ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'Loại bỏ (tạp âm)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'Khôi phục';
+
+  @override
+  String get dayReviewMergeTooltip => 'Chọn để gộp';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Gộp $count đoạn ghi âm thành một',
+      one: 'Chọn thêm một đoạn ghi âm để gộp',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'Tách nhóm';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'Đã gộp thành một cuộc trò chuyện';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'Giữ $kept · Gộp $merged · Loại bỏ $dropped · Tóm tắt $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged sẽ được gộp thành một cuộc trò chuyện cho mỗi nhóm và $dropped sẽ bị loại bỏ.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled đã tóm tắt · $kept đã giữ · $merged đã gộp · $dropped đã loại bỏ';
+  }
+
+  @override
+  String get heldForDayReview => 'Đang chờ bạn xem lại ngày';
 }

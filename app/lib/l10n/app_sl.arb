@@ -11907,5 +11907,20 @@
     "newSubfolder": "Nova podmapa",
     "folderTreeTitle": "Mape",
     "moveFolder": "Premakni…",
-    "moveFolderTo": "Premakni „{name}“ v…"
+    "moveFolderTo": "Premakni „{name}“ v…",
+    "dayReviewSortHintHold": "Nič še ni bilo obdelano. Z zvezdico označite, kar želite obdržati, odkljukajte posnetke, da jih združite v enega, in zavrzite šum. Vse drugo postane en povzetek dneva, ki ga lahko popravite.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 posnetek brez pravega govora je bil samodejno zavržen.} two{{count} posnetka brez pravega govora sta bila samodejno zavržena.} few{{count} posnetki brez pravega govora so bili samodejno zavrženi.} other{{count} posnetkov brez pravega govora je bilo samodejno zavrženih.}}",
+    "dayReviewUnclearTitle": "Kratki ali nejasni posnetki",
+    "dayReviewDroppedTitle": "Zavrženo ({count})",
+    "dayReviewMergedTitle": "Združeno v enega ({count})",
+    "dayReviewDropTooltip": "Zavrzi (šum)",
+    "dayReviewRestoreTooltip": "Vrni",
+    "dayReviewMergeTooltip": "Izberi za združitev",
+    "dayReviewMergeSelected": "{count, plural, =1{Izberite še en posnetek za združitev} two{Združi {count} posnetka v enega} few{Združi {count} posnetke v enega} other{Združi {count} posnetkov v enega}}",
+    "dayReviewUngroup": "Razdruži",
+    "dayReviewMergeGroupLabel": "Združeno v en pogovor",
+    "dayReviewFinalizeButtonFull": "Obdrži {kept} · Združi {merged} · Zavrzi {dropped} · Povzemi {rolled}",
+    "dayReviewConfirmExtra": "{merged} bo združenih v po en pogovor, {dropped} pa zavrženih.",
+    "dayReviewCountsFull": "Povzeto: {rolled} · Obdržano: {kept} · Združeno: {merged} · Zavrženo: {dropped}",
+    "heldForDayReview": "Čaka na vaš pregled dneva"
 }

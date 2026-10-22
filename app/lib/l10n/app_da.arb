@@ -4523,5 +4523,20 @@
     "newSubfolder": "Ny undermappe",
     "folderTreeTitle": "Mapper",
     "moveFolder": "Flyt…",
-    "moveFolderTo": "Flyt \"{name}\" til…"
+    "moveFolderTo": "Flyt \"{name}\" til…",
+    "dayReviewSortHintHold": "Intet er behandlet endnu. Stjernemarkér det, du vil beholde, sæt flueben ved klip for at flette dem til ét, og kassér støjen. Alt andet bliver til ét dagsresumé, som du kan rette.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 klip uden egentlig tale blev kasseret automatisk.} other{{count} klip uden egentlig tale blev kasseret automatisk.}}",
+    "dayReviewUnclearTitle": "Korte eller uklare klip",
+    "dayReviewDroppedTitle": "Kasseret ({count})",
+    "dayReviewMergedTitle": "Flettet til ét ({count})",
+    "dayReviewDropTooltip": "Kassér (støj)",
+    "dayReviewRestoreTooltip": "Læg tilbage",
+    "dayReviewMergeTooltip": "Vælg for at flette",
+    "dayReviewMergeSelected": "{count, plural, =1{Vælg endnu et klip for at flette} other{Flet {count} klip til ét}}",
+    "dayReviewUngroup": "Ophæv gruppering",
+    "dayReviewMergeGroupLabel": "Flettet til én samtale",
+    "dayReviewFinalizeButtonFull": "Behold {kept} · Flet {merged} · Kassér {dropped} · Opsummer {rolled}",
+    "dayReviewConfirmExtra": "{merged} flettes til én samtale hver, og {dropped} kasseres.",
+    "dayReviewCountsFull": "{rolled} opsummeret · {kept} beholdt · {merged} flettet · {dropped} kasseret",
+    "heldForDayReview": "Venter på din dagsgennemgang"
 }

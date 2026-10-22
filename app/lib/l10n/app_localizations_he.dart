@@ -14658,4 +14658,76 @@ class AppLocalizationsHe extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'העבר את \"$name\" אל…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'עדיין לא עובד דבר. סמן בכוכב את מה שברצונך לשמור, סמן קטעים כדי למזג אותם לאחד, והשלך את הרעש. כל השאר יהפוך לסיכום יום אחד שתוכל לתקן.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count קטעים ללא דיבור ממשי הושלכו אוטומטית.',
+      one: 'קטע אחד ללא דיבור ממשי הושלך אוטומטית.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'קטעים קצרים או לא ברורים';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'הושלכו ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'מוזגו לאחד ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'השלך (רעש)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'החזר';
+
+  @override
+  String get dayReviewMergeTooltip => 'בחר למיזוג';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'מזג $count קטעים לאחד',
+      one: 'בחר קטע נוסף למיזוג',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'בטל קיבוץ';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'מוזגו לשיחה אחת';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'שמור $kept · מזג $merged · השלך $dropped · סכם $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged ימוזגו לשיחה אחת כל אחד, ו-$dropped יושלכו.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled סוכמו · $kept נשמרו · $merged מוזגו · $dropped הושלכו';
+  }
+
+  @override
+  String get heldForDayReview => 'ממתין לסיכום היום שלך';
 }

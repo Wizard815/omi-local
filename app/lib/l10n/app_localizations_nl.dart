@@ -14805,4 +14805,76 @@ class AppLocalizationsNl extends AppLocalizations {
   String moveFolderTo(String name) {
     return '‘$name’ verplaatsen naar…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'Er is nog niets verwerkt. Geef een ster aan wat je wilt bewaren, vink clips aan om ze samen te voegen tot één gesprek en verwijder de ruis. Al het andere wordt één dagsamenvatting die je kunt corrigeren.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count clips zonder echte spraak zijn automatisch verwijderd.',
+      one: '1 clip zonder echte spraak is automatisch verwijderd.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'Korte of onduidelijke clips';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'Verwijderd ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'Samengevoegd tot één ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'Verwijderen (ruis)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'Terugzetten';
+
+  @override
+  String get dayReviewMergeTooltip => 'Selecteren om samen te voegen';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count clips samenvoegen tot één',
+      one: 'Selecteer nog een clip om samen te voegen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'Groep opheffen';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'Samengevoegd tot één gesprek';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return '$kept bewaren · $merged samenvoegen · $dropped verwijderen · $rolled samenvatten';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged worden elk samengevoegd tot één gesprek en $dropped worden verwijderd.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled samengevat · $kept bewaard · $merged samengevoegd · $dropped verwijderd';
+  }
+
+  @override
+  String get heldForDayReview => 'Wacht op je dagoverzicht';
 }

@@ -11907,5 +11907,20 @@
     "newSubfolder": "Нова потпапка",
     "folderTreeTitle": "Папки",
     "moveFolder": "Премести…",
-    "moveFolderTo": "Премести „{name}“ во…"
+    "moveFolderTo": "Премести „{name}“ во…",
+    "dayReviewSortHintHold": "Сè уште ништо не е обработено. Означете со ѕвезда што сакате да задржите, штиклирајте ги записите што ќе се спојат во еден и отфрлете го шумот. Сè друго станува едно резиме на денот што можете да го поправите.",
+    "dayReviewAutoDropped": "{count, plural, =1{{count} запис без вистински говор беше автоматски отфрлен.} other{{count} записи без вистински говор беа автоматски отфрлени.}}",
+    "dayReviewUnclearTitle": "Кратки или нејасни записи",
+    "dayReviewDroppedTitle": "Отфрлени ({count})",
+    "dayReviewMergedTitle": "Споени во еден ({count})",
+    "dayReviewDropTooltip": "Отфрли (шум)",
+    "dayReviewRestoreTooltip": "Врати назад",
+    "dayReviewMergeTooltip": "Избери за спојување",
+    "dayReviewMergeSelected": "{count, plural, =1{Изберете уште еден запис за спојување} other{Спои {count} записи во еден}}",
+    "dayReviewUngroup": "Разгрупирај",
+    "dayReviewMergeGroupLabel": "Споени во еден разговор",
+    "dayReviewFinalizeButtonFull": "Задржи {kept} · Спои {merged} · Отфрли {dropped} · Сумирај {rolled}",
+    "dayReviewConfirmExtra": "{merged} ќе бидат споени во по еден разговор, а {dropped} ќе бидат отфрлени.",
+    "dayReviewCountsFull": "{rolled} сумирани · {kept} задржани · {merged} споени · {dropped} отфрлени",
+    "heldForDayReview": "Чека на вашиот преглед на денот"
 }

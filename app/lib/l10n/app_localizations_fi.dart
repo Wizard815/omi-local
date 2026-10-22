@@ -14770,4 +14770,76 @@ class AppLocalizationsFi extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'Siirrä ”$name” kansioon…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'Mitään ei ole vielä käsitelty. Merkitse tähdellä se, minkä haluat säilyttää, rastita pätkät yhdistääksesi ne yhdeksi ja hylkää häly. Kaikesta muusta tulee yksi päivän yhteenveto, jota voit korjata.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count pätkää ilman varsinaista puhetta hylättiin automaattisesti.',
+      one: '1 pätkä ilman varsinaista puhetta hylättiin automaattisesti.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'Lyhyet tai epäselvät pätkät';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'Hylätyt ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'Yhdistetty yhdeksi ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'Hylkää (häly)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'Palauta';
+
+  @override
+  String get dayReviewMergeTooltip => 'Valitse yhdistettäväksi';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Yhdistä $count pätkää yhdeksi',
+      one: 'Valitse toinen pätkä yhdistettäväksi',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'Pura ryhmä';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'Yhdistetty yhdeksi keskusteluksi';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'Säilytä $kept · Yhdistä $merged · Hylkää $dropped · Tiivistä $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged yhdistetään kukin yhdeksi keskusteluksi ja $dropped hylätään.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled tiivistetty · $kept säilytetty · $merged yhdistetty · $dropped hylätty';
+  }
+
+  @override
+  String get heldForDayReview => 'Odottaa päiväkatsaustasi';
 }

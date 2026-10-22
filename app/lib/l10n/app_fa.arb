@@ -11907,5 +11907,20 @@
     "newSubfolder": "زیرپوشه جدید",
     "folderTreeTitle": "پوشه‌ها",
     "moveFolder": "انتقال…",
-    "moveFolderTo": "انتقال «{name}» به…"
+    "moveFolderTo": "انتقال «{name}» به…",
+    "dayReviewSortHintHold": "هنوز چیزی پردازش نشده است. آنچه را می‌خواهید نگه دارید ستاره‌دار کنید، کلیپ‌ها را تیک بزنید تا در یک گفتگو ادغام شوند و نویز را حذف کنید. بقیه به یک خلاصه روز تبدیل می‌شوند که می‌توانید اصلاحش کنید.",
+    "dayReviewAutoDropped": "{count, plural, =1{یک کلیپ بدون گفتار واقعی به‌طور خودکار حذف شد.} other{{count} کلیپ بدون گفتار واقعی به‌طور خودکار حذف شدند.}}",
+    "dayReviewUnclearTitle": "کلیپ‌های کوتاه یا نامشخص",
+    "dayReviewDroppedTitle": "حذف‌شده ({count})",
+    "dayReviewMergedTitle": "ادغام‌شده در یکی ({count})",
+    "dayReviewDropTooltip": "حذف (نویز)",
+    "dayReviewRestoreTooltip": "بازگرداندن",
+    "dayReviewMergeTooltip": "انتخاب برای ادغام",
+    "dayReviewMergeSelected": "{count, plural, =1{کلیپ دیگری را برای ادغام انتخاب کنید} other{ادغام {count} کلیپ در یک گفتگو}}",
+    "dayReviewUngroup": "لغو ادغام",
+    "dayReviewMergeGroupLabel": "ادغام‌شده در یک گفتگو",
+    "dayReviewFinalizeButtonFull": "نگه‌داشتن {kept} · ادغام {merged} · حذف {dropped} · خلاصه کردن {rolled}",
+    "dayReviewConfirmExtra": "{merged} هرکدام در یک گفتگو ادغام می‌شوند و {dropped} حذف می‌شوند.",
+    "dayReviewCountsFull": "{rolled} خلاصه‌شده · {kept} نگه‌داشته‌شده · {merged} ادغام‌شده · {dropped} حذف‌شده",
+    "heldForDayReview": "در انتظار مرور روز شما"
 }

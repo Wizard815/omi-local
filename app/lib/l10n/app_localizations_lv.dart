@@ -14798,4 +14798,77 @@ class AppLocalizationsLv extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'Pārvietot „$name” uz…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'Vēl nekas nav apstrādāts. Atzīmējiet ar zvaigznīti to, ko paturēt, atķeksējiet fragmentus, lai tos apvienotu vienā, un atmetiet troksni. Viss pārējais kļūs par vienu dienas kopsavilkumu, ko varat labot.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count fragmenti bez īstas runas tika atmesti automātiski.',
+      one: '$count fragments bez īstas runas tika atmests automātiski.',
+      zero: '$count fragmentu bez īstas runas tika atmesti automātiski.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'Īsi vai neskaidri fragmenti';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'Atmesti ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'Apvienoti vienā ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'Atmest (troksnis)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'Atlikt atpakaļ';
+
+  @override
+  String get dayReviewMergeTooltip => 'Atlasīt apvienošanai';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Apvienot $count fragmentus vienā',
+      one: 'Atlasiet vēl vienu fragmentu, ko apvienot',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'Atdalīt grupu';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'Apvienoti vienā sarunā';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'Paturēt: $kept · Apvienot: $merged · Atmest: $dropped · Apkopot: $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged tiks apvienotas katra vienā sarunā, un $dropped tiks atmestas.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return 'Apkopotas: $rolled · Paturētas: $kept · Apvienotas: $merged · Atmestas: $dropped';
+  }
+
+  @override
+  String get heldForDayReview => 'Gaida jūsu dienas pārskatu';
 }

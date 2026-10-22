@@ -11907,5 +11907,20 @@
     "newSubfolder": "Новая падпапка",
     "folderTreeTitle": "Папкі",
     "moveFolder": "Перамясціць…",
-    "moveFolderTo": "Перамясціць «{name}» у…"
+    "moveFolderTo": "Перамясціць «{name}» у…",
+    "dayReviewSortHintHold": "Нічога яшчэ не апрацавана. Адзначце зоркай тое, што хочаце захаваць, пастаўце галачкі на запісах, каб аб'яднаць іх у адну размову, выдаліце шум. Усё астатняе стане адной зводкай дня, якую можна выправіць.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 запіс без сапраўднай гаворкі выдалены аўтаматычна.} few{{count} запісы без сапраўднай гаворкі выдалены аўтаматычна.} many{{count} запісаў без сапраўднай гаворкі выдалены аўтаматычна.} other{{count} запісу без сапраўднай гаворкі выдалены аўтаматычна.}}",
+    "dayReviewUnclearTitle": "Кароткія або незразумелыя запісы",
+    "dayReviewDroppedTitle": "Выдалена ({count})",
+    "dayReviewMergedTitle": "Аб'яднана ў адну ({count})",
+    "dayReviewDropTooltip": "Выдаліць (шум)",
+    "dayReviewRestoreTooltip": "Вярнуць",
+    "dayReviewMergeTooltip": "Вылучыць для аб'яднання",
+    "dayReviewMergeSelected": "{count, plural, =1{Вылучыце яшчэ адзін запіс для аб'яднання} few{Аб'яднаць {count} запісы ў адзін} many{Аб'яднаць {count} запісаў у адзін} other{Аб'яднаць {count} запісу ў адзін}}",
+    "dayReviewUngroup": "Разгрупаваць",
+    "dayReviewMergeGroupLabel": "Аб'яднана ў адну размову",
+    "dayReviewFinalizeButtonFull": "Захаваць: {kept} · Аб'яднаць: {merged} · Выдаліць: {dropped} · Рэзюмаваць: {rolled}",
+    "dayReviewConfirmExtra": "{merged} будуць аб'яднаны ў адну размову кожная, а {dropped} — выдалены.",
+    "dayReviewCountsFull": "У зводцы: {rolled} · Захавана: {kept} · Аб'яднана: {merged} · Выдалена: {dropped}",
+    "heldForDayReview": "Чакае вашага агляду дня"
 }

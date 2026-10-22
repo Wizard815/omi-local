@@ -14800,4 +14800,78 @@ class AppLocalizationsHr extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'Premjesti „$name” u…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'Ništa još nije obrađeno. Označite zvjezdicom ono što želite zadržati, kvačicom isječke koje želite spojiti u jedan, a šum odbacite. Sve ostalo postaje jedan sažetak dana koji možete ispraviti.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count isječaka bez stvarnog govora automatski je odbačeno.',
+      few: '$count isječka bez stvarnog govora automatski su odbačena.',
+      one: '1 isječak bez stvarnog govora automatski je odbačen.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'Kratki ili nejasni isječci';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'Odbačeno ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'Spojeno u jedan ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'Odbaci (šum)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'Vrati natrag';
+
+  @override
+  String get dayReviewMergeTooltip => 'Odaberi za spajanje';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Spoji $count isječaka u jedan',
+      few: 'Spoji $count isječka u jedan',
+      one: 'Odaberite još jedan isječak za spajanje',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'Razgrupiraj';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'Spojeno u jedan razgovor';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'Zadrži: $kept · Spoji: $merged · Odbaci: $dropped · Sažmi: $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged bit će spojeno u po jedan razgovor, a $dropped odbačeno.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return 'Sažeto: $rolled · Zadržano: $kept · Spojeno: $merged · Odbačeno: $dropped';
+  }
+
+  @override
+  String get heldForDayReview => 'Čeka vaš pregled dana';
 }

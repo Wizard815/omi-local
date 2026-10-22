@@ -18077,5 +18077,121 @@
                 "type": "String"
             }
         }
+    },
+    "dayReviewSortHintHold": "Nothing was processed yet. Star what to keep, tick clips to merge them into one, drop the noise. Everything else becomes one day summary you can correct.",
+    "@dayReviewSortHintHold": {
+        "description": "Day review hint when clips were held unprocessed"
+    },
+    "dayReviewAutoDropped": "{count, plural, =1{1 clip with no real speech was dropped automatically.} other{{count} clips with no real speech were dropped automatically.}}",
+    "@dayReviewAutoDropped": {
+        "description": "Day review note about rule-dropped noise",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewUnclearTitle": "Short or unclear clips",
+    "@dayReviewUnclearTitle": {
+        "description": "Day review section for short clips the noise rules could not settle"
+    },
+    "dayReviewDroppedTitle": "Dropped ({count})",
+    "@dayReviewDroppedTitle": {
+        "description": "Day review dropped clips section",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewMergedTitle": "Merged into one ({count})",
+    "@dayReviewMergedTitle": {
+        "description": "Day review merged groups section",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewDropTooltip": "Drop (noise)",
+    "@dayReviewDropTooltip": {
+        "description": "Day review drop button tooltip"
+    },
+    "dayReviewRestoreTooltip": "Put back",
+    "@dayReviewRestoreTooltip": {
+        "description": "Day review undo-drop button tooltip"
+    },
+    "dayReviewMergeTooltip": "Select to merge",
+    "@dayReviewMergeTooltip": {
+        "description": "Day review merge checkbox tooltip"
+    },
+    "dayReviewMergeSelected": "{count, plural, =1{Select another clip to merge} other{Merge {count} clips into one}}",
+    "@dayReviewMergeSelected": {
+        "description": "Day review merge action for the selected clips",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewUngroup": "Ungroup",
+    "@dayReviewUngroup": {
+        "description": "Day review undo a merge group"
+    },
+    "dayReviewMergeGroupLabel": "Merged into one conversation",
+    "@dayReviewMergeGroupLabel": {
+        "description": "Day review merge group header"
+    },
+    "dayReviewFinalizeButtonFull": "Keep {kept} · Merge {merged} · Drop {dropped} · Summarize {rolled}",
+    "@dayReviewFinalizeButtonFull": {
+        "description": "Day review finalize button with every disposition",
+        "placeholders": {
+            "kept": {
+                "type": "int"
+            },
+            "merged": {
+                "type": "int"
+            },
+            "dropped": {
+                "type": "int"
+            },
+            "rolled": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewConfirmExtra": "{merged} will be merged into one conversation each and {dropped} dropped.",
+    "@dayReviewConfirmExtra": {
+        "description": "Day review confirm dialog, merges and drops line",
+        "placeholders": {
+            "merged": {
+                "type": "int"
+            },
+            "dropped": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewCountsFull": "{rolled} summarized · {kept} kept · {merged} merged · {dropped} dropped",
+    "@dayReviewCountsFull": {
+        "description": "Day review header counts with merges and drops",
+        "placeholders": {
+            "rolled": {
+                "type": "int"
+            },
+            "kept": {
+                "type": "int"
+            },
+            "merged": {
+                "type": "int"
+            },
+            "dropped": {
+                "type": "int"
+            }
+        }
+    },
+    "heldForDayReview": "Waiting for your day review",
+    "@heldForDayReview": {
+        "description": "Conversation list marker for a clip held until the day review"
     }
 }

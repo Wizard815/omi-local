@@ -14682,4 +14682,76 @@ class AppLocalizationsAr extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'نقل «$name» إلى…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'لم تتم معالجة أي شيء بعد. ميّز بنجمة ما تريد الاحتفاظ به، وحدّد المقاطع لدمجها في محادثة واحدة، وأسقط الضوضاء. كل ما عداها يصبح ملخصًا واحدًا لليوم يمكنك تصحيحه.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تم تلقائيًا إسقاط $count من المقاطع التي لا تحتوي على كلام حقيقي.',
+      one: 'تم تلقائيًا إسقاط مقطع واحد لا يحتوي على كلام حقيقي.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'مقاطع قصيرة أو غير واضحة';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'المُسقطة ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'المدمجة في واحدة ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'إسقاط (ضوضاء)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'إعادة';
+
+  @override
+  String get dayReviewMergeTooltip => 'تحديد للدمج';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'دمج $count من المقاطع في محادثة واحدة',
+      one: 'حدّد مقطعًا آخر لدمجه',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'فك الدمج';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'مدمجة في محادثة واحدة';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'الاحتفاظ بـ $kept · دمج $merged · إسقاط $dropped · تلخيص $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return 'سيتم دمج $merged في محادثة واحدة لكل مجموعة وإسقاط $dropped.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled ملخَّصة · $kept محتفَظ بها · $merged مدمجة · $dropped مُسقطة';
+  }
+
+  @override
+  String get heldForDayReview => 'بانتظار مراجعة اليوم';
 }

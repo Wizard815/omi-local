@@ -4516,5 +4516,20 @@
     "newSubfolder": "Новая подпапка",
     "folderTreeTitle": "Папки",
     "moveFolder": "Переместить…",
-    "moveFolderTo": "Переместить «{name}» в…"
+    "moveFolderTo": "Переместить «{name}» в…",
+    "dayReviewSortHintHold": "Пока ничего не обработано. Отметьте звёздочкой то, что хотите сохранить, отметьте галочкой записи, которые нужно объединить в одну, и отбросьте шум. Всё остальное станет одной сводкой дня, которую можно исправить.",
+    "dayReviewAutoDropped": "{count, plural, =1{{count} запись без реальной речи была отброшена автоматически.} few{{count} записи без реальной речи были отброшены автоматически.} many{{count} записей без реальной речи были отброшены автоматически.} other{{count} записи без реальной речи были отброшены автоматически.}}",
+    "dayReviewUnclearTitle": "Короткие или неясные записи",
+    "dayReviewDroppedTitle": "Отброшено ({count})",
+    "dayReviewMergedTitle": "Объединено в одну ({count})",
+    "dayReviewDropTooltip": "Отбросить (шум)",
+    "dayReviewRestoreTooltip": "Вернуть",
+    "dayReviewMergeTooltip": "Выбрать для объединения",
+    "dayReviewMergeSelected": "{count, plural, =1{Выберите ещё одну запись для объединения} few{Объединить {count} записи в одну} many{Объединить {count} записей в одну} other{Объединить {count} записи в одну}}",
+    "dayReviewUngroup": "Разгруппировать",
+    "dayReviewMergeGroupLabel": "Объединено в один разговор",
+    "dayReviewFinalizeButtonFull": "Оставить {kept} · Объединить {merged} · Отбросить {dropped} · Обобщить {rolled}",
+    "dayReviewConfirmExtra": "{merged} будут объединены каждая в один разговор, а {dropped} — отброшены.",
+    "dayReviewCountsFull": "Обобщено: {rolled} · Оставлено: {kept} · Объединено: {merged} · Отброшено: {dropped}",
+    "heldForDayReview": "Ожидает вашего обзора дня"
 }

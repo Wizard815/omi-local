@@ -11907,5 +11907,20 @@
     "newSubfolder": "নতুন সাবফোল্ডার",
     "folderTreeTitle": "ফোল্ডার",
     "moveFolder": "সরান…",
-    "moveFolderTo": "\"{name}\" কোথায় সরাবেন…"
+    "moveFolderTo": "\"{name}\" কোথায় সরাবেন…",
+    "dayReviewSortHintHold": "এখনও কিছুই প্রক্রিয়া করা হয়নি। যা রাখতে চান তা তারকা চিহ্নিত করুন, ক্লিপগুলো একটিতে মার্জ করতে টিক দিন, নয়েজ বাদ দিন। বাকি সবকিছু একটি দিনের সারসংক্ষেপে পরিণত হবে, যা আপনি সংশোধন করতে পারবেন।",
+    "dayReviewAutoDropped": "{count, plural, =1{প্রকৃত কথা না থাকায় ১টি ক্লিপ স্বয়ংক্রিয়ভাবে বাদ দেওয়া হয়েছে।} other{প্রকৃত কথা না থাকায় {count}টি ক্লিপ স্বয়ংক্রিয়ভাবে বাদ দেওয়া হয়েছে।}}",
+    "dayReviewUnclearTitle": "ছোট বা অস্পষ্ট ক্লিপ",
+    "dayReviewDroppedTitle": "বাদ দেওয়া ({count})",
+    "dayReviewMergedTitle": "একটিতে মার্জ করা ({count})",
+    "dayReviewDropTooltip": "বাদ দিন (নয়েজ)",
+    "dayReviewRestoreTooltip": "ফিরিয়ে আনুন",
+    "dayReviewMergeTooltip": "মার্জ করতে নির্বাচন করুন",
+    "dayReviewMergeSelected": "{count, plural, =1{মার্জ করতে আরেকটি ক্লিপ নির্বাচন করুন} other{{count}টি ক্লিপ একটিতে মার্জ করুন}}",
+    "dayReviewUngroup": "গ্রুপ ভাঙুন",
+    "dayReviewMergeGroupLabel": "একটি কথোপকথনে মার্জ করা হয়েছে",
+    "dayReviewFinalizeButtonFull": "{kept}টি রাখুন · {merged}টি মার্জ করুন · {dropped}টি বাদ দিন · {rolled}টি সংক্ষিপ্ত করুন",
+    "dayReviewConfirmExtra": "{merged}টি প্রতিটি একটি করে কথোপকথনে মার্জ হবে এবং {dropped}টি বাদ যাবে।",
+    "dayReviewCountsFull": "{rolled}টি সংক্ষিপ্ত · {kept}টি রাখা হয়েছে · {merged}টি মার্জ করা · {dropped}টি বাদ দেওয়া",
+    "heldForDayReview": "আপনার দিনের পর্যালোচনার অপেক্ষায়"
 }

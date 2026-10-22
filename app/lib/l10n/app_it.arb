@@ -4481,5 +4481,20 @@
     "newSubfolder": "Nuova sottocartella",
     "folderTreeTitle": "Cartelle",
     "moveFolder": "Sposta…",
-    "moveFolderTo": "Sposta «{name}» in…"
+    "moveFolderTo": "Sposta «{name}» in…",
+    "dayReviewSortHintHold": "Non è stato ancora elaborato nulla. Metti una stella a ciò che vuoi tenere, spunta le clip per unirle in una sola, scarta il rumore. Tutto il resto diventa un unico riepilogo del giorno che puoi correggere.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 clip senza parlato reale è stata scartata automaticamente.} other{{count} clip senza parlato reale sono state scartate automaticamente.}}",
+    "dayReviewUnclearTitle": "Clip brevi o poco chiare",
+    "dayReviewDroppedTitle": "Scartate ({count})",
+    "dayReviewMergedTitle": "Unite in una sola ({count})",
+    "dayReviewDropTooltip": "Scarta (rumore)",
+    "dayReviewRestoreTooltip": "Ripristina",
+    "dayReviewMergeTooltip": "Seleziona per unire",
+    "dayReviewMergeSelected": "{count, plural, =1{Seleziona un'altra clip da unire} other{Unisci {count} clip in una sola}}",
+    "dayReviewUngroup": "Separa",
+    "dayReviewMergeGroupLabel": "Unite in una sola conversazione",
+    "dayReviewFinalizeButtonFull": "Tieni {kept} · Unisci {merged} · Scarta {dropped} · Riassumi {rolled}",
+    "dayReviewConfirmExtra": "{merged} verranno unite in una conversazione ciascuna e {dropped} scartate.",
+    "dayReviewCountsFull": "{rolled} riassunte · {kept} tenute · {merged} unite · {dropped} scartate",
+    "heldForDayReview": "In attesa della tua revisione del giorno"
 }

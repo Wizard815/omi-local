@@ -11907,5 +11907,20 @@
     "newSubfolder": "புதிய துணைக் கோப்புறை",
     "folderTreeTitle": "கோப்புறைகள்",
     "moveFolder": "நகர்த்து…",
-    "moveFolderTo": "\"{name}\" ஐ இங்கு நகர்த்து…"
+    "moveFolderTo": "\"{name}\" ஐ இங்கு நகர்த்து…",
+    "dayReviewSortHintHold": "இன்னும் எதுவும் செயலாக்கப்படவில்லை. வைத்திருக்க வேண்டியவற்றுக்கு நட்சத்திரமிடுங்கள், ஒன்றாக இணைக்க வேண்டிய கிளிப்புகளைத் தேர்வு செய்யுங்கள், இரைச்சலை நீக்குங்கள். மற்ற அனைத்தும் நீங்கள் திருத்தக்கூடிய ஒரே நாள் சுருக்கமாக மாறும்.",
+    "dayReviewAutoDropped": "{count, plural, =1{உண்மையான பேச்சு இல்லாத 1 கிளிப் தானாக நீக்கப்பட்டது.} other{உண்மையான பேச்சு இல்லாத {count} கிளிப்புகள் தானாக நீக்கப்பட்டன.}}",
+    "dayReviewUnclearTitle": "குறுகிய அல்லது தெளிவற்ற கிளிப்புகள்",
+    "dayReviewDroppedTitle": "நீக்கப்பட்டவை ({count})",
+    "dayReviewMergedTitle": "ஒன்றாக இணைக்கப்பட்டவை ({count})",
+    "dayReviewDropTooltip": "நீக்கு (இரைச்சல்)",
+    "dayReviewRestoreTooltip": "மீட்டெடு",
+    "dayReviewMergeTooltip": "இணைக்கத் தேர்வு செய்யவும்",
+    "dayReviewMergeSelected": "{count, plural, =1{இணைக்க மற்றொரு கிளிப்பைத் தேர்வு செய்யவும்} other{{count} கிளிப்புகளை ஒன்றாக இணைக்கவும்}}",
+    "dayReviewUngroup": "குழுவை நீக்கு",
+    "dayReviewMergeGroupLabel": "ஒரே உரையாடலாக இணைக்கப்பட்டது",
+    "dayReviewFinalizeButtonFull": "{kept} வைத்திருக்கவும் · {merged} இணைக்கவும் · {dropped} நீக்கவும் · {rolled} சுருக்கவும்",
+    "dayReviewConfirmExtra": "{merged} ஒவ்வொன்றும் ஒரே உரையாடலாக இணைக்கப்படும், {dropped} நீக்கப்படும்.",
+    "dayReviewCountsFull": "{rolled} சுருக்கப்பட்டது · {kept} வைக்கப்பட்டது · {merged} இணைக்கப்பட்டது · {dropped} நீக்கப்பட்டது",
+    "heldForDayReview": "உங்கள் நாள் மதிப்பாய்வுக்காகக் காத்திருக்கிறது"
 }

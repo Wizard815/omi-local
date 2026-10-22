@@ -14817,4 +14817,76 @@ class AppLocalizationsBg extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'Премести „$name“ в…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'Нищо още не е обработено. Отбележете със звезда това, което искате да запазите, отметнете записите, които да се обединят в един, и изхвърлете шума. Всичко останало става едно резюме на деня, което можете да коригирате.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count записа без реална реч бяха изхвърлени автоматично.',
+      one: '1 запис без реална реч беше изхвърлен автоматично.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'Кратки или неясни записи';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'Изхвърлени ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'Обединени в един ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'Изхвърли (шум)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'Върни обратно';
+
+  @override
+  String get dayReviewMergeTooltip => 'Избери за обединяване';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Обедини $count записа в един',
+      one: 'Изберете още един запис за обединяване',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'Разгрупирай';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'Обединени в един разговор';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'Запази $kept · Обедини $merged · Изхвърли $dropped · Обобщи $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged ще бъдат обединени в по един разговор, а $dropped ще бъдат изхвърлени.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled обобщени · $kept запазени · $merged обединени · $dropped изхвърлени';
+  }
+
+  @override
+  String get heldForDayReview => 'Чака вашия преглед на деня';
 }

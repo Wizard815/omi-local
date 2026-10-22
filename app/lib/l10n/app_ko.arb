@@ -4481,5 +4481,20 @@
     "newSubfolder": "새 하위 폴더",
     "folderTreeTitle": "폴더",
     "moveFolder": "이동…",
-    "moveFolderTo": "\"{name}\" 이동할 위치…"
+    "moveFolderTo": "\"{name}\" 이동할 위치…",
+    "dayReviewSortHintHold": "아직 아무것도 처리되지 않았습니다. 보관할 항목에 별표를 표시하고, 하나로 합칠 클립에 체크하고, 잡음은 버리세요. 나머지는 모두 직접 수정할 수 있는 하루 요약 하나로 합쳐집니다.",
+    "dayReviewAutoDropped": "{count, plural, =1{실제 대화가 없는 클립 1개가 자동으로 버려졌습니다.} other{실제 대화가 없는 클립 {count}개가 자동으로 버려졌습니다.}}",
+    "dayReviewUnclearTitle": "짧거나 불분명한 클립",
+    "dayReviewDroppedTitle": "버림 ({count})",
+    "dayReviewMergedTitle": "하나로 합침 ({count})",
+    "dayReviewDropTooltip": "버리기 (잡음)",
+    "dayReviewRestoreTooltip": "되돌리기",
+    "dayReviewMergeTooltip": "합칠 항목으로 선택",
+    "dayReviewMergeSelected": "{count, plural, =1{합칠 클립을 하나 더 선택하세요} other{클립 {count}개를 하나로 합치기}}",
+    "dayReviewUngroup": "그룹 해제",
+    "dayReviewMergeGroupLabel": "하나의 대화로 합쳐짐",
+    "dayReviewFinalizeButtonFull": "{kept}개 보관 · {merged}개 합치기 · {dropped}개 버리기 · {rolled}개 요약",
+    "dayReviewConfirmExtra": "{merged}개는 각각 하나의 대화로 합쳐지고 {dropped}개는 버려집니다.",
+    "dayReviewCountsFull": "{rolled}개 요약됨 · {kept}개 보관됨 · {merged}개 합쳐짐 · {dropped}개 버려짐",
+    "heldForDayReview": "하루 검토를 기다리는 중"
 }

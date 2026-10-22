@@ -4481,5 +4481,20 @@
     "newSubfolder": "Нова подпапка",
     "folderTreeTitle": "Папки",
     "moveFolder": "Премести…",
-    "moveFolderTo": "Премести „{name}“ в…"
+    "moveFolderTo": "Премести „{name}“ в…",
+    "dayReviewSortHintHold": "Нищо още не е обработено. Отбележете със звезда това, което искате да запазите, отметнете записите, които да се обединят в един, и изхвърлете шума. Всичко останало става едно резюме на деня, което можете да коригирате.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 запис без реална реч беше изхвърлен автоматично.} other{{count} записа без реална реч бяха изхвърлени автоматично.}}",
+    "dayReviewUnclearTitle": "Кратки или неясни записи",
+    "dayReviewDroppedTitle": "Изхвърлени ({count})",
+    "dayReviewMergedTitle": "Обединени в един ({count})",
+    "dayReviewDropTooltip": "Изхвърли (шум)",
+    "dayReviewRestoreTooltip": "Върни обратно",
+    "dayReviewMergeTooltip": "Избери за обединяване",
+    "dayReviewMergeSelected": "{count, plural, =1{Изберете още един запис за обединяване} other{Обедини {count} записа в един}}",
+    "dayReviewUngroup": "Разгрупирай",
+    "dayReviewMergeGroupLabel": "Обединени в един разговор",
+    "dayReviewFinalizeButtonFull": "Запази {kept} · Обедини {merged} · Изхвърли {dropped} · Обобщи {rolled}",
+    "dayReviewConfirmExtra": "{merged} ще бъдат обединени в по един разговор, а {dropped} ще бъдат изхвърлени.",
+    "dayReviewCountsFull": "{rolled} обобщени · {kept} запазени · {merged} обединени · {dropped} изхвърлени",
+    "heldForDayReview": "Чака вашия преглед на деня"
 }

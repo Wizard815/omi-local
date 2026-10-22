@@ -4481,5 +4481,20 @@
     "newSubfolder": "Uusi alikansio",
     "folderTreeTitle": "Kansiot",
     "moveFolder": "Siirrä…",
-    "moveFolderTo": "Siirrä ”{name}” kansioon…"
+    "moveFolderTo": "Siirrä ”{name}” kansioon…",
+    "dayReviewSortHintHold": "Mitään ei ole vielä käsitelty. Merkitse tähdellä se, minkä haluat säilyttää, rastita pätkät yhdistääksesi ne yhdeksi ja hylkää häly. Kaikesta muusta tulee yksi päivän yhteenveto, jota voit korjata.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 pätkä ilman varsinaista puhetta hylättiin automaattisesti.} other{{count} pätkää ilman varsinaista puhetta hylättiin automaattisesti.}}",
+    "dayReviewUnclearTitle": "Lyhyet tai epäselvät pätkät",
+    "dayReviewDroppedTitle": "Hylätyt ({count})",
+    "dayReviewMergedTitle": "Yhdistetty yhdeksi ({count})",
+    "dayReviewDropTooltip": "Hylkää (häly)",
+    "dayReviewRestoreTooltip": "Palauta",
+    "dayReviewMergeTooltip": "Valitse yhdistettäväksi",
+    "dayReviewMergeSelected": "{count, plural, =1{Valitse toinen pätkä yhdistettäväksi} other{Yhdistä {count} pätkää yhdeksi}}",
+    "dayReviewUngroup": "Pura ryhmä",
+    "dayReviewMergeGroupLabel": "Yhdistetty yhdeksi keskusteluksi",
+    "dayReviewFinalizeButtonFull": "Säilytä {kept} · Yhdistä {merged} · Hylkää {dropped} · Tiivistä {rolled}",
+    "dayReviewConfirmExtra": "{merged} yhdistetään kukin yhdeksi keskusteluksi ja {dropped} hylätään.",
+    "dayReviewCountsFull": "{rolled} tiivistetty · {kept} säilytetty · {merged} yhdistetty · {dropped} hylätty",
+    "heldForDayReview": "Odottaa päiväkatsaustasi"
 }

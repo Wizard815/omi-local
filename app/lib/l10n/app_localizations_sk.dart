@@ -14764,4 +14764,78 @@ class AppLocalizationsSk extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'Presunúť „$name“ do…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'Zatiaľ sa nič nespracovalo. Označte hviezdičkou, čo si chcete ponechať, zaškrtnite klipy, ktoré chcete zlúčiť do jedného, a zahoďte šum. Všetko ostatné sa zmení na jedno zhrnutie dňa, ktoré môžete opraviť.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count klipov bez skutočnej reči bolo automaticky zahodených.',
+      few: '$count klipy bez skutočnej reči boli automaticky zahodené.',
+      one: '1 klip bez skutočnej reči bol automaticky zahodený.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'Krátke alebo nejasné klipy';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'Zahodené ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'Zlúčené do jedného ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'Zahodiť (šum)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'Vrátiť späť';
+
+  @override
+  String get dayReviewMergeTooltip => 'Vybrať na zlúčenie';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Zlúčiť $count klipov do jedného',
+      few: 'Zlúčiť $count klipy do jedného',
+      one: 'Vyberte ďalší klip na zlúčenie',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'Zrušiť zoskupenie';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'Zlúčené do jednej konverzácie';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'Ponechať $kept · Zlúčiť $merged · Zahodiť $dropped · Zhrnúť $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged sa zlúči každá do jednej konverzácie a $dropped sa zahodí.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return 'Zhrnuté: $rolled · Ponechané: $kept · Zlúčené: $merged · Zahodené: $dropped';
+  }
+
+  @override
+  String get heldForDayReview => 'Čaká na vaše zhodnotenie dňa';
 }

@@ -14812,4 +14812,76 @@ class AppLocalizationsKn extends AppLocalizations {
   String moveFolderTo(String name) {
     return '“$name” ಅನ್ನು ಇದರೊಳಗೆ ಸರಿಸಿ…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'ಇನ್ನೂ ಏನನ್ನೂ ಪ್ರಕ್ರಿಯೆಗೊಳಿಸಿಲ್ಲ. ಇರಿಸಿಕೊಳ್ಳಬೇಕಾದವುಗಳಿಗೆ ನಕ್ಷತ್ರ ಹಾಕಿ, ಒಂದಾಗಿ ಮರ್ಜ್ ಮಾಡಬೇಕಾದ ಕ್ಲಿಪ್‌ಗಳನ್ನು ಗುರುತಿಸಿ, ಗದ್ದಲವನ್ನು ತೆಗೆದುಹಾಕಿ. ಉಳಿದೆಲ್ಲವೂ ನೀವು ತಿದ್ದಬಹುದಾದ ಒಂದೇ ದಿನದ ಸಾರಾಂಶವಾಗುತ್ತದೆ.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'ನಿಜವಾದ ಮಾತಿಲ್ಲದ $count ಕ್ಲಿಪ್‌ಗಳನ್ನು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ತೆಗೆದುಹಾಕಲಾಗಿದೆ.',
+      one: 'ನಿಜವಾದ ಮಾತಿಲ್ಲದ $count ಕ್ಲಿಪ್ ಅನ್ನು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ತೆಗೆದುಹಾಕಲಾಗಿದೆ.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'ಚಿಕ್ಕ ಅಥವಾ ಅಸ್ಪಷ್ಟ ಕ್ಲಿಪ್‌ಗಳು';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'ತೆಗೆದುಹಾಕಲಾಗಿದೆ ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'ಒಂದಾಗಿ ಮರ್ಜ್ ಮಾಡಲಾಗಿದೆ ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'ತೆಗೆದುಹಾಕಿ (ಗದ್ದಲ)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'ಮರಳಿ ಇರಿಸಿ';
+
+  @override
+  String get dayReviewMergeTooltip => 'ಮರ್ಜ್ ಮಾಡಲು ಆಯ್ಕೆಮಾಡಿ';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ಕ್ಲಿಪ್‌ಗಳನ್ನು ಒಂದಾಗಿ ಮರ್ಜ್ ಮಾಡಿ',
+      one: 'ಮರ್ಜ್ ಮಾಡಲು ಇನ್ನೊಂದು ಕ್ಲಿಪ್ ಆಯ್ಕೆಮಾಡಿ',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'ಗುಂಪು ರದ್ದುಮಾಡಿ';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'ಒಂದೇ ಸಂವಾದವಾಗಿ ಮರ್ಜ್ ಮಾಡಲಾಗಿದೆ';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return '$kept ಇರಿಸಿ · $merged ಮರ್ಜ್ ಮಾಡಿ · $dropped ತೆಗೆದುಹಾಕಿ · $rolled ಸಾರಾಂಶಗೊಳಿಸಿ';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged ಅನ್ನು ತಲಾ ಒಂದೇ ಸಂವಾದವಾಗಿ ಮರ್ಜ್ ಮಾಡಲಾಗುತ್ತದೆ ಮತ್ತು $dropped ಅನ್ನು ತೆಗೆದುಹಾಕಲಾಗುತ್ತದೆ.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled ಸಾರಾಂಶಗೊಳಿಸಲಾಗಿದೆ · $kept ಇರಿಸಲಾಗಿದೆ · $merged ಮರ್ಜ್ ಮಾಡಲಾಗಿದೆ · $dropped ತೆಗೆದುಹಾಕಲಾಗಿದೆ';
+  }
+
+  @override
+  String get heldForDayReview => 'ನಿಮ್ಮ ದಿನದ ಪರಿಶೀಲನೆಗಾಗಿ ಕಾಯುತ್ತಿದೆ';
 }

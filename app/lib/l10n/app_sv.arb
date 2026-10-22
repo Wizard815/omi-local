@@ -4481,5 +4481,20 @@
     "newSubfolder": "Ny undermapp",
     "folderTreeTitle": "Mappar",
     "moveFolder": "Flytta…",
-    "moveFolderTo": "Flytta ”{name}” till…"
+    "moveFolderTo": "Flytta ”{name}” till…",
+    "dayReviewSortHintHold": "Inget har bearbetats ännu. Stjärnmärk det du vill behålla, bocka för klipp för att slå ihop dem till ett och släng bruset. Allt annat blir en enda dagssammanfattning som du kan rätta.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 klipp utan riktigt tal slängdes automatiskt.} other{{count} klipp utan riktigt tal slängdes automatiskt.}}",
+    "dayReviewUnclearTitle": "Korta eller otydliga klipp",
+    "dayReviewDroppedTitle": "Slängda ({count})",
+    "dayReviewMergedTitle": "Ihopslagna till ett ({count})",
+    "dayReviewDropTooltip": "Släng (brus)",
+    "dayReviewRestoreTooltip": "Lägg tillbaka",
+    "dayReviewMergeTooltip": "Välj för att slå ihop",
+    "dayReviewMergeSelected": "{count, plural, =1{Välj ett klipp till att slå ihop} other{Slå ihop {count} klipp till ett}}",
+    "dayReviewUngroup": "Dela upp",
+    "dayReviewMergeGroupLabel": "Ihopslagna till en enda konversation",
+    "dayReviewFinalizeButtonFull": "Behåll {kept} · Slå ihop {merged} · Släng {dropped} · Sammanfatta {rolled}",
+    "dayReviewConfirmExtra": "{merged} slås ihop till en konversation vardera och {dropped} slängs.",
+    "dayReviewCountsFull": "{rolled} sammanfattade · {kept} behållna · {merged} ihopslagna · {dropped} slängda",
+    "heldForDayReview": "Väntar på din dagsgenomgång"
 }

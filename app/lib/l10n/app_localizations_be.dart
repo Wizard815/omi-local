@@ -14801,4 +14801,80 @@ class AppLocalizationsBe extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'Перамясціць «$name» у…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'Нічога яшчэ не апрацавана. Адзначце зоркай тое, што хочаце захаваць, пастаўце галачкі на запісах, каб аб\'яднаць іх у адну размову, выдаліце шум. Усё астатняе стане адной зводкай дня, якую можна выправіць.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count запісу без сапраўднай гаворкі выдалены аўтаматычна.',
+      many: '$count запісаў без сапраўднай гаворкі выдалены аўтаматычна.',
+      few: '$count запісы без сапраўднай гаворкі выдалены аўтаматычна.',
+      one: '1 запіс без сапраўднай гаворкі выдалены аўтаматычна.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'Кароткія або незразумелыя запісы';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'Выдалена ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'Аб\'яднана ў адну ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'Выдаліць (шум)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'Вярнуць';
+
+  @override
+  String get dayReviewMergeTooltip => 'Вылучыць для аб\'яднання';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Аб\'яднаць $count запісу ў адзін',
+      many: 'Аб\'яднаць $count запісаў у адзін',
+      few: 'Аб\'яднаць $count запісы ў адзін',
+      one: 'Вылучыце яшчэ адзін запіс для аб\'яднання',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'Разгрупаваць';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'Аб\'яднана ў адну размову';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'Захаваць: $kept · Аб\'яднаць: $merged · Выдаліць: $dropped · Рэзюмаваць: $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged будуць аб\'яднаны ў адну размову кожная, а $dropped — выдалены.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return 'У зводцы: $rolled · Захавана: $kept · Аб\'яднана: $merged · Выдалена: $dropped';
+  }
+
+  @override
+  String get heldForDayReview => 'Чакае вашага агляду дня';
 }

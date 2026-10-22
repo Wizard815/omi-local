@@ -14790,4 +14790,80 @@ class AppLocalizationsLt extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'Perkelti „$name“ į…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'Dar niekas neapdorota. Pažymėkite žvaigždute, ką norite palikti, pažymėkite įrašus, kad sujungtumėte juos į vieną, atmeskite triukšmą. Visa kita taps viena dienos santrauka, kurią galėsite pataisyti.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count įrašų be tikros kalbos atmesta automatiškai.',
+      many: '$count įrašo be tikros kalbos atmesta automatiškai.',
+      few: '$count įrašai be tikros kalbos atmesti automatiškai.',
+      one: '1 įrašas be tikros kalbos atmestas automatiškai.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'Trumpi arba neaiškūs įrašai';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'Atmesta ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'Sujungta į vieną ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'Atmesti (triukšmas)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'Grąžinti';
+
+  @override
+  String get dayReviewMergeTooltip => 'Pasirinkti sujungimui';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Sujungti $count įrašų į vieną',
+      many: 'Sujungti $count įrašo į vieną',
+      few: 'Sujungti $count įrašus į vieną',
+      one: 'Pasirinkite dar vieną įrašą sujungimui',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'Išskirti';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'Sujungta į vieną pokalbį';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'Palikti $kept · Sujungti $merged · Atmesti $dropped · Apibendrinti $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged bus sujungta po vieną pokalbį, o $dropped atmesta.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return 'Apibendrinta: $rolled · Palikta: $kept · Sujungta: $merged · Atmesta: $dropped';
+  }
+
+  @override
+  String get heldForDayReview => 'Laukia jūsų dienos peržiūros';
 }

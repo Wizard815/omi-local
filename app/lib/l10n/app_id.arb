@@ -4516,5 +4516,20 @@
     "newSubfolder": "Subfolder baru",
     "folderTreeTitle": "Folder",
     "moveFolder": "Pindahkan…",
-    "moveFolderTo": "Pindahkan \"{name}\" ke…"
+    "moveFolderTo": "Pindahkan \"{name}\" ke…",
+    "dayReviewSortHintHold": "Belum ada yang diproses. Beri bintang pada yang ingin Anda simpan, centang klip untuk menggabungkannya jadi satu, buang yang hanya gangguan. Sisanya akan menjadi satu ringkasan hari yang bisa Anda koreksi.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 klip tanpa percakapan nyata dibuang secara otomatis.} other{{count} klip tanpa percakapan nyata dibuang secara otomatis.}}",
+    "dayReviewUnclearTitle": "Klip pendek atau tidak jelas",
+    "dayReviewDroppedTitle": "Dibuang ({count})",
+    "dayReviewMergedTitle": "Digabung jadi satu ({count})",
+    "dayReviewDropTooltip": "Buang (gangguan)",
+    "dayReviewRestoreTooltip": "Kembalikan",
+    "dayReviewMergeTooltip": "Pilih untuk digabung",
+    "dayReviewMergeSelected": "{count, plural, =1{Pilih satu klip lagi untuk digabung} other{Gabung {count} klip jadi satu}}",
+    "dayReviewUngroup": "Pisahkan",
+    "dayReviewMergeGroupLabel": "Digabung jadi satu percakapan",
+    "dayReviewFinalizeButtonFull": "Simpan {kept} · Gabung {merged} · Buang {dropped} · Ringkas {rolled}",
+    "dayReviewConfirmExtra": "{merged} akan digabung menjadi satu percakapan masing-masing dan {dropped} dibuang.",
+    "dayReviewCountsFull": "{rolled} diringkas · {kept} disimpan · {merged} digabung · {dropped} dibuang",
+    "heldForDayReview": "Menunggu tinjauan hari Anda"
 }

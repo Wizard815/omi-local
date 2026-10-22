@@ -112,6 +112,9 @@ class UsageProvider with ChangeNotifier {
   @visibleForTesting
   static bool selfHosted = true;
 
+  /// Read-only view for widgets; tests flip [selfHosted].
+  static bool get isSelfHosted => selfHosted;
+
   /// Defaults to true when the subscription response hasn't loaded yet, so a
   /// network blip doesn't silently hide paid surfaces from real users.
   bool get showSubscriptionUI => !selfHosted && (_subscription?.showSubscriptionUi ?? true);

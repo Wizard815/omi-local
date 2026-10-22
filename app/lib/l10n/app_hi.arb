@@ -4481,5 +4481,20 @@
     "newSubfolder": "नया सबफ़ोल्डर",
     "folderTreeTitle": "फ़ोल्डर",
     "moveFolder": "ले जाएं…",
-    "moveFolderTo": "“{name}” को इसमें ले जाएं…"
+    "moveFolderTo": "“{name}” को इसमें ले जाएं…",
+    "dayReviewSortHintHold": "अभी तक कुछ भी प्रोसेस नहीं हुआ है। जो रखना है उसे तारांकित करें, क्लिप को एक में मिलाने के लिए उन पर टिक करें, शोर हटा दें। बाकी सब एक दिन के सारांश में बदल जाएगा, जिसे आप सुधार सकते हैं।",
+    "dayReviewAutoDropped": "{count, plural, =1{बिना असली बातचीत वाली 1 क्लिप अपने आप हटा दी गई।} other{बिना असली बातचीत वाली {count} क्लिप अपने आप हटा दी गईं।}}",
+    "dayReviewUnclearTitle": "छोटी या अस्पष्ट क्लिप",
+    "dayReviewDroppedTitle": "हटाई गईं ({count})",
+    "dayReviewMergedTitle": "एक में मिलाई गईं ({count})",
+    "dayReviewDropTooltip": "हटाएं (शोर)",
+    "dayReviewRestoreTooltip": "वापस रखें",
+    "dayReviewMergeTooltip": "मिलाने के लिए चुनें",
+    "dayReviewMergeSelected": "{count, plural, =1{मिलाने के लिए एक और क्लिप चुनें} other{{count} क्लिप को एक में मिलाएं}}",
+    "dayReviewUngroup": "अलग करें",
+    "dayReviewMergeGroupLabel": "एक बातचीत में मिलाई गईं",
+    "dayReviewFinalizeButtonFull": "{kept} रखें · {merged} मिलाएं · {dropped} हटाएं · {rolled} का सारांश बनाएं",
+    "dayReviewConfirmExtra": "{merged} को एक-एक बातचीत में मिला दिया जाएगा और {dropped} हटा दी जाएंगी।",
+    "dayReviewCountsFull": "{rolled} सारांश में · {kept} रखी गईं · {merged} मिलाई गईं · {dropped} हटाई गईं",
+    "heldForDayReview": "आपकी दिन की समीक्षा की प्रतीक्षा में"
 }

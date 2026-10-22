@@ -14861,4 +14861,76 @@ class AppLocalizationsEl extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'Μετακίνηση του «$name» σε…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'Δεν έχει γίνει ακόμη καμία επεξεργασία. Βάλτε αστέρι σε ό,τι θέλετε να κρατήσετε, τσεκάρετε αποσπάσματα για να τα συγχωνεύσετε σε ένα και απορρίψτε τον θόρυβο. Όλα τα υπόλοιπα γίνονται μία περίληψη ημέρας, την οποία μπορείτε να διορθώσετε.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count αποσπάσματα χωρίς πραγματική ομιλία απορρίφθηκαν αυτόματα.',
+      one: '1 απόσπασμα χωρίς πραγματική ομιλία απορρίφθηκε αυτόματα.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'Σύντομα ή ασαφή αποσπάσματα';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'Απορρίφθηκαν ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'Συγχωνεύτηκαν σε ένα ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'Απόρριψη (θόρυβος)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'Επαναφορά';
+
+  @override
+  String get dayReviewMergeTooltip => 'Επιλογή για συγχώνευση';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Συγχώνευση $count αποσπασμάτων σε ένα',
+      one: 'Επιλέξτε άλλο ένα απόσπασμα για συγχώνευση',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'Αποομαδοποίηση';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'Συγχωνεύτηκαν σε μία συνομιλία';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'Διατήρηση $kept · Συγχώνευση $merged · Απόρριψη $dropped · Περίληψη $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged θα συγχωνευτούν σε μία συνομιλία το καθένα και $dropped θα απορριφθούν.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled στην περίληψη · $kept διατηρήθηκαν · $merged συγχωνεύτηκαν · $dropped απορρίφθηκαν';
+  }
+
+  @override
+  String get heldForDayReview => 'Σε αναμονή της ανασκόπησης ημέρας';
 }

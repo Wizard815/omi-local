@@ -4577,5 +4577,20 @@
     "newSubfolder": "Új almappa",
     "folderTreeTitle": "Mappák",
     "moveFolder": "Áthelyezés…",
-    "moveFolderTo": "„{name}” áthelyezése ide…"
+    "moveFolderTo": "„{name}” áthelyezése ide…",
+    "dayReviewSortHintHold": "Még semmi sincs feldolgozva. Csillagozd meg, amit megtartanál, pipáld ki az eggyé vonandó felvételeket, a zajt pedig dobd el. Minden más egyetlen napi összefoglalóvá válik, amelyet javíthatsz.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 valódi beszédet nem tartalmazó felvétel automatikusan el lett dobva.} other{{count} valódi beszédet nem tartalmazó felvétel automatikusan el lett dobva.}}",
+    "dayReviewUnclearTitle": "Rövid vagy nem egyértelmű felvételek",
+    "dayReviewDroppedTitle": "Eldobva ({count})",
+    "dayReviewMergedTitle": "Eggyé összevonva ({count})",
+    "dayReviewDropTooltip": "Eldobás (zaj)",
+    "dayReviewRestoreTooltip": "Visszahelyezés",
+    "dayReviewMergeTooltip": "Kijelölés összevonáshoz",
+    "dayReviewMergeSelected": "{count, plural, =1{Jelölj ki még egy felvételt az összevonáshoz} other{{count} felvétel összevonása eggyé}}",
+    "dayReviewUngroup": "Szétválasztás",
+    "dayReviewMergeGroupLabel": "Egy beszélgetéssé összevonva",
+    "dayReviewFinalizeButtonFull": "Megtartás: {kept} · Összevonás: {merged} · Eldobás: {dropped} · Összefoglalás: {rolled}",
+    "dayReviewConfirmExtra": "{merged} egy-egy beszélgetéssé lesz összevonva, {dropped} pedig eldobva.",
+    "dayReviewCountsFull": "{rolled} összefoglalva · {kept} megtartva · {merged} összevonva · {dropped} eldobva",
+    "heldForDayReview": "A napi áttekintésedre vár"
 }

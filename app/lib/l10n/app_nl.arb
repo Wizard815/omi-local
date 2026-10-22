@@ -4481,5 +4481,20 @@
     "newSubfolder": "Nieuwe submap",
     "folderTreeTitle": "Mappen",
     "moveFolder": "Verplaatsen…",
-    "moveFolderTo": "‘{name}’ verplaatsen naar…"
+    "moveFolderTo": "‘{name}’ verplaatsen naar…",
+    "dayReviewSortHintHold": "Er is nog niets verwerkt. Geef een ster aan wat je wilt bewaren, vink clips aan om ze samen te voegen tot één gesprek en verwijder de ruis. Al het andere wordt één dagsamenvatting die je kunt corrigeren.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 clip zonder echte spraak is automatisch verwijderd.} other{{count} clips zonder echte spraak zijn automatisch verwijderd.}}",
+    "dayReviewUnclearTitle": "Korte of onduidelijke clips",
+    "dayReviewDroppedTitle": "Verwijderd ({count})",
+    "dayReviewMergedTitle": "Samengevoegd tot één ({count})",
+    "dayReviewDropTooltip": "Verwijderen (ruis)",
+    "dayReviewRestoreTooltip": "Terugzetten",
+    "dayReviewMergeTooltip": "Selecteren om samen te voegen",
+    "dayReviewMergeSelected": "{count, plural, =1{Selecteer nog een clip om samen te voegen} other{{count} clips samenvoegen tot één}}",
+    "dayReviewUngroup": "Groep opheffen",
+    "dayReviewMergeGroupLabel": "Samengevoegd tot één gesprek",
+    "dayReviewFinalizeButtonFull": "{kept} bewaren · {merged} samenvoegen · {dropped} verwijderen · {rolled} samenvatten",
+    "dayReviewConfirmExtra": "{merged} worden elk samengevoegd tot één gesprek en {dropped} worden verwijderd.",
+    "dayReviewCountsFull": "{rolled} samengevat · {kept} bewaard · {merged} samengevoegd · {dropped} verwijderd",
+    "heldForDayReview": "Wacht op je dagoverzicht"
 }

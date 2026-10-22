@@ -14758,4 +14758,76 @@ class AppLocalizationsEt extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'Teisalda „$name“ kausta…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'Midagi pole veel töödeldud. Märkige tärniga see, mida soovite alles hoida, linnukesega klipid, mida soovite üheks liita, ja jätke müra kõrvale. Kõik muu koondatakse üheks päeva kokkuvõtteks, mida saate parandada.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ilma tegeliku kõneta klippi jäeti automaatselt kõrvale.',
+      one: '1 ilma tegeliku kõneta klipp jäeti automaatselt kõrvale.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'Lühikesed või ebaselged klipid';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'Kõrvale jäetud ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'Üheks liidetud ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'Jäta kõrvale (müra)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'Pane tagasi';
+
+  @override
+  String get dayReviewMergeTooltip => 'Vali liitmiseks';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Liida $count klippi üheks',
+      one: 'Valige liitmiseks veel üks klipp',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'Tühista rühmitamine';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'Üheks vestluseks liidetud';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'Hoia alles $kept · Liida $merged · Jäta kõrvale $dropped · Kokkuvõttesse $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged liidetakse igaüks üheks vestluseks ja $dropped jäetakse kõrvale.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled kokkuvõttes · $kept alles hoitud · $merged liidetud · $dropped kõrvale jäetud';
+  }
+
+  @override
+  String get heldForDayReview => 'Ootab teie päeva ülevaadet';
 }

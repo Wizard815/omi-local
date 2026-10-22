@@ -11907,5 +11907,20 @@
     "newSubfolder": "కొత్త సబ్‌ఫోల్డర్",
     "folderTreeTitle": "ఫోల్డర్‌లు",
     "moveFolder": "తరలించు…",
-    "moveFolderTo": "“{name}”ను ఎక్కడికి తరలించాలి…"
+    "moveFolderTo": "“{name}”ను ఎక్కడికి తరలించాలి…",
+    "dayReviewSortHintHold": "ఇంకా ఏదీ ప్రాసెస్ కాలేదు. ఉంచుకోవాల్సినవి స్టార్ చేయండి, క్లిప్‌లను ఒకటిగా విలీనం చేయడానికి టిక్ చేయండి, శబ్దాన్ని తీసివేయండి. మిగతావన్నీ మీరు సరిదిద్దగల ఒకే రోజు సారాంశంగా మారతాయి.",
+    "dayReviewAutoDropped": "{count, plural, =1{నిజమైన మాటలు లేని 1 క్లిప్ ఆటోమేటిక్‌గా తీసివేయబడింది.} other{నిజమైన మాటలు లేని {count} క్లిప్‌లు ఆటోమేటిక్‌గా తీసివేయబడ్డాయి.}}",
+    "dayReviewUnclearTitle": "చిన్న లేదా అస్పష్టమైన క్లిప్‌లు",
+    "dayReviewDroppedTitle": "తీసివేసినవి ({count})",
+    "dayReviewMergedTitle": "ఒకటిగా విలీనం చేసినవి ({count})",
+    "dayReviewDropTooltip": "తీసివేయండి (శబ్దం)",
+    "dayReviewRestoreTooltip": "తిరిగి ఉంచండి",
+    "dayReviewMergeTooltip": "విలీనం చేయడానికి ఎంచుకోండి",
+    "dayReviewMergeSelected": "{count, plural, =1{విలీనం చేయడానికి మరో క్లిప్‌ను ఎంచుకోండి} other{{count} క్లిప్‌లను ఒకటిగా విలీనం చేయండి}}",
+    "dayReviewUngroup": "విడదీయండి",
+    "dayReviewMergeGroupLabel": "ఒకే సంభాషణగా విలీనం చేయబడింది",
+    "dayReviewFinalizeButtonFull": "{kept} ఉంచండి · {merged} విలీనం చేయండి · {dropped} తీసివేయండి · {rolled} సారాంశం చేయండి",
+    "dayReviewConfirmExtra": "{merged} ఒక్కొక్కటి ఒకే సంభాషణగా విలీనం చేయబడతాయి, {dropped} తీసివేయబడతాయి.",
+    "dayReviewCountsFull": "{rolled} సారాంశంలో · {kept} ఉంచినవి · {merged} విలీనం చేసినవి · {dropped} తీసివేసినవి",
+    "heldForDayReview": "మీ రోజు సమీక్ష కోసం వేచి ఉంది"
 }

@@ -11,8 +11,11 @@ import 'package:omi/utils/l10n_extensions.dart';
 
 /// End-of-day review for one local date.
 ///
-/// Before review: star the conversations to keep; everything else is rolled
-/// into one long day summary (and leaves the conversation list).
+/// Before review: star the conversations to keep, tick clips to merge them
+/// into one, drop the noise; everything else is rolled into one long day
+/// summary (and leaves the conversation list). On a self-hosted server the
+/// clips arrive unprocessed (transcript only) and only what you keep or merge
+/// gets the full treatment.
 /// After: the summary reads like a doc you can correct — select text to attach
 /// a correction or redact it, add whole paragraphs, then "Apply corrections".
 class DayReviewPage extends StatefulWidget {
@@ -31,6 +34,11 @@ class _DayReviewPageState extends State<DayReviewPage> {
   String? _error;
   String? _busyMessage;
   final Set<String> _keep = {};
+  final Set<String> _drop = {};
+  final List<List<String>> _groups = [];
+
+  /// Clips ticked for the next merge group.
+  final Set<String> _selected = {};
 
   @override
   void initState() {
@@ -47,7 +55,10 @@ class _DayReviewPageState extends State<DayReviewPage> {
         _error = null;
         _keep
           ..clear()
-          ..addAll(_day!.conversations.where((c) => c.starred && !c.rolledUp).map((c) => c.id));
+          ..addAll(_day!.conversations.where((c) => c.starred && !c.rolledUp && !c.dropped).map((c) => c.id));
+        _drop.clear();
+        _groups.clear();
+        _selected.clear();
       } else {
         _error = result.error ?? context.l10n.dayReviewLoadFailed;
       }
@@ -86,16 +97,65 @@ class _DayReviewPageState extends State<DayReviewPage> {
 
   // ---------------------------------------------------------------- actions
 
+  Set<String> get _grouped => {for (final g in _groups) ...g};
+
+  int get _rolledCount => _day!.conversations
+      .where((c) => !_keep.contains(c.id) && !_drop.contains(c.id) && !_grouped.contains(c.id))
+      .length;
+
+  void _toggleKeep(String id) => setState(() {
+        if (_keep.contains(id)) {
+          _keep.remove(id);
+        } else {
+          _keep.add(id);
+          _drop.remove(id);
+          _selected.remove(id);
+        }
+      });
+
+  void _toggleDrop(String id) => setState(() {
+        if (_drop.contains(id)) {
+          _drop.remove(id);
+        } else {
+          _drop.add(id);
+          _keep.remove(id);
+          _selected.remove(id);
+        }
+      });
+
+  void _toggleSelected(String id) => setState(() {
+        if (_selected.contains(id)) {
+          _selected.remove(id);
+        } else {
+          _selected.add(id);
+          _keep.remove(id);
+          _drop.remove(id);
+        }
+      });
+
+  void _mergeSelected() {
+    if (_selected.length < 2) return;
+    final order = {for (var i = 0; i < _day!.conversations.length; i++) _day!.conversations[i].id: i};
+    setState(() {
+      _groups.add(_selected.toList()..sort((a, b) => (order[a] ?? 0).compareTo(order[b] ?? 0)));
+      _selected.clear();
+    });
+  }
+
+  void _ungroup(List<String> group) => setState(() => _groups.remove(group));
+
   Future<void> _finalize() async {
     final l10n = context.l10n;
-    final day = _day!;
-    final rolled = day.conversations.where((c) => !_keep.contains(c.id)).length;
-    if (rolled > 0) {
+    final rolled = _rolledCount;
+    if (rolled > 0 || _groups.isNotEmpty || _drop.isNotEmpty) {
+      final extra = _groups.isNotEmpty || _drop.isNotEmpty
+          ? '\n\n${l10n.dayReviewConfirmExtra(_groups.length, _drop.length)}'
+          : '';
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
           title: Text(l10n.dayReviewConfirmTitle),
-          content: Text(l10n.dayReviewConfirmBody(rolled)),
+          content: Text('${l10n.dayReviewConfirmBody(rolled)}$extra'),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
             TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.dayReviewConfirmAction)),
@@ -105,7 +165,12 @@ class _DayReviewPageState extends State<DayReviewPage> {
       if (confirmed != true) return;
     }
     await _busy(l10n.dayReviewWriting, () async {
-      final result = await finalizeDayReview(widget.date, _keep.toList());
+      final result = await finalizeDayReview(
+        widget.date,
+        _keep.toList(),
+        mergeGroups: _groups.map((g) => List<String>.from(g)).toList(),
+        dropConversationIds: _drop.toList(),
+      );
       if (result.ok) {
         await _load();
       } else if (mounted) {
@@ -321,12 +386,15 @@ class _DayReviewPageState extends State<DayReviewPage> {
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 2),
                 Text(_timeRange(c), style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
-                if (c.overview.isNotEmpty) ...[
+                if (c.overview.isNotEmpty || c.transcriptSnippet.isNotEmpty) ...[
                   const SizedBox(height: 4),
-                  Text(c.overview,
+                  Text(c.overview.isNotEmpty ? c.overview : c.transcriptSnippet,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: Colors.grey.shade400, fontSize: 13)),
+                      style: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 13,
+                          fontStyle: c.overview.isEmpty ? FontStyle.italic : FontStyle.normal)),
                 ],
               ],
             ),
@@ -337,9 +405,85 @@ class _DayReviewPageState extends State<DayReviewPage> {
     );
   }
 
+  Widget _sortTile(DayReviewConversation c) {
+    final l10n = context.l10n;
+    final kept = _keep.contains(c.id);
+    final dropped = _drop.contains(c.id);
+    return Opacity(
+      opacity: dropped ? 0.45 : 1,
+      child: _conversationTile(
+        c,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Checkbox(
+              value: _selected.contains(c.id),
+              onChanged: dropped ? null : (_) => _toggleSelected(c.id),
+              visualDensity: VisualDensity.compact,
+              side: BorderSide(color: Colors.grey.shade600),
+            ),
+            IconButton(
+              tooltip: l10n.dayReviewKeepTooltip,
+              visualDensity: VisualDensity.compact,
+              icon: Icon(kept ? Icons.star_rounded : Icons.star_outline_rounded,
+                  color: kept ? Colors.amber : Colors.grey.shade500),
+              onPressed: () => _toggleKeep(c.id),
+            ),
+            IconButton(
+              tooltip: dropped ? l10n.dayReviewRestoreTooltip : l10n.dayReviewDropTooltip,
+              visualDensity: VisualDensity.compact,
+              icon: Icon(dropped ? Icons.restore_from_trash_outlined : Icons.delete_outline_rounded,
+                  color: dropped ? Colors.white : Colors.grey.shade500),
+              onPressed: () => _toggleDrop(c.id),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _groupBlock(List<String> group, Map<String, DayReviewConversation> byId) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white38),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.call_merge_rounded, size: 18, color: Colors.white70),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(context.l10n.dayReviewMergeGroupLabel,
+                    style: const TextStyle(color: Colors.white70, fontSize: 12.5)),
+              ),
+              TextButton(onPressed: () => _ungroup(group), child: Text(context.l10n.dayReviewUngroup)),
+            ],
+          ),
+          for (final id in group)
+            if (byId[id] != null) _conversationTile(byId[id]!),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionTitle(String text) => Padding(
+        padding: const EdgeInsets.only(top: 12, bottom: 8),
+        child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+      );
+
   Widget _buildSortView(DayReviewDay day) {
     final l10n = context.l10n;
-    final rolled = day.conversations.where((c) => !_keep.contains(c.id)).length;
+    final byId = {for (final c in day.conversations) c.id: c};
+    final grouped = _grouped;
+    final loose = day.conversations.where((c) => !grouped.contains(c.id)).toList();
+    final clear = loose.where((c) => !c.unclear).toList();
+    final unclear = loose.where((c) => c.unclear).toList();
+    final rolled = _rolledCount;
     return Column(
       children: [
         Expanded(
@@ -348,10 +492,16 @@ class _DayReviewPageState extends State<DayReviewPage> {
             children: [
               Text(_prettyDate, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
-              Text(l10n.dayReviewSortHint, style: TextStyle(color: Colors.grey.shade400, height: 1.4)),
+              Text(day.holdEnabled ? l10n.dayReviewSortHintHold : l10n.dayReviewSortHint,
+                  style: TextStyle(color: Colors.grey.shade400, height: 1.4)),
               if (day.processingCount > 0) ...[
                 const SizedBox(height: 8),
                 Text(l10n.dayReviewProcessing(day.processingCount),
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 12.5)),
+              ],
+              if (day.droppedAutoCount > 0) ...[
+                const SizedBox(height: 4),
+                Text(l10n.dayReviewAutoDropped(day.droppedAutoCount),
                     style: TextStyle(color: Colors.grey.shade500, fontSize: 12.5)),
               ],
               const SizedBox(height: 16),
@@ -361,21 +511,32 @@ class _DayReviewPageState extends State<DayReviewPage> {
                   child: Text(l10n.dayReviewEmpty,
                       textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
                 ),
-              for (final c in day.conversations)
-                _conversationTile(
-                  c,
-                  trailing: IconButton(
-                    tooltip: l10n.dayReviewKeepTooltip,
-                    icon: Icon(
-                      _keep.contains(c.id) ? Icons.star_rounded : Icons.star_outline_rounded,
-                      color: _keep.contains(c.id) ? Colors.amber : Colors.grey.shade500,
-                    ),
-                    onPressed: () => setState(() => _keep.contains(c.id) ? _keep.remove(c.id) : _keep.add(c.id)),
-                  ),
-                ),
+              for (final g in _groups) _groupBlock(g, byId),
+              for (final c in clear) _sortTile(c),
+              if (unclear.isNotEmpty) ...[
+                _sectionTitle(l10n.dayReviewUnclearTitle),
+                for (final c in unclear) _sortTile(c),
+              ],
             ],
           ),
         ),
+        if (_selected.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+            child: SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: const BorderSide(color: Colors.white54),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                onPressed: _selected.length < 2 ? null : _mergeSelected,
+                icon: const Icon(Icons.call_merge_rounded),
+                label: Text(l10n.dayReviewMergeSelected(_selected.length)),
+              ),
+            ),
+          ),
         if (day.conversations.isNotEmpty)
           SafeArea(
             top: false,
@@ -391,7 +552,9 @@ class _DayReviewPageState extends State<DayReviewPage> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                   onPressed: _finalize,
-                  child: Text(l10n.dayReviewFinalizeButton(_keep.length, rolled)),
+                  child: Text(_groups.isEmpty && _drop.isEmpty
+                      ? l10n.dayReviewFinalizeButton(_keep.length, rolled)
+                      : l10n.dayReviewFinalizeButtonFull(_keep.length, _groups.length, _drop.length, rolled)),
                 ),
               ),
             ),
@@ -548,6 +711,8 @@ class _DayReviewPageState extends State<DayReviewPage> {
         .toList();
     final kept = day.conversations.where((c) => review.keptConversationIds.contains(c.id)).toList();
     final rolled = day.conversations.where((c) => review.rolledUpConversationIds.contains(c.id)).toList();
+    final dropped = day.conversations.where((c) => review.droppedConversationIds.contains(c.id)).toList();
+    final merged = review.mergedGroups.length;
 
     return Column(
       children: [
@@ -560,7 +725,10 @@ class _DayReviewPageState extends State<DayReviewPage> {
               Text(review.title,
                   style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700)),
               const SizedBox(height: 6),
-              Text(l10n.dayReviewCounts(rolled.length, kept.length),
+              Text(
+                  merged == 0 && dropped.isEmpty
+                      ? l10n.dayReviewCounts(rolled.length, kept.length)
+                      : l10n.dayReviewCountsFull(rolled.length, kept.length, merged, dropped.length),
                   style: TextStyle(color: Colors.grey.shade500, fontSize: 12.5)),
               if (paragraphs.isNotEmpty) ...[
                 const SizedBox(height: 4),
@@ -593,6 +761,27 @@ class _DayReviewPageState extends State<DayReviewPage> {
                   tilePadding: EdgeInsets.zero,
                   title: Text(l10n.dayReviewRolledTitle(rolled.length), style: const TextStyle(color: Colors.white)),
                   children: [for (final c in rolled) _conversationTile(c)],
+                ),
+              if (merged > 0)
+                ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  title: Text(l10n.dayReviewMergedTitle(merged), style: const TextStyle(color: Colors.white)),
+                  // The sources were merged away; only their count and ids remain.
+                  children: [
+                    for (final g in review.mergedGroups)
+                      ListTile(
+                        dense: true,
+                        leading: const Icon(Icons.call_merge_rounded, color: Colors.white70),
+                        title: Text(l10n.dayReviewMergeGroupLabel, style: const TextStyle(color: Colors.white70)),
+                        subtitle: Text('${g.length}', style: TextStyle(color: Colors.grey.shade500)),
+                      ),
+                  ],
+                ),
+              if (dropped.isNotEmpty)
+                ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  title: Text(l10n.dayReviewDroppedTitle(dropped.length), style: const TextStyle(color: Colors.white)),
+                  children: [for (final c in dropped) _conversationTile(c)],
                 ),
             ],
           ),

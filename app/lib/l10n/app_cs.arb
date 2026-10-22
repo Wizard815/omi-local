@@ -4481,5 +4481,20 @@
     "newSubfolder": "Nová podsložka",
     "folderTreeTitle": "Složky",
     "moveFolder": "Přesunout…",
-    "moveFolderTo": "Přesunout „{name}“ do…"
+    "moveFolderTo": "Přesunout „{name}“ do…",
+    "dayReviewSortHintHold": "Zatím nebylo nic zpracováno. Označte hvězdičkou, co si chcete ponechat, zaškrtněte nahrávky, které se mají sloučit do jedné, a šum zahoďte. Vše ostatní se spojí do jednoho souhrnu dne, který můžete opravit.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 nahrávka bez skutečné řeči byla automaticky zahozena.} few{{count} nahrávky bez skutečné řeči byly automaticky zahozeny.} other{{count} nahrávek bez skutečné řeči bylo automaticky zahozeno.}}",
+    "dayReviewUnclearTitle": "Krátké nebo nejasné nahrávky",
+    "dayReviewDroppedTitle": "Zahozeno ({count})",
+    "dayReviewMergedTitle": "Sloučeno do jedné ({count})",
+    "dayReviewDropTooltip": "Zahodit (šum)",
+    "dayReviewRestoreTooltip": "Vrátit zpět",
+    "dayReviewMergeTooltip": "Vybrat ke sloučení",
+    "dayReviewMergeSelected": "{count, plural, =1{Vyberte další nahrávku ke sloučení} few{Sloučit {count} nahrávky do jedné} other{Sloučit {count} nahrávek do jedné}}",
+    "dayReviewUngroup": "Rozdělit skupinu",
+    "dayReviewMergeGroupLabel": "Sloučeno do jedné konverzace",
+    "dayReviewFinalizeButtonFull": "Ponechat {kept} · Sloučit {merged} · Zahodit {dropped} · Shrnout {rolled}",
+    "dayReviewConfirmExtra": "{merged} bude sloučeno vždy do jedné konverzace a {dropped} bude zahozeno.",
+    "dayReviewCountsFull": "Shrnuto: {rolled} · Ponecháno: {kept} · Sloučeno: {merged} · Zahozeno: {dropped}",
+    "heldForDayReview": "Čeká na váš přehled dne"
 }

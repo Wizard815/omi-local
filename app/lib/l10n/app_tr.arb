@@ -4516,5 +4516,20 @@
     "newSubfolder": "Yeni alt klasör",
     "folderTreeTitle": "Klasörler",
     "moveFolder": "Taşı…",
-    "moveFolderTo": "\"{name}\" klasörünü şuraya taşı…"
+    "moveFolderTo": "\"{name}\" klasörünü şuraya taşı…",
+    "dayReviewSortHintHold": "Henüz hiçbir şey işlenmedi. Saklamak istediklerinizi yıldızlayın, tek bir konuşmada birleştirmek istediğiniz klipleri işaretleyin, gürültüyü atın. Geri kalan her şey, düzeltebileceğiniz tek bir gün özetine dönüşür.",
+    "dayReviewAutoDropped": "{count, plural, =1{Gerçek konuşma içermeyen 1 klip otomatik olarak atıldı.} other{Gerçek konuşma içermeyen {count} klip otomatik olarak atıldı.}}",
+    "dayReviewUnclearTitle": "Kısa veya belirsiz klipler",
+    "dayReviewDroppedTitle": "Atılanlar ({count})",
+    "dayReviewMergedTitle": "Tek konuşmada birleştirilenler ({count})",
+    "dayReviewDropTooltip": "At (gürültü)",
+    "dayReviewRestoreTooltip": "Geri koy",
+    "dayReviewMergeTooltip": "Birleştirmek için seç",
+    "dayReviewMergeSelected": "{count, plural, =1{Birleştirmek için bir klip daha seçin} other{{count} klibi tek konuşmada birleştir}}",
+    "dayReviewUngroup": "Gruplamayı kaldır",
+    "dayReviewMergeGroupLabel": "Tek bir konuşmada birleştirildi",
+    "dayReviewFinalizeButtonFull": "Sakla: {kept} · Birleştir: {merged} · At: {dropped} · Özetle: {rolled}",
+    "dayReviewConfirmExtra": "{merged} tanesi her biri tek bir konuşmada birleştirilecek ve {dropped} tanesi atılacak.",
+    "dayReviewCountsFull": "{rolled} özetlendi · {kept} saklandı · {merged} birleştirildi · {dropped} atıldı",
+    "heldForDayReview": "Gün değerlendirmenizi bekliyor"
 }
