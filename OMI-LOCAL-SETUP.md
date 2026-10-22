@@ -217,13 +217,23 @@ tap it or send `/adult toggle` again to turn it off). Pick the model behind each
 `omi-host/.env`.
 
 ### End-of-day review
+Leave it recording all day. A clip that ends (silence, the stop button, an offline-sync
+upload) is kept as a transcript with a title from its first words; nothing runs on the model
+and nothing piles up as a finished conversation. The rule-based noise check still drops empty,
+filler-only and mic-check clips on its own. In the list such clips say "Waiting for your day
+review"; open one to read its transcript.
+
 A "Review your day" card appears on the conversation list (for earlier unsorted days, and for
-today after 6 pm), or open it with `/review` or the book icon in **Daily Recaps**. Star the
-conversations you want to keep; everything else is rolled into one long day summary and leaves
-the list. In the summary, select text → **Correct** (attach what's right) or **Redact** (never
-shown again, never sent to the model again), and use **+ Add paragraph** to write whole
-paragraphs. **Apply corrections** rewrites the summary with them. **Reopen day** undoes it all.
-Tune `DAY_REVIEW_TIMEOUT_SECONDS` / `DAY_REVIEW_MAX_INPUT_CHARS` for slow or small-context models.
+today after 6 pm), or open it with `/review` or the book icon in **Daily Recaps**. For each clip:
+**star** to keep it (it then gets the full treatment: title, summary, tasks, memories), **tick**
+two or more and **Merge** to make them one conversation (processed once, as one), **drop** the
+noise, or leave it. Short or unclear clips are listed in their own section. Everything left is
+rolled into one long day summary and leaves the list. In the summary, select text → **Correct**
+(attach what's right) or **Redact** (never shown again, never sent to the model again), and use
+**+ Add paragraph** to write whole paragraphs. **Apply corrections** rewrites the summary with
+them. **Reopen day** brings the summarized and dropped clips back; a merge stays merged.
+`OMI_CONVERSATION_HOLD=off` restores per-clip processing. Tune `DAY_REVIEW_TIMEOUT_SECONDS` /
+`DAY_REVIEW_MAX_INPUT_CHARS` for slow or small-context models.
 
 ### Folder tree
 Folders can be nested (up to 5 levels). Folders live in **Search** (upstream moved folder

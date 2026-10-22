@@ -188,8 +188,14 @@ def _generate_and_store_daily_summary(
             release_daily_summary_lock(uid, date_str)
             return None, False, _DECLINE_NO_CONVERSATIONS
 
+        # Rows held for the day review (omi-local) carry no summary yet; the
+        # review decides what they become.
         conversations = deserialize_conversations(
-            [convo_data for convo_data in conversations_data if not convo_data.get('is_locked')]
+            [
+                convo_data
+                for convo_data in conversations_data
+                if not convo_data.get('is_locked') and not convo_data.get('processing_deferred')
+            ]
         )
         if not conversations:
             release_daily_summary_lock(uid, date_str)

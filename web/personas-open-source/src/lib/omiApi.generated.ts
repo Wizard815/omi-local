@@ -2016,10 +2016,12 @@ export interface DayReview {
   corrections?: Array<DayReviewCorrection>;
   created_at?: string | null;
   date: string;
+  dropped_conversation_ids?: Array<string>;
   final_text?: string;
   generated_at?: string | null;
   generation_count?: number;
   kept_conversation_ids?: Array<string>;
+  merged_groups?: Array<DayReviewMergeGroup>;
   rolled_up_conversation_ids?: Array<string>;
   status?: "finalized";
   summary_text?: string;
@@ -2029,14 +2031,19 @@ export interface DayReview {
 }
 
 export interface DayReviewConversation {
+  dropped?: boolean;
   emoji?: string;
   finished_at?: string | null;
+  held?: boolean;
+  hold_rule?: string;
   id: string;
   overview?: string;
   rolled_up?: boolean;
   starred?: boolean;
   started_at?: string | null;
   title?: string;
+  transcript_snippet?: string;
+  word_count?: number;
 }
 
 export interface DayReviewCorrection {
@@ -2054,8 +2061,14 @@ export interface DayReviewCorrection {
 export interface DayReviewDayResponse {
   conversations?: Array<DayReviewConversation>;
   date: string;
+  dropped_auto_count?: number;
+  hold_enabled?: boolean;
   processing_count?: number;
   review?: DayReview | null;
+}
+
+export interface DayReviewMergeGroup {
+  conversation_ids?: Array<string>;
 }
 
 export interface DayReviewsListResponse {
@@ -2737,7 +2750,9 @@ export interface FileChat {
 }
 
 export interface FinalizeDayReviewRequest {
+  drop_conversation_ids?: Array<string>;
   keep_conversation_ids?: Array<string>;
+  merge_groups?: Array<DayReviewMergeGroup>;
 }
 
 export interface FirmwareVersionResponse {
@@ -4406,6 +4421,7 @@ export interface ReleaseChannel {
 }
 
 export interface ReopenDayReviewResponse {
+  merged_count?: number;
   restored_count?: number;
   status?: string;
 }
@@ -6557,6 +6573,7 @@ export interface OmiApiSchemas {
   "DayReviewConversation": DayReviewConversation;
   "DayReviewCorrection": DayReviewCorrection;
   "DayReviewDayResponse": DayReviewDayResponse;
+  "DayReviewMergeGroup": DayReviewMergeGroup;
   "DayReviewsListResponse": DayReviewsListResponse;
   "DecisionDebugProjection": DecisionDebugProjection;
   "DecisionRecord": DecisionRecord;

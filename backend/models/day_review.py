@@ -43,6 +43,10 @@ class CreateDayReviewCorrectionRequest(BaseModel):
         return self
 
 
+class DayReviewMergeGroup(BaseModel):
+    conversation_ids: List[str] = Field(default_factory=list, min_length=2, max_length=200)
+
+
 class DayReview(BaseModel):
     date: str
     status: Literal['finalized'] = 'finalized'
@@ -54,6 +58,10 @@ class DayReview(BaseModel):
     corrections: List[DayReviewCorrection] = Field(default_factory=list)
     kept_conversation_ids: List[str] = Field(default_factory=list)
     rolled_up_conversation_ids: List[str] = Field(default_factory=list)
+    merged_groups: List[DayReviewMergeGroup] = Field(
+        default_factory=list, description='Each group was merged into one new conversation (sources deleted)'
+    )
+    dropped_conversation_ids: List[str] = Field(default_factory=list, description='Dropped as noise (hidden)')
     time_zone: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
@@ -70,6 +78,11 @@ class DayReviewConversation(BaseModel):
     finished_at: Optional[datetime] = None
     starred: bool = False
     rolled_up: bool = Field(default=False, description='Folded into this day\'s summary (hidden from the normal list)')
+    dropped: bool = Field(default=False, description='Dropped as noise by this review (hidden)')
+    held: bool = Field(default=False, description='Transcript only so far; the review decides whether it is processed')
+    hold_rule: str = Field(default='', description='Noise rule that let a held clip through, e.g. model_withheld')
+    transcript_snippet: str = ''
+    word_count: int = 0
 
 
 class DayReviewDayResponse(BaseModel):
@@ -77,12 +90,36 @@ class DayReviewDayResponse(BaseModel):
     review: Optional[DayReview] = None
     conversations: List[DayReviewConversation] = Field(default_factory=list)
     processing_count: int = Field(default=0, description='Conversations of this day still being processed')
+    dropped_auto_count: int = Field(default=0, description='Clips the noise rules dropped on their own')
+    hold_enabled: bool = Field(default=False, description='Finished clips wait for this review (no model calls)')
 
 
 class FinalizeDayReviewRequest(BaseModel):
     keep_conversation_ids: List[str] = Field(
         default_factory=list, max_length=500, description='Starred: stay normal conversations. The rest are rolled up.'
     )
+    merge_groups: List[DayReviewMergeGroup] = Field(
+        default_factory=list, max_length=100, description='Groups of 2+ clips, each merged into one kept conversation'
+    )
+    drop_conversation_ids: List[str] = Field(
+        default_factory=list, max_length=500, description='Noise: hidden, not summarized'
+    )
+
+    @model_validator(mode='after')
+    def _disjoint(self):
+        seen: set = set()
+        for group in self.merge_groups:
+            if len(set(group.conversation_ids)) < 2:
+                raise ValueError('A merge group needs at least 2 different conversations')
+        for cid in [
+            *self.keep_conversation_ids,
+            *self.drop_conversation_ids,
+            *(c for g in self.merge_groups for c in g.conversation_ids),
+        ]:
+            if cid in seen:
+                raise ValueError(f'Conversation {cid} is listed more than once')
+            seen.add(cid)
+        return self
 
 
 class DayReviewsListResponse(BaseModel):
@@ -97,3 +134,4 @@ class PendingDayReviewsResponse(BaseModel):
 class ReopenDayReviewResponse(BaseModel):
     status: str = 'ok'
     restored_count: int = 0
+    merged_count: int = Field(default=0, description='Merged conversations stay merged; their sources are gone')

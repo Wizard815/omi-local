@@ -12870,6 +12870,14 @@
             "title": "Date",
             "type": "string"
           },
+          "dropped_conversation_ids": {
+            "description": "Dropped as noise (hidden)",
+            "items": {
+              "type": "string"
+            },
+            "title": "Dropped Conversation Ids",
+            "type": "array"
+          },
           "final_text": {
             "default": "",
             "description": "summary_text with redactions masked and pending corrections applied",
@@ -12898,6 +12906,14 @@
               "type": "string"
             },
             "title": "Kept Conversation Ids",
+            "type": "array"
+          },
+          "merged_groups": {
+            "description": "Each group was merged into one new conversation (sources deleted)",
+            "items": {
+              "$ref": "#/components/schemas/DayReviewMergeGroup"
+            },
+            "title": "Merged Groups",
             "type": "array"
           },
           "rolled_up_conversation_ids": {
@@ -12956,6 +12972,12 @@
       },
       "DayReviewConversation": {
         "properties": {
+          "dropped": {
+            "default": false,
+            "description": "Dropped as noise by this review (hidden)",
+            "title": "Dropped",
+            "type": "boolean"
+          },
           "emoji": {
             "default": "",
             "title": "Emoji",
@@ -12972,6 +12994,18 @@
               }
             ],
             "title": "Finished At"
+          },
+          "held": {
+            "default": false,
+            "description": "Transcript only so far; the review decides whether it is processed",
+            "title": "Held",
+            "type": "boolean"
+          },
+          "hold_rule": {
+            "default": "",
+            "description": "Noise rule that let a held clip through, e.g. model_withheld",
+            "title": "Hold Rule",
+            "type": "string"
           },
           "id": {
             "title": "Id",
@@ -13009,6 +13043,16 @@
             "default": "",
             "title": "Title",
             "type": "string"
+          },
+          "transcript_snippet": {
+            "default": "",
+            "title": "Transcript Snippet",
+            "type": "string"
+          },
+          "word_count": {
+            "default": 0,
+            "title": "Word Count",
+            "type": "integer"
           }
         },
         "required": [
@@ -13126,6 +13170,18 @@
             "title": "Date",
             "type": "string"
           },
+          "dropped_auto_count": {
+            "default": 0,
+            "description": "Clips the noise rules dropped on their own",
+            "title": "Dropped Auto Count",
+            "type": "integer"
+          },
+          "hold_enabled": {
+            "default": false,
+            "description": "Finished clips wait for this review (no model calls)",
+            "title": "Hold Enabled",
+            "type": "boolean"
+          },
           "processing_count": {
             "default": 0,
             "description": "Conversations of this day still being processed",
@@ -13147,6 +13203,21 @@
           "date"
         ],
         "title": "DayReviewDayResponse",
+        "type": "object"
+      },
+      "DayReviewMergeGroup": {
+        "properties": {
+          "conversation_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 200,
+            "minItems": 2,
+            "title": "Conversation Ids",
+            "type": "array"
+          }
+        },
+        "title": "DayReviewMergeGroup",
         "type": "object"
       },
       "DayReviewsListResponse": {
@@ -17024,6 +17095,15 @@
       },
       "FinalizeDayReviewRequest": {
         "properties": {
+          "drop_conversation_ids": {
+            "description": "Noise: hidden, not summarized",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 500,
+            "title": "Drop Conversation Ids",
+            "type": "array"
+          },
           "keep_conversation_ids": {
             "description": "Starred: stay normal conversations. The rest are rolled up.",
             "items": {
@@ -17031,6 +17111,15 @@
             },
             "maxItems": 500,
             "title": "Keep Conversation Ids",
+            "type": "array"
+          },
+          "merge_groups": {
+            "description": "Groups of 2+ clips, each merged into one kept conversation",
+            "items": {
+              "$ref": "#/components/schemas/DayReviewMergeGroup"
+            },
+            "maxItems": 100,
+            "title": "Merge Groups",
             "type": "array"
           }
         },
@@ -27136,6 +27225,12 @@
       },
       "ReopenDayReviewResponse": {
         "properties": {
+          "merged_count": {
+            "default": 0,
+            "description": "Merged conversations stay merged; their sources are gone",
+            "title": "Merged Count",
+            "type": "integer"
+          },
           "restored_count": {
             "default": 0,
             "title": "Restored Count",
@@ -73211,7 +73306,7 @@
     },
     "/v1/users/day-reviews/{date}/finalize": {
       "post": {
-        "description": "Keep (star) the listed conversations; roll every other one into one day summary.",
+        "description": "Keep (star) the listed conversations, merge each group into one, drop the noise; roll every other one into one day summary.",
         "operationId": "finalize_day_review_v1_users_day_reviews__date__finalize_post",
         "parameters": [
           {
@@ -73401,7 +73496,7 @@
     },
     "/v1/users/day-reviews/{date}/reopen": {
       "post": {
-        "description": "Undo the review: rolled-up conversations come back, the summary is deleted.",
+        "description": "Undo the review: rolled-up and dropped conversations come back, the summary is deleted. Merges stay.",
         "operationId": "reopen_day_review_v1_users_day_reviews__date__reopen_post",
         "parameters": [
           {
