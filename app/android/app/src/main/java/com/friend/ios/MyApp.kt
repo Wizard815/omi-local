@@ -5,15 +5,11 @@ import android.content.Context
 import android.content.SharedPreferences
 import org.json.JSONArray
 import org.json.JSONObject
-import io.maido.intercom.IntercomFlutterPlugin
 
 class MyApp : Application() {
     override fun onCreate() {
         super.onCreate()
         recordProcessStart()
-        if (BuildConfig.INTERCOM_APP_ID.isNotEmpty() && BuildConfig.INTERCOM_ANDROID_API_KEY.isNotEmpty()) {
-            IntercomFlutterPlugin.initSdk(this, appId = BuildConfig.INTERCOM_APP_ID, androidApiKey = BuildConfig.INTERCOM_ANDROID_API_KEY)
-        }
     }
 
     private fun recordProcessStart() {

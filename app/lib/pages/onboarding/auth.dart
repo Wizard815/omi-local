@@ -1,9 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
 import 'package:omi/backend/preferences.dart';
@@ -120,42 +117,7 @@ class _AuthComponentState extends State<AuthComponent> {
                 const SizedBox(height: 12),
               ],
 
-              // Sign in buttons
-              if (!provider.isLocalDevProfile && (Platform.isIOS || Platform.isAndroid)) ...[
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      OmiHaptics.selection();
-                      provider.onAppleSignIn(widget.onSignIn);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: OmiColors.accent,
-                      foregroundColor: OmiColors.onAccent,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const FaIcon(FontAwesomeIcons.apple, size: 24),
-                        const SizedBox(width: 8),
-                        Text(
-                          context.l10n.signInWithApple,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'Manrope',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              // No Google sign-in: a self-hosted deployment has no Google OAuth client.
+              // No Google/Apple sign-in: a self-hosted deployment has no OAuth clients.
 
               // Local dev: skip Google/Apple OAuth, sign in with the
               // username/password provisioned on the server (see

@@ -4,7 +4,6 @@ import 'package:omi/utils/platform/platform_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 
 import 'package:omi/backend/http/api/knowledge_graph_api.dart';
@@ -34,7 +33,6 @@ import 'package:omi/providers/home_provider.dart';
 import 'package:omi/providers/usage_provider.dart';
 import 'package:omi/services/auth_service.dart';
 import 'package:omi/services/experiments/onboarding_setup_rating_prompt.dart';
-import 'package:omi/utils/analytics/intercom.dart';
 import 'package:omi/utils/analytics/registry/events.g.dart';
 import 'package:omi/utils/analytics/registry/typed_events.dart';
 import 'package:omi/utils/analytics/product_telemetry.dart';
@@ -583,7 +581,6 @@ class _OnboardingWrapperState extends State<OnboardingWrapper> with TickerProvid
           // so an in-session re-login would otherwise leave it null until the
           // Plan & Usage page is opened (missing Pro badge).
           context.read<UsageProvider>().fetchSubscription();
-          IntercomManager.instance.loginIdentifiedUser(SharedPreferencesUtil().uid);
           // Consent is checked first regardless of server-side onboarding
           // state so a returning user signing in on a fresh install still
           // sees the consent screen before any AI processing begins.
@@ -616,14 +613,6 @@ class _OnboardingWrapperState extends State<OnboardingWrapper> with TickerProvid
       NameWidget(
         goNext: () {
           _goNext(); // Go to Primary Language page
-          // Self-hosted remote-login sessions never touch FirebaseAuth (see
-          // AuthService.establishRemoteSession), so currentUser is null there —
-          // ?. rather than ! avoids crashing this synchronous callback mid-onboarding.
-          IntercomManager.instance.updateUser(
-            FirebaseAuth.instance.currentUser?.email,
-            FirebaseAuth.instance.currentUser?.displayName,
-            FirebaseAuth.instance.currentUser?.uid,
-          );
           PlatformManager.instance.analytics.onboardingStepCompleted('Name');
         },
       ),

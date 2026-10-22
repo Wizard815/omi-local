@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:intercom_flutter/intercom_flutter.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
 import 'package:omi/utils/debug_log_manager.dart';
@@ -74,13 +73,6 @@ class LoggerSnackbar extends StatelessWidget {
         title: Text(
           data.message ?? context.l10n.somethingWentWrongTryAgain,
           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        trailing: IconButton(
-          icon: const Icon(Icons.share, color: Colors.white),
-          onPressed: () async {
-            // TODO: Have a custom form which can be prefilled with the error stack trace instead of opening the Gleap Homepage
-            await Intercom.instance.displayMessenger();
-          },
         ),
       ),
     );

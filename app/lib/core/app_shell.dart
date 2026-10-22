@@ -416,11 +416,6 @@ class _AppShellState extends State<AppShell> {
       homeProvider.loadLanguagesThenSetupPrimary();
       context.read<UserProvider>().initialize();
       context.read<PeopleProvider>().initialize();
-      try {
-        await PlatformManager.instance.intercom.loginIdentifiedUser(SharedPreferencesUtil().uid);
-      } catch (e) {
-        Logger.debug('Failed to login to Intercom: $e');
-      }
 
       if (!mounted) return;
       context.read<MessageProvider>().setMessagesFromCache();
@@ -433,13 +428,7 @@ class _AppShellState extends State<AppShell> {
       context.read<IntegrationProvider>().loadFromBackend();
 
       NotificationService.instance.saveNotificationToken();
-    } else {
-      if (!PlatformManager.instance.isAnalyticsSupported) {
-        await PlatformManager.instance.intercom.loginUnidentifiedUser();
-      }
-      if (!mounted) return;
     }
-    PlatformManager.instance.intercom.setUserAttributes();
   }
 
   @override

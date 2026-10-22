@@ -8,7 +8,6 @@ import 'package:omi/pages/home/firmware_mixin.dart';
 import 'package:omi/pages/home/home_navigation.dart';
 import 'package:omi/ui/ui.dart';
 import 'package:omi/providers/device_provider.dart';
-import 'package:omi/utils/analytics/intercom.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 import 'firmware_update_dialog.dart';
 
@@ -273,13 +272,6 @@ class _FirmwareUpdateState extends State<FirmwareUpdate> with FirmwareMixin {
             _startUpdate();
           },
         ),
-        const SizedBox(height: OmiSpacing.xs),
-        OmiButton.secondary(
-          key: const Key('firmware_update_contact_support'),
-          label: context.l10n.contactSupportAction,
-          expand: true,
-          onPressed: () => IntercomManager.instance.intercom.displayMessenger(),
-        ),
       ],
     );
   }
@@ -419,17 +411,6 @@ class _FirmwareUpdateState extends State<FirmwareUpdate> with FirmwareMixin {
             leading: const FaIcon(FontAwesomeIcons.download),
             expand: true,
             onPressed: batteryTooLow ? null : _startUpdate,
-          ),
-        ],
-
-        // Help link
-        if (!shouldUpdate) ...[
-          const SizedBox(height: OmiSpacing.sm),
-          OmiButton.secondary(
-            label: context.l10n.updateGuide,
-            leading: const FaIcon(FontAwesomeIcons.circleQuestion),
-            expand: true,
-            onPressed: () => IntercomManager.instance.displayFirmwareUpdateArticle(),
           ),
         ],
       ],

@@ -14,12 +14,10 @@ import 'package:omi/pages/conversation_detail/conversation_detail_provider.dart'
 import 'package:omi/pages/conversation_detail/widgets.dart';
 import 'package:omi/pages/on_device/on_device_provenance_section.dart';
 import 'package:omi/providers/connectivity_provider.dart';
-import 'package:omi/services/app_review_service.dart';
 import 'package:omi/utils/platform/platform_manager.dart';
 import 'package:omi/utils/analytics/product_telemetry.dart';
 import 'package:omi/utils/analytics/analytics_manager.dart';
 import 'package:omi/utils/l10n_extensions.dart';
-import 'package:omi/widgets/app_review_prompt.dart';
 import 'package:omi/ui/ui.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:uuid/uuid.dart';
@@ -30,7 +28,6 @@ import 'feedback_sheet.dart';
 import 'summary_task_recovery.dart';
 
 class SummaryTab extends StatefulWidget {
-  final bool reviewEnabled;
   final ValueChanged<String>? onOpenSource;
   final String searchQuery;
   final int currentResultIndex;
@@ -41,7 +38,6 @@ class SummaryTab extends StatefulWidget {
 
   const SummaryTab(
       {super.key,
-      this.reviewEnabled = false,
       this.onOpenSource,
       this.searchQuery = '',
       this.currentResultIndex = -1,
@@ -103,109 +99,97 @@ class _SummaryTabState extends State<SummaryTab> with AutomaticKeepAliveClientMi
                   hasSummary: hasSummaryFeedback,
                   hasRecording: hasRecordingFeedback,
                 );
-          return AppReviewPrompt(
-            contentId: conversation?.id ?? '',
-            moment: AppReviewMoment.conversationRead,
-            enabled: widget.reviewEnabled &&
-                !_isEditing &&
-                !provider.isLoading &&
-                !provider.loadingReprocessConversation &&
-                conversation?.status == ConversationStatus.completed &&
-                !discarded &&
-                summarySelection.content.trim().isNotEmpty,
-            child: Stack(
-              children: [
-                CustomScrollView(
-                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
-                  // The page leaves the side margin to each tab; everything here sits inside it
-                  // except the screenshot strip, which scrolls edge to edge.
-                  slivers: [
-                    SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: OmiSpacing.md),
-                      sliver: SliverMainAxisGroup(slivers: [
-                        // Title and facts live in the page header, shared by every tab.
-                        SliverToBoxAdapter(child: SizedBox(height: leadsWithHeading ? 0 : 18)),
-                        // Where the transcript and summary were made, when the phone made them.
-                        // Redo with Omi Cloud waits on a re-transcription endpoint.
-                        if (conversation != null && !discarded)
-                          SliverToBoxAdapter(child: OnDeviceProvenanceSection(conversationId: conversation.id)),
-                        discarded
-                            ? const SliverToBoxAdapter(child: ReprocessDiscardedWidget())
-                            : GetAppsWidgets(
-                                onOpenSource: widget.onOpenSource,
-                                searchQuery: widget.searchQuery,
-                                currentResultIndex: widget.currentResultIndex,
-                                onOpenTranscript: widget.onOpenTranscript,
-                                canStartEditing: () {
-                                  final connectivityProvider =
-                                      Provider.of<ConnectivityProvider>(context, listen: false);
-                                  if (!connectivityProvider.isConnected) {
-                                    ConnectivityProvider.showNoInternetDialog(context);
-                                    return false;
-                                  }
-                                  return true;
-                                },
-                                onEditStarted: (_) {
-                                  setState(() => _isEditing = true);
-                                  PlatformManager.instance.analytics.editSummaryStarted();
-                                },
-                                onEditCancelled: (_) {
-                                  setState(() => _isEditing = false);
-                                  PlatformManager.instance.analytics.editSummaryCancelled();
-                                },
-                                onSaveSummarySelection: (selection, newContent) {
-                                  PlatformManager.instance.analytics.editSummarySaved();
-                                  context.read<ConversationDetailProvider>().saveEditingSummarySelection(
-                                        selection,
-                                        newContent,
-                                      );
-                                },
-                              ),
-                        if (conversation != null &&
-                            !_isEditing &&
-                            !summarySelection.isApp &&
-                            !provider.isLoading &&
-                            !provider.loadingReprocessConversation)
-                          SliverToBoxAdapter(child: SummaryTaskRecovery(conversation: conversation)),
-                      ]),
-                    ),
-                    // Where the Mac puts its strip: after the note's own sections. Only a completed
-                    // conversation can have adjudicated screenshots.
-                    if (!discarded && conversation != null && conversation.status == ConversationStatus.completed)
-                      ConversationScreenshotsSection(
-                        key: ValueKey('conversation-screenshots-${conversation.id}'),
-                        conversationId: conversation.id,
-                      ),
-                    SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: OmiSpacing.md),
-                      sliver: SliverMainAxisGroup(slivers: [
-                        // The episode this conversation belonged to, when it had several moments.
-                        if (!discarded && conversation != null && conversation.status == ConversationStatus.completed)
-                          SliverToBoxAdapter(
-                            child: EpisodeMomentsSection(
-                              key: ValueKey('episode-moments-${conversation.id}'),
-                              conversationId: conversation.id,
-                              onOpenConversation: (id) => _openConversation(context, id),
+          return Stack(
+            children: [
+              CustomScrollView(
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
+                // The page leaves the side margin to each tab; everything here sits inside it
+                // except the screenshot strip, which scrolls edge to edge.
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: OmiSpacing.md),
+                    sliver: SliverMainAxisGroup(slivers: [
+                      // Title and facts live in the page header, shared by every tab.
+                      SliverToBoxAdapter(child: SizedBox(height: leadsWithHeading ? 0 : 18)),
+                      // Where the transcript and summary were made, when the phone made them.
+                      // Redo with Omi Cloud waits on a re-transcription endpoint.
+                      if (conversation != null && !discarded)
+                        SliverToBoxAdapter(child: OnDeviceProvenanceSection(conversationId: conversation.id)),
+                      discarded
+                          ? const SliverToBoxAdapter(child: ReprocessDiscardedWidget())
+                          : GetAppsWidgets(
+                              onOpenSource: widget.onOpenSource,
+                              searchQuery: widget.searchQuery,
+                              currentResultIndex: widget.currentResultIndex,
+                              onOpenTranscript: widget.onOpenTranscript,
+                              canStartEditing: () {
+                                final connectivityProvider = Provider.of<ConnectivityProvider>(context, listen: false);
+                                if (!connectivityProvider.isConnected) {
+                                  ConnectivityProvider.showNoInternetDialog(context);
+                                  return false;
+                                }
+                                return true;
+                              },
+                              onEditStarted: (_) {
+                                setState(() => _isEditing = true);
+                                PlatformManager.instance.analytics.editSummaryStarted();
+                              },
+                              onEditCancelled: (_) {
+                                setState(() => _isEditing = false);
+                                PlatformManager.instance.analytics.editSummaryCancelled();
+                              },
+                              onSaveSummarySelection: (selection, newContent) {
+                                PlatformManager.instance.analytics.editSummarySaved();
+                                context.read<ConversationDetailProvider>().saveEditingSummarySelection(
+                                      selection,
+                                      newContent,
+                                    );
+                              },
                             ),
-                          ),
-                        if (feedbackKind == FeedbackPromptKind.summary)
-                          SummaryFeedbackPrompt(
-                            key: ValueKey('summary-feedback-${conversation?.id ?? ''}'),
-                            conversationId: conversation?.id,
-                          ),
-                        if (feedbackKind == FeedbackPromptKind.recording && conversation != null)
-                          RecordingQualityFeedbackPrompt(
-                            key: ValueKey('recording-feedback-${conversation.id}'),
-                            recordingId: conversation.id,
-                          ),
-                        const SliverToBoxAdapter(child: GetGeolocationWidgets()),
-                        const SliverToBoxAdapter(child: SizedBox(height: 150)),
-                      ]),
+                      if (conversation != null &&
+                          !_isEditing &&
+                          !summarySelection.isApp &&
+                          !provider.isLoading &&
+                          !provider.loadingReprocessConversation)
+                        SliverToBoxAdapter(child: SummaryTaskRecovery(conversation: conversation)),
+                    ]),
+                  ),
+                  // Where the Mac puts its strip: after the note's own sections. Only a completed
+                  // conversation can have adjudicated screenshots.
+                  if (!discarded && conversation != null && conversation.status == ConversationStatus.completed)
+                    ConversationScreenshotsSection(
+                      key: ValueKey('conversation-screenshots-${conversation.id}'),
+                      conversationId: conversation.id,
                     ),
-                  ],
-                ),
-              ],
-            ),
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: OmiSpacing.md),
+                    sliver: SliverMainAxisGroup(slivers: [
+                      // The episode this conversation belonged to, when it had several moments.
+                      if (!discarded && conversation != null && conversation.status == ConversationStatus.completed)
+                        SliverToBoxAdapter(
+                          child: EpisodeMomentsSection(
+                            key: ValueKey('episode-moments-${conversation.id}'),
+                            conversationId: conversation.id,
+                            onOpenConversation: (id) => _openConversation(context, id),
+                          ),
+                        ),
+                      if (feedbackKind == FeedbackPromptKind.summary)
+                        SummaryFeedbackPrompt(
+                          key: ValueKey('summary-feedback-${conversation?.id ?? ''}'),
+                          conversationId: conversation?.id,
+                        ),
+                      if (feedbackKind == FeedbackPromptKind.recording && conversation != null)
+                        RecordingQualityFeedbackPrompt(
+                          key: ValueKey('recording-feedback-${conversation.id}'),
+                          recordingId: conversation.id,
+                        ),
+                      const SliverToBoxAdapter(child: GetGeolocationWidgets()),
+                      const SliverToBoxAdapter(child: SizedBox(height: 150)),
+                    ]),
+                  ),
+                ],
+              ),
+            ],
           );
         },
       ),

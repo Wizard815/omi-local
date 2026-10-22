@@ -28,7 +28,6 @@ dependencies:
   flutter_native_splash: ^2.4.0
   gradient_borders: ^1.0.1
   visibility_detector: ^0.4.0+2
-  flutter_rating_bar: ^4.0.1
   skeletonizer: 2.0.1
   shimmer: ^3.0.0
   pull_down_button: ^0.10.2
@@ -39,15 +38,6 @@ dependencies:
   firebase_core: 3.13.0
   firebase_auth: 5.5.3
   firebase_messaging: 15.2.5
-  firebase_crashlytics: 4.3.2
-
-  # Auth
-  google_sign_in: 6.2.2
-  sign_in_with_apple: ^8.1.0
-
-  # Analytics and Support
-  intercom_flutter: 9.6.22
-  posthog_flutter: ^5.24.0
 
   # Logging
   talker_flutter: 5.0.0
@@ -92,7 +82,6 @@ dependencies:
   device_info_plus: ^11.5.0
   path_provider: 2.1.5
   flutter_foreground_task: 10.0.0
-  upgrader: 11.4.0
   crypto: ^3.0.3
   flutter_markdown: ^0.7.7
   markdown: ^7.3.0
@@ -134,9 +123,7 @@ dependencies:
       ref: af6b457cca4cdd6c97cc2dfa8557333ee09c81f1
   disk_space_2: ^1.0.11
   vector_math: ^2.2.0
-  marionette_flutter: ^0.3.0
   quick_actions: ^1.0.0
-  in_app_review: ^2.0.12
   cryptography: ^2.9.0
 
 dependency_overrides:
@@ -154,7 +141,8 @@ dependency_overrides:
 
 dev_dependencies:
   flutter_launcher_icons: 0.13.1
-  google_sign_in_ios: 5.7.5
+  # Pure-Dart debug driver used only by integration_test/*_capture.dart; never linked into the APK.
+  marionette_flutter: ^0.3.0
   flutter_lints: ^4.0.0
   integration_test:
     sdk: flutter
@@ -199,11 +187,9 @@ flutter_launcher_icons:
 
 flutter:
   # Flutter 3.44 turned Swift Package Manager on by default for iOS/macOS.
-  # firebase_crashlytics 4.3.2 is built against firebase_core 3.11.0 while
-  # firebase_messaging 15.2.5 is built against 3.13.0, so SPM cannot resolve a
-  # single `flutterfire` package version and every iOS archive fails. CocoaPods
-  # tolerates the skew. Re-enable once the Firebase plugin versions are aligned;
-  # Flutter will eventually stop honouring this. https://github.com/BasedHardware/omi/issues/11676
+  # Upstream kept CocoaPods because its Firebase plugin versions disagreed on
+  # firebase_core (https://github.com/BasedHardware/omi/issues/11676). iOS is
+  # out of scope for the self-hosted build, so the override is left as-is.
   config:
     enable-swift-package-manager: false
   generate: true

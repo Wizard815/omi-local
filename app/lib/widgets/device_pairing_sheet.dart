@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:omi/backend/schema/device_guide.dart';
 import 'package:omi/ui/ui.dart';
-import 'package:omi/utils/analytics/intercom.dart';
 import 'package:omi/utils/l10n_extensions.dart';
-import 'package:omi/utils/platform/platform_manager.dart';
 
 /// How to pair one device from the connection guide. Shown in the shared sheet shell
 /// (docs/ux-contract.md §2); "Done" closes this sheet and the guide.
@@ -50,16 +48,6 @@ class DevicePairingSheet extends StatelessWidget {
             ),
           const SizedBox(height: OmiSpacing.xxl),
           OmiButton(label: context.l10n.done, expand: true, onPressed: onDismissAll),
-          const SizedBox(height: OmiSpacing.xs),
-          OmiButton.tertiary(
-            label: context.l10n.reportAnIssue,
-            expand: true,
-            onPressed: () async {
-              PlatformManager.instance.analytics.connectionGuideReportIssue(product.id);
-              onDismissAll();
-              await IntercomManager.instance.intercom.displayMessenger();
-            },
-          ),
         ],
       ),
     );

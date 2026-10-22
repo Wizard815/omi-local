@@ -1,21 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:in_app_review/in_app_review.dart';
 
-import 'package:omi/backend/preferences.dart';
 import 'package:omi/ui/ui.dart';
-import 'package:omi/utils/analytics/registry/events.g.dart';
-import 'package:omi/utils/analytics/registry/typed_events.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 
 /// "Setting up your Omi": the last moment before the completion screen. A short checklist ticks
 /// through the personalization steps while any setup the flow started earlier ([pendingWork])
 /// finishes, then the page advances itself through [onFinished].
-///
-/// [ratingPromptDelay] after the page appears, a native-style alert asks whether Omi has been nice
-/// to use; "Yes" opens the platform's in-app review sheet ([requestReview]), "Not really" just
-/// closes. The page never advances while that alert is open.
 ///
 /// Shown only behind [OnboardingSetupRatingPromptGate]; the wrapper owns that decision.
 class OnboardingSetupPage extends StatefulWidget {
@@ -24,9 +16,7 @@ class OnboardingSetupPage extends StatefulWidget {
     required this.onFinished,
     this.pendingWork,
     this.stepInterval = const Duration(milliseconds: 750),
-    this.ratingPromptDelay = const Duration(milliseconds: 1200),
     this.maxPendingWait = const Duration(seconds: 5),
-    this.requestReview,
   });
 
   /// Called once, after the last tick and once [pendingWork] settled (or [maxPendingWait] ran out).
@@ -38,14 +28,8 @@ class OnboardingSetupPage extends StatefulWidget {
   /// Gap between two ticks.
   final Duration stepInterval;
 
-  /// Delay from the first frame to the rating alert.
-  final Duration ratingPromptDelay;
-
   /// Longest the page waits for [pendingWork] after the ticks finished.
   final Duration maxPendingWait;
-
-  /// Opens the store review sheet; defaults to `in_app_review`. Injectable for tests.
-  final Future<void> Function()? requestReview;
 
   static const int stepCount = 5;
 
@@ -58,9 +42,6 @@ class _OnboardingSetupPageState extends State<OnboardingSetupPage> with SingleTi
   final List<Timer> _timers = [];
   int _completed = 0;
   bool _finished = false;
-  bool _promptOpen = false;
-  bool _promptShown = false;
-  Completer<void>? _promptClosed;
 
   @override
   void initState() {
@@ -69,7 +50,6 @@ class _OnboardingSetupPageState extends State<OnboardingSetupPage> with SingleTi
     for (var i = 1; i <= OnboardingSetupPage.stepCount; i++) {
       _timers.add(Timer(widget.stepInterval * i, () => _tick(i)));
     }
-    _timers.add(Timer(widget.ratingPromptDelay, _showRatingPrompt));
   }
 
   @override
@@ -94,56 +74,11 @@ class _OnboardingSetupPageState extends State<OnboardingSetupPage> with SingleTi
       // Real setup may still be running; wait for it, but never longer than the cap.
       await work.timeout(widget.maxPendingWait, onTimeout: () {}).catchError((_) {});
     }
-    // Let the last tick land before leaving; the alert, if open, holds the page.
+    // Let the last tick land before leaving.
     await Future<void>.delayed(const Duration(milliseconds: 450));
-    if (_promptOpen) await _promptClosed!.future;
     if (!mounted || _finished) return;
     _finished = true;
     widget.onFinished();
-  }
-
-  Future<void> _showRatingPrompt() async {
-    if (!mounted || _promptShown) return;
-    _promptShown = true;
-    _promptOpen = true;
-    _promptClosed = Completer<void>();
-    const TypedEvents().emit(const OnboardingSetupRatingPromptShown());
-    final l10n = context.l10n;
-    final answer = await showDialog<OnboardingSetupRatingPromptAnsweredAnswer>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => OmiAlertDialog(
-        title: l10n.onboardingRatingPromptTitle,
-        actions: [
-          OmiDialogAction(
-            key: const Key('onboarding_rating_yes'),
-            label: l10n.onboardingRatingPromptYes,
-            isDefault: true,
-            onPressed: () => Navigator.of(dialogContext).pop(OnboardingSetupRatingPromptAnsweredAnswer.support),
-          ),
-          OmiDialogAction(
-            key: const Key('onboarding_rating_no'),
-            label: l10n.onboardingRatingPromptNo,
-            onPressed: () => Navigator.of(dialogContext).pop(OnboardingSetupRatingPromptAnsweredAnswer.notReally),
-          ),
-        ],
-      ),
-    );
-    _promptOpen = false;
-    _promptClosed!.complete();
-    if (answer == null) return;
-    const TypedEvents().emit(OnboardingSetupRatingPromptAnswered(answer: answer));
-    SharedPreferencesUtil().ratingAskAnswer =
-        answer == OnboardingSetupRatingPromptAnsweredAnswer.support ? 'yes' : 'no';
-    if (answer == OnboardingSetupRatingPromptAnsweredAnswer.support) {
-      OmiHaptics.success();
-      try {
-        // The store decides whether its sheet appears (and never on the simulator).
-        await (widget.requestReview ?? InAppReview.instance.requestReview)();
-      } catch (error) {
-        debugPrint('OnboardingSetupPage: review request failed: $error');
-      }
-    }
   }
 
   @override

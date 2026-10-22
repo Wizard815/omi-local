@@ -13,10 +13,8 @@ import 'package:omi/backend/schema/conversation.dart';
 import 'package:omi/backend/schema/memory.dart';
 import 'package:omi/env/env.dart';
 import 'package:omi/env/physical_qualification.dart';
-import 'package:omi/utils/analytics/adapters/posthog_adapter.dart';
 import 'package:omi/utils/analytics/analytics_adapter.dart';
 import 'package:omi/utils/analytics/device_health_telemetry.dart';
-import 'package:omi/utils/analytics/intercom.dart';
 import 'package:omi/services/capture/empty_recording_notice.dart';
 import 'package:omi/utils/analytics/registry/events.g.dart';
 import 'package:omi/utils/analytics/registry/typed_events.dart';
@@ -232,12 +230,8 @@ class AnalyticsManager {
   static Future<void> init({Duration timeout = _initTimeout}) async {
     if (PhysicalQualification.enabled) return;
     _initStarted = true;
-    if (_adapter == null && Env.posthogApiKey != null) {
-      _adapter = PostHogAnalyticsAdapter(
-        apiKey: Env.posthogApiKey!,
-        personPropertiesForFlags: () => {'\$email': _preferences.email},
-      );
-    }
+    // Self-hosted build: no PostHog SDK. Only an adapter installed through
+    // [configure] (tests) is ever used; otherwise analytics stay a no-op.
     final adapter = _adapter;
     if (adapter == null || _analyticsReady) return;
     final existing = _initialization;
@@ -351,16 +345,10 @@ class AnalyticsManager {
 
   void setUserAttribute(String key, dynamic value) {
     setUserProperty(key, value);
-    PlatformService.executeIfSupported(PlatformService.isIntercomSupported, () {
-      IntercomManager.instance.updateCustomAttributes({key: value});
-    });
   }
 
   void setUserAttributes() {
     setPeopleValues();
-    PlatformService.executeIfSupported(PlatformService.isIntercomSupported, () {
-      IntercomManager.instance.setUserAttributes();
-    });
   }
 
   void trackEvent(String eventName, {Map<String, dynamic>? properties}) {

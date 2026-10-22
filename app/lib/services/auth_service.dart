@@ -7,9 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:app_links/app_links.dart';
 import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:omi/services/onboarding_sync_runtime.dart';
@@ -245,112 +243,6 @@ class AuthService {
 
   getFirebaseUser() {
     return FirebaseAuth.instance.currentUser;
-  }
-
-  /// Google Sign In using the standard google_sign_in package (iOS, Android)
-  Future<UserCredential?> signInWithGoogleMobile() async {
-    // Trigger the authentication flow
-    final GoogleSignInAccount? googleUser = await GoogleSignIn(scopes: ['profile', 'email']).signIn();
-
-    // Obtain the auth details from the request
-    final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
-    if (googleAuth == null) {
-      return null;
-    }
-
-    // Create a new credential
-    if (googleAuth.accessToken == null && googleAuth.idToken == null) {
-      return null;
-    }
-    final credential = GoogleAuthProvider.credential(accessToken: googleAuth.accessToken, idToken: googleAuth.idToken);
-
-    // Once signed in, return the UserCredential
-    final result = await FirebaseAuth.instance.signInWithCredential(credential);
-    await _updateUserPreferences(result, 'google');
-    return result;
-  }
-
-  /// Generates a cryptographically secure random nonce, to be included in a
-  /// credential request.
-  String generateNonce([int length = 32]) {
-    const charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
-    final random = Random.secure();
-    return List.generate(length, (_) => charset[random.nextInt(charset.length)]).join();
-  }
-
-  /// Returns the sha256 hash of [input] in hex notation.
-  String sha256ofString(String input) {
-    final bytes = utf8.encode(input);
-    final digest = sha256.convert(bytes);
-    return digest.toString();
-  }
-
-  Future<UserCredential?> signInWithAppleMobile() async {
-    try {
-      // Sign out the current user first
-      Logger.debug('Signing out current user...');
-      await signOutForAccountSwitch();
-      Logger.debug('User signed out successfully.');
-
-      final rawNonce = generateNonce();
-      final nonce = sha256ofString(rawNonce);
-
-      Logger.debug('Requesting Apple credential...');
-      final appleCredential = await SignInWithApple.getAppleIDCredential(
-        scopes: [AppleIDAuthorizationScopes.email, AppleIDAuthorizationScopes.fullName],
-        nonce: nonce,
-      );
-
-      if (appleCredential.identityToken == null) {
-        throw Exception('Apple Sign In failed - no identity token received.');
-      }
-
-      // Create an `OAuthCredential` from the credential returned by Apple.
-      final oauthCredential = OAuthProvider("apple.com").credential(
-        idToken: appleCredential.identityToken,
-        rawNonce: rawNonce,
-        accessToken: appleCredential.authorizationCode,
-      );
-
-      // Sign in the user with Firebase.
-      Logger.debug('Attempting to sign in with Firebase...');
-      UserCredential userCred = await FirebaseAuth.instance.signInWithCredential(oauthCredential);
-      Logger.debug('Firebase sign-in successful.');
-
-      // Extract name from Apple credential (only available on first sign-in)
-      if (appleCredential.givenName != null && appleCredential.givenName!.isNotEmpty) {
-        Logger.debug('Apple provided name: ${appleCredential.givenName} ${appleCredential.familyName ?? ""}');
-        SharedPreferencesUtil().givenName = appleCredential.givenName!;
-        if (appleCredential.familyName != null && appleCredential.familyName!.isNotEmpty) {
-          SharedPreferencesUtil().familyName = appleCredential.familyName!;
-        }
-
-        // Update Firebase profile with the name
-        final fullName = appleCredential.familyName != null && appleCredential.familyName!.isNotEmpty
-            ? '${appleCredential.givenName} ${appleCredential.familyName}'
-            : appleCredential.givenName!;
-        try {
-          await userCred.user?.updateProfile(displayName: fullName);
-          await userCred.user?.reload();
-        } catch (e) {
-          Logger.debug('Failed to update Firebase profile with Apple name: $e');
-        }
-      }
-
-      await _updateUserPreferences(userCred, 'apple');
-
-      return userCred;
-    } on FirebaseAuthException catch (e) {
-      Logger.debug('FirebaseAuthException: ${e.code} - ${e.message}');
-      if (e.code == 'invalid-credential') {
-        Logger.debug('Please check Firebase console configuration for Apple Sign In.');
-      }
-      return null;
-    } catch (e) {
-      Logger.debug('Error during Apple Sign In: $e');
-      Logger.handle(e, null, message: 'An error occurred while signing in. Please try again later.');
-      return null;
-    }
   }
 
   /// Self-hosted sign-in, on the LAN or through a tunnel: hits the backend's

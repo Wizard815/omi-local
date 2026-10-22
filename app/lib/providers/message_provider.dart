@@ -22,7 +22,6 @@ import 'package:omi/backend/http/api/users.dart';
 import 'package:omi/backend/http/api_result.dart';
 import 'package:omi/backend/http/streaming_error.dart';
 import 'package:omi/backend/preferences.dart';
-import 'package:omi/services/app_review_service.dart';
 import 'package:omi/services/chat_video_sampler.dart';
 import 'package:omi/services/voice_playback/chat_reply_read_aloud.dart';
 import 'package:omi/services/voice_playback/omi_voice_playback_service.dart';
@@ -621,7 +620,6 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
 
   Future<bool> setMessageNps(ServerMessage message, int value, {String? reason}) async {
     if (!await setMessageResponseRating(message.id, value, reason: reason)) return false;
-    if (value == -1) unawaited(AppReviewService().recordBadExperience(AppReviewBadExperience.negativeChatRating));
     message.askForNps = false;
     // Update local message rating so it persists when scrolling
     message.rating = value == 0 ? null : value;

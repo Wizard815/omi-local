@@ -1,5 +1,3 @@
-import 'package:omi/services/app_review_service.dart';
-import 'package:omi/widgets/app_review_prompt.dart';
 import 'package:omi/utils/platform/platform_manager.dart';
 import 'package:flutter/material.dart';
 
@@ -316,49 +314,41 @@ class _DailySummaryDetailPageState extends State<DailySummaryDetailPage> with Si
 
   Widget _buildContent() {
     final summary = _summary!;
-    return AppReviewPrompt(
-      contentId: summary.id,
-      moment: AppReviewMoment.dailySummaryRead,
-      enabled: !_isLoading && !_isSharing && !_isDeleting && !_isRegenerating && summary.overview.trim().isNotEmpty,
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: CustomScrollView(
-          slivers: [
-            _buildHeader(summary),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  _buildOverviewCard(summary),
-                  const SizedBox(height: 24),
-                  _buildStatsRow(summary),
-                  if (summary.highlights.isNotEmpty) ...[const SizedBox(height: 32), _buildHighlightsSection(summary)],
-                  if (summary.actionItems.isNotEmpty) ...[
-                    const SizedBox(height: 32),
-                    _buildActionItemsSection(summary)
-                  ],
-                  if (summary.unresolvedQuestions.isNotEmpty) ...[
-                    const SizedBox(height: 32),
-                    _buildUnresolvedQuestionsSection(summary),
-                  ],
-                  if (summary.decisionsMade.isNotEmpty) ...[
-                    const SizedBox(height: 32),
-                    _buildDecisionsMadeSection(summary),
-                  ],
-                  if (summary.memoriesLearned.isNotEmpty) ...[
-                    const SizedBox(height: 32),
-                    _buildMemoriesLearnedSection(summary),
-                  ],
-                  if (summary.knowledgeNuggets.isNotEmpty) ...[
-                    const SizedBox(height: 32),
-                    _buildKnowledgeNuggetsSection(summary),
-                  ],
-                  if (summary.locations.isNotEmpty) ...[const SizedBox(height: 32), _buildLocationsMap(summary)],
-                ]),
-              ),
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: CustomScrollView(
+        slivers: [
+          _buildHeader(summary),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                _buildOverviewCard(summary),
+                const SizedBox(height: 24),
+                _buildStatsRow(summary),
+                if (summary.highlights.isNotEmpty) ...[const SizedBox(height: 32), _buildHighlightsSection(summary)],
+                if (summary.actionItems.isNotEmpty) ...[const SizedBox(height: 32), _buildActionItemsSection(summary)],
+                if (summary.unresolvedQuestions.isNotEmpty) ...[
+                  const SizedBox(height: 32),
+                  _buildUnresolvedQuestionsSection(summary),
+                ],
+                if (summary.decisionsMade.isNotEmpty) ...[
+                  const SizedBox(height: 32),
+                  _buildDecisionsMadeSection(summary),
+                ],
+                if (summary.memoriesLearned.isNotEmpty) ...[
+                  const SizedBox(height: 32),
+                  _buildMemoriesLearnedSection(summary),
+                ],
+                if (summary.knowledgeNuggets.isNotEmpty) ...[
+                  const SizedBox(height: 32),
+                  _buildKnowledgeNuggetsSection(summary),
+                ],
+                if (summary.locations.isNotEmpty) ...[const SizedBox(height: 32), _buildLocationsMap(summary)],
+              ]),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

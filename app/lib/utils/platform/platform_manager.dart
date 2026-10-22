@@ -9,7 +9,6 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:omi/backend/preferences.dart';
-import 'package:omi/utils/analytics/intercom.dart';
 import 'package:omi/utils/analytics/analytics_manager.dart';
 import 'package:omi/utils/debugging/crashlytics_manager.dart';
 import 'package:omi/utils/platform/platform_service.dart';
@@ -30,18 +29,16 @@ class PlatformManager {
   String get appNamespace => _packageInfo.packageName;
 
   AnalyticsManager get analytics => AnalyticsManager();
-  IntercomManager get intercom => IntercomManager.instance;
   CrashlyticsManager get crashReporter => CrashlyticsManager.instance;
 
   static Future<void> initializeServices() async {
     _instance._packageInfo = await PackageInfo.fromPlatform();
     _instance._deviceIdHash = await _instance._getDeviceIdHash();
     unawaited(AnalyticsManager.init());
-    await IntercomManager.instance.initIntercom();
   }
 
   /// Synchronous initialization for the local hermetic journey lane
-  /// (SCA-488): no platform plugins, no analytics, no Intercom — only the
+  /// (SCA-488): no platform plugins, no analytics — only the
   /// fields request headers read. The full app boot still uses
   /// [initializeServices]; this seam exists so production HTTP paths can run
   /// inside a host test without plugin channels.
