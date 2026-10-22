@@ -4481,5 +4481,20 @@
     "newSubfolder": "Subcarpeta nova",
     "folderTreeTitle": "Carpetes",
     "moveFolder": "Moure…",
-    "moveFolderTo": "Moure «{name}» a…"
+    "moveFolderTo": "Moure «{name}» a…",
+    "dayReviewSortHintHold": "Encara no s'ha processat res. Destaca el que vulguis conservar, marca els clips per fusionar-los en un de sol i descarta el soroll. La resta es convertirà en un sol resum del dia que podràs corregir.",
+    "dayReviewAutoDropped": "{count, plural, =1{S'ha descartat automàticament 1 clip sense veu real.} other{S'han descartat automàticament {count} clips sense veu real.}}",
+    "dayReviewUnclearTitle": "Clips curts o poc clars",
+    "dayReviewDroppedTitle": "Descartats ({count})",
+    "dayReviewMergedTitle": "Fusionats en un de sol ({count})",
+    "dayReviewDropTooltip": "Descartar (soroll)",
+    "dayReviewRestoreTooltip": "Tornar a posar",
+    "dayReviewMergeTooltip": "Seleccionar per fusionar",
+    "dayReviewMergeSelected": "{count, plural, =1{Selecciona un altre clip per fusionar} other{Fusionar {count} clips en un de sol}}",
+    "dayReviewUngroup": "Desagrupar",
+    "dayReviewMergeGroupLabel": "Fusionats en una sola conversa",
+    "dayReviewFinalizeButtonFull": "Conservar {kept} · Fusionar {merged} · Descartar {dropped} · Resumir {rolled}",
+    "dayReviewConfirmExtra": "{merged} es fusionaran en una sola conversa cadascun i {dropped} es descartaran.",
+    "dayReviewCountsFull": "{rolled} resumides · {kept} conservades · {merged} fusionades · {dropped} descartades",
+    "heldForDayReview": "En espera de la teva revisió del dia"
 }

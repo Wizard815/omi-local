@@ -4481,5 +4481,20 @@
     "newSubfolder": "新しいサブフォルダ",
     "folderTreeTitle": "フォルダ",
     "moveFolder": "移動…",
-    "moveFolderTo": "「{name}」の移動先…"
+    "moveFolderTo": "「{name}」の移動先…",
+    "dayReviewSortHintHold": "まだ何も処理されていません。残したいものにスターを付け、1つにまとめたいクリップにチェックを入れ、ノイズは破棄してください。それ以外は、あとから修正できる1つの日次の要約にまとめられます。",
+    "dayReviewAutoDropped": "{count, plural, =1{実際の発話がない1件のクリップを自動的に破棄しました。} other{実際の発話がない{count}件のクリップを自動的に破棄しました。}}",
+    "dayReviewUnclearTitle": "短い、または不明瞭なクリップ",
+    "dayReviewDroppedTitle": "破棄済み（{count}）",
+    "dayReviewMergedTitle": "1つに統合済み（{count}）",
+    "dayReviewDropTooltip": "破棄（ノイズ）",
+    "dayReviewRestoreTooltip": "元に戻す",
+    "dayReviewMergeTooltip": "選択して統合",
+    "dayReviewMergeSelected": "{count, plural, =1{統合するクリップをもう1件選択してください} other{{count}件のクリップを1つに統合}}",
+    "dayReviewUngroup": "グループ解除",
+    "dayReviewMergeGroupLabel": "1つの会話に統合済み",
+    "dayReviewFinalizeButtonFull": "{kept}件を残す · {merged}件を統合 · {dropped}件を破棄 · {rolled}件を要約",
+    "dayReviewConfirmExtra": "{merged}はそれぞれ1つの会話に統合され、{dropped}は破棄されます。",
+    "dayReviewCountsFull": "要約 {rolled}件 · 保持 {kept}件 · 統合 {merged}件 · 破棄 {dropped}件",
+    "heldForDayReview": "日次レビュー待ち"
 }

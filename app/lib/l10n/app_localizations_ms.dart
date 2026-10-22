@@ -14800,4 +14800,76 @@ class AppLocalizationsMs extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'Alih “$name” ke dalam…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'Belum ada yang diproses. Bintangkan apa yang mahu disimpan, tandakan klip untuk menggabungkannya menjadi satu, buang hingar. Selebihnya menjadi satu ringkasan hari yang boleh anda betulkan.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count klip tanpa pertuturan sebenar telah dibuang secara automatik.',
+      one: '1 klip tanpa pertuturan sebenar telah dibuang secara automatik.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'Klip pendek atau tidak jelas';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'Dibuang ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'Digabungkan menjadi satu ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'Buang (hingar)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'Kembalikan';
+
+  @override
+  String get dayReviewMergeTooltip => 'Pilih untuk digabungkan';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Gabungkan $count klip menjadi satu',
+      one: 'Pilih satu lagi klip untuk digabungkan',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'Leraikan';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'Digabungkan menjadi satu perbualan';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'Simpan $kept · Gabung $merged · Buang $dropped · Ringkaskan $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged akan digabungkan menjadi satu perbualan setiap kumpulan dan $dropped dibuang.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled diringkaskan · $kept disimpan · $merged digabungkan · $dropped dibuang';
+  }
+
+  @override
+  String get heldForDayReview => 'Menunggu semakan hari anda';
 }

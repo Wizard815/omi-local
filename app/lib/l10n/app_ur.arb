@@ -11907,5 +11907,20 @@
     "newSubfolder": "نیا ذیلی فولڈر",
     "folderTreeTitle": "فولڈرز",
     "moveFolder": "منتقل کریں…",
-    "moveFolderTo": "“{name}” کو اس میں منتقل کریں…"
+    "moveFolderTo": "“{name}” کو اس میں منتقل کریں…",
+    "dayReviewSortHintHold": "ابھی کچھ بھی پراسیس نہیں ہوا۔ جو رکھنا ہے اسے ستارہ لگائیں، کلپس کو ایک میں ضم کرنے کے لیے ٹک کریں، اور شور ہٹا دیں۔ باقی سب ایک دن کا خلاصہ بن جائے گا جسے آپ درست کر سکتے ہیں۔",
+    "dayReviewAutoDropped": "{count, plural, =1{بغیر حقیقی گفتگو والا 1 کلپ خودکار طور پر ہٹا دیا گیا۔} other{بغیر حقیقی گفتگو والے {count} کلپس خودکار طور پر ہٹا دیے گئے۔}}",
+    "dayReviewUnclearTitle": "مختصر یا غیر واضح کلپس",
+    "dayReviewDroppedTitle": "ہٹائے گئے ({count})",
+    "dayReviewMergedTitle": "ایک میں ضم شدہ ({count})",
+    "dayReviewDropTooltip": "ہٹائیں (شور)",
+    "dayReviewRestoreTooltip": "واپس رکھیں",
+    "dayReviewMergeTooltip": "ضم کرنے کے لیے منتخب کریں",
+    "dayReviewMergeSelected": "{count, plural, =1{ضم کرنے کے لیے ایک اور کلپ منتخب کریں} other{{count} کلپس کو ایک میں ضم کریں}}",
+    "dayReviewUngroup": "گروپ ختم کریں",
+    "dayReviewMergeGroupLabel": "ایک گفتگو میں ضم شدہ",
+    "dayReviewFinalizeButtonFull": "{kept} رکھیں · {merged} ضم کریں · {dropped} ہٹائیں · {rolled} کا خلاصہ کریں",
+    "dayReviewConfirmExtra": "{merged} ہر ایک الگ گفتگو میں ضم ہوں گی اور {dropped} ہٹا دی جائیں گی۔",
+    "dayReviewCountsFull": "{rolled} خلاصے میں · {kept} رکھی گئیں · {merged} ضم شدہ · {dropped} ہٹائی گئیں",
+    "heldForDayReview": "آپ کے دن کے جائزے کا انتظار ہے"
 }

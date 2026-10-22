@@ -4516,5 +4516,20 @@
     "newSubfolder": "Nowy podfolder",
     "folderTreeTitle": "Foldery",
     "moveFolder": "Przenieś…",
-    "moveFolderTo": "Przenieś „{name}” do…"
+    "moveFolderTo": "Przenieś „{name}” do…",
+    "dayReviewSortHintHold": "Nic nie zostało jeszcze przetworzone. Oznacz gwiazdką to, co chcesz zachować, zaznacz klipy, aby scalić je w jeden, i odrzuć szum. Cała reszta stanie się jednym podsumowaniem dnia, które możesz poprawić.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 klip bez prawdziwej mowy został odrzucony automatycznie.} few{{count} klipy bez prawdziwej mowy zostały odrzucone automatycznie.} many{{count} klipów bez prawdziwej mowy zostało odrzuconych automatycznie.} other{{count} klipu bez prawdziwej mowy zostało odrzucone automatycznie.}}",
+    "dayReviewUnclearTitle": "Krótkie lub niejasne klipy",
+    "dayReviewDroppedTitle": "Odrzucone ({count})",
+    "dayReviewMergedTitle": "Scalone w jeden ({count})",
+    "dayReviewDropTooltip": "Odrzuć (szum)",
+    "dayReviewRestoreTooltip": "Przywróć",
+    "dayReviewMergeTooltip": "Zaznacz do scalenia",
+    "dayReviewMergeSelected": "{count, plural, =1{Zaznacz kolejny klip, aby scalić} few{Scal {count} klipy w jeden} many{Scal {count} klipów w jeden} other{Scal {count} klipu w jeden}}",
+    "dayReviewUngroup": "Rozgrupuj",
+    "dayReviewMergeGroupLabel": "Scalone w jedną rozmowę",
+    "dayReviewFinalizeButtonFull": "Zachowaj {kept} · Scal {merged} · Odrzuć {dropped} · Podsumuj {rolled}",
+    "dayReviewConfirmExtra": "{merged} zostanie scalonych w jedną rozmowę każda, a {dropped} odrzuconych.",
+    "dayReviewCountsFull": "Podsumowane: {rolled} · Zachowane: {kept} · Scalone: {merged} · Odrzucone: {dropped}",
+    "heldForDayReview": "Czeka na Twój przegląd dnia"
 }

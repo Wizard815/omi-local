@@ -14879,4 +14879,76 @@ class AppLocalizationsTl extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'Ilipat ang \"$name\" sa…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'Wala pang naproseso. I-star ang gusto mong itago, i-tick ang mga clip na pagsasamahin sa iisa, at itapon ang ingay. Lahat ng iba ay magiging iisang buod ng araw na puwede mong itama.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count clip na walang tunay na pagsasalita ang awtomatikong itinapon.',
+      one: '$count clip na walang tunay na pagsasalita ang awtomatikong itinapon.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'Maikli o hindi malinaw na mga clip';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'Itinapon ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'Pinagsama sa iisa ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'Itapon (ingay)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'Ibalik';
+
+  @override
+  String get dayReviewMergeTooltip => 'Piliin para pagsamahin';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Pagsamahin ang $count clip sa iisa',
+      one: 'Pumili ng isa pang clip na pagsasamahin',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'I-ungroup';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'Pinagsama sa iisang conversation';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'Itago ang $kept · Pagsamahin ang $merged · Itapon ang $dropped · Ibuod ang $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return 'Pagsasamahin ang $merged sa tig-iisang conversation at itatapon ang $dropped.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled naibuod · $kept itinago · $merged pinagsama · $dropped itinapon';
+  }
+
+  @override
+  String get heldForDayReview => 'Naghihintay sa iyong review ng araw';
 }

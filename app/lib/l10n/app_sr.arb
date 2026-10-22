@@ -11907,5 +11907,20 @@
     "newSubfolder": "Нова потфасцикла",
     "folderTreeTitle": "Фасцикле",
     "moveFolder": "Премести…",
-    "moveFolderTo": "Премести „{name}” у…"
+    "moveFolderTo": "Премести „{name}” у…",
+    "dayReviewSortHintHold": "Ништа још није обрађено. Означите звездицом оно што желите да задржите, штиклирајте исечке да бисте их спојили у један, а шум одбаците. Све остало постаје један резиме дана који можете да исправите.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 исечак без стварног говора је аутоматски одбачен.} few{{count} исечка без стварног говора су аутоматски одбачена.} other{{count} исечака без стварног говора је аутоматски одбачено.}}",
+    "dayReviewUnclearTitle": "Кратки или нејасни исечци",
+    "dayReviewDroppedTitle": "Одбачено ({count})",
+    "dayReviewMergedTitle": "Спојено у један ({count})",
+    "dayReviewDropTooltip": "Одбаци (шум)",
+    "dayReviewRestoreTooltip": "Врати назад",
+    "dayReviewMergeTooltip": "Изабери за спајање",
+    "dayReviewMergeSelected": "{count, plural, =1{Изаберите још један исечак за спајање} few{Споји {count} исечка у један} other{Споји {count} исечака у један}}",
+    "dayReviewUngroup": "Разгрупиши",
+    "dayReviewMergeGroupLabel": "Спојено у један разговор",
+    "dayReviewFinalizeButtonFull": "Задржи: {kept} · Споји: {merged} · Одбаци: {dropped} · Резимирај: {rolled}",
+    "dayReviewConfirmExtra": "{merged} ће бити спојено у по један разговор, а {dropped} одбачено.",
+    "dayReviewCountsFull": "Резимирано: {rolled} · Задржано: {kept} · Спојено: {merged} · Одбачено: {dropped}",
+    "heldForDayReview": "Чека ваш преглед дана"
 }

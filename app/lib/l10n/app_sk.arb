@@ -4481,5 +4481,20 @@
     "newSubfolder": "Nový podpriečinok",
     "folderTreeTitle": "Priečinky",
     "moveFolder": "Presunúť…",
-    "moveFolderTo": "Presunúť „{name}“ do…"
+    "moveFolderTo": "Presunúť „{name}“ do…",
+    "dayReviewSortHintHold": "Zatiaľ sa nič nespracovalo. Označte hviezdičkou, čo si chcete ponechať, zaškrtnite klipy, ktoré chcete zlúčiť do jedného, a zahoďte šum. Všetko ostatné sa zmení na jedno zhrnutie dňa, ktoré môžete opraviť.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 klip bez skutočnej reči bol automaticky zahodený.} few{{count} klipy bez skutočnej reči boli automaticky zahodené.} other{{count} klipov bez skutočnej reči bolo automaticky zahodených.}}",
+    "dayReviewUnclearTitle": "Krátke alebo nejasné klipy",
+    "dayReviewDroppedTitle": "Zahodené ({count})",
+    "dayReviewMergedTitle": "Zlúčené do jedného ({count})",
+    "dayReviewDropTooltip": "Zahodiť (šum)",
+    "dayReviewRestoreTooltip": "Vrátiť späť",
+    "dayReviewMergeTooltip": "Vybrať na zlúčenie",
+    "dayReviewMergeSelected": "{count, plural, =1{Vyberte ďalší klip na zlúčenie} few{Zlúčiť {count} klipy do jedného} other{Zlúčiť {count} klipov do jedného}}",
+    "dayReviewUngroup": "Zrušiť zoskupenie",
+    "dayReviewMergeGroupLabel": "Zlúčené do jednej konverzácie",
+    "dayReviewFinalizeButtonFull": "Ponechať {kept} · Zlúčiť {merged} · Zahodiť {dropped} · Zhrnúť {rolled}",
+    "dayReviewConfirmExtra": "{merged} sa zlúči každá do jednej konverzácie a {dropped} sa zahodí.",
+    "dayReviewCountsFull": "Zhrnuté: {rolled} · Ponechané: {kept} · Zlúčené: {merged} · Zahodené: {dropped}",
+    "heldForDayReview": "Čaká na vaše zhodnotenie dňa"
 }

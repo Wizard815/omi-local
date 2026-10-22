@@ -4481,5 +4481,20 @@
     "newSubfolder": "Jauna apakšmape",
     "folderTreeTitle": "Mapes",
     "moveFolder": "Pārvietot…",
-    "moveFolderTo": "Pārvietot „{name}” uz…"
+    "moveFolderTo": "Pārvietot „{name}” uz…",
+    "dayReviewSortHintHold": "Vēl nekas nav apstrādāts. Atzīmējiet ar zvaigznīti to, ko paturēt, atķeksējiet fragmentus, lai tos apvienotu vienā, un atmetiet troksni. Viss pārējais kļūs par vienu dienas kopsavilkumu, ko varat labot.",
+    "dayReviewAutoDropped": "{count, plural, zero{{count} fragmentu bez īstas runas tika atmesti automātiski.} one{{count} fragments bez īstas runas tika atmests automātiski.} other{{count} fragmenti bez īstas runas tika atmesti automātiski.}}",
+    "dayReviewUnclearTitle": "Īsi vai neskaidri fragmenti",
+    "dayReviewDroppedTitle": "Atmesti ({count})",
+    "dayReviewMergedTitle": "Apvienoti vienā ({count})",
+    "dayReviewDropTooltip": "Atmest (troksnis)",
+    "dayReviewRestoreTooltip": "Atlikt atpakaļ",
+    "dayReviewMergeTooltip": "Atlasīt apvienošanai",
+    "dayReviewMergeSelected": "{count, plural, =1{Atlasiet vēl vienu fragmentu, ko apvienot} other{Apvienot {count} fragmentus vienā}}",
+    "dayReviewUngroup": "Atdalīt grupu",
+    "dayReviewMergeGroupLabel": "Apvienoti vienā sarunā",
+    "dayReviewFinalizeButtonFull": "Paturēt: {kept} · Apvienot: {merged} · Atmest: {dropped} · Apkopot: {rolled}",
+    "dayReviewConfirmExtra": "{merged} tiks apvienotas katra vienā sarunā, un {dropped} tiks atmestas.",
+    "dayReviewCountsFull": "Apkopotas: {rolled} · Paturētas: {kept} · Apvienotas: {merged} · Atmestas: {dropped}",
+    "heldForDayReview": "Gaida jūsu dienas pārskatu"
 }

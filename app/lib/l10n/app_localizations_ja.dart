@@ -14555,4 +14555,76 @@ class AppLocalizationsJa extends AppLocalizations {
   String moveFolderTo(String name) {
     return '「$name」の移動先…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'まだ何も処理されていません。残したいものにスターを付け、1つにまとめたいクリップにチェックを入れ、ノイズは破棄してください。それ以外は、あとから修正できる1つの日次の要約にまとめられます。';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '実際の発話がない$count件のクリップを自動的に破棄しました。',
+      one: '実際の発話がない1件のクリップを自動的に破棄しました。',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => '短い、または不明瞭なクリップ';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return '破棄済み（$count）';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return '1つに統合済み（$count）';
+  }
+
+  @override
+  String get dayReviewDropTooltip => '破棄（ノイズ）';
+
+  @override
+  String get dayReviewRestoreTooltip => '元に戻す';
+
+  @override
+  String get dayReviewMergeTooltip => '選択して統合';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count件のクリップを1つに統合',
+      one: '統合するクリップをもう1件選択してください',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'グループ解除';
+
+  @override
+  String get dayReviewMergeGroupLabel => '1つの会話に統合済み';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return '$kept件を残す · $merged件を統合 · $dropped件を破棄 · $rolled件を要約';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$mergedはそれぞれ1つの会話に統合され、$droppedは破棄されます。';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '要約 $rolled件 · 保持 $kept件 · 統合 $merged件 · 破棄 $dropped件';
+  }
+
+  @override
+  String get heldForDayReview => '日次レビュー待ち';
 }

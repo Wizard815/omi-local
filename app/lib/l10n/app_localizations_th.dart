@@ -14691,4 +14691,76 @@ class AppLocalizationsTh extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'ย้าย “$name” ไปยัง…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'ยังไม่มีการประมวลผลใดๆ ติดดาวสิ่งที่ต้องการเก็บไว้ ติ๊กเลือกคลิปเพื่อรวมเป็นหนึ่งเดียว และทิ้งเสียงรบกวน ส่วนที่เหลือจะรวมเป็นสรุปประจำวันหนึ่งรายการที่คุณแก้ไขได้';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'ทิ้งคลิปที่ไม่มีเสียงพูดจริง $count คลิปโดยอัตโนมัติแล้ว',
+      one: 'ทิ้งคลิปที่ไม่มีเสียงพูดจริง 1 คลิปโดยอัตโนมัติแล้ว',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'คลิปสั้นหรือไม่ชัดเจน';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'ทิ้งแล้ว ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'รวมเป็นหนึ่งเดียวแล้ว ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'ทิ้ง (เสียงรบกวน)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'นำกลับคืน';
+
+  @override
+  String get dayReviewMergeTooltip => 'เลือกเพื่อรวม';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'รวม $count คลิปเป็นหนึ่งเดียว',
+      one: 'เลือกคลิปอีกหนึ่งคลิปเพื่อรวม',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'ยกเลิกการจัดกลุ่ม';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'รวมเป็นบทสนทนาเดียวแล้ว';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'เก็บ $kept · รวม $merged · ทิ้ง $dropped · สรุป $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged จะถูกรวมเป็นบทสนทนาเดียวต่อกลุ่ม และ $dropped จะถูกทิ้ง';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return 'สรุปแล้ว $rolled · เก็บไว้ $kept · รวมแล้ว $merged · ทิ้งแล้ว $dropped';
+  }
+
+  @override
+  String get heldForDayReview => 'รอการทบทวนประจำวันของคุณ';
 }

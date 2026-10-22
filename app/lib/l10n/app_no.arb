@@ -4481,5 +4481,20 @@
     "newSubfolder": "Ny undermappe",
     "folderTreeTitle": "Mapper",
     "moveFolder": "Flytt…",
-    "moveFolderTo": "Flytt «{name}» til…"
+    "moveFolderTo": "Flytt «{name}» til…",
+    "dayReviewSortHintHold": "Ingenting er behandlet ennå. Stjernemerk det du vil beholde, huk av klipp for å slå dem sammen til ett, og forkast støyen. Alt annet blir ett dagsammendrag som du kan rette.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 klipp uten reell tale ble forkastet automatisk.} other{{count} klipp uten reell tale ble forkastet automatisk.}}",
+    "dayReviewUnclearTitle": "Korte eller uklare klipp",
+    "dayReviewDroppedTitle": "Forkastet ({count})",
+    "dayReviewMergedTitle": "Slått sammen til ett ({count})",
+    "dayReviewDropTooltip": "Forkast (støy)",
+    "dayReviewRestoreTooltip": "Legg tilbake",
+    "dayReviewMergeTooltip": "Velg for å slå sammen",
+    "dayReviewMergeSelected": "{count, plural, =1{Velg ett klipp til for å slå sammen} other{Slå sammen {count} klipp til ett}}",
+    "dayReviewUngroup": "Del opp",
+    "dayReviewMergeGroupLabel": "Slått sammen til én samtale",
+    "dayReviewFinalizeButtonFull": "Behold {kept} · Slå sammen {merged} · Forkast {dropped} · Oppsummer {rolled}",
+    "dayReviewConfirmExtra": "{merged} blir slått sammen til én samtale hver, og {dropped} blir forkastet.",
+    "dayReviewCountsFull": "{rolled} oppsummert · {kept} beholdt · {merged} slått sammen · {dropped} forkastet",
+    "heldForDayReview": "Venter på dagsgjennomgangen din"
 }

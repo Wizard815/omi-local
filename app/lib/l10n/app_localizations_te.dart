@@ -14824,4 +14824,76 @@ class AppLocalizationsTe extends AppLocalizations {
   String moveFolderTo(String name) {
     return '“$name”ను ఎక్కడికి తరలించాలి…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'ఇంకా ఏదీ ప్రాసెస్ కాలేదు. ఉంచుకోవాల్సినవి స్టార్ చేయండి, క్లిప్‌లను ఒకటిగా విలీనం చేయడానికి టిక్ చేయండి, శబ్దాన్ని తీసివేయండి. మిగతావన్నీ మీరు సరిదిద్దగల ఒకే రోజు సారాంశంగా మారతాయి.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'నిజమైన మాటలు లేని $count క్లిప్‌లు ఆటోమేటిక్‌గా తీసివేయబడ్డాయి.',
+      one: 'నిజమైన మాటలు లేని 1 క్లిప్ ఆటోమేటిక్‌గా తీసివేయబడింది.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'చిన్న లేదా అస్పష్టమైన క్లిప్‌లు';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'తీసివేసినవి ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'ఒకటిగా విలీనం చేసినవి ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'తీసివేయండి (శబ్దం)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'తిరిగి ఉంచండి';
+
+  @override
+  String get dayReviewMergeTooltip => 'విలీనం చేయడానికి ఎంచుకోండి';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count క్లిప్‌లను ఒకటిగా విలీనం చేయండి',
+      one: 'విలీనం చేయడానికి మరో క్లిప్‌ను ఎంచుకోండి',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'విడదీయండి';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'ఒకే సంభాషణగా విలీనం చేయబడింది';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return '$kept ఉంచండి · $merged విలీనం చేయండి · $dropped తీసివేయండి · $rolled సారాంశం చేయండి';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged ఒక్కొక్కటి ఒకే సంభాషణగా విలీనం చేయబడతాయి, $dropped తీసివేయబడతాయి.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled సారాంశంలో · $kept ఉంచినవి · $merged విలీనం చేసినవి · $dropped తీసివేసినవి';
+  }
+
+  @override
+  String get heldForDayReview => 'మీ రోజు సమీక్ష కోసం వేచి ఉంది';
 }

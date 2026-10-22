@@ -134,14 +134,36 @@ class GeneratedDayReviewCorrection {
   }
 }
 
+class GeneratedDayReviewMergeGroup {
+  final List<String>? conversationIds;
+
+  const GeneratedDayReviewMergeGroup({
+    this.conversationIds,
+  });
+
+  factory GeneratedDayReviewMergeGroup.fromJson(Map<String, dynamic> json) {
+    return GeneratedDayReviewMergeGroup(
+      conversationIds: _readFieldValue<List<String>>(_readField(json, const ["conversation_ids"]), "conversation_ids", _readStringList, requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'conversation_ids': conversationIds,
+    };
+  }
+}
+
 class GeneratedDayReview {
   final List<GeneratedDayReviewCorrection>? corrections;
   final DateTime? createdAt;
   final String date;
+  final List<String>? droppedConversationIds;
   final String finalText;
   final DateTime? generatedAt;
   final int generationCount;
   final List<String>? keptConversationIds;
+  final List<GeneratedDayReviewMergeGroup>? mergedGroups;
   final List<String>? rolledUpConversationIds;
   final String status;
   final String summaryText;
@@ -153,10 +175,12 @@ class GeneratedDayReview {
     this.corrections,
     this.createdAt,
     required this.date,
+    this.droppedConversationIds,
     this.finalText = "",
     this.generatedAt,
     this.generationCount = 0,
     this.keptConversationIds,
+    this.mergedGroups,
     this.rolledUpConversationIds,
     this.status = "finalized",
     this.summaryText = "",
@@ -170,10 +194,12 @@ class GeneratedDayReview {
       corrections: _readFieldValue<List<GeneratedDayReviewCorrection>>(_readField(json, const ["corrections"]), "corrections", (value) => _readObjectList(value, GeneratedDayReviewCorrection.fromJson), requiredField: false, nullable: true),
       createdAt: _readFieldValue<DateTime>(_readField(json, const ["created_at"]), "created_at", _readDateTime, requiredField: false, nullable: true),
       date: _required(_readFieldValue<String>(_readField(json, const ["date"]), "date", _readString, requiredField: true, nullable: false), "date"),
+      droppedConversationIds: _readFieldValue<List<String>>(_readField(json, const ["dropped_conversation_ids"]), "dropped_conversation_ids", _readStringList, requiredField: false, nullable: true),
       finalText: _required(_readFieldValue<String>(_readField(json, const ["final_text"]), "final_text", _readString, requiredField: false, nullable: false, defaultValue: ""), "final_text"),
       generatedAt: _readFieldValue<DateTime>(_readField(json, const ["generated_at"]), "generated_at", _readDateTime, requiredField: false, nullable: true),
       generationCount: _required(_readFieldValue<int>(_readField(json, const ["generation_count"]), "generation_count", _readInt, requiredField: false, nullable: false, defaultValue: 0), "generation_count"),
       keptConversationIds: _readFieldValue<List<String>>(_readField(json, const ["kept_conversation_ids"]), "kept_conversation_ids", _readStringList, requiredField: false, nullable: true),
+      mergedGroups: _readFieldValue<List<GeneratedDayReviewMergeGroup>>(_readField(json, const ["merged_groups"]), "merged_groups", (value) => _readObjectList(value, GeneratedDayReviewMergeGroup.fromJson), requiredField: false, nullable: true),
       rolledUpConversationIds: _readFieldValue<List<String>>(_readField(json, const ["rolled_up_conversation_ids"]), "rolled_up_conversation_ids", _readStringList, requiredField: false, nullable: true),
       status: _required(_readFieldValue<String>(_readField(json, const ["status"]), "status", _readString, requiredField: false, nullable: false, defaultValue: "finalized"), "status"),
       summaryText: _required(_readFieldValue<String>(_readField(json, const ["summary_text"]), "summary_text", _readString, requiredField: false, nullable: false, defaultValue: ""), "summary_text"),
@@ -188,10 +214,12 @@ class GeneratedDayReview {
       'corrections': corrections?.map((value) => value.toJson()).toList(),
       'created_at': createdAt?.toUtc().toIso8601String(),
       'date': date,
+      'dropped_conversation_ids': droppedConversationIds,
       'final_text': finalText,
       'generated_at': generatedAt?.toUtc().toIso8601String(),
       'generation_count': generationCount,
       'kept_conversation_ids': keptConversationIds,
+      'merged_groups': mergedGroups?.map((value) => value.toJson()).toList(),
       'rolled_up_conversation_ids': rolledUpConversationIds,
       'status': status,
       'summary_text': summaryText,
@@ -203,49 +231,69 @@ class GeneratedDayReview {
 }
 
 class GeneratedDayReviewConversation {
+  final bool dropped;
   final String emoji;
   final DateTime? finishedAt;
+  final bool held;
+  final String holdRule;
   final String id;
   final String overview;
   final bool rolledUp;
   final bool starred;
   final DateTime? startedAt;
   final String title;
+  final String transcriptSnippet;
+  final int wordCount;
 
   const GeneratedDayReviewConversation({
+    this.dropped = false,
     this.emoji = "",
     this.finishedAt,
+    this.held = false,
+    this.holdRule = "",
     required this.id,
     this.overview = "",
     this.rolledUp = false,
     this.starred = false,
     this.startedAt,
     this.title = "",
+    this.transcriptSnippet = "",
+    this.wordCount = 0,
   });
 
   factory GeneratedDayReviewConversation.fromJson(Map<String, dynamic> json) {
     return GeneratedDayReviewConversation(
+      dropped: _required(_readFieldValue<bool>(_readField(json, const ["dropped"]), "dropped", _readBool, requiredField: false, nullable: false, defaultValue: false), "dropped"),
       emoji: _required(_readFieldValue<String>(_readField(json, const ["emoji"]), "emoji", _readString, requiredField: false, nullable: false, defaultValue: ""), "emoji"),
       finishedAt: _readFieldValue<DateTime>(_readField(json, const ["finished_at"]), "finished_at", _readDateTime, requiredField: false, nullable: true),
+      held: _required(_readFieldValue<bool>(_readField(json, const ["held"]), "held", _readBool, requiredField: false, nullable: false, defaultValue: false), "held"),
+      holdRule: _required(_readFieldValue<String>(_readField(json, const ["hold_rule"]), "hold_rule", _readString, requiredField: false, nullable: false, defaultValue: ""), "hold_rule"),
       id: _required(_readFieldValue<String>(_readField(json, const ["id"]), "id", _readString, requiredField: true, nullable: false), "id"),
       overview: _required(_readFieldValue<String>(_readField(json, const ["overview"]), "overview", _readString, requiredField: false, nullable: false, defaultValue: ""), "overview"),
       rolledUp: _required(_readFieldValue<bool>(_readField(json, const ["rolled_up"]), "rolled_up", _readBool, requiredField: false, nullable: false, defaultValue: false), "rolled_up"),
       starred: _required(_readFieldValue<bool>(_readField(json, const ["starred"]), "starred", _readBool, requiredField: false, nullable: false, defaultValue: false), "starred"),
       startedAt: _readFieldValue<DateTime>(_readField(json, const ["started_at"]), "started_at", _readDateTime, requiredField: false, nullable: true),
       title: _required(_readFieldValue<String>(_readField(json, const ["title"]), "title", _readString, requiredField: false, nullable: false, defaultValue: ""), "title"),
+      transcriptSnippet: _required(_readFieldValue<String>(_readField(json, const ["transcript_snippet"]), "transcript_snippet", _readString, requiredField: false, nullable: false, defaultValue: ""), "transcript_snippet"),
+      wordCount: _required(_readFieldValue<int>(_readField(json, const ["word_count"]), "word_count", _readInt, requiredField: false, nullable: false, defaultValue: 0), "word_count"),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'dropped': dropped,
       'emoji': emoji,
       'finished_at': finishedAt?.toUtc().toIso8601String(),
+      'held': held,
+      'hold_rule': holdRule,
       'id': id,
       'overview': overview,
       'rolled_up': rolledUp,
       'starred': starred,
       'started_at': startedAt?.toUtc().toIso8601String(),
       'title': title,
+      'transcript_snippet': transcriptSnippet,
+      'word_count': wordCount,
     };
   }
 }
@@ -253,12 +301,16 @@ class GeneratedDayReviewConversation {
 class GeneratedDayReviewDayResponse {
   final List<GeneratedDayReviewConversation>? conversations;
   final String date;
+  final int droppedAutoCount;
+  final bool holdEnabled;
   final int processingCount;
   final GeneratedDayReview? review;
 
   const GeneratedDayReviewDayResponse({
     this.conversations,
     required this.date,
+    this.droppedAutoCount = 0,
+    this.holdEnabled = false,
     this.processingCount = 0,
     this.review,
   });
@@ -267,6 +319,8 @@ class GeneratedDayReviewDayResponse {
     return GeneratedDayReviewDayResponse(
       conversations: _readFieldValue<List<GeneratedDayReviewConversation>>(_readField(json, const ["conversations"]), "conversations", (value) => _readObjectList(value, GeneratedDayReviewConversation.fromJson), requiredField: false, nullable: true),
       date: _required(_readFieldValue<String>(_readField(json, const ["date"]), "date", _readString, requiredField: true, nullable: false), "date"),
+      droppedAutoCount: _required(_readFieldValue<int>(_readField(json, const ["dropped_auto_count"]), "dropped_auto_count", _readInt, requiredField: false, nullable: false, defaultValue: 0), "dropped_auto_count"),
+      holdEnabled: _required(_readFieldValue<bool>(_readField(json, const ["hold_enabled"]), "hold_enabled", _readBool, requiredField: false, nullable: false, defaultValue: false), "hold_enabled"),
       processingCount: _required(_readFieldValue<int>(_readField(json, const ["processing_count"]), "processing_count", _readInt, requiredField: false, nullable: false, defaultValue: 0), "processing_count"),
       review: _readFieldValue<GeneratedDayReview>(_readField(json, const ["review"]), "review", (value) => _readObject(value, GeneratedDayReview.fromJson), requiredField: false, nullable: true),
     );
@@ -276,6 +330,8 @@ class GeneratedDayReviewDayResponse {
     return {
       'conversations': conversations?.map((value) => value.toJson()).toList(),
       'date': date,
+      'dropped_auto_count': droppedAutoCount,
+      'hold_enabled': holdEnabled,
       'processing_count': processingCount,
       'review': review?.toJson(),
     };
@@ -327,16 +383,19 @@ class GeneratedPendingDayReviewsResponse {
 }
 
 class GeneratedReopenDayReviewResponse {
+  final int mergedCount;
   final int restoredCount;
   final String status;
 
   const GeneratedReopenDayReviewResponse({
+    this.mergedCount = 0,
     this.restoredCount = 0,
     this.status = "ok",
   });
 
   factory GeneratedReopenDayReviewResponse.fromJson(Map<String, dynamic> json) {
     return GeneratedReopenDayReviewResponse(
+      mergedCount: _required(_readFieldValue<int>(_readField(json, const ["merged_count"]), "merged_count", _readInt, requiredField: false, nullable: false, defaultValue: 0), "merged_count"),
       restoredCount: _required(_readFieldValue<int>(_readField(json, const ["restored_count"]), "restored_count", _readInt, requiredField: false, nullable: false, defaultValue: 0), "restored_count"),
       status: _required(_readFieldValue<String>(_readField(json, const ["status"]), "status", _readString, requiredField: false, nullable: false, defaultValue: "ok"), "status"),
     );
@@ -344,6 +403,7 @@ class GeneratedReopenDayReviewResponse {
 
   Map<String, dynamic> toJson() {
     return {
+      'merged_count': mergedCount,
       'restored_count': restoredCount,
       'status': status,
     };

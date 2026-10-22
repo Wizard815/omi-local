@@ -4481,5 +4481,20 @@
     "newSubfolder": "Νέος υποφάκελος",
     "folderTreeTitle": "Φάκελοι",
     "moveFolder": "Μετακίνηση…",
-    "moveFolderTo": "Μετακίνηση του «{name}» σε…"
+    "moveFolderTo": "Μετακίνηση του «{name}» σε…",
+    "dayReviewSortHintHold": "Δεν έχει γίνει ακόμη καμία επεξεργασία. Βάλτε αστέρι σε ό,τι θέλετε να κρατήσετε, τσεκάρετε αποσπάσματα για να τα συγχωνεύσετε σε ένα και απορρίψτε τον θόρυβο. Όλα τα υπόλοιπα γίνονται μία περίληψη ημέρας, την οποία μπορείτε να διορθώσετε.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 απόσπασμα χωρίς πραγματική ομιλία απορρίφθηκε αυτόματα.} other{{count} αποσπάσματα χωρίς πραγματική ομιλία απορρίφθηκαν αυτόματα.}}",
+    "dayReviewUnclearTitle": "Σύντομα ή ασαφή αποσπάσματα",
+    "dayReviewDroppedTitle": "Απορρίφθηκαν ({count})",
+    "dayReviewMergedTitle": "Συγχωνεύτηκαν σε ένα ({count})",
+    "dayReviewDropTooltip": "Απόρριψη (θόρυβος)",
+    "dayReviewRestoreTooltip": "Επαναφορά",
+    "dayReviewMergeTooltip": "Επιλογή για συγχώνευση",
+    "dayReviewMergeSelected": "{count, plural, =1{Επιλέξτε άλλο ένα απόσπασμα για συγχώνευση} other{Συγχώνευση {count} αποσπασμάτων σε ένα}}",
+    "dayReviewUngroup": "Αποομαδοποίηση",
+    "dayReviewMergeGroupLabel": "Συγχωνεύτηκαν σε μία συνομιλία",
+    "dayReviewFinalizeButtonFull": "Διατήρηση {kept} · Συγχώνευση {merged} · Απόρριψη {dropped} · Περίληψη {rolled}",
+    "dayReviewConfirmExtra": "{merged} θα συγχωνευτούν σε μία συνομιλία το καθένα και {dropped} θα απορριφθούν.",
+    "dayReviewCountsFull": "{rolled} στην περίληψη · {kept} διατηρήθηκαν · {merged} συγχωνεύτηκαν · {dropped} απορρίφθηκαν",
+    "heldForDayReview": "Σε αναμονή της ανασκόπησης ημέρας"
 }

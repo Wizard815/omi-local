@@ -14814,4 +14814,80 @@ class AppLocalizationsPl extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'Przenieś „$name” do…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'Nic nie zostało jeszcze przetworzone. Oznacz gwiazdką to, co chcesz zachować, zaznacz klipy, aby scalić je w jeden, i odrzuć szum. Cała reszta stanie się jednym podsumowaniem dnia, które możesz poprawić.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count klipu bez prawdziwej mowy zostało odrzucone automatycznie.',
+      many: '$count klipów bez prawdziwej mowy zostało odrzuconych automatycznie.',
+      few: '$count klipy bez prawdziwej mowy zostały odrzucone automatycznie.',
+      one: '1 klip bez prawdziwej mowy został odrzucony automatycznie.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'Krótkie lub niejasne klipy';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'Odrzucone ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'Scalone w jeden ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'Odrzuć (szum)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'Przywróć';
+
+  @override
+  String get dayReviewMergeTooltip => 'Zaznacz do scalenia';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Scal $count klipu w jeden',
+      many: 'Scal $count klipów w jeden',
+      few: 'Scal $count klipy w jeden',
+      one: 'Zaznacz kolejny klip, aby scalić',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'Rozgrupuj';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'Scalone w jedną rozmowę';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'Zachowaj $kept · Scal $merged · Odrzuć $dropped · Podsumuj $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged zostanie scalonych w jedną rozmowę każda, a $dropped odrzuconych.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return 'Podsumowane: $rolled · Zachowane: $kept · Scalone: $merged · Odrzucone: $dropped';
+  }
+
+  @override
+  String get heldForDayReview => 'Czeka na Twój przegląd dnia';
 }

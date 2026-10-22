@@ -11907,5 +11907,20 @@
     "newSubfolder": "Nova podmapa",
     "folderTreeTitle": "Mape",
     "moveFolder": "Premjesti…",
-    "moveFolderTo": "Premjesti „{name}” u…"
+    "moveFolderTo": "Premjesti „{name}” u…",
+    "dayReviewSortHintHold": "Ništa još nije obrađeno. Označite zvjezdicom ono što želite zadržati, kvačicom isječke koje želite spojiti u jedan, a šum odbacite. Sve ostalo postaje jedan sažetak dana koji možete ispraviti.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 isječak bez stvarnog govora automatski je odbačen.} few{{count} isječka bez stvarnog govora automatski su odbačena.} other{{count} isječaka bez stvarnog govora automatski je odbačeno.}}",
+    "dayReviewUnclearTitle": "Kratki ili nejasni isječci",
+    "dayReviewDroppedTitle": "Odbačeno ({count})",
+    "dayReviewMergedTitle": "Spojeno u jedan ({count})",
+    "dayReviewDropTooltip": "Odbaci (šum)",
+    "dayReviewRestoreTooltip": "Vrati natrag",
+    "dayReviewMergeTooltip": "Odaberi za spajanje",
+    "dayReviewMergeSelected": "{count, plural, =1{Odaberite još jedan isječak za spajanje} few{Spoji {count} isječka u jedan} other{Spoji {count} isječaka u jedan}}",
+    "dayReviewUngroup": "Razgrupiraj",
+    "dayReviewMergeGroupLabel": "Spojeno u jedan razgovor",
+    "dayReviewFinalizeButtonFull": "Zadrži: {kept} · Spoji: {merged} · Odbaci: {dropped} · Sažmi: {rolled}",
+    "dayReviewConfirmExtra": "{merged} bit će spojeno u po jedan razgovor, a {dropped} odbačeno.",
+    "dayReviewCountsFull": "Sažeto: {rolled} · Zadržano: {kept} · Spojeno: {merged} · Odbačeno: {dropped}",
+    "heldForDayReview": "Čeka vaš pregled dana"
 }

@@ -4481,5 +4481,20 @@
     "newSubfolder": "新建子文件夹",
     "folderTreeTitle": "文件夹",
     "moveFolder": "移动…",
-    "moveFolderTo": "将“{name}”移动到…"
+    "moveFolderTo": "将“{name}”移动到…",
+    "dayReviewSortHintHold": "尚未处理任何内容。为想保留的对话加星标，勾选片段可将它们合并为一个，丢弃噪音。其余内容将合并为一份可修改的当日摘要。",
+    "dayReviewAutoDropped": "{count, plural, =1{已自动丢弃 1 个没有实际语音的片段。} other{已自动丢弃 {count} 个没有实际语音的片段。}}",
+    "dayReviewUnclearTitle": "过短或不清晰的片段",
+    "dayReviewDroppedTitle": "已丢弃（{count}）",
+    "dayReviewMergedTitle": "已合并为一个（{count}）",
+    "dayReviewDropTooltip": "丢弃（噪音）",
+    "dayReviewRestoreTooltip": "放回",
+    "dayReviewMergeTooltip": "选择以合并",
+    "dayReviewMergeSelected": "{count, plural, =1{再选择一个片段以合并} other{将 {count} 个片段合并为一个}}",
+    "dayReviewUngroup": "取消合并",
+    "dayReviewMergeGroupLabel": "已合并为一个对话",
+    "dayReviewFinalizeButtonFull": "保留 {kept} · 合并 {merged} · 丢弃 {dropped} · 摘要 {rolled}",
+    "dayReviewConfirmExtra": "{merged} 个将各自合并为一个对话，{dropped} 个将被丢弃。",
+    "dayReviewCountsFull": "已摘要 {rolled} · 已保留 {kept} · 已合并 {merged} · 已丢弃 {dropped}",
+    "heldForDayReview": "等待您的当日回顾"
 }

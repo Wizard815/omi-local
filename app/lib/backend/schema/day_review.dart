@@ -56,6 +56,10 @@ class DayReview {
   final List<DayReviewCorrection> corrections;
   final List<String> keptConversationIds;
   final List<String> rolledUpConversationIds;
+
+  /// Each group was merged into one new conversation; the sources are gone.
+  final List<List<String>> mergedGroups;
+  final List<String> droppedConversationIds;
   final DateTime? generatedAt;
   final int generationCount;
 
@@ -67,6 +71,8 @@ class DayReview {
     required this.corrections,
     required this.keptConversationIds,
     required this.rolledUpConversationIds,
+    this.mergedGroups = const [],
+    this.droppedConversationIds = const [],
     this.generatedAt,
     this.generationCount = 0,
   });
@@ -89,6 +95,8 @@ class DayReview {
         corrections: (g.corrections ?? const []).map(DayReviewCorrection.fromGenerated).toList(),
         keptConversationIds: g.keptConversationIds ?? const [],
         rolledUpConversationIds: g.rolledUpConversationIds ?? const [],
+        mergedGroups: (g.mergedGroups ?? const []).map((group) => group.conversationIds ?? const <String>[]).toList(),
+        droppedConversationIds: g.droppedConversationIds ?? const [],
         generatedAt: g.generatedAt?.toLocal(),
         generationCount: g.generationCount,
       );
@@ -103,6 +111,17 @@ class DayReviewConversation {
   final DateTime? finishedAt;
   final bool starred;
   final bool rolledUp;
+  final bool dropped;
+
+  /// Transcript only so far (the server held it for this review): no overview yet.
+  final bool held;
+
+  /// The noise rule that let a held clip through; `model_withheld` means short or unclear.
+  final String holdRule;
+  final String transcriptSnippet;
+  final int wordCount;
+
+  bool get unclear => held && holdRule == 'model_withheld';
 
   const DayReviewConversation({
     required this.id,
@@ -113,6 +132,11 @@ class DayReviewConversation {
     this.finishedAt,
     required this.starred,
     required this.rolledUp,
+    this.dropped = false,
+    this.held = false,
+    this.holdRule = '',
+    this.transcriptSnippet = '',
+    this.wordCount = 0,
   });
 
   factory DayReviewConversation.fromGenerated(wire.GeneratedDayReviewConversation g) => DayReviewConversation(
@@ -124,6 +148,11 @@ class DayReviewConversation {
         finishedAt: g.finishedAt?.toLocal(),
         starred: g.starred,
         rolledUp: g.rolledUp,
+        dropped: g.dropped,
+        held: g.held,
+        holdRule: g.holdRule,
+        transcriptSnippet: g.transcriptSnippet,
+        wordCount: g.wordCount,
       );
 }
 
@@ -133,12 +162,27 @@ class DayReviewDay {
   final List<DayReviewConversation> conversations;
   final int processingCount;
 
-  const DayReviewDay({required this.date, this.review, required this.conversations, this.processingCount = 0});
+  /// Clips the server's noise rules dropped on their own.
+  final int droppedAutoCount;
+
+  /// Finished clips wait for this review instead of being processed one by one.
+  final bool holdEnabled;
+
+  const DayReviewDay({
+    required this.date,
+    this.review,
+    required this.conversations,
+    this.processingCount = 0,
+    this.droppedAutoCount = 0,
+    this.holdEnabled = false,
+  });
 
   factory DayReviewDay.fromGenerated(wire.GeneratedDayReviewDayResponse g) => DayReviewDay(
         date: g.date,
         review: g.review == null ? null : DayReview.fromGenerated(g.review!),
         conversations: (g.conversations ?? const []).map(DayReviewConversation.fromGenerated).toList(),
         processingCount: g.processingCount,
+        droppedAutoCount: g.droppedAutoCount,
+        holdEnabled: g.holdEnabled,
       );
 }

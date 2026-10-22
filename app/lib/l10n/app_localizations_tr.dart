@@ -14778,4 +14778,76 @@ class AppLocalizationsTr extends AppLocalizations {
   String moveFolderTo(String name) {
     return '\"$name\" klasörünü şuraya taşı…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'Henüz hiçbir şey işlenmedi. Saklamak istediklerinizi yıldızlayın, tek bir konuşmada birleştirmek istediğiniz klipleri işaretleyin, gürültüyü atın. Geri kalan her şey, düzeltebileceğiniz tek bir gün özetine dönüşür.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Gerçek konuşma içermeyen $count klip otomatik olarak atıldı.',
+      one: 'Gerçek konuşma içermeyen 1 klip otomatik olarak atıldı.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'Kısa veya belirsiz klipler';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'Atılanlar ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'Tek konuşmada birleştirilenler ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'At (gürültü)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'Geri koy';
+
+  @override
+  String get dayReviewMergeTooltip => 'Birleştirmek için seç';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count klibi tek konuşmada birleştir',
+      one: 'Birleştirmek için bir klip daha seçin',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'Gruplamayı kaldır';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'Tek bir konuşmada birleştirildi';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'Sakla: $kept · Birleştir: $merged · At: $dropped · Özetle: $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged tanesi her biri tek bir konuşmada birleştirilecek ve $dropped tanesi atılacak.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled özetlendi · $kept saklandı · $merged birleştirildi · $dropped atıldı';
+  }
+
+  @override
+  String get heldForDayReview => 'Gün değerlendirmenizi bekliyor';
 }

@@ -4481,5 +4481,20 @@
     "newSubfolder": "Subdosar nou",
     "folderTreeTitle": "Dosare",
     "moveFolder": "Mută…",
-    "moveFolderTo": "Mută „{name}” în…"
+    "moveFolderTo": "Mută „{name}” în…",
+    "dayReviewSortHintHold": "Nimic nu a fost procesat încă. Marchează cu stea ce vrei să păstrezi, bifează clipurile ca să le îmbini într-unul singur și elimină zgomotul. Restul devine un singur rezumat al zilei, pe care îl poți corecta.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 clip fără vorbire reală a fost eliminat automat.} few{{count} clipuri fără vorbire reală au fost eliminate automat.} other{{count} de clipuri fără vorbire reală au fost eliminate automat.}}",
+    "dayReviewUnclearTitle": "Clipuri scurte sau neclare",
+    "dayReviewDroppedTitle": "Eliminate ({count})",
+    "dayReviewMergedTitle": "Îmbinate într-unul singur ({count})",
+    "dayReviewDropTooltip": "Elimină (zgomot)",
+    "dayReviewRestoreTooltip": "Pune înapoi",
+    "dayReviewMergeTooltip": "Selectează pentru îmbinare",
+    "dayReviewMergeSelected": "{count, plural, =1{Selectează încă un clip pentru îmbinare} few{Îmbină {count} clipuri într-unul singur} other{Îmbină {count} de clipuri într-unul singur}}",
+    "dayReviewUngroup": "Desparte grupul",
+    "dayReviewMergeGroupLabel": "Îmbinate într-o singură conversație",
+    "dayReviewFinalizeButtonFull": "Păstrează {kept} · Îmbină {merged} · Elimină {dropped} · Rezumă {rolled}",
+    "dayReviewConfirmExtra": "{merged} vor fi îmbinate fiecare într-o singură conversație, iar {dropped} vor fi eliminate.",
+    "dayReviewCountsFull": "{rolled} rezumate · {kept} păstrate · {merged} îmbinate · {dropped} eliminate",
+    "heldForDayReview": "Așteaptă recapitularea zilei"
 }

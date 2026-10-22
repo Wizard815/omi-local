@@ -14778,4 +14778,76 @@ class AppLocalizationsUr extends AppLocalizations {
   String moveFolderTo(String name) {
     return '“$name” کو اس میں منتقل کریں…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'ابھی کچھ بھی پراسیس نہیں ہوا۔ جو رکھنا ہے اسے ستارہ لگائیں، کلپس کو ایک میں ضم کرنے کے لیے ٹک کریں، اور شور ہٹا دیں۔ باقی سب ایک دن کا خلاصہ بن جائے گا جسے آپ درست کر سکتے ہیں۔';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'بغیر حقیقی گفتگو والے $count کلپس خودکار طور پر ہٹا دیے گئے۔',
+      one: 'بغیر حقیقی گفتگو والا 1 کلپ خودکار طور پر ہٹا دیا گیا۔',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'مختصر یا غیر واضح کلپس';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'ہٹائے گئے ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'ایک میں ضم شدہ ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'ہٹائیں (شور)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'واپس رکھیں';
+
+  @override
+  String get dayReviewMergeTooltip => 'ضم کرنے کے لیے منتخب کریں';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count کلپس کو ایک میں ضم کریں',
+      one: 'ضم کرنے کے لیے ایک اور کلپ منتخب کریں',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'گروپ ختم کریں';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'ایک گفتگو میں ضم شدہ';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return '$kept رکھیں · $merged ضم کریں · $dropped ہٹائیں · $rolled کا خلاصہ کریں';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged ہر ایک الگ گفتگو میں ضم ہوں گی اور $dropped ہٹا دی جائیں گی۔';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled خلاصے میں · $kept رکھی گئیں · $merged ضم شدہ · $dropped ہٹائی گئیں';
+  }
+
+  @override
+  String get heldForDayReview => 'آپ کے دن کے جائزے کا انتظار ہے';
 }

@@ -11907,5 +11907,20 @@
     "newSubfolder": "ಹೊಸ ಉಪಫೋಲ್ಡರ್",
     "folderTreeTitle": "ಫೋಲ್ಡರ್‌ಗಳು",
     "moveFolder": "ಸರಿಸಿ…",
-    "moveFolderTo": "“{name}” ಅನ್ನು ಇದರೊಳಗೆ ಸರಿಸಿ…"
+    "moveFolderTo": "“{name}” ಅನ್ನು ಇದರೊಳಗೆ ಸರಿಸಿ…",
+    "dayReviewSortHintHold": "ಇನ್ನೂ ಏನನ್ನೂ ಪ್ರಕ್ರಿಯೆಗೊಳಿಸಿಲ್ಲ. ಇರಿಸಿಕೊಳ್ಳಬೇಕಾದವುಗಳಿಗೆ ನಕ್ಷತ್ರ ಹಾಕಿ, ಒಂದಾಗಿ ಮರ್ಜ್ ಮಾಡಬೇಕಾದ ಕ್ಲಿಪ್‌ಗಳನ್ನು ಗುರುತಿಸಿ, ಗದ್ದಲವನ್ನು ತೆಗೆದುಹಾಕಿ. ಉಳಿದೆಲ್ಲವೂ ನೀವು ತಿದ್ದಬಹುದಾದ ಒಂದೇ ದಿನದ ಸಾರಾಂಶವಾಗುತ್ತದೆ.",
+    "dayReviewAutoDropped": "{count, plural, =1{ನಿಜವಾದ ಮಾತಿಲ್ಲದ {count} ಕ್ಲಿಪ್ ಅನ್ನು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ತೆಗೆದುಹಾಕಲಾಗಿದೆ.} other{ನಿಜವಾದ ಮಾತಿಲ್ಲದ {count} ಕ್ಲಿಪ್‌ಗಳನ್ನು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ತೆಗೆದುಹಾಕಲಾಗಿದೆ.}}",
+    "dayReviewUnclearTitle": "ಚಿಕ್ಕ ಅಥವಾ ಅಸ್ಪಷ್ಟ ಕ್ಲಿಪ್‌ಗಳು",
+    "dayReviewDroppedTitle": "ತೆಗೆದುಹಾಕಲಾಗಿದೆ ({count})",
+    "dayReviewMergedTitle": "ಒಂದಾಗಿ ಮರ್ಜ್ ಮಾಡಲಾಗಿದೆ ({count})",
+    "dayReviewDropTooltip": "ತೆಗೆದುಹಾಕಿ (ಗದ್ದಲ)",
+    "dayReviewRestoreTooltip": "ಮರಳಿ ಇರಿಸಿ",
+    "dayReviewMergeTooltip": "ಮರ್ಜ್ ಮಾಡಲು ಆಯ್ಕೆಮಾಡಿ",
+    "dayReviewMergeSelected": "{count, plural, =1{ಮರ್ಜ್ ಮಾಡಲು ಇನ್ನೊಂದು ಕ್ಲಿಪ್ ಆಯ್ಕೆಮಾಡಿ} other{{count} ಕ್ಲಿಪ್‌ಗಳನ್ನು ಒಂದಾಗಿ ಮರ್ಜ್ ಮಾಡಿ}}",
+    "dayReviewUngroup": "ಗುಂಪು ರದ್ದುಮಾಡಿ",
+    "dayReviewMergeGroupLabel": "ಒಂದೇ ಸಂವಾದವಾಗಿ ಮರ್ಜ್ ಮಾಡಲಾಗಿದೆ",
+    "dayReviewFinalizeButtonFull": "{kept} ಇರಿಸಿ · {merged} ಮರ್ಜ್ ಮಾಡಿ · {dropped} ತೆಗೆದುಹಾಕಿ · {rolled} ಸಾರಾಂಶಗೊಳಿಸಿ",
+    "dayReviewConfirmExtra": "{merged} ಅನ್ನು ತಲಾ ಒಂದೇ ಸಂವಾದವಾಗಿ ಮರ್ಜ್ ಮಾಡಲಾಗುತ್ತದೆ ಮತ್ತು {dropped} ಅನ್ನು ತೆಗೆದುಹಾಕಲಾಗುತ್ತದೆ.",
+    "dayReviewCountsFull": "{rolled} ಸಾರಾಂಶಗೊಳಿಸಲಾಗಿದೆ · {kept} ಇರಿಸಲಾಗಿದೆ · {merged} ಮರ್ಜ್ ಮಾಡಲಾಗಿದೆ · {dropped} ತೆಗೆದುಹಾಕಲಾಗಿದೆ",
+    "heldForDayReview": "ನಿಮ್ಮ ದಿನದ ಪರಿಶೀಲನೆಗಾಗಿ ಕಾಯುತ್ತಿದೆ"
 }

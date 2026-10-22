@@ -14748,4 +14748,76 @@ class AppLocalizationsHi extends AppLocalizations {
   String moveFolderTo(String name) {
     return '“$name” को इसमें ले जाएं…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'अभी तक कुछ भी प्रोसेस नहीं हुआ है। जो रखना है उसे तारांकित करें, क्लिप को एक में मिलाने के लिए उन पर टिक करें, शोर हटा दें। बाकी सब एक दिन के सारांश में बदल जाएगा, जिसे आप सुधार सकते हैं।';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'बिना असली बातचीत वाली $count क्लिप अपने आप हटा दी गईं।',
+      one: 'बिना असली बातचीत वाली 1 क्लिप अपने आप हटा दी गई।',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'छोटी या अस्पष्ट क्लिप';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'हटाई गईं ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'एक में मिलाई गईं ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'हटाएं (शोर)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'वापस रखें';
+
+  @override
+  String get dayReviewMergeTooltip => 'मिलाने के लिए चुनें';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count क्लिप को एक में मिलाएं',
+      one: 'मिलाने के लिए एक और क्लिप चुनें',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'अलग करें';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'एक बातचीत में मिलाई गईं';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return '$kept रखें · $merged मिलाएं · $dropped हटाएं · $rolled का सारांश बनाएं';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged को एक-एक बातचीत में मिला दिया जाएगा और $dropped हटा दी जाएंगी।';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled सारांश में · $kept रखी गईं · $merged मिलाई गईं · $dropped हटाई गईं';
+  }
+
+  @override
+  String get heldForDayReview => 'आपकी दिन की समीक्षा की प्रतीक्षा में';
 }

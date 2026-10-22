@@ -14768,4 +14768,76 @@ class AppLocalizationsNo extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'Flytt «$name» til…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'Ingenting er behandlet ennå. Stjernemerk det du vil beholde, huk av klipp for å slå dem sammen til ett, og forkast støyen. Alt annet blir ett dagsammendrag som du kan rette.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count klipp uten reell tale ble forkastet automatisk.',
+      one: '1 klipp uten reell tale ble forkastet automatisk.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'Korte eller uklare klipp';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'Forkastet ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'Slått sammen til ett ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'Forkast (støy)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'Legg tilbake';
+
+  @override
+  String get dayReviewMergeTooltip => 'Velg for å slå sammen';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Slå sammen $count klipp til ett',
+      one: 'Velg ett klipp til for å slå sammen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'Del opp';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'Slått sammen til én samtale';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'Behold $kept · Slå sammen $merged · Forkast $dropped · Oppsummer $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged blir slått sammen til én samtale hver, og $dropped blir forkastet.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled oppsummert · $kept beholdt · $merged slått sammen · $dropped forkastet';
+  }
+
+  @override
+  String get heldForDayReview => 'Venter på dagsgjennomgangen din';
 }

@@ -4481,5 +4481,20 @@
     "newSubfolder": "Nueva subcarpeta",
     "folderTreeTitle": "Carpetas",
     "moveFolder": "Mover…",
-    "moveFolderTo": "Mover «{name}» a…"
+    "moveFolderTo": "Mover «{name}» a…",
+    "dayReviewSortHintHold": "Aún no se ha procesado nada. Marca con estrella lo que quieras conservar, selecciona los clips que quieras fusionar en uno y descarta el ruido. Todo lo demás se convierte en un único resumen del día que puedes corregir.",
+    "dayReviewAutoDropped": "{count, plural, =1{Se descartó automáticamente 1 clip sin voz real.} other{Se descartaron automáticamente {count} clips sin voz real.}}",
+    "dayReviewUnclearTitle": "Clips cortos o poco claros",
+    "dayReviewDroppedTitle": "Descartados ({count})",
+    "dayReviewMergedTitle": "Fusionados en uno ({count})",
+    "dayReviewDropTooltip": "Descartar (ruido)",
+    "dayReviewRestoreTooltip": "Restaurar",
+    "dayReviewMergeTooltip": "Seleccionar para fusionar",
+    "dayReviewMergeSelected": "{count, plural, =1{Selecciona otro clip para fusionar} other{Fusionar {count} clips en uno}}",
+    "dayReviewUngroup": "Desagrupar",
+    "dayReviewMergeGroupLabel": "Fusionados en una sola conversación",
+    "dayReviewFinalizeButtonFull": "Conservar {kept} · Fusionar {merged} · Descartar {dropped} · Resumir {rolled}",
+    "dayReviewConfirmExtra": "{merged} se fusionarán en una conversación cada uno y {dropped} se descartarán.",
+    "dayReviewCountsFull": "{rolled} resumidas · {kept} conservadas · {merged} fusionadas · {dropped} descartadas",
+    "heldForDayReview": "Esperando tu revisión del día"
 }

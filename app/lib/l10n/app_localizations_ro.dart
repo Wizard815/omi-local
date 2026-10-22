@@ -14827,4 +14827,78 @@ class AppLocalizationsRo extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'Mută „$name” în…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'Nimic nu a fost procesat încă. Marchează cu stea ce vrei să păstrezi, bifează clipurile ca să le îmbini într-unul singur și elimină zgomotul. Restul devine un singur rezumat al zilei, pe care îl poți corecta.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count de clipuri fără vorbire reală au fost eliminate automat.',
+      few: '$count clipuri fără vorbire reală au fost eliminate automat.',
+      one: '1 clip fără vorbire reală a fost eliminat automat.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'Clipuri scurte sau neclare';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'Eliminate ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'Îmbinate într-unul singur ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'Elimină (zgomot)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'Pune înapoi';
+
+  @override
+  String get dayReviewMergeTooltip => 'Selectează pentru îmbinare';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Îmbină $count de clipuri într-unul singur',
+      few: 'Îmbină $count clipuri într-unul singur',
+      one: 'Selectează încă un clip pentru îmbinare',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'Desparte grupul';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'Îmbinate într-o singură conversație';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'Păstrează $kept · Îmbină $merged · Elimină $dropped · Rezumă $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged vor fi îmbinate fiecare într-o singură conversație, iar $dropped vor fi eliminate.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled rezumate · $kept păstrate · $merged îmbinate · $dropped eliminate';
+  }
+
+  @override
+  String get heldForDayReview => 'Așteaptă recapitularea zilei';
 }

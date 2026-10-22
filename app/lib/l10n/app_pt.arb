@@ -4516,5 +4516,20 @@
     "newSubfolder": "Nova subpasta",
     "folderTreeTitle": "Pastas",
     "moveFolder": "Mover…",
-    "moveFolderTo": "Mover “{name}” para…"
+    "moveFolderTo": "Mover “{name}” para…",
+    "dayReviewSortHintHold": "Nada foi processado ainda. Marque com estrela o que quer manter, marque clipes para mesclá-los em um só, descarte o ruído. Todo o resto vira um único resumo do dia que você pode corrigir.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 clipe sem fala real foi descartado automaticamente.} other{{count} clipes sem fala real foram descartados automaticamente.}}",
+    "dayReviewUnclearTitle": "Clipes curtos ou pouco claros",
+    "dayReviewDroppedTitle": "Descartados ({count})",
+    "dayReviewMergedTitle": "Mesclados em um só ({count})",
+    "dayReviewDropTooltip": "Descartar (ruído)",
+    "dayReviewRestoreTooltip": "Devolver",
+    "dayReviewMergeTooltip": "Selecionar para mesclar",
+    "dayReviewMergeSelected": "{count, plural, =1{Selecione outro clipe para mesclar} other{Mesclar {count} clipes em um só}}",
+    "dayReviewUngroup": "Desagrupar",
+    "dayReviewMergeGroupLabel": "Mesclados em uma só conversa",
+    "dayReviewFinalizeButtonFull": "Manter {kept} · Mesclar {merged} · Descartar {dropped} · Resumir {rolled}",
+    "dayReviewConfirmExtra": "{merged} serão mesclados em uma conversa cada e {dropped} descartados.",
+    "dayReviewCountsFull": "{rolled} resumidas · {kept} mantidas · {merged} mescladas · {dropped} descartadas",
+    "heldForDayReview": "Aguardando sua revisão do dia"
 }

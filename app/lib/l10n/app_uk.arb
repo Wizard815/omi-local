@@ -4481,5 +4481,20 @@
     "newSubfolder": "Нова підпапка",
     "folderTreeTitle": "Папки",
     "moveFolder": "Перемістити…",
-    "moveFolderTo": "Перемістити «{name}» до…"
+    "moveFolderTo": "Перемістити «{name}» до…",
+    "dayReviewSortHintHold": "Ще нічого не оброблено. Позначте зірочкою те, що хочете залишити, відмітьте кліпи, щоб об'єднати їх в один, і відкиньте шум. Усе інше стане одним підсумком дня, який можна виправити.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 кліп без справжньої мови відкинуто автоматично.} few{{count} кліпи без справжньої мови відкинуто автоматично.} many{{count} кліпів без справжньої мови відкинуто автоматично.} other{{count} кліпу без справжньої мови відкинуто автоматично.}}",
+    "dayReviewUnclearTitle": "Короткі або нечіткі кліпи",
+    "dayReviewDroppedTitle": "Відкинуто ({count})",
+    "dayReviewMergedTitle": "Об'єднано в один ({count})",
+    "dayReviewDropTooltip": "Відкинути (шум)",
+    "dayReviewRestoreTooltip": "Повернути",
+    "dayReviewMergeTooltip": "Вибрати для об'єднання",
+    "dayReviewMergeSelected": "{count, plural, =1{Виберіть ще один кліп для об'єднання} few{Об'єднати {count} кліпи в один} many{Об'єднати {count} кліпів в один} other{Об'єднати {count} кліпу в один}}",
+    "dayReviewUngroup": "Розгрупувати",
+    "dayReviewMergeGroupLabel": "Об'єднано в одну розмову",
+    "dayReviewFinalizeButtonFull": "Залишити {kept} · Об'єднати {merged} · Відкинути {dropped} · Підсумувати {rolled}",
+    "dayReviewConfirmExtra": "{merged} буде об'єднано в одну розмову кожну, а {dropped} відкинуто.",
+    "dayReviewCountsFull": "Підсумовано: {rolled} · Залишено: {kept} · Об'єднано: {merged} · Відкинуто: {dropped}",
+    "heldForDayReview": "Очікує на ваш огляд дня"
 }

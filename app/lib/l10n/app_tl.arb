@@ -11907,5 +11907,20 @@
     "newSubfolder": "Bagong subfolder",
     "folderTreeTitle": "Mga Folder",
     "moveFolder": "Ilipat…",
-    "moveFolderTo": "Ilipat ang \"{name}\" sa…"
+    "moveFolderTo": "Ilipat ang \"{name}\" sa…",
+    "dayReviewSortHintHold": "Wala pang naproseso. I-star ang gusto mong itago, i-tick ang mga clip na pagsasamahin sa iisa, at itapon ang ingay. Lahat ng iba ay magiging iisang buod ng araw na puwede mong itama.",
+    "dayReviewAutoDropped": "{count, plural, =1{{count} clip na walang tunay na pagsasalita ang awtomatikong itinapon.} other{{count} clip na walang tunay na pagsasalita ang awtomatikong itinapon.}}",
+    "dayReviewUnclearTitle": "Maikli o hindi malinaw na mga clip",
+    "dayReviewDroppedTitle": "Itinapon ({count})",
+    "dayReviewMergedTitle": "Pinagsama sa iisa ({count})",
+    "dayReviewDropTooltip": "Itapon (ingay)",
+    "dayReviewRestoreTooltip": "Ibalik",
+    "dayReviewMergeTooltip": "Piliin para pagsamahin",
+    "dayReviewMergeSelected": "{count, plural, =1{Pumili ng isa pang clip na pagsasamahin} other{Pagsamahin ang {count} clip sa iisa}}",
+    "dayReviewUngroup": "I-ungroup",
+    "dayReviewMergeGroupLabel": "Pinagsama sa iisang conversation",
+    "dayReviewFinalizeButtonFull": "Itago ang {kept} · Pagsamahin ang {merged} · Itapon ang {dropped} · Ibuod ang {rolled}",
+    "dayReviewConfirmExtra": "Pagsasamahin ang {merged} sa tig-iisang conversation at itatapon ang {dropped}.",
+    "dayReviewCountsFull": "{rolled} naibuod · {kept} itinago · {merged} pinagsama · {dropped} itinapon",
+    "heldForDayReview": "Naghihintay sa iyong review ng araw"
 }

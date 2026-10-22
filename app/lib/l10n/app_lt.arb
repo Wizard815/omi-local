@@ -4481,5 +4481,20 @@
     "newSubfolder": "Naujas poaplankis",
     "folderTreeTitle": "Aplankai",
     "moveFolder": "Perkelti…",
-    "moveFolderTo": "Perkelti „{name}“ į…"
+    "moveFolderTo": "Perkelti „{name}“ į…",
+    "dayReviewSortHintHold": "Dar niekas neapdorota. Pažymėkite žvaigždute, ką norite palikti, pažymėkite įrašus, kad sujungtumėte juos į vieną, atmeskite triukšmą. Visa kita taps viena dienos santrauka, kurią galėsite pataisyti.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 įrašas be tikros kalbos atmestas automatiškai.} few{{count} įrašai be tikros kalbos atmesti automatiškai.} many{{count} įrašo be tikros kalbos atmesta automatiškai.} other{{count} įrašų be tikros kalbos atmesta automatiškai.}}",
+    "dayReviewUnclearTitle": "Trumpi arba neaiškūs įrašai",
+    "dayReviewDroppedTitle": "Atmesta ({count})",
+    "dayReviewMergedTitle": "Sujungta į vieną ({count})",
+    "dayReviewDropTooltip": "Atmesti (triukšmas)",
+    "dayReviewRestoreTooltip": "Grąžinti",
+    "dayReviewMergeTooltip": "Pasirinkti sujungimui",
+    "dayReviewMergeSelected": "{count, plural, =1{Pasirinkite dar vieną įrašą sujungimui} few{Sujungti {count} įrašus į vieną} many{Sujungti {count} įrašo į vieną} other{Sujungti {count} įrašų į vieną}}",
+    "dayReviewUngroup": "Išskirti",
+    "dayReviewMergeGroupLabel": "Sujungta į vieną pokalbį",
+    "dayReviewFinalizeButtonFull": "Palikti {kept} · Sujungti {merged} · Atmesti {dropped} · Apibendrinti {rolled}",
+    "dayReviewConfirmExtra": "{merged} bus sujungta po vieną pokalbį, o {dropped} atmesta.",
+    "dayReviewCountsFull": "Apibendrinta: {rolled} · Palikta: {kept} · Sujungta: {merged} · Atmesta: {dropped}",
+    "heldForDayReview": "Laukia jūsų dienos peržiūros"
 }

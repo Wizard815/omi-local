@@ -4481,5 +4481,20 @@
     "newSubfolder": "โฟลเดอร์ย่อยใหม่",
     "folderTreeTitle": "โฟลเดอร์",
     "moveFolder": "ย้าย…",
-    "moveFolderTo": "ย้าย “{name}” ไปยัง…"
+    "moveFolderTo": "ย้าย “{name}” ไปยัง…",
+    "dayReviewSortHintHold": "ยังไม่มีการประมวลผลใดๆ ติดดาวสิ่งที่ต้องการเก็บไว้ ติ๊กเลือกคลิปเพื่อรวมเป็นหนึ่งเดียว และทิ้งเสียงรบกวน ส่วนที่เหลือจะรวมเป็นสรุปประจำวันหนึ่งรายการที่คุณแก้ไขได้",
+    "dayReviewAutoDropped": "{count, plural, =1{ทิ้งคลิปที่ไม่มีเสียงพูดจริง 1 คลิปโดยอัตโนมัติแล้ว} other{ทิ้งคลิปที่ไม่มีเสียงพูดจริง {count} คลิปโดยอัตโนมัติแล้ว}}",
+    "dayReviewUnclearTitle": "คลิปสั้นหรือไม่ชัดเจน",
+    "dayReviewDroppedTitle": "ทิ้งแล้ว ({count})",
+    "dayReviewMergedTitle": "รวมเป็นหนึ่งเดียวแล้ว ({count})",
+    "dayReviewDropTooltip": "ทิ้ง (เสียงรบกวน)",
+    "dayReviewRestoreTooltip": "นำกลับคืน",
+    "dayReviewMergeTooltip": "เลือกเพื่อรวม",
+    "dayReviewMergeSelected": "{count, plural, =1{เลือกคลิปอีกหนึ่งคลิปเพื่อรวม} other{รวม {count} คลิปเป็นหนึ่งเดียว}}",
+    "dayReviewUngroup": "ยกเลิกการจัดกลุ่ม",
+    "dayReviewMergeGroupLabel": "รวมเป็นบทสนทนาเดียวแล้ว",
+    "dayReviewFinalizeButtonFull": "เก็บ {kept} · รวม {merged} · ทิ้ง {dropped} · สรุป {rolled}",
+    "dayReviewConfirmExtra": "{merged} จะถูกรวมเป็นบทสนทนาเดียวต่อกลุ่ม และ {dropped} จะถูกทิ้ง",
+    "dayReviewCountsFull": "สรุปแล้ว {rolled} · เก็บไว้ {kept} · รวมแล้ว {merged} · ทิ้งแล้ว {dropped}",
+    "heldForDayReview": "รอการทบทวนประจำวันของคุณ"
 }

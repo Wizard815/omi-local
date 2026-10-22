@@ -14775,4 +14775,76 @@ class AppLocalizationsMr extends AppLocalizations {
   String moveFolderTo(String name) {
     return '\"$name\" येथे हलवा…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'अजून काहीही प्रक्रिया केलेले नाही. जे ठेवायचे आहे ते तारांकित करा, क्लिप एकात विलीन करण्यासाठी त्यांना टिक करा, गोंगाट वगळा. बाकी सर्व एका दिवसाच्या सारांशात बदलेल, जो आपण दुरुस्त करू शकता.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'प्रत्यक्ष बोलणे नसलेल्या $count क्लिप आपोआप वगळल्या गेल्या.',
+      one: 'प्रत्यक्ष बोलणे नसलेली 1 क्लिप आपोआप वगळली गेली.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'लहान किंवा अस्पष्ट क्लिप';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'वगळलेल्या ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'एकात विलीन केलेल्या ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'वगळा (गोंगाट)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'परत ठेवा';
+
+  @override
+  String get dayReviewMergeTooltip => 'विलीन करण्यासाठी निवडा';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count क्लिप एकात विलीन करा',
+      one: 'विलीन करण्यासाठी आणखी एक क्लिप निवडा',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'गट रद्द करा';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'एका संभाषणात विलीन केले';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return '$kept ठेवा · $merged विलीन करा · $dropped वगळा · $rolled सारांशित करा';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged प्रत्येकी एका संभाषणात विलीन केले जातील आणि $dropped वगळले जातील.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled सारांशित · $kept ठेवले · $merged विलीन केले · $dropped वगळले';
+  }
+
+  @override
+  String get heldForDayReview => 'आपल्या दिवसाच्या आढाव्याची वाट पाहत आहे';
 }

@@ -14561,4 +14561,76 @@ class AppLocalizationsKo extends AppLocalizations {
   String moveFolderTo(String name) {
     return '\"$name\" 이동할 위치…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      '아직 아무것도 처리되지 않았습니다. 보관할 항목에 별표를 표시하고, 하나로 합칠 클립에 체크하고, 잡음은 버리세요. 나머지는 모두 직접 수정할 수 있는 하루 요약 하나로 합쳐집니다.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '실제 대화가 없는 클립 $count개가 자동으로 버려졌습니다.',
+      one: '실제 대화가 없는 클립 1개가 자동으로 버려졌습니다.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => '짧거나 불분명한 클립';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return '버림 ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return '하나로 합침 ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => '버리기 (잡음)';
+
+  @override
+  String get dayReviewRestoreTooltip => '되돌리기';
+
+  @override
+  String get dayReviewMergeTooltip => '합칠 항목으로 선택';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '클립 $count개를 하나로 합치기',
+      one: '합칠 클립을 하나 더 선택하세요',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => '그룹 해제';
+
+  @override
+  String get dayReviewMergeGroupLabel => '하나의 대화로 합쳐짐';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return '$kept개 보관 · $merged개 합치기 · $dropped개 버리기 · $rolled개 요약';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged개는 각각 하나의 대화로 합쳐지고 $dropped개는 버려집니다.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled개 요약됨 · $kept개 보관됨 · $merged개 합쳐짐 · $dropped개 버려짐';
+  }
+
+  @override
+  String get heldForDayReview => '하루 검토를 기다리는 중';
 }

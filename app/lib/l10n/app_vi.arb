@@ -4481,5 +4481,20 @@
     "newSubfolder": "Thư mục con mới",
     "folderTreeTitle": "Thư mục",
     "moveFolder": "Di chuyển…",
-    "moveFolderTo": "Di chuyển “{name}” vào…"
+    "moveFolderTo": "Di chuyển “{name}” vào…",
+    "dayReviewSortHintHold": "Chưa có gì được xử lý. Gắn sao cho những gì bạn muốn giữ lại, tích chọn các đoạn ghi âm để gộp chúng thành một, và loại bỏ tạp âm. Mọi thứ khác sẽ gộp thành một bản tóm tắt ngày mà bạn có thể đính chính.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 đoạn ghi âm không có giọng nói thực sự đã được tự động loại bỏ.} other{{count} đoạn ghi âm không có giọng nói thực sự đã được tự động loại bỏ.}}",
+    "dayReviewUnclearTitle": "Các đoạn ghi âm ngắn hoặc không rõ",
+    "dayReviewDroppedTitle": "Đã loại bỏ ({count})",
+    "dayReviewMergedTitle": "Đã gộp thành một ({count})",
+    "dayReviewDropTooltip": "Loại bỏ (tạp âm)",
+    "dayReviewRestoreTooltip": "Khôi phục",
+    "dayReviewMergeTooltip": "Chọn để gộp",
+    "dayReviewMergeSelected": "{count, plural, =1{Chọn thêm một đoạn ghi âm để gộp} other{Gộp {count} đoạn ghi âm thành một}}",
+    "dayReviewUngroup": "Tách nhóm",
+    "dayReviewMergeGroupLabel": "Đã gộp thành một cuộc trò chuyện",
+    "dayReviewFinalizeButtonFull": "Giữ {kept} · Gộp {merged} · Loại bỏ {dropped} · Tóm tắt {rolled}",
+    "dayReviewConfirmExtra": "{merged} sẽ được gộp thành một cuộc trò chuyện cho mỗi nhóm và {dropped} sẽ bị loại bỏ.",
+    "dayReviewCountsFull": "{rolled} đã tóm tắt · {kept} đã giữ · {merged} đã gộp · {dropped} đã loại bỏ",
+    "heldForDayReview": "Đang chờ bạn xem lại ngày"
 }

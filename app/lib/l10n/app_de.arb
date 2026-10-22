@@ -4481,5 +4481,20 @@
     "newSubfolder": "Neuer Unterordner",
     "folderTreeTitle": "Ordner",
     "moveFolder": "Verschieben…",
-    "moveFolderTo": "„{name}“ verschieben nach…"
+    "moveFolderTo": "„{name}“ verschieben nach…",
+    "dayReviewSortHintHold": "Noch nichts wurde verarbeitet. Markiere mit einem Stern, was du behalten möchtest, hake Clips ab, um sie zu einem Gespräch zusammenzuführen, und verwirf das Rauschen. Alles andere wird zu einer Tageszusammenfassung, die du korrigieren kannst.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 Clip ohne echte Sprache wurde automatisch verworfen.} other{{count} Clips ohne echte Sprache wurden automatisch verworfen.}}",
+    "dayReviewUnclearTitle": "Kurze oder unklare Clips",
+    "dayReviewDroppedTitle": "Verworfen ({count})",
+    "dayReviewMergedTitle": "Zusammengeführt ({count})",
+    "dayReviewDropTooltip": "Verwerfen (Rauschen)",
+    "dayReviewRestoreTooltip": "Zurücklegen",
+    "dayReviewMergeTooltip": "Zum Zusammenführen auswählen",
+    "dayReviewMergeSelected": "{count, plural, =1{Wähle einen weiteren Clip zum Zusammenführen} other{{count} Clips zu einem Gespräch zusammenführen}}",
+    "dayReviewUngroup": "Gruppierung aufheben",
+    "dayReviewMergeGroupLabel": "Zu einem Gespräch zusammengeführt",
+    "dayReviewFinalizeButtonFull": "{kept} behalten · {merged} zusammenführen · {dropped} verwerfen · {rolled} zusammenfassen",
+    "dayReviewConfirmExtra": "{merged} werden zu je einem Gespräch zusammengeführt und {dropped} verworfen.",
+    "dayReviewCountsFull": "{rolled} zusammengefasst · {kept} behalten · {merged} zusammengeführt · {dropped} verworfen",
+    "heldForDayReview": "Wartet auf deinen Tagesrückblick"
 }

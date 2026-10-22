@@ -14795,4 +14795,80 @@ class AppLocalizationsUk extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'Перемістити «$name» до…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'Ще нічого не оброблено. Позначте зірочкою те, що хочете залишити, відмітьте кліпи, щоб об\'єднати їх в один, і відкиньте шум. Усе інше стане одним підсумком дня, який можна виправити.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count кліпу без справжньої мови відкинуто автоматично.',
+      many: '$count кліпів без справжньої мови відкинуто автоматично.',
+      few: '$count кліпи без справжньої мови відкинуто автоматично.',
+      one: '1 кліп без справжньої мови відкинуто автоматично.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'Короткі або нечіткі кліпи';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'Відкинуто ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'Об\'єднано в один ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'Відкинути (шум)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'Повернути';
+
+  @override
+  String get dayReviewMergeTooltip => 'Вибрати для об\'єднання';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Об\'єднати $count кліпу в один',
+      many: 'Об\'єднати $count кліпів в один',
+      few: 'Об\'єднати $count кліпи в один',
+      one: 'Виберіть ще один кліп для об\'єднання',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'Розгрупувати';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'Об\'єднано в одну розмову';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'Залишити $kept · Об\'єднати $merged · Відкинути $dropped · Підсумувати $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged буде об\'єднано в одну розмову кожну, а $dropped відкинуто.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return 'Підсумовано: $rolled · Залишено: $kept · Об\'єднано: $merged · Відкинуто: $dropped';
+  }
+
+  @override
+  String get heldForDayReview => 'Очікує на ваш огляд дня';
 }

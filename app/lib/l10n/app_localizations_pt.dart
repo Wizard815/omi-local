@@ -14792,4 +14792,76 @@ class AppLocalizationsPt extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'Mover “$name” para…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'Nada foi processado ainda. Marque com estrela o que quer manter, marque clipes para mesclá-los em um só, descarte o ruído. Todo o resto vira um único resumo do dia que você pode corrigir.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count clipes sem fala real foram descartados automaticamente.',
+      one: '1 clipe sem fala real foi descartado automaticamente.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'Clipes curtos ou pouco claros';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'Descartados ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'Mesclados em um só ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'Descartar (ruído)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'Devolver';
+
+  @override
+  String get dayReviewMergeTooltip => 'Selecionar para mesclar';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Mesclar $count clipes em um só',
+      one: 'Selecione outro clipe para mesclar',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'Desagrupar';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'Mesclados em uma só conversa';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'Manter $kept · Mesclar $merged · Descartar $dropped · Resumir $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged serão mesclados em uma conversa cada e $dropped descartados.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled resumidas · $kept mantidas · $merged mescladas · $dropped descartadas';
+  }
+
+  @override
+  String get heldForDayReview => 'Aguardando sua revisão do dia';
 }

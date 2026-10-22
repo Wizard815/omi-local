@@ -14761,4 +14761,76 @@ class AppLocalizationsBn extends AppLocalizations {
   String moveFolderTo(String name) {
     return '\"$name\" কোথায় সরাবেন…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'এখনও কিছুই প্রক্রিয়া করা হয়নি। যা রাখতে চান তা তারকা চিহ্নিত করুন, ক্লিপগুলো একটিতে মার্জ করতে টিক দিন, নয়েজ বাদ দিন। বাকি সবকিছু একটি দিনের সারসংক্ষেপে পরিণত হবে, যা আপনি সংশোধন করতে পারবেন।';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'প্রকৃত কথা না থাকায় $countটি ক্লিপ স্বয়ংক্রিয়ভাবে বাদ দেওয়া হয়েছে।',
+      one: 'প্রকৃত কথা না থাকায় ১টি ক্লিপ স্বয়ংক্রিয়ভাবে বাদ দেওয়া হয়েছে।',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'ছোট বা অস্পষ্ট ক্লিপ';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'বাদ দেওয়া ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'একটিতে মার্জ করা ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'বাদ দিন (নয়েজ)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'ফিরিয়ে আনুন';
+
+  @override
+  String get dayReviewMergeTooltip => 'মার্জ করতে নির্বাচন করুন';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countটি ক্লিপ একটিতে মার্জ করুন',
+      one: 'মার্জ করতে আরেকটি ক্লিপ নির্বাচন করুন',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'গ্রুপ ভাঙুন';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'একটি কথোপকথনে মার্জ করা হয়েছে';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return '$keptটি রাখুন · $mergedটি মার্জ করুন · $droppedটি বাদ দিন · $rolledটি সংক্ষিপ্ত করুন';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$mergedটি প্রতিটি একটি করে কথোপকথনে মার্জ হবে এবং $droppedটি বাদ যাবে।';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolledটি সংক্ষিপ্ত · $keptটি রাখা হয়েছে · $mergedটি মার্জ করা · $droppedটি বাদ দেওয়া';
+  }
+
+  @override
+  String get heldForDayReview => 'আপনার দিনের পর্যালোচনার অপেক্ষায়';
 }

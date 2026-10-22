@@ -198,7 +198,8 @@ class ProcessingDeferredMarker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(
-        context.l10n.processingDeferred,
+        // Self-hosted: finished clips wait for the day review, not for a budget.
+        UsageProvider.isSelfHosted ? context.l10n.heldForDayReview : context.l10n.processingDeferred,
         key: const Key('processing_deferred_marker'),
         style: OmiType.footnote.copyWith(color: OmiColors.textSecondary),
       );

@@ -71,12 +71,23 @@ Future<DayReviewResult<DayReviewDay>> getDayReviewDay(String date) async {
   );
 }
 
-Future<DayReviewResult<DayReview>> finalizeDayReview(String date, List<String> keepConversationIds) async {
+Future<DayReviewResult<DayReview>> finalizeDayReview(
+  String date,
+  List<String> keepConversationIds, {
+  List<List<String>> mergeGroups = const [],
+  List<String> dropConversationIds = const [],
+}) async {
   final response = await makeApiCall(
     url: '${_base()}/$date/finalize',
     headers: {'Content-Type': 'application/json'},
     method: 'POST',
-    body: jsonEncode({'keep_conversation_ids': keepConversationIds}),
+    body: jsonEncode({
+      'keep_conversation_ids': keepConversationIds,
+      'merge_groups': [
+        for (final g in mergeGroups) {'conversation_ids': g}
+      ],
+      'drop_conversation_ids': dropConversationIds,
+    }),
   );
   return _decode(
       response, (json) => DayReview.fromGenerated(wire.GeneratedDayReview.fromJson(json)), 'finalizeDayReview');

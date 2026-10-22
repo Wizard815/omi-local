@@ -26078,6 +26078,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Move \"{name}\" into…'**
   String moveFolderTo(String name);
+
+  /// Day review hint when clips were held unprocessed
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing was processed yet. Star what to keep, tick clips to merge them into one, drop the noise. Everything else becomes one day summary you can correct.'**
+  String get dayReviewSortHintHold;
+
+  /// Day review note about rule-dropped noise
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 clip with no real speech was dropped automatically.} other{{count} clips with no real speech were dropped automatically.}}'**
+  String dayReviewAutoDropped(int count);
+
+  /// Day review section for short clips the noise rules could not settle
+  ///
+  /// In en, this message translates to:
+  /// **'Short or unclear clips'**
+  String get dayReviewUnclearTitle;
+
+  /// Day review dropped clips section
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped ({count})'**
+  String dayReviewDroppedTitle(int count);
+
+  /// Day review merged groups section
+  ///
+  /// In en, this message translates to:
+  /// **'Merged into one ({count})'**
+  String dayReviewMergedTitle(int count);
+
+  /// Day review drop button tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Drop (noise)'**
+  String get dayReviewDropTooltip;
+
+  /// Day review undo-drop button tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Put back'**
+  String get dayReviewRestoreTooltip;
+
+  /// Day review merge checkbox tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Select to merge'**
+  String get dayReviewMergeTooltip;
+
+  /// Day review merge action for the selected clips
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Select another clip to merge} other{Merge {count} clips into one}}'**
+  String dayReviewMergeSelected(int count);
+
+  /// Day review undo a merge group
+  ///
+  /// In en, this message translates to:
+  /// **'Ungroup'**
+  String get dayReviewUngroup;
+
+  /// Day review merge group header
+  ///
+  /// In en, this message translates to:
+  /// **'Merged into one conversation'**
+  String get dayReviewMergeGroupLabel;
+
+  /// Day review finalize button with every disposition
+  ///
+  /// In en, this message translates to:
+  /// **'Keep {kept} · Merge {merged} · Drop {dropped} · Summarize {rolled}'**
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled);
+
+  /// Day review confirm dialog, merges and drops line
+  ///
+  /// In en, this message translates to:
+  /// **'{merged} will be merged into one conversation each and {dropped} dropped.'**
+  String dayReviewConfirmExtra(int merged, int dropped);
+
+  /// Day review header counts with merges and drops
+  ///
+  /// In en, this message translates to:
+  /// **'{rolled} summarized · {kept} kept · {merged} merged · {dropped} dropped'**
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped);
+
+  /// Conversation list marker for a clip held until the day review
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for your day review'**
+  String get heldForDayReview;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

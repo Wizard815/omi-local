@@ -4516,5 +4516,20 @@
     "newSubfolder": "Nouveau sous-dossier",
     "folderTreeTitle": "Dossiers",
     "moveFolder": "Déplacer…",
-    "moveFolderTo": "Déplacer « {name} » dans…"
+    "moveFolderTo": "Déplacer « {name} » dans…",
+    "dayReviewSortHintHold": "Rien n'a encore été traité. Ajoutez une étoile à ce que vous voulez garder, cochez les clips à fusionner en un seul, écartez le bruit. Tout le reste devient un seul résumé de la journée que vous pouvez corriger.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 clip sans parole réelle a été écarté automatiquement.} other{{count} clips sans parole réelle ont été écartés automatiquement.}}",
+    "dayReviewUnclearTitle": "Clips courts ou peu clairs",
+    "dayReviewDroppedTitle": "Écartés ({count})",
+    "dayReviewMergedTitle": "Fusionnés en un seul ({count})",
+    "dayReviewDropTooltip": "Écarter (bruit)",
+    "dayReviewRestoreTooltip": "Remettre",
+    "dayReviewMergeTooltip": "Sélectionner pour fusionner",
+    "dayReviewMergeSelected": "{count, plural, =1{Sélectionnez un autre clip à fusionner} other{Fusionner {count} clips en un seul}}",
+    "dayReviewUngroup": "Dissocier",
+    "dayReviewMergeGroupLabel": "Fusionnés en une seule conversation",
+    "dayReviewFinalizeButtonFull": "Garder {kept} · Fusionner {merged} · Écarter {dropped} · Résumer {rolled}",
+    "dayReviewConfirmExtra": "{merged} seront fusionnés en une seule conversation chacun et {dropped} écartés.",
+    "dayReviewCountsFull": "{rolled} résumées · {kept} gardées · {merged} fusionnées · {dropped} écartées",
+    "heldForDayReview": "En attente de votre revue de la journée"
 }

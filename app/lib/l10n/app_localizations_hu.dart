@@ -14825,4 +14825,76 @@ class AppLocalizationsHu extends AppLocalizations {
   String moveFolderTo(String name) {
     return '„$name” áthelyezése ide…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'Még semmi sincs feldolgozva. Csillagozd meg, amit megtartanál, pipáld ki az eggyé vonandó felvételeket, a zajt pedig dobd el. Minden más egyetlen napi összefoglalóvá válik, amelyet javíthatsz.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count valódi beszédet nem tartalmazó felvétel automatikusan el lett dobva.',
+      one: '1 valódi beszédet nem tartalmazó felvétel automatikusan el lett dobva.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'Rövid vagy nem egyértelmű felvételek';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'Eldobva ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'Eggyé összevonva ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'Eldobás (zaj)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'Visszahelyezés';
+
+  @override
+  String get dayReviewMergeTooltip => 'Kijelölés összevonáshoz';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count felvétel összevonása eggyé',
+      one: 'Jelölj ki még egy felvételt az összevonáshoz',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'Szétválasztás';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'Egy beszélgetéssé összevonva';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'Megtartás: $kept · Összevonás: $merged · Eldobás: $dropped · Összefoglalás: $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged egy-egy beszélgetéssé lesz összevonva, $dropped pedig eldobva.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled összefoglalva · $kept megtartva · $merged összevonva · $dropped eldobva';
+  }
+
+  @override
+  String get heldForDayReview => 'A napi áttekintésedre vár';
 }

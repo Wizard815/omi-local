@@ -14865,4 +14865,76 @@ class AppLocalizationsTa extends AppLocalizations {
   String moveFolderTo(String name) {
     return '\"$name\" ஐ இங்கு நகர்த்து…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'இன்னும் எதுவும் செயலாக்கப்படவில்லை. வைத்திருக்க வேண்டியவற்றுக்கு நட்சத்திரமிடுங்கள், ஒன்றாக இணைக்க வேண்டிய கிளிப்புகளைத் தேர்வு செய்யுங்கள், இரைச்சலை நீக்குங்கள். மற்ற அனைத்தும் நீங்கள் திருத்தக்கூடிய ஒரே நாள் சுருக்கமாக மாறும்.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'உண்மையான பேச்சு இல்லாத $count கிளிப்புகள் தானாக நீக்கப்பட்டன.',
+      one: 'உண்மையான பேச்சு இல்லாத 1 கிளிப் தானாக நீக்கப்பட்டது.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'குறுகிய அல்லது தெளிவற்ற கிளிப்புகள்';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'நீக்கப்பட்டவை ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'ஒன்றாக இணைக்கப்பட்டவை ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'நீக்கு (இரைச்சல்)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'மீட்டெடு';
+
+  @override
+  String get dayReviewMergeTooltip => 'இணைக்கத் தேர்வு செய்யவும்';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count கிளிப்புகளை ஒன்றாக இணைக்கவும்',
+      one: 'இணைக்க மற்றொரு கிளிப்பைத் தேர்வு செய்யவும்',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'குழுவை நீக்கு';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'ஒரே உரையாடலாக இணைக்கப்பட்டது';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return '$kept வைத்திருக்கவும் · $merged இணைக்கவும் · $dropped நீக்கவும் · $rolled சுருக்கவும்';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged ஒவ்வொன்றும் ஒரே உரையாடலாக இணைக்கப்படும், $dropped நீக்கப்படும்.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled சுருக்கப்பட்டது · $kept வைக்கப்பட்டது · $merged இணைக்கப்பட்டது · $dropped நீக்கப்பட்டது';
+  }
+
+  @override
+  String get heldForDayReview => 'உங்கள் நாள் மதிப்பாய்வுக்காகக் காத்திருக்கிறது';
 }

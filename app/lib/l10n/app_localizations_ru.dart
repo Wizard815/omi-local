@@ -14820,4 +14820,80 @@ class AppLocalizationsRu extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'Переместить «$name» в…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'Пока ничего не обработано. Отметьте звёздочкой то, что хотите сохранить, отметьте галочкой записи, которые нужно объединить в одну, и отбросьте шум. Всё остальное станет одной сводкой дня, которую можно исправить.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count записи без реальной речи были отброшены автоматически.',
+      many: '$count записей без реальной речи были отброшены автоматически.',
+      few: '$count записи без реальной речи были отброшены автоматически.',
+      one: '$count запись без реальной речи была отброшена автоматически.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'Короткие или неясные записи';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'Отброшено ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'Объединено в одну ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'Отбросить (шум)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'Вернуть';
+
+  @override
+  String get dayReviewMergeTooltip => 'Выбрать для объединения';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Объединить $count записи в одну',
+      many: 'Объединить $count записей в одну',
+      few: 'Объединить $count записи в одну',
+      one: 'Выберите ещё одну запись для объединения',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'Разгруппировать';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'Объединено в один разговор';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'Оставить $kept · Объединить $merged · Отбросить $dropped · Обобщить $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged будут объединены каждая в один разговор, а $dropped — отброшены.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return 'Обобщено: $rolled · Оставлено: $kept · Объединено: $merged · Отброшено: $dropped';
+  }
+
+  @override
+  String get heldForDayReview => 'Ожидает вашего обзора дня';
 }

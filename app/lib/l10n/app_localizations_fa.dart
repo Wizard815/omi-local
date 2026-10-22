@@ -14760,4 +14760,76 @@ class AppLocalizationsFa extends AppLocalizations {
   String moveFolderTo(String name) {
     return 'انتقال «$name» به…';
   }
+
+  @override
+  String get dayReviewSortHintHold =>
+      'هنوز چیزی پردازش نشده است. آنچه را می‌خواهید نگه دارید ستاره‌دار کنید، کلیپ‌ها را تیک بزنید تا در یک گفتگو ادغام شوند و نویز را حذف کنید. بقیه به یک خلاصه روز تبدیل می‌شوند که می‌توانید اصلاحش کنید.';
+
+  @override
+  String dayReviewAutoDropped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count کلیپ بدون گفتار واقعی به‌طور خودکار حذف شدند.',
+      one: 'یک کلیپ بدون گفتار واقعی به‌طور خودکار حذف شد.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUnclearTitle => 'کلیپ‌های کوتاه یا نامشخص';
+
+  @override
+  String dayReviewDroppedTitle(int count) {
+    return 'حذف‌شده ($count)';
+  }
+
+  @override
+  String dayReviewMergedTitle(int count) {
+    return 'ادغام‌شده در یکی ($count)';
+  }
+
+  @override
+  String get dayReviewDropTooltip => 'حذف (نویز)';
+
+  @override
+  String get dayReviewRestoreTooltip => 'بازگرداندن';
+
+  @override
+  String get dayReviewMergeTooltip => 'انتخاب برای ادغام';
+
+  @override
+  String dayReviewMergeSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'ادغام $count کلیپ در یک گفتگو',
+      one: 'کلیپ دیگری را برای ادغام انتخاب کنید',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewUngroup => 'لغو ادغام';
+
+  @override
+  String get dayReviewMergeGroupLabel => 'ادغام‌شده در یک گفتگو';
+
+  @override
+  String dayReviewFinalizeButtonFull(int kept, int merged, int dropped, int rolled) {
+    return 'نگه‌داشتن $kept · ادغام $merged · حذف $dropped · خلاصه کردن $rolled';
+  }
+
+  @override
+  String dayReviewConfirmExtra(int merged, int dropped) {
+    return '$merged هرکدام در یک گفتگو ادغام می‌شوند و $dropped حذف می‌شوند.';
+  }
+
+  @override
+  String dayReviewCountsFull(int rolled, int kept, int merged, int dropped) {
+    return '$rolled خلاصه‌شده · $kept نگه‌داشته‌شده · $merged ادغام‌شده · $dropped حذف‌شده';
+  }
+
+  @override
+  String get heldForDayReview => 'در انتظار مرور روز شما';
 }

@@ -4481,5 +4481,20 @@
     "newSubfolder": "مجلد فرعي جديد",
     "folderTreeTitle": "المجلدات",
     "moveFolder": "نقل…",
-    "moveFolderTo": "نقل «{name}» إلى…"
+    "moveFolderTo": "نقل «{name}» إلى…",
+    "dayReviewSortHintHold": "لم تتم معالجة أي شيء بعد. ميّز بنجمة ما تريد الاحتفاظ به، وحدّد المقاطع لدمجها في محادثة واحدة، وأسقط الضوضاء. كل ما عداها يصبح ملخصًا واحدًا لليوم يمكنك تصحيحه.",
+    "dayReviewAutoDropped": "{count, plural, =1{تم تلقائيًا إسقاط مقطع واحد لا يحتوي على كلام حقيقي.} other{تم تلقائيًا إسقاط {count} من المقاطع التي لا تحتوي على كلام حقيقي.}}",
+    "dayReviewUnclearTitle": "مقاطع قصيرة أو غير واضحة",
+    "dayReviewDroppedTitle": "المُسقطة ({count})",
+    "dayReviewMergedTitle": "المدمجة في واحدة ({count})",
+    "dayReviewDropTooltip": "إسقاط (ضوضاء)",
+    "dayReviewRestoreTooltip": "إعادة",
+    "dayReviewMergeTooltip": "تحديد للدمج",
+    "dayReviewMergeSelected": "{count, plural, =1{حدّد مقطعًا آخر لدمجه} other{دمج {count} من المقاطع في محادثة واحدة}}",
+    "dayReviewUngroup": "فك الدمج",
+    "dayReviewMergeGroupLabel": "مدمجة في محادثة واحدة",
+    "dayReviewFinalizeButtonFull": "الاحتفاظ بـ {kept} · دمج {merged} · إسقاط {dropped} · تلخيص {rolled}",
+    "dayReviewConfirmExtra": "سيتم دمج {merged} في محادثة واحدة لكل مجموعة وإسقاط {dropped}.",
+    "dayReviewCountsFull": "{rolled} ملخَّصة · {kept} محتفَظ بها · {merged} مدمجة · {dropped} مُسقطة",
+    "heldForDayReview": "بانتظار مراجعة اليوم"
 }

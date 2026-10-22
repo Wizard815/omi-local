@@ -4481,5 +4481,20 @@
     "newSubfolder": "Uus alamkaust",
     "folderTreeTitle": "Kaustad",
     "moveFolder": "Teisalda…",
-    "moveFolderTo": "Teisalda „{name}“ kausta…"
+    "moveFolderTo": "Teisalda „{name}“ kausta…",
+    "dayReviewSortHintHold": "Midagi pole veel töödeldud. Märkige tärniga see, mida soovite alles hoida, linnukesega klipid, mida soovite üheks liita, ja jätke müra kõrvale. Kõik muu koondatakse üheks päeva kokkuvõtteks, mida saate parandada.",
+    "dayReviewAutoDropped": "{count, plural, =1{1 ilma tegeliku kõneta klipp jäeti automaatselt kõrvale.} other{{count} ilma tegeliku kõneta klippi jäeti automaatselt kõrvale.}}",
+    "dayReviewUnclearTitle": "Lühikesed või ebaselged klipid",
+    "dayReviewDroppedTitle": "Kõrvale jäetud ({count})",
+    "dayReviewMergedTitle": "Üheks liidetud ({count})",
+    "dayReviewDropTooltip": "Jäta kõrvale (müra)",
+    "dayReviewRestoreTooltip": "Pane tagasi",
+    "dayReviewMergeTooltip": "Vali liitmiseks",
+    "dayReviewMergeSelected": "{count, plural, =1{Valige liitmiseks veel üks klipp} other{Liida {count} klippi üheks}}",
+    "dayReviewUngroup": "Tühista rühmitamine",
+    "dayReviewMergeGroupLabel": "Üheks vestluseks liidetud",
+    "dayReviewFinalizeButtonFull": "Hoia alles {kept} · Liida {merged} · Jäta kõrvale {dropped} · Kokkuvõttesse {rolled}",
+    "dayReviewConfirmExtra": "{merged} liidetakse igaüks üheks vestluseks ja {dropped} jäetakse kõrvale.",
+    "dayReviewCountsFull": "{rolled} kokkuvõttes · {kept} alles hoitud · {merged} liidetud · {dropped} kõrvale jäetud",
+    "heldForDayReview": "Ootab teie päeva ülevaadet"
 }
