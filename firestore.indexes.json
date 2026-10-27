@@ -4281,6 +4281,24 @@
       ]
     },
     {
+      "collectionGroup": "conversations",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "created_at",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "chat_first_deferrals",
       "queryScope": "COLLECTION",
       "fields": [
@@ -4685,24 +4703,6 @@
         {
           "fieldPath": "__name__",
           "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "conversations",
-      "queryScope": "COLLECTION_GROUP",
-      "fields": [
-        {
-          "fieldPath": "status",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "created_at",
-          "order": "DESCENDING"
-        },
-        {
-          "fieldPath": "__name__",
-          "order": "DESCENDING"
         }
       ]
     }
