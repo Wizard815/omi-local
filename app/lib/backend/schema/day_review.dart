@@ -44,6 +44,36 @@ class DayReviewCorrection {
       );
 }
 
+/// One part of the day summary and the conversations it was written from.
+class DayReviewSection {
+  final String id;
+  final List<String> conversationIds;
+  final String title;
+  final String text;
+  final List<String> tags;
+
+  /// Its conversations were pulled back out as starred conversations.
+  final bool favorited;
+
+  const DayReviewSection({
+    required this.id,
+    required this.conversationIds,
+    required this.title,
+    required this.text,
+    this.tags = const [],
+    this.favorited = false,
+  });
+
+  factory DayReviewSection.fromGenerated(wire.GeneratedDayReviewSection g) => DayReviewSection(
+        id: g.id,
+        conversationIds: g.conversationIds ?? const [],
+        title: g.title,
+        text: g.text,
+        tags: g.tags ?? const [],
+        favorited: g.favorited,
+      );
+}
+
 class DayReview {
   final String date;
   final String title;
@@ -54,6 +84,12 @@ class DayReview {
   /// summaryText with redactions masked and pending corrections folded in.
   final String finalText;
   final List<DayReviewCorrection> corrections;
+
+  /// summaryText split by source conversations; empty for reviews written before sections existed.
+  final List<DayReviewSection> sections;
+
+  /// Every section tag of the day.
+  final List<String> tags;
   final List<String> keptConversationIds;
   final List<String> rolledUpConversationIds;
 
@@ -69,6 +105,8 @@ class DayReview {
     required this.summaryText,
     required this.finalText,
     required this.corrections,
+    this.sections = const [],
+    this.tags = const [],
     required this.keptConversationIds,
     required this.rolledUpConversationIds,
     this.mergedGroups = const [],
@@ -93,6 +131,8 @@ class DayReview {
         summaryText: g.summaryText,
         finalText: g.finalText,
         corrections: (g.corrections ?? const []).map(DayReviewCorrection.fromGenerated).toList(),
+        sections: (g.sections ?? const []).map(DayReviewSection.fromGenerated).toList(),
+        tags: g.tags ?? const [],
         keptConversationIds: g.keptConversationIds ?? const [],
         rolledUpConversationIds: g.rolledUpConversationIds ?? const [],
         mergedGroups: (g.mergedGroups ?? const []).map((group) => group.conversationIds ?? const <String>[]).toList(),
@@ -110,6 +150,7 @@ class DayReviewConversation {
   final DateTime? startedAt;
   final DateTime? finishedAt;
   final bool starred;
+  final List<String> tags;
   final bool rolledUp;
   final bool dropped;
 
@@ -131,6 +172,7 @@ class DayReviewConversation {
     this.startedAt,
     this.finishedAt,
     required this.starred,
+    this.tags = const [],
     required this.rolledUp,
     this.dropped = false,
     this.held = false,
@@ -147,6 +189,7 @@ class DayReviewConversation {
         startedAt: g.startedAt?.toLocal(),
         finishedAt: g.finishedAt?.toLocal(),
         starred: g.starred,
+        tags: g.tags ?? const [],
         rolledUp: g.rolledUp,
         dropped: g.dropped,
         held: g.held,

@@ -144,6 +144,10 @@ abstract class GlobalSearchSource {
   Future<ConversationSearchResult> conversations(String query,
       {String? speakerId, DateTime? startDate, DateTime? endDate});
   Future<List<ServerConversation>> conversationsIn({String? folderId, bool starred = false});
+
+  /// omi-local: the user's tags (most used first) and the conversations carrying one.
+  Future<List<({String tag, int count})>> tagCatalog() async => const [];
+  Future<List<ServerConversation>> conversationsByTag(String tag) async => const [];
   Future<ApiResult<List<DailySummary>>> recaps(String query);
   Future<ApiResult<List<DailySummary>>> recapsInRange(String query, DateTime start, DateTime end) => recaps(query);
   Future<ApiResult<List<ActionItemWithMetadata>>> tasks(String query);
@@ -168,6 +172,12 @@ class ApiGlobalSearchSource extends GlobalSearchSource {
   @override
   Future<List<ServerConversation>> conversationsIn({String? folderId, bool starred = false}) =>
       getConversations(limit: 50, folderId: folderId, starred: starred ? true : null);
+
+  @override
+  Future<List<({String tag, int count})>> tagCatalog() => getConversationTagCatalog();
+
+  @override
+  Future<List<ServerConversation>> conversationsByTag(String tag) => getConversationsByTag(tag, limit: 100);
 
   @override
   Future<ApiResult<List<DailySummary>>> recaps(String query) => searchDailySummaries(query);
@@ -230,14 +240,25 @@ class _Results {
   bool get isEmpty => conversations.isEmpty && recaps.isEmpty && tasks.isEmpty && memories.isEmpty;
 }
 
-/// A browsed list opened from a tile: a folder, Starred, or the people.
+/// A browsed list opened from a tile: a folder, Starred, the people, the tags, or one tag.
 class _Scope {
-  const _Scope({required this.title, this.folderId, this.starred = false, this.people = false});
+  const _Scope({
+    required this.title,
+    this.folderId,
+    this.starred = false,
+    this.people = false,
+    this.tags = false,
+    this.tag,
+  });
 
   final String title;
   final String? folderId;
   final bool starred;
   final bool people;
+
+  /// The tag catalog: one row per tag, each opening that tag's conversations.
+  final bool tags;
+  final String? tag;
 }
 
 const String _recentSearchesKey = 'globalSearchRecentQueries';
@@ -268,6 +289,7 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
   _Scope? _scope;
   bool _loadingScope = false;
   List<ServerConversation> _scopeConversations = const [];
+  List<({String tag, int count})> _scopeTags = const [];
 
   /// In the People scope the search field filters the shared people list instead of searching.
   String _peopleQuery = '';
@@ -521,8 +543,19 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
       setState(() => _loadingScope = false);
       return;
     }
-    final conversations = await source
-        .conversationsIn(folderId: scope.folderId, starred: scope.starred)
+    if (scope.tags) {
+      final tags = await source.tagCatalog().catchError((_) => <({String tag, int count})>[]);
+      if (!mounted || generation != _generation) return;
+      setState(() {
+        _scopeTags = tags;
+        _loadingScope = false;
+      });
+      return;
+    }
+    final tag = scope.tag;
+    final conversations = await (tag != null
+            ? source.conversationsByTag(tag)
+            : source.conversationsIn(folderId: scope.folderId, starred: scope.starred))
         .catchError((_) => <ServerConversation>[]);
     if (!mounted || generation != _generation) return;
     setState(() {
@@ -681,6 +714,12 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
         label: l10n.starred,
         count: overview?.starred,
         onTap: () => _openScope(_Scope(title: l10n.starred, starred: true)),
+      ),
+      _SearchTile(
+        key: const ValueKey('search_tile_tags'),
+        icon: FontAwesomeIcons.tag,
+        label: l10n.conversationTags,
+        onTap: () => _openScope(_Scope(title: l10n.conversationsFilterByTag, tags: true)),
       ),
       for (final folder in folders)
         _SearchTile(
@@ -863,6 +902,22 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
         query: _peopleQuery,
         onClearQuery: () => _useRecent(''),
       );
+    } else if (scope.tags) {
+      body = _scopeTags.isEmpty
+          ? OmiEmptyState(icon: Icons.sell_outlined, title: context.l10n.conversationsNoTagsYet)
+          : ListView(
+              padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom + 24),
+              children: [
+                for (final row in _scopeTags)
+                  _Row(
+                    key: ValueKey('search_tag_${row.tag}'),
+                    leading: const Icon(Icons.sell_outlined, color: Colors.white70, size: 20),
+                    title: '#${row.tag}',
+                    subtitle: '${row.count}',
+                    onTap: () => _openScope(_Scope(title: '#${row.tag}', tag: row.tag)),
+                  ),
+              ],
+            );
     } else {
       body = _scopeConversations.isEmpty
           ? OmiEmptyState(icon: Icons.forum_outlined, title: context.l10n.noConversationsYet)

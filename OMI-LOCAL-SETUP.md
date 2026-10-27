@@ -241,6 +241,38 @@ them. **Reopen day** brings the summarized and dropped clips back; a merge stays
 `OMI_CONVERSATION_HOLD=off` restores per-clip processing. Tune `DAY_REVIEW_TIMEOUT_SECONDS` /
 `DAY_REVIEW_MAX_INPUT_CHARS` for slow or small-context models.
 
+**Day bundle (one tap, or automatic).** Fifty clips a day is normal when the device never
+stops, and most are small. **Bundle the day** on the review folds every unstarred clip into one
+day summary written in **sections**; each section names the clips it came from and carries the
+model's tags (people, places, projects). **Favorite** a section to pull its clips back out as
+starred conversations (held clips get the full treatment then); **Unfavorite** folds them back.
+The summary keeps covering favorited sections, so corrections and regeneration work as before.
+Past days are bundled on their own once the local clock passes `OMI_DAY_BUNDLE_HOUR` (default
+3 am); a day the model could not summarize is retried after six hours. `OMI_DAY_BUNDLE_AUTO=off`
+leaves bundling to the button. The manual sort (star, merge, drop) is still there under the
+button.
+
+### Tags
+Every conversation carries tags: the day bundle adds the section's tags to its clips, and you
+edit them on the conversation (the **Tags** chip under the title: type one, or tap one of your
+existing tags). The server normalizes them (lowercase, dashes) and keeps a per-user catalog with
+counts. **Search → Tags** lists the catalog; a tag opens its conversations, newest first.
+API: `PUT /v1/conversations/{id}/tags`, `GET /v1/conversations/tags`,
+`GET /v1/conversations?tag=work`.
+
+### Calendar & tasks (CalDAV)
+Tasks and the day's events live outside Omi too. `omi-host` runs **Radicale** (`omi-radicale`,
+port `CALDAV_PORT`, default 5232; set `CALDAV_PASSWORD` in `.env` or it refuses to start) and
+the backend syncs with it every hour and on **Sync now** (Settings → **Calendar & tasks**):
+open tasks and recently completed ones go out as to-dos, a to-do ticked off on the phone flips
+the Omi task, to-dos made elsewhere become Omi tasks; day summaries land as all-day events and
+the events the pipeline extracted from conversations as timed ones; the calendar's own events
+come back into Omi for the chat's calendar tool. Point a phone (DAVx5 + Tasks.org) or a desktop
+client at `http://<host>:5232/` with the same user and password to see the same lists. To use
+Nextcloud, Baïkal, iCloud or another server instead, enter it on the settings page (per user) or
+set `CALDAV_DEFAULT_URL` / `CALDAV_USER` / `CALDAV_PASSWORD` for the whole stack. Worked
+examples: `omi-host/examples/caldav/README.md`. Contacts (CardDAV) are not synced.
+
 ### Folder tree
 Folders can be nested (up to 5 levels). Folders live in **Search** (upstream moved folder
 browsing there): the tiles are top-level folders; opening one shows its path and its subfolders

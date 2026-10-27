@@ -705,6 +705,60 @@ Future<bool> setConversationStarred(String conversationId, bool starred) async {
   return response.statusCode == 200;
 }
 
+/// Replaces the conversation's tags (the server normalizes them). Returns the stored tags, or null on failure.
+Future<List<String>?> setConversationTags(String conversationId, List<String> tags) async {
+  final response = await makeApiCall(
+    url: '${Env.apiBaseUrl}v1/conversations/$conversationId/tags',
+    headers: {'Content-Type': 'application/json'},
+    method: 'PUT',
+    // omi-perf-allow: history-json-on-ui -- a list of at most 20 short tags
+    body: jsonEncode({'tags': tags}),
+  );
+  if (response == null || response.statusCode != 200) {
+    Logger.debug('setConversationTags failed: ${response?.statusCode} ${response?.body}');
+    return null;
+  }
+  // omi-perf-allow: history-json-on-ui -- one conversation envelope, not the user's history
+  final body = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+  final conversation = body['conversation'];
+  if (conversation is Map<String, dynamic>) {
+    return List<String>.from((conversation['tags'] as List<dynamic>?) ?? const []);
+  }
+  return tags;
+}
+
+/// Every tag the user's conversations carry, most used first.
+Future<List<({String tag, int count})>> getConversationTagCatalog() async {
+  final response =
+      await makeApiCall(url: '${Env.apiBaseUrl}v1/conversations/tags', headers: {}, method: 'GET', body: '');
+  if (response == null || response.statusCode != 200) return const [];
+  // omi-perf-allow: history-json-on-ui -- the tag catalog is a few hundred bytes
+  final body = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+  return [
+    for (final row in (body['tags'] as List<dynamic>? ?? const []))
+      if (row is Map<String, dynamic>) (tag: row['tag'] as String, count: (row['count'] as num?)?.toInt() ?? 0)
+  ];
+}
+
+/// Newest conversations carrying [tag] (list rows, no transcript).
+Future<List<ServerConversation>> getConversationsByTag(String tag, {int limit = 100}) async {
+  final response = await makeApiCall(
+    url: '${Env.apiBaseUrl}v1/conversations?tag=${Uri.encodeQueryComponent(tag)}&limit=$limit',
+    headers: {},
+    method: 'GET',
+    body: '',
+  );
+  if (response == null || response.statusCode != 200) return const [];
+  final bodyBytes = response.bodyBytes;
+  return offUiIsolate(
+    // omi-perf-allow: history-json-on-ui -- decoded inside offUiIsolate once the page passes its threshold
+    () => parseConversationListBody(jsonDecode(utf8.decode(bodyBytes)) as List<dynamic>),
+    size: bodyBytes.length,
+    threshold: conversationListBackgroundParseBytes,
+    debugName: 'conversation_tag_list_parse',
+  );
+}
+
 enum CaptureGroupSeparationResult { separated, unchanged, failed }
 
 /// Separates [conversationId] from the capture group (one event recorded by

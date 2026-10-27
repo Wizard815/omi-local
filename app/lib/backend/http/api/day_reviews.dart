@@ -93,6 +93,25 @@ Future<DayReviewResult<DayReview>> finalizeDayReview(
       response, (json) => DayReview.fromGenerated(wire.GeneratedDayReview.fromJson(json)), 'finalizeDayReview');
 }
 
+/// The hands-off review: starred conversations stay, everything else becomes the sectioned day summary.
+Future<DayReviewResult<DayReview>> bundleDayReview(String date) async {
+  final response = await makeApiCall(url: '${_base()}/$date/bundle', headers: {}, method: 'POST', body: '');
+  return _decode(
+      response, (json) => DayReview.fromGenerated(wire.GeneratedDayReview.fromJson(json)), 'bundleDayReview');
+}
+
+/// Pull a section's conversations back out as starred conversations ([favorited] = true) or fold them back in.
+Future<DayReviewResult<DayReview>> favoriteDayReviewSection(String date, String sectionId, bool favorited) async {
+  final response = await makeApiCall(
+    url: '${_base()}/$date/sections/$sectionId/favorite',
+    headers: {'Content-Type': 'application/json'},
+    method: 'POST',
+    body: jsonEncode({'favorited': favorited}),
+  );
+  return _decode(
+      response, (json) => DayReview.fromGenerated(wire.GeneratedDayReview.fromJson(json)), 'favoriteDayReviewSection');
+}
+
 Future<DayReviewResult<DayReview>> addDayReviewCorrection(
   String date, {
   required DayReviewCorrectionType type,

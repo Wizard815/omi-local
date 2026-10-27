@@ -748,6 +748,15 @@ class ConversationDetailProvider extends ChangeNotifier with MessageNotifierMixi
     return null;
   }
 
+  /// omi-local: the tags editor saved [tags]; this page and the list row show them.
+  void setTags(List<String> tags) {
+    final target = conversationOrNull;
+    if (target == null) return;
+    target.tags = List<String>.from(tags);
+    conversationProvider?.updateConversation(target);
+    notifyListeners();
+  }
+
   /// Non-null accessor for call sites that already know the conversation is
   /// valid (gestures, async handlers). Build paths use [conversationOrNull].
   @override

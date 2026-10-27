@@ -395,6 +395,9 @@ class ServerConversation {
   final bool isLocked;
   bool starred;
   String? folderId;
+
+  /// User-managed labels (server-normalized: lowercase, dashes). The day bundle adds its own.
+  List<String> tags;
   ConversationVisibility visibility;
 
   /// The app keeps its historical private fallback for unknown wire values;
@@ -453,6 +456,7 @@ class ServerConversation {
     this.isLocked = false,
     this.starred = false,
     this.folderId,
+    List<String>? tags,
     this.visibility = ConversationVisibility.private_,
     this.siriVisibilityValid = true,
     this.matchSnippets = const [],
@@ -461,7 +465,7 @@ class ServerConversation {
     this.summaryRetryable = false,
     this.processingDeferred = false,
     this.captureCoverage,
-  });
+  }) : tags = tags ?? <String>[];
 
   /// List rows omit transcript_segments ("unknown/not loaded, not an empty transcript"), while the
   /// detail page loads the transcript once and reads it back from the provider's list. A refreshed
@@ -499,6 +503,7 @@ class ServerConversation {
         isLocked: isLocked,
         starred: starred,
         folderId: folderId,
+        tags: List<String>.from(tags),
         visibility: visibility,
         siriVisibilityValid: siriVisibilityValid,
         matchSnippets: matchSnippets,
@@ -599,6 +604,7 @@ class ServerConversation {
       isLocked: generated.isLocked,
       starred: generated.starred,
       folderId: generated.folderId,
+      tags: generated.tags ?? const [],
       visibility: ConversationVisibility.fromString(generated.visibility),
       siriVisibilityValid: siriVisibilityValid,
       matchSnippets: snippets,
@@ -640,6 +646,7 @@ class ServerConversation {
       'is_locked': isLocked,
       'starred': starred,
       'folder_id': folderId,
+      'tags': tags,
       'visibility': visibility.value,
       if (!siriVisibilityValid) 'siri_visibility_valid': false,
       'capture_group': captureGroup?.toJson(),

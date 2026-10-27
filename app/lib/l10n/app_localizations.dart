@@ -26360,6 +26360,258 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Waiting for your day review'**
   String get heldForDayReview;
+
+  /// Primary action on the day review: fold every unstarred conversation into one summary
+  ///
+  /// In en, this message translates to:
+  /// **'Bundle the day'**
+  String get dayReviewBundleButton;
+
+  /// Explains the one-tap bundle
+  ///
+  /// In en, this message translates to:
+  /// **'Starred conversations stay. Everything else becomes one day summary in sections; favorite a section to pull its conversations back out.'**
+  String get dayReviewBundleHint;
+
+  /// Divider label between the bundle button and the manual sort
+  ///
+  /// In en, this message translates to:
+  /// **'Or sort by hand: star, merge, drop'**
+  String get dayReviewOrSortManually;
+
+  /// Busy message while the server writes the sectioned summary
+  ///
+  /// In en, this message translates to:
+  /// **'Bundling the day…'**
+  String get dayReviewBundleWriting;
+
+  /// Button on a summary section: pull its conversations back out as starred conversations
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite'**
+  String get dayReviewFavoriteSection;
+
+  /// Button on a favorited section: fold its conversations back into the summary
+  ///
+  /// In en, this message translates to:
+  /// **'Unfavorite'**
+  String get dayReviewUnfavoriteSection;
+
+  /// Badge on a favorited section
+  ///
+  /// In en, this message translates to:
+  /// **'Kept as {count} conversation(s)'**
+  String dayReviewSectionFavorited(int count);
+
+  /// Heading above the day summary tag chips
+  ///
+  /// In en, this message translates to:
+  /// **'Tags of the day'**
+  String get dayReviewTagsTitle;
+
+  /// Chip label and sheet title for a conversation's tags
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get conversationTags;
+
+  /// Placeholder of the tag text field
+  ///
+  /// In en, this message translates to:
+  /// **'Add a tag'**
+  String get conversationTagsAdd;
+
+  /// Shown when a conversation has no tags
+  ///
+  /// In en, this message translates to:
+  /// **'No tags yet'**
+  String get conversationTagsEmpty;
+
+  /// Error toast
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the tags'**
+  String get conversationTagsSaveFailed;
+
+  /// Heading above the user's existing tags in the editor
+  ///
+  /// In en, this message translates to:
+  /// **'Your tags'**
+  String get conversationTagsSuggestions;
+
+  /// Menu entry / sheet title for the tag filter in the conversation list
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by tag'**
+  String get conversationsFilterByTag;
+
+  /// Active tag filter chip
+  ///
+  /// In en, this message translates to:
+  /// **'Tag: {tag}'**
+  String conversationsFilterTag(String tag);
+
+  /// Clears the tag filter
+  ///
+  /// In en, this message translates to:
+  /// **'All conversations'**
+  String get conversationsFilterTagClear;
+
+  /// Empty state of the tag filter sheet
+  ///
+  /// In en, this message translates to:
+  /// **'No tags yet. They appear here once your conversations carry some.'**
+  String get conversationsNoTagsYet;
+
+  /// Settings row and page title
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar & tasks (CalDAV)'**
+  String get caldavSettingsTitle;
+
+  /// Intro paragraph of the CalDAV settings page
+  ///
+  /// In en, this message translates to:
+  /// **'Your tasks, day summaries and conversation events sync with a CalDAV server every hour, and the calendar comes back into Omi. The server bundled with your stack is used until you set your own.'**
+  String get caldavSettingsIntro;
+
+  /// Text field label
+  ///
+  /// In en, this message translates to:
+  /// **'Server URL'**
+  String get caldavServerUrl;
+
+  /// Text field label
+  ///
+  /// In en, this message translates to:
+  /// **'User name'**
+  String get caldavUsername;
+
+  /// Text field label
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get caldavPassword;
+
+  /// Helper under the password field when one is stored
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty to keep the stored password'**
+  String get caldavPasswordKept;
+
+  /// Button
+  ///
+  /// In en, this message translates to:
+  /// **'Test connection'**
+  String get caldavTestConnection;
+
+  /// Button
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get caldavSyncNow;
+
+  /// Button
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get caldavSave;
+
+  /// Button that deletes the user's own settings
+  ///
+  /// In en, this message translates to:
+  /// **'Forget my server (use the bundled one)'**
+  String get caldavForget;
+
+  /// Switch
+  ///
+  /// In en, this message translates to:
+  /// **'Sync enabled'**
+  String get caldavEnabled;
+
+  /// Switch
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks to the calendar (to-do list)'**
+  String get caldavPushTasks;
+
+  /// Switch
+  ///
+  /// In en, this message translates to:
+  /// **'Task changes from the calendar'**
+  String get caldavPullTasks;
+
+  /// Switch
+  ///
+  /// In en, this message translates to:
+  /// **'Day summaries as all-day events'**
+  String get caldavPushDaySummaries;
+
+  /// Switch
+  ///
+  /// In en, this message translates to:
+  /// **'Events found in conversations'**
+  String get caldavPushConversationEvents;
+
+  /// Switch
+  ///
+  /// In en, this message translates to:
+  /// **'Conversations as time blocks'**
+  String get caldavPushConversations;
+
+  /// Switch
+  ///
+  /// In en, this message translates to:
+  /// **'Read the calendar into Omi'**
+  String get caldavPullEvents;
+
+  /// Status line
+  ///
+  /// In en, this message translates to:
+  /// **'Last sync: {when}'**
+  String caldavLastSync(String when);
+
+  /// Status line
+  ///
+  /// In en, this message translates to:
+  /// **'Last error: {error}'**
+  String caldavLastError(String error);
+
+  /// Status line
+  ///
+  /// In en, this message translates to:
+  /// **'No CalDAV server is configured. Set CALDAV_PASSWORD on your stack or enter a server below.'**
+  String get caldavNotConfigured;
+
+  /// Status line
+  ///
+  /// In en, this message translates to:
+  /// **'Using the server bundled with your stack ({url})'**
+  String caldavUsingBundled(String url);
+
+  /// Toast after a manual sync
+  ///
+  /// In en, this message translates to:
+  /// **'Pushed {tasks} tasks and {events} events, pulled {pulled} changes'**
+  String caldavSyncResult(int tasks, int events, int pulled);
+
+  /// Toast after a successful connection test
+  ///
+  /// In en, this message translates to:
+  /// **'{count} calendar(s) found'**
+  String caldavCalendarsFound(int count);
+
+  /// Toast on a failed test or sync
+  ///
+  /// In en, this message translates to:
+  /// **'CalDAV: {error}'**
+  String caldavFailed(String error);
+
+  /// Toast
+  ///
+  /// In en, this message translates to:
+  /// **'CalDAV settings saved'**
+  String get caldavSaved;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

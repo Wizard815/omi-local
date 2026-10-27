@@ -15,6 +15,7 @@ import 'package:omi/pages/conversation_detail/widgets/calendar_event_sheets.dart
 import 'package:omi/pages/conversation_detail/widgets/capture_recordings.dart';
 import 'package:omi/pages/conversation_detail/widgets/conversation_detail_chip.dart';
 import 'package:omi/pages/conversation_detail/widgets/conversation_entity_chips.dart';
+import 'package:omi/pages/conversation_detail/widgets/conversation_tags_sheet.dart';
 import 'package:omi/pages/conversations/conversation_action_analytics.dart';
 import 'package:omi/pages/conversations/widgets/move_to_folder_sheet.dart';
 import 'package:omi/providers/folder_provider.dart';
@@ -76,6 +77,7 @@ class ConversationDetailHeader extends StatelessWidget {
                     ),
                   // Only a filed conversation shows its folder; Move to Folder is in the ⋯ menu.
                   if (folder != null) _FolderChip(conversation: conversation, folder: folder),
+                  _TagsChip(conversation: conversation, provider: provider),
                   if (peopleLabel != null)
                     _peopleChip(
                       context,
@@ -414,6 +416,34 @@ abstract final class ConversationVisibilitySheet {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// "#work #family" (or "Tags" when empty): opens the tags editor; the saved tags update this
+/// page and the list row. omi-local: tags come from the day bundle and the user.
+class _TagsChip extends StatelessWidget {
+  const _TagsChip({required this.conversation, required this.provider});
+
+  final ServerConversation conversation;
+  final ConversationDetailProvider provider;
+
+  @override
+  Widget build(BuildContext context) {
+    final tags = conversation.tags;
+    final label = tags.isEmpty ? context.l10n.conversationTags : tags.take(3).map((t) => '#$t').join(' ');
+    return GestureDetector(
+      key: const Key('conversation_tags_chip'),
+      onTap: () async {
+        final stored = await showConversationTagsSheet(context, conversation);
+        if (stored == null || !context.mounted) return;
+        provider.setTags(stored);
+      },
+      child: ConversationDetailChip(
+        icon: const Icon(Icons.sell_outlined),
+        label: tags.length > 3 ? '$label +${tags.length - 3}' : label,
+        color: tags.isEmpty ? ConversationDetailInk.label : null,
       ),
     );
   }

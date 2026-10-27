@@ -14,6 +14,7 @@ DayReviewCorrection _c(String id, DayReviewCorrectionType type, String quote, {i
     );
 
 void main() {
+  _sectionTests();
   const text = 'You met Sam at noon.\n\nLater Sam called about the trip.';
 
   test('paragraph offsets index the summary text exactly', () {
@@ -51,5 +52,20 @@ void main() {
       _c('g', DayReviewCorrectionType.redaction, 'not in the text anymore'),
     ]);
     expect(paragraphs.every((p) => p.segments.every((s) => s.kind == SummarySegmentKind.plain)), isTrue);
+  });
+}
+
+// --- omi-local: sections are placed by their paragraph offsets ------------------------------
+
+void _sectionTests() {
+  test('a section header belongs to the paragraph its text starts at', () {
+    const a = DayReviewSection(id: 's1', conversationIds: ['c1'], title: 'Coffee', text: 'One.\n\nTwo.');
+    const b = DayReviewSection(id: 's2', conversationIds: ['c2'], title: 'Lunch', text: 'Three.');
+    const empty = DayReviewSection(id: 's3', conversationIds: [], title: '', text: '');
+    final paragraphs = buildSummaryParagraphs('One.\n\nTwo.\n\nThree.', const []);
+    expect(paragraphs.map((p) => p.start), [0, 6, 12]);
+    expect(sectionsStartingAt([a, empty, b], 0).map((s) => s.id), ['s1']);
+    expect(sectionsStartingAt([a, empty, b], 6), isEmpty);
+    expect(sectionsStartingAt([a, empty, b], 12).map((s) => s.id), ['s2']);
   });
 }
