@@ -18366,5 +18366,219 @@
     "heldForDayReview": "Waiting for your day review",
     "@heldForDayReview": {
         "description": "Conversation list marker for a clip held until the day review"
+    },
+    "dayReviewBundleButton": "Bundle the day",
+    "@dayReviewBundleButton": {
+        "description": "Primary action on the day review: fold every unstarred conversation into one summary"
+    },
+    "dayReviewBundleHint": "Starred conversations stay. Everything else becomes one day summary in sections; favorite a section to pull its conversations back out.",
+    "@dayReviewBundleHint": {
+        "description": "Explains the one-tap bundle"
+    },
+    "dayReviewOrSortManually": "Or sort by hand: star, merge, drop",
+    "@dayReviewOrSortManually": {
+        "description": "Divider label between the bundle button and the manual sort"
+    },
+    "dayReviewBundleWriting": "Bundling the day…",
+    "@dayReviewBundleWriting": {
+        "description": "Busy message while the server writes the sectioned summary"
+    },
+    "dayReviewFavoriteSection": "Favorite",
+    "@dayReviewFavoriteSection": {
+        "description": "Button on a summary section: pull its conversations back out as starred conversations"
+    },
+    "dayReviewUnfavoriteSection": "Unfavorite",
+    "@dayReviewUnfavoriteSection": {
+        "description": "Button on a favorited section: fold its conversations back into the summary"
+    },
+    "dayReviewSectionFavorited": "Kept as {count} conversation(s)",
+    "@dayReviewSectionFavorited": {
+        "description": "Badge on a favorited section",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewTagsTitle": "Tags of the day",
+    "@dayReviewTagsTitle": {
+        "description": "Heading above the day summary tag chips"
+    },
+    "conversationTags": "Tags",
+    "@conversationTags": {
+        "description": "Chip label and sheet title for a conversation's tags"
+    },
+    "conversationTagsAdd": "Add a tag",
+    "@conversationTagsAdd": {
+        "description": "Placeholder of the tag text field"
+    },
+    "conversationTagsEmpty": "No tags yet",
+    "@conversationTagsEmpty": {
+        "description": "Shown when a conversation has no tags"
+    },
+    "conversationTagsSaveFailed": "Could not save the tags",
+    "@conversationTagsSaveFailed": {
+        "description": "Error toast"
+    },
+    "conversationTagsSuggestions": "Your tags",
+    "@conversationTagsSuggestions": {
+        "description": "Heading above the user's existing tags in the editor"
+    },
+    "conversationsFilterByTag": "Filter by tag",
+    "@conversationsFilterByTag": {
+        "description": "Menu entry / sheet title for the tag filter in the conversation list"
+    },
+    "conversationsFilterTag": "Tag: {tag}",
+    "@conversationsFilterTag": {
+        "description": "Active tag filter chip",
+        "placeholders": {
+            "tag": {
+                "type": "String"
+            }
+        }
+    },
+    "conversationsFilterTagClear": "All conversations",
+    "@conversationsFilterTagClear": {
+        "description": "Clears the tag filter"
+    },
+    "conversationsNoTagsYet": "No tags yet. They appear here once your conversations carry some.",
+    "@conversationsNoTagsYet": {
+        "description": "Empty state of the tag filter sheet"
+    },
+    "caldavSettingsTitle": "Calendar & tasks (CalDAV)",
+    "@caldavSettingsTitle": {
+        "description": "Settings row and page title"
+    },
+    "caldavSettingsIntro": "Your tasks, day summaries and conversation events sync with a CalDAV server every hour, and the calendar comes back into Omi. The server bundled with your stack is used until you set your own.",
+    "@caldavSettingsIntro": {
+        "description": "Intro paragraph of the CalDAV settings page"
+    },
+    "caldavServerUrl": "Server URL",
+    "@caldavServerUrl": {
+        "description": "Text field label"
+    },
+    "caldavUsername": "User name",
+    "@caldavUsername": {
+        "description": "Text field label"
+    },
+    "caldavPassword": "Password",
+    "@caldavPassword": {
+        "description": "Text field label"
+    },
+    "caldavPasswordKept": "Leave empty to keep the stored password",
+    "@caldavPasswordKept": {
+        "description": "Helper under the password field when one is stored"
+    },
+    "caldavTestConnection": "Test connection",
+    "@caldavTestConnection": {
+        "description": "Button"
+    },
+    "caldavSyncNow": "Sync now",
+    "@caldavSyncNow": {
+        "description": "Button"
+    },
+    "caldavSave": "Save",
+    "@caldavSave": {
+        "description": "Button"
+    },
+    "caldavForget": "Forget my server (use the bundled one)",
+    "@caldavForget": {
+        "description": "Button that deletes the user's own settings"
+    },
+    "caldavEnabled": "Sync enabled",
+    "@caldavEnabled": {
+        "description": "Switch"
+    },
+    "caldavPushTasks": "Tasks to the calendar (to-do list)",
+    "@caldavPushTasks": {
+        "description": "Switch"
+    },
+    "caldavPullTasks": "Task changes from the calendar",
+    "@caldavPullTasks": {
+        "description": "Switch"
+    },
+    "caldavPushDaySummaries": "Day summaries as all-day events",
+    "@caldavPushDaySummaries": {
+        "description": "Switch"
+    },
+    "caldavPushConversationEvents": "Events found in conversations",
+    "@caldavPushConversationEvents": {
+        "description": "Switch"
+    },
+    "caldavPushConversations": "Conversations as time blocks",
+    "@caldavPushConversations": {
+        "description": "Switch"
+    },
+    "caldavPullEvents": "Read the calendar into Omi",
+    "@caldavPullEvents": {
+        "description": "Switch"
+    },
+    "caldavLastSync": "Last sync: {when}",
+    "@caldavLastSync": {
+        "description": "Status line",
+        "placeholders": {
+            "when": {
+                "type": "String"
+            }
+        }
+    },
+    "caldavLastError": "Last error: {error}",
+    "@caldavLastError": {
+        "description": "Status line",
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "caldavNotConfigured": "No CalDAV server is configured. Set CALDAV_PASSWORD on your stack or enter a server below.",
+    "@caldavNotConfigured": {
+        "description": "Status line"
+    },
+    "caldavUsingBundled": "Using the server bundled with your stack ({url})",
+    "@caldavUsingBundled": {
+        "description": "Status line",
+        "placeholders": {
+            "url": {
+                "type": "String"
+            }
+        }
+    },
+    "caldavSyncResult": "Pushed {tasks} tasks and {events} events, pulled {pulled} changes",
+    "@caldavSyncResult": {
+        "description": "Toast after a manual sync",
+        "placeholders": {
+            "tasks": {
+                "type": "int"
+            },
+            "events": {
+                "type": "int"
+            },
+            "pulled": {
+                "type": "int"
+            }
+        }
+    },
+    "caldavCalendarsFound": "{count} calendar(s) found",
+    "@caldavCalendarsFound": {
+        "description": "Toast after a successful connection test",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "caldavFailed": "CalDAV: {error}",
+    "@caldavFailed": {
+        "description": "Toast on a failed test or sync",
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "caldavSaved": "CalDAV settings saved",
+    "@caldavSaved": {
+        "description": "Toast"
     }
 }

@@ -201,6 +201,12 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
               tag: SettingsTag(l10n.beta, OmiColors.warning),
             ),
             _row(
+              SettingsDestination.caldav,
+              key: 'settings_row_caldav',
+              icon: FontAwesomeIcons.calendarCheck,
+              title: l10n.caldavSettingsTitle,
+            ),
+            _row(
               SettingsDestination.connectAgent,
               key: 'settings_row_connect_agent',
               icon: FontAwesomeIcons.terminal,

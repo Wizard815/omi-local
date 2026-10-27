@@ -23,6 +23,7 @@ enum SettingsDestination {
   device,
   integrations,
   taskIntegrations,
+  caldav,
   permissions,
   memories,
   goals,
@@ -203,6 +204,8 @@ final List<SettingsSearchEntry> settingsSearchEntries = [
   SettingsSearchEntry('integrations', (l) => l.integrations, SettingsDestination.integrations, _drawer),
   SettingsSearchEntry('taskIntegrations', (l) => l.taskIntegrations, SettingsDestination.taskIntegrations,
       'lib/pages/settings/integrations_page.dart'),
+  // omi-local: CalDAV tasks + calendar sync.
+  SettingsSearchEntry('caldav', (l) => l.caldavSettingsTitle, SettingsDestination.caldav, _drawer),
 
   // Data & Privacy group
   SettingsSearchEntry('dataProtection', (l) => l.dataProtection, SettingsDestination.dataPrivacy, _groups),

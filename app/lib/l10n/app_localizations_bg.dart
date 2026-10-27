@@ -15005,4 +15005,149 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get heldForDayReview => 'Чака вашия преглед на деня';
+
+  @override
+  String get dayReviewBundleButton => 'Bundle the day';
+
+  @override
+  String get dayReviewBundleHint =>
+      'Starred conversations stay. Everything else becomes one day summary in sections; favorite a section to pull its conversations back out.';
+
+  @override
+  String get dayReviewOrSortManually => 'Or sort by hand: star, merge, drop';
+
+  @override
+  String get dayReviewBundleWriting => 'Bundling the day…';
+
+  @override
+  String get dayReviewFavoriteSection => 'Favorite';
+
+  @override
+  String get dayReviewUnfavoriteSection => 'Unfavorite';
+
+  @override
+  String dayReviewSectionFavorited(int count) {
+    return 'Kept as $count conversation(s)';
+  }
+
+  @override
+  String get dayReviewTagsTitle => 'Tags of the day';
+
+  @override
+  String get conversationTags => 'Tags';
+
+  @override
+  String get conversationTagsAdd => 'Add a tag';
+
+  @override
+  String get conversationTagsEmpty => 'No tags yet';
+
+  @override
+  String get conversationTagsSaveFailed => 'Could not save the tags';
+
+  @override
+  String get conversationTagsSuggestions => 'Your tags';
+
+  @override
+  String get conversationsFilterByTag => 'Filter by tag';
+
+  @override
+  String conversationsFilterTag(String tag) {
+    return 'Tag: $tag';
+  }
+
+  @override
+  String get conversationsFilterTagClear => 'All conversations';
+
+  @override
+  String get conversationsNoTagsYet => 'No tags yet. They appear here once your conversations carry some.';
+
+  @override
+  String get caldavSettingsTitle => 'Calendar & tasks (CalDAV)';
+
+  @override
+  String get caldavSettingsIntro =>
+      'Your tasks, day summaries and conversation events sync with a CalDAV server every hour, and the calendar comes back into Omi. The server bundled with your stack is used until you set your own.';
+
+  @override
+  String get caldavServerUrl => 'Server URL';
+
+  @override
+  String get caldavUsername => 'User name';
+
+  @override
+  String get caldavPassword => 'Password';
+
+  @override
+  String get caldavPasswordKept => 'Leave empty to keep the stored password';
+
+  @override
+  String get caldavTestConnection => 'Test connection';
+
+  @override
+  String get caldavSyncNow => 'Sync now';
+
+  @override
+  String get caldavSave => 'Save';
+
+  @override
+  String get caldavForget => 'Forget my server (use the bundled one)';
+
+  @override
+  String get caldavEnabled => 'Sync enabled';
+
+  @override
+  String get caldavPushTasks => 'Tasks to the calendar (to-do list)';
+
+  @override
+  String get caldavPullTasks => 'Task changes from the calendar';
+
+  @override
+  String get caldavPushDaySummaries => 'Day summaries as all-day events';
+
+  @override
+  String get caldavPushConversationEvents => 'Events found in conversations';
+
+  @override
+  String get caldavPushConversations => 'Conversations as time blocks';
+
+  @override
+  String get caldavPullEvents => 'Read the calendar into Omi';
+
+  @override
+  String caldavLastSync(String when) {
+    return 'Last sync: $when';
+  }
+
+  @override
+  String caldavLastError(String error) {
+    return 'Last error: $error';
+  }
+
+  @override
+  String get caldavNotConfigured =>
+      'No CalDAV server is configured. Set CALDAV_PASSWORD on your stack or enter a server below.';
+
+  @override
+  String caldavUsingBundled(String url) {
+    return 'Using the server bundled with your stack ($url)';
+  }
+
+  @override
+  String caldavSyncResult(int tasks, int events, int pulled) {
+    return 'Pushed $tasks tasks and $events events, pulled $pulled changes';
+  }
+
+  @override
+  String caldavCalendarsFound(int count) {
+    return '$count calendar(s) found';
+  }
+
+  @override
+  String caldavFailed(String error) {
+    return 'CalDAV: $error';
+  }
+
+  @override
+  String get caldavSaved => 'CalDAV settings saved';
 }

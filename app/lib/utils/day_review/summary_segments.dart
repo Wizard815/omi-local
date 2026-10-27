@@ -119,3 +119,19 @@ List<SummarySegment> _segments(String body, int offset, List<_Mark> marks) {
   }
   return out;
 }
+
+/// The sections whose text begins at [paragraphStart] (an offset into the summary text).
+///
+/// The server writes summaryText as the sections' texts joined by one blank line, so every
+/// section starts at a paragraph boundary; the page draws a section's header above that
+/// paragraph. A section with empty text has no place in the text and is never returned.
+List<DayReviewSection> sectionsStartingAt(List<DayReviewSection> sections, int paragraphStart) {
+  final out = <DayReviewSection>[];
+  var offset = 0;
+  for (final section in sections) {
+    if (section.text.isEmpty) continue;
+    if (offset == paragraphStart) out.add(section);
+    offset += section.text.length + 2;
+  }
+  return out;
+}

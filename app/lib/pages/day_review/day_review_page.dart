@@ -145,6 +145,29 @@ class _DayReviewPageState extends State<DayReviewPage> {
 
   void _ungroup(List<String> group) => setState(() => _groups.remove(group));
 
+  /// One tap: starred conversations stay, everything else becomes the sectioned day summary.
+  Future<void> _bundle() async {
+    final l10n = context.l10n;
+    await _busy(l10n.dayReviewBundleWriting, () async {
+      final result = await bundleDayReview(widget.date);
+      if (result.ok) {
+        await _load();
+      } else {
+        _applyReview(result);
+      }
+    });
+  }
+
+  Future<void> _favoriteSection(DayReviewSection section, bool favorited) async {
+    final result = await favoriteDayReviewSection(widget.date, section.id, favorited);
+    if (!mounted) return;
+    if (result.ok) {
+      await _load();
+    } else {
+      _applyReview(result);
+    }
+  }
+
   Future<void> _finalize() async {
     final l10n = context.l10n;
     final rolled = _rolledCount;
@@ -492,8 +515,31 @@ class _DayReviewPageState extends State<DayReviewPage> {
             children: [
               Text(_prettyDate, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
-              Text(day.holdEnabled ? l10n.dayReviewSortHintHold : l10n.dayReviewSortHint,
-                  style: TextStyle(color: Colors.grey.shade400, height: 1.4)),
+              Text(l10n.dayReviewBundleHint, style: TextStyle(color: Colors.grey.shade400, height: 1.4)),
+              if (day.conversations.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    key: const Key('day_review_bundle'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(OmiRadius.lg)),
+                    ),
+                    onPressed: _bundle,
+                    icon: const Icon(Icons.auto_awesome_rounded, size: 18),
+                    label: Text(l10n.dayReviewBundleButton),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(l10n.dayReviewOrSortManually,
+                    style: OmiType.footnote.copyWith(color: Colors.grey.shade500, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text(day.holdEnabled ? l10n.dayReviewSortHintHold : l10n.dayReviewSortHint,
+                    style: OmiType.footnote.copyWith(color: Colors.grey.shade500, height: 1.4)),
+              ],
               if (day.processingCount > 0) ...[
                 const SizedBox(height: 8),
                 Text(l10n.dayReviewProcessing(day.processingCount),
@@ -699,6 +745,54 @@ class _DayReviewPageState extends State<DayReviewPage> {
     );
   }
 
+  Widget _tagChip(String tag) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: OmiSpacing.xs, vertical: OmiSpacing.xxs),
+        decoration: BoxDecoration(color: OmiColors.chipSurface, borderRadius: BorderRadius.circular(OmiRadius.md)),
+        child: Text('#$tag', style: OmiType.footnote.copyWith(color: OmiColors.textSecondary)),
+      );
+
+  Widget _sectionHeader(DayReviewDay day, DayReviewSection section) {
+    final l10n = context.l10n;
+    final count = section.conversationIds.length;
+    return Padding(
+      key: Key('day_review_section_${section.id}'),
+      padding: const EdgeInsets.only(top: 14, bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (section.title.isNotEmpty) Text(section.title, style: OmiType.headline),
+                if (section.favorited)
+                  Text(l10n.dayReviewSectionFavorited(count),
+                      style: OmiType.footnote.copyWith(color: OmiColors.warning)),
+                if (section.tags.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Wrap(spacing: 6, runSpacing: 4, children: [for (final t in section.tags) _tagChip(t)]),
+                  ),
+              ],
+            ),
+          ),
+          if (count > 0)
+            TextButton.icon(
+              key: Key('day_review_section_favorite_${section.id}'),
+              style: TextButton.styleFrom(
+                foregroundColor: section.favorited ? OmiColors.warning : OmiColors.textSecondary,
+                padding: const EdgeInsets.symmetric(horizontal: OmiSpacing.xs),
+                visualDensity: VisualDensity.compact,
+              ),
+              onPressed: () => _favoriteSection(section, !section.favorited),
+              icon: Icon(section.favorited ? Icons.star_rounded : Icons.star_outline_rounded, size: 18),
+              label: Text(section.favorited ? l10n.dayReviewUnfavoriteSection : l10n.dayReviewFavoriteSection),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildReviewView(DayReviewDay day, DayReview review) {
     final l10n = context.l10n;
     final paragraphs = buildSummaryParagraphs(review.summaryText, review.corrections);
@@ -734,8 +828,13 @@ class _DayReviewPageState extends State<DayReviewPage> {
                 const SizedBox(height: 4),
                 Text(l10n.dayReviewEditHint, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
               ],
+              if (review.tags.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Wrap(spacing: 6, runSpacing: 6, children: [for (final t in review.tags) _tagChip(t)]),
+              ],
               const SizedBox(height: 16),
               for (final p in paragraphs) ...[
+                for (final s in sectionsStartingAt(review.sections, p.start)) _sectionHeader(day, s),
                 _paragraphBlock(review, p),
                 for (final c in anchoredAt(p.index)) _userParagraph(c),
                 _addParagraphButton(p.index),
