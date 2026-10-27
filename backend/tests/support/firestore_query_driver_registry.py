@@ -1263,6 +1263,14 @@ _add(
     )
 )
 _add(DriverEntry('database.folders.update_folder_conversation_count', base={'uid': UID, 'folder_id': 'folder-1'}))
+_add(
+    DriverEntry(
+        'database.conversations.get_conversations_by_tag',
+        base={'uid': UID, 'tag': 'work'},
+        domains={'include_discarded': [False, True]},
+        neutrals={'limit': _LIMIT},
+    )
+)
 
 # omi-local (self-hosted fork): end-of-day reviews, the dashboard's in-progress
 # list, and the ChromaDB vector store.

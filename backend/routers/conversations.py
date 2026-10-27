@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 
 import database.conversation_scan as conversation_scan_db
 import database.conversations as conversations_db
+import database.conversation_tags as conversation_tags_db
 import database._client as db_client_module
 import database.action_items as action_items_db
 import database.redis_db as redis_db
@@ -37,6 +38,8 @@ from models.conversation import (
     BulkAssignSegmentsRequest,
     CalendarEventLink,
     Conversation,
+    ConversationTagCatalogResponse,
+    SetConversationTagsRequest,
     ConversationAnalytics,
     ConversationFinalizationStatusResponse,
     ConversationMutationResponse,
@@ -55,6 +58,7 @@ from models.conversation import (
     UpdateSummaryRequest,
     project_shared_conversation,
 )
+from utils.conversations.tags import normalize_tag, normalize_tags
 from utils.conversations.fragment_visibility import is_completed_rule_discard
 from utils.conversations.factory import deserialize_conversation
 from utils.conversations.processing_trigger import ProcessingTrigger
@@ -968,11 +972,23 @@ def get_conversations(
     end_date: Optional[datetime] = Query(None, description="Filter by end date (inclusive)"),
     folder_id: Optional[str] = Query(None, description="Filter by folder ID"),
     starred: Optional[bool] = Query(None, description="Filter by starred status"),
+    tag: Optional[str] = Query(None, description="Only conversations carrying this tag (newest first)"),
     uid: str = Depends(auth.get_current_user_uid),
 ):
     if start_date is not None and end_date is not None and _ensure_aware(start_date) > _ensure_aware(end_date):
         raise HTTPException(status_code=400, detail="start_date must be earlier than or equal to end_date")
     logger.info(f'get_conversations {uid} {limit} {offset} {statuses} {sources} {folder_id} {starred}')
+    # isinstance: direct (non-HTTP) callers leave the Query default object in place.
+    if isinstance(tag, str) and tag.strip():
+        logger.info('get_conversations tag filter uid=%s tag=%s', uid, tag)
+        normalized_tag = normalize_tag(tag)
+        if not normalized_tag:
+            raise HTTPException(status_code=400, detail="tag is empty after normalization")
+        tagged = conversations_db.get_conversations_by_tag(
+            uid, normalized_tag, limit=limit, include_discarded=include_discarded
+        )
+        redact_conversations_for_list(tagged)
+        return tagged
     # force convos statuses to processing, completed on the empty filter
     if len(statuses) == 0:
         statuses = "processing,completed"
@@ -1024,6 +1040,12 @@ def get_conversations(
         response, truncated=budget.truncated, cacheable=not any(row.get('is_locked') for row in conversations)
     )
     return conversations
+
+
+@router.get('/v1/conversations/tags', tags=['conversations'], response_model=ConversationTagCatalogResponse)
+def get_conversation_tag_catalog(uid: str = Depends(auth.get_current_user_uid)):
+    """Every tag the user's conversations carry, with counts (most used first)."""
+    return {'tags': conversation_tags_db.get_tag_catalog(uid)}
 
 
 @router.get('/v1/conversations/count', tags=['conversations'], response_model=ConversationsCountResponse)
@@ -1973,6 +1995,19 @@ def send_conversation_share_email(
         logger.exception('share email: definitive failure before delivery')
         _release_reservation_and_quota()
         raise HTTPException(status_code=502, detail='share email failed before delivery')
+
+
+@router.put(
+    '/v1/conversations/{conversation_id}/tags', tags=['conversations'], response_model=ConversationMutationResponse
+)
+def set_conversation_tags(
+    conversation_id: str, request: SetConversationTagsRequest, uid: str = Depends(auth.get_current_user_uid)
+):
+    """Replace the conversation's tags. Tags are normalized (lowercase, dashes); the user's tag catalog follows."""
+    _get_valid_conversation_by_id(uid, conversation_id)
+    tags = normalize_tags(request.tags)
+    conversations_db.set_conversation_tags(uid, conversation_id, tags)
+    return {"status": "Ok", "conversation": _get_valid_conversation_by_id(uid, conversation_id)}
 
 
 @router.patch(

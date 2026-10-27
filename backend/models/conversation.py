@@ -622,6 +622,9 @@ class Conversation(BaseModel):
     imported: bool = False
     visibility: ConversationVisibility = ConversationVisibility.private
     starred: bool = False
+    # User-managed labels (utils/conversations/tags.py normalizes them); the
+    # day bundle adds its own, the user edits them on the conversation.
+    tags: List[str] = Field(default_factory=list)
 
     # TODO: processing_memory_id for backward compatibility with the old memories routes and app
     processing_memory_id: Optional[str] = None
@@ -715,6 +718,19 @@ class ConversationMutationResponse(BaseModel):
 
     status: str
     conversation: Conversation
+
+
+class SetConversationTagsRequest(BaseModel):
+    tags: List[str] = Field(default_factory=list, max_length=50, description='Replaces the conversation\'s tags')
+
+
+class ConversationTagCount(BaseModel):
+    tag: str
+    count: int
+
+
+class ConversationTagCatalogResponse(BaseModel):
+    tags: List[ConversationTagCount] = Field(default_factory=list)
 
 
 class SetConversationTitleOperation(BaseModel):

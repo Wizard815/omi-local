@@ -654,6 +654,7 @@ PINNED_CONVERSATION_FIELDS: FrozenSet[str] = frozenset(
         'imported',
         'visibility',
         'starred',
+        'tags',
         'processing_memory_id',
         'processing_conversation_id',
         'status',
