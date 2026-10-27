@@ -14555,6 +14555,106 @@ class AppLocalizationsBg extends AppLocalizations {
   String get deviceControls => 'Управление';
 
   @override
+  String homeBackgroundLine(String items) {
+    return 'Също: $items';
+  }
+
+  @override
+  String get deviceOnboardingPressButtonTitle => 'Натиснете бутона на Omi';
+
+  @override
+  String get deviceOnboardingPressButtonSubtitle => 'Едно кратко натискане. После питайте каквото искате.';
+
+  @override
+  String get deviceOnboardingAskNowTitle => 'Задайте въпроса си';
+
+  @override
+  String get deviceOnboardingAskNowSubtitle => 'Кажете го на глас. Omi слуша.';
+
+  @override
+  String get deviceOnboardingPressAgainHint => 'Готово? Натиснете бутона отново, за да изпратите.';
+
+  @override
+  String trialUpsellTitle(int days) {
+    return 'Получавате $days дни безплатно';
+  }
+
+  @override
+  String trialUpsellBody(int days) {
+    return '$days дни Omi Pro за наша сметка. Ще ви напомним преди таксуване. Отказ по всяко време.';
+  }
+
+  @override
+  String trialUpsellClaim(int days) {
+    return 'Вземи $days дни пробен период';
+  }
+
+  @override
+  String settingsUpgradeTrialSubtitle(int days) {
+    return 'Започнете $days-дневен безплатен пробен период';
+  }
+
+  @override
+  String get pairingPowerOnTitle => 'Включете Omi';
+
+  @override
+  String get pairingPowerOnSubtitle => 'Натиснете бутона веднъж и го дръжте близо до телефона.';
+
+  @override
+  String get walkthroughBackgroundRecordingNote => 'Готово. Omi ще продължи да записва разговорите ви във фонов режим.';
+
+  @override
+  String get noThanks => 'Не, благодаря';
+
+  @override
+  String get recapInTheBackground => 'На заден план';
+
+  @override
+  String retentionOfferAccept(int percent) {
+    return 'Остани с $percent% отстъпка';
+  }
+
+  @override
+  String retentionOfferBody(String price, int months) {
+    return 'Остани и плащай $price на месец за следващите $months месеца.';
+  }
+
+  @override
+  String retentionOfferApplied(int percent, int months) {
+    return 'Готово. $percent% отстъпка за следващите $months месеца.';
+  }
+
+  @override
+  String get othersSpeakerLabel => 'Други';
+
+  @override
+  String get livePreviewLabel => 'Live preview';
+
+  @override
+  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
+
+  @override
+  String get livePreviewListening => 'Listening… words appear here as you speak.';
+
+  @override
+  String get livePreviewStarting => 'Starting live preview…';
+
+  @override
+  String get livePreviewTranscribingTitle => 'Transcribing…';
+
+  @override
+  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
+
+  @override
+  String get openLoopAnswerDone => 'Готово';
+
+  @override
+  String get openLoopAnswerRemind => 'Напомни по-късно';
+
+  @override
+  String get openLoopAnswerDrop => 'Изостави го';
+
+  @override
   String get dayReviewTitle => 'Преглед на деня';
 
   @override
@@ -14905,104 +15005,4 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get heldForDayReview => 'Чака вашия преглед на деня';
-
-  @override
-  String homeBackgroundLine(String items) {
-    return 'Също: $items';
-  }
-
-  @override
-  String get deviceOnboardingPressButtonTitle => 'Натиснете бутона на Omi';
-
-  @override
-  String get deviceOnboardingPressButtonSubtitle => 'Едно кратко натискане. После питайте каквото искате.';
-
-  @override
-  String get deviceOnboardingAskNowTitle => 'Задайте въпроса си';
-
-  @override
-  String get deviceOnboardingAskNowSubtitle => 'Кажете го на глас. Omi слуша.';
-
-  @override
-  String get deviceOnboardingPressAgainHint => 'Готово? Натиснете бутона отново, за да изпратите.';
-
-  @override
-  String trialUpsellTitle(int days) {
-    return 'Получавате $days дни безплатно';
-  }
-
-  @override
-  String trialUpsellBody(int days) {
-    return '$days дни Omi Pro за наша сметка. Ще ви напомним преди таксуване. Отказ по всяко време.';
-  }
-
-  @override
-  String trialUpsellClaim(int days) {
-    return 'Вземи $days дни пробен период';
-  }
-
-  @override
-  String settingsUpgradeTrialSubtitle(int days) {
-    return 'Започнете $days-дневен безплатен пробен период';
-  }
-
-  @override
-  String get pairingPowerOnTitle => 'Включете Omi';
-
-  @override
-  String get pairingPowerOnSubtitle => 'Натиснете бутона веднъж и го дръжте близо до телефона.';
-
-  @override
-  String get walkthroughBackgroundRecordingNote => 'Готово. Omi ще продължи да записва разговорите ви във фонов режим.';
-
-  @override
-  String get noThanks => 'Не, благодаря';
-
-  @override
-  String get recapInTheBackground => 'На заден план';
-
-  @override
-  String retentionOfferAccept(int percent) {
-    return 'Остани с $percent% отстъпка';
-  }
-
-  @override
-  String retentionOfferBody(String price, int months) {
-    return 'Остани и плащай $price на месец за следващите $months месеца.';
-  }
-
-  @override
-  String retentionOfferApplied(int percent, int months) {
-    return 'Готово. $percent% отстъпка за следващите $months месеца.';
-  }
-
-  @override
-  String get othersSpeakerLabel => 'Други';
-
-  @override
-  String get livePreviewLabel => 'Live preview';
-
-  @override
-  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
-
-  @override
-  String get livePreviewListening => 'Listening… words appear here as you speak.';
-
-  @override
-  String get livePreviewStarting => 'Starting live preview…';
-
-  @override
-  String get livePreviewTranscribingTitle => 'Transcribing…';
-
-  @override
-  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
-
-  @override
-  String get openLoopAnswerDone => 'Готово';
-
-  @override
-  String get openLoopAnswerRemind => 'Напомни по-късно';
-
-  @override
-  String get openLoopAnswerDrop => 'Изостави го';
 }

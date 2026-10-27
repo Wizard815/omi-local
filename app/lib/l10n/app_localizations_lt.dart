@@ -14527,6 +14527,106 @@ class AppLocalizationsLt extends AppLocalizations {
   String get deviceControls => 'Valdikliai';
 
   @override
+  String homeBackgroundLine(String items) {
+    return 'Taip pat: $items';
+  }
+
+  @override
+  String get deviceOnboardingPressButtonTitle => 'Paspauskite Omi mygtuką';
+
+  @override
+  String get deviceOnboardingPressButtonSubtitle => 'Vienas trumpas paspaudimas. Tada klauskite bet ko.';
+
+  @override
+  String get deviceOnboardingAskNowTitle => 'Užduokite klausimą';
+
+  @override
+  String get deviceOnboardingAskNowSubtitle => 'Pasakykite garsiai. Omi klauso.';
+
+  @override
+  String get deviceOnboardingPressAgainHint => 'Baigėte? Paspauskite mygtuką dar kartą, kad išsiųstumėte.';
+
+  @override
+  String trialUpsellTitle(int days) {
+    return 'Gavote $days dienas nemokamai';
+  }
+
+  @override
+  String trialUpsellBody(int days) {
+    return '$days dienos Omi Pro mūsų sąskaita. Priminsime prieš nuskaitymą. Atšaukite bet kada.';
+  }
+
+  @override
+  String trialUpsellClaim(int days) {
+    return 'Gauti $days dienų bandymą';
+  }
+
+  @override
+  String settingsUpgradeTrialSubtitle(int days) {
+    return 'Pradėkite $days dienų nemokamą bandymą';
+  }
+
+  @override
+  String get pairingPowerOnTitle => 'Įjunkite Omi';
+
+  @override
+  String get pairingPowerOnSubtitle => 'Paspauskite mygtuką vieną kartą ir laikykite prie telefono.';
+
+  @override
+  String get walkthroughBackgroundRecordingNote => 'Tiek. Omi toliau įrašinės jūsų pokalbius fone.';
+
+  @override
+  String get noThanks => 'Ne, ačiū';
+
+  @override
+  String get recapInTheBackground => 'Fone';
+
+  @override
+  String retentionOfferAccept(int percent) {
+    return 'Likti su $percent% nuolaida';
+  }
+
+  @override
+  String retentionOfferBody(String price, int months) {
+    return 'Likite ir mokėkite $price per mėnesį ateinančius $months mėnesius.';
+  }
+
+  @override
+  String retentionOfferApplied(int percent, int months) {
+    return 'Atlikta. $percent% nuolaida ateinančius $months mėnesius.';
+  }
+
+  @override
+  String get othersSpeakerLabel => 'Kiti';
+
+  @override
+  String get livePreviewLabel => 'Live preview';
+
+  @override
+  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
+
+  @override
+  String get livePreviewListening => 'Listening… words appear here as you speak.';
+
+  @override
+  String get livePreviewStarting => 'Starting live preview…';
+
+  @override
+  String get livePreviewTranscribingTitle => 'Transcribing…';
+
+  @override
+  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
+
+  @override
+  String get openLoopAnswerDone => 'Atlikta';
+
+  @override
+  String get openLoopAnswerRemind => 'Priminti vėliau';
+
+  @override
+  String get openLoopAnswerDrop => 'Atmesti';
+
+  @override
   String get dayReviewTitle => 'Dienos peržiūra';
 
   @override
@@ -14882,104 +14982,4 @@ class AppLocalizationsLt extends AppLocalizations {
 
   @override
   String get heldForDayReview => 'Laukia jūsų dienos peržiūros';
-
-  @override
-  String homeBackgroundLine(String items) {
-    return 'Taip pat: $items';
-  }
-
-  @override
-  String get deviceOnboardingPressButtonTitle => 'Paspauskite Omi mygtuką';
-
-  @override
-  String get deviceOnboardingPressButtonSubtitle => 'Vienas trumpas paspaudimas. Tada klauskite bet ko.';
-
-  @override
-  String get deviceOnboardingAskNowTitle => 'Užduokite klausimą';
-
-  @override
-  String get deviceOnboardingAskNowSubtitle => 'Pasakykite garsiai. Omi klauso.';
-
-  @override
-  String get deviceOnboardingPressAgainHint => 'Baigėte? Paspauskite mygtuką dar kartą, kad išsiųstumėte.';
-
-  @override
-  String trialUpsellTitle(int days) {
-    return 'Gavote $days dienas nemokamai';
-  }
-
-  @override
-  String trialUpsellBody(int days) {
-    return '$days dienos Omi Pro mūsų sąskaita. Priminsime prieš nuskaitymą. Atšaukite bet kada.';
-  }
-
-  @override
-  String trialUpsellClaim(int days) {
-    return 'Gauti $days dienų bandymą';
-  }
-
-  @override
-  String settingsUpgradeTrialSubtitle(int days) {
-    return 'Pradėkite $days dienų nemokamą bandymą';
-  }
-
-  @override
-  String get pairingPowerOnTitle => 'Įjunkite Omi';
-
-  @override
-  String get pairingPowerOnSubtitle => 'Paspauskite mygtuką vieną kartą ir laikykite prie telefono.';
-
-  @override
-  String get walkthroughBackgroundRecordingNote => 'Tiek. Omi toliau įrašinės jūsų pokalbius fone.';
-
-  @override
-  String get noThanks => 'Ne, ačiū';
-
-  @override
-  String get recapInTheBackground => 'Fone';
-
-  @override
-  String retentionOfferAccept(int percent) {
-    return 'Likti su $percent% nuolaida';
-  }
-
-  @override
-  String retentionOfferBody(String price, int months) {
-    return 'Likite ir mokėkite $price per mėnesį ateinančius $months mėnesius.';
-  }
-
-  @override
-  String retentionOfferApplied(int percent, int months) {
-    return 'Atlikta. $percent% nuolaida ateinančius $months mėnesius.';
-  }
-
-  @override
-  String get othersSpeakerLabel => 'Kiti';
-
-  @override
-  String get livePreviewLabel => 'Live preview';
-
-  @override
-  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
-
-  @override
-  String get livePreviewListening => 'Listening… words appear here as you speak.';
-
-  @override
-  String get livePreviewStarting => 'Starting live preview…';
-
-  @override
-  String get livePreviewTranscribingTitle => 'Transcribing…';
-
-  @override
-  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
-
-  @override
-  String get openLoopAnswerDone => 'Atlikta';
-
-  @override
-  String get openLoopAnswerRemind => 'Priminti vėliau';
-
-  @override
-  String get openLoopAnswerDrop => 'Atmesti';
 }

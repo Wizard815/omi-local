@@ -14617,6 +14617,107 @@ class AppLocalizationsTl extends AppLocalizations {
   String get deviceControls => 'Mga Kontrol';
 
   @override
+  String homeBackgroundLine(String items) {
+    return 'Gayundin: $items';
+  }
+
+  @override
+  String get deviceOnboardingPressButtonTitle => 'Pindutin ang button sa iyong Omi';
+
+  @override
+  String get deviceOnboardingPressButtonSubtitle => 'Isang maikling pindot. Pagkatapos, magtanong ng kahit ano.';
+
+  @override
+  String get deviceOnboardingAskNowTitle => 'Itanong ang iyong tanong';
+
+  @override
+  String get deviceOnboardingAskNowSubtitle => 'Sabihin nang malakas. Nakikinig si Omi.';
+
+  @override
+  String get deviceOnboardingPressAgainHint => 'Tapos na? Pindutin muli ang button para ipadala.';
+
+  @override
+  String trialUpsellTitle(int days) {
+    return 'Na-upgrade ka sa $days araw na libre';
+  }
+
+  @override
+  String trialUpsellBody(int days) {
+    return '$days araw ng Omi Pro, libre mula sa amin. Paalalahanan ka namin bago masingil. Kanselahin anumang oras.';
+  }
+
+  @override
+  String trialUpsellClaim(int days) {
+    return 'Kunin ang $days-araw na trial';
+  }
+
+  @override
+  String settingsUpgradeTrialSubtitle(int days) {
+    return 'Simulan ang $days-araw na libreng trial';
+  }
+
+  @override
+  String get pairingPowerOnTitle => 'I-on ang iyong Omi';
+
+  @override
+  String get pairingPowerOnSubtitle => 'Pindutin nang isang beses ang button at ilapit sa iyong phone.';
+
+  @override
+  String get walkthroughBackgroundRecordingNote =>
+      'Ayan na. Patuloy na irerekord ni Omi ang iyong mga usapan sa background.';
+
+  @override
+  String get noThanks => 'Hindi, salamat';
+
+  @override
+  String get recapInTheBackground => 'Sa background';
+
+  @override
+  String retentionOfferAccept(int percent) {
+    return 'Manatili nang may $percent% diskwento';
+  }
+
+  @override
+  String retentionOfferBody(String price, int months) {
+    return 'Manatili at magbayad ng $price kada buwan sa susunod na $months buwan.';
+  }
+
+  @override
+  String retentionOfferApplied(int percent, int months) {
+    return 'Tapos na. $percent% diskwento sa susunod na $months buwan.';
+  }
+
+  @override
+  String get othersSpeakerLabel => 'Iba pa';
+
+  @override
+  String get livePreviewLabel => 'Live preview';
+
+  @override
+  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
+
+  @override
+  String get livePreviewListening => 'Listening… words appear here as you speak.';
+
+  @override
+  String get livePreviewStarting => 'Starting live preview…';
+
+  @override
+  String get livePreviewTranscribingTitle => 'Transcribing…';
+
+  @override
+  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
+
+  @override
+  String get openLoopAnswerDone => 'Tapos';
+
+  @override
+  String get openLoopAnswerRemind => 'Ipaalala sa akin mamaya';
+
+  @override
+  String get openLoopAnswerDrop => 'Iwanan';
+
+  @override
   String get dayReviewTitle => 'Review ng araw';
 
   @override
@@ -14967,105 +15068,4 @@ class AppLocalizationsTl extends AppLocalizations {
 
   @override
   String get heldForDayReview => 'Naghihintay sa iyong review ng araw';
-
-  @override
-  String homeBackgroundLine(String items) {
-    return 'Gayundin: $items';
-  }
-
-  @override
-  String get deviceOnboardingPressButtonTitle => 'Pindutin ang button sa iyong Omi';
-
-  @override
-  String get deviceOnboardingPressButtonSubtitle => 'Isang maikling pindot. Pagkatapos, magtanong ng kahit ano.';
-
-  @override
-  String get deviceOnboardingAskNowTitle => 'Itanong ang iyong tanong';
-
-  @override
-  String get deviceOnboardingAskNowSubtitle => 'Sabihin nang malakas. Nakikinig si Omi.';
-
-  @override
-  String get deviceOnboardingPressAgainHint => 'Tapos na? Pindutin muli ang button para ipadala.';
-
-  @override
-  String trialUpsellTitle(int days) {
-    return 'Na-upgrade ka sa $days araw na libre';
-  }
-
-  @override
-  String trialUpsellBody(int days) {
-    return '$days araw ng Omi Pro, libre mula sa amin. Paalalahanan ka namin bago masingil. Kanselahin anumang oras.';
-  }
-
-  @override
-  String trialUpsellClaim(int days) {
-    return 'Kunin ang $days-araw na trial';
-  }
-
-  @override
-  String settingsUpgradeTrialSubtitle(int days) {
-    return 'Simulan ang $days-araw na libreng trial';
-  }
-
-  @override
-  String get pairingPowerOnTitle => 'I-on ang iyong Omi';
-
-  @override
-  String get pairingPowerOnSubtitle => 'Pindutin nang isang beses ang button at ilapit sa iyong phone.';
-
-  @override
-  String get walkthroughBackgroundRecordingNote =>
-      'Ayan na. Patuloy na irerekord ni Omi ang iyong mga usapan sa background.';
-
-  @override
-  String get noThanks => 'Hindi, salamat';
-
-  @override
-  String get recapInTheBackground => 'Sa background';
-
-  @override
-  String retentionOfferAccept(int percent) {
-    return 'Manatili nang may $percent% diskwento';
-  }
-
-  @override
-  String retentionOfferBody(String price, int months) {
-    return 'Manatili at magbayad ng $price kada buwan sa susunod na $months buwan.';
-  }
-
-  @override
-  String retentionOfferApplied(int percent, int months) {
-    return 'Tapos na. $percent% diskwento sa susunod na $months buwan.';
-  }
-
-  @override
-  String get othersSpeakerLabel => 'Iba pa';
-
-  @override
-  String get livePreviewLabel => 'Live preview';
-
-  @override
-  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
-
-  @override
-  String get livePreviewListening => 'Listening… words appear here as you speak.';
-
-  @override
-  String get livePreviewStarting => 'Starting live preview…';
-
-  @override
-  String get livePreviewTranscribingTitle => 'Transcribing…';
-
-  @override
-  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
-
-  @override
-  String get openLoopAnswerDone => 'Tapos';
-
-  @override
-  String get openLoopAnswerRemind => 'Ipaalala sa akin mamaya';
-
-  @override
-  String get openLoopAnswerDrop => 'Iwanan';
 }
