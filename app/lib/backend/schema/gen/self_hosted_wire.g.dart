@@ -154,6 +154,46 @@ class GeneratedDayReviewMergeGroup {
   }
 }
 
+class GeneratedDayReviewSection {
+  final List<String>? conversationIds;
+  final bool favorited;
+  final String id;
+  final List<String>? tags;
+  final String text;
+  final String title;
+
+  const GeneratedDayReviewSection({
+    this.conversationIds,
+    this.favorited = false,
+    required this.id,
+    this.tags,
+    this.text = "",
+    this.title = "",
+  });
+
+  factory GeneratedDayReviewSection.fromJson(Map<String, dynamic> json) {
+    return GeneratedDayReviewSection(
+      conversationIds: _readFieldValue<List<String>>(_readField(json, const ["conversation_ids"]), "conversation_ids", _readStringList, requiredField: false, nullable: true),
+      favorited: _required(_readFieldValue<bool>(_readField(json, const ["favorited"]), "favorited", _readBool, requiredField: false, nullable: false, defaultValue: false), "favorited"),
+      id: _required(_readFieldValue<String>(_readField(json, const ["id"]), "id", _readString, requiredField: true, nullable: false), "id"),
+      tags: _readFieldValue<List<String>>(_readField(json, const ["tags"]), "tags", _readStringList, requiredField: false, nullable: true),
+      text: _required(_readFieldValue<String>(_readField(json, const ["text"]), "text", _readString, requiredField: false, nullable: false, defaultValue: ""), "text"),
+      title: _required(_readFieldValue<String>(_readField(json, const ["title"]), "title", _readString, requiredField: false, nullable: false, defaultValue: ""), "title"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'conversation_ids': conversationIds,
+      'favorited': favorited,
+      'id': id,
+      'tags': tags,
+      'text': text,
+      'title': title,
+    };
+  }
+}
+
 class GeneratedDayReview {
   final List<GeneratedDayReviewCorrection>? corrections;
   final DateTime? createdAt;
@@ -165,8 +205,10 @@ class GeneratedDayReview {
   final List<String>? keptConversationIds;
   final List<GeneratedDayReviewMergeGroup>? mergedGroups;
   final List<String>? rolledUpConversationIds;
+  final List<GeneratedDayReviewSection>? sections;
   final String status;
   final String summaryText;
+  final List<String>? tags;
   final String? timeZone;
   final String title;
   final DateTime? updatedAt;
@@ -182,8 +224,10 @@ class GeneratedDayReview {
     this.keptConversationIds,
     this.mergedGroups,
     this.rolledUpConversationIds,
+    this.sections,
     this.status = "finalized",
     this.summaryText = "",
+    this.tags,
     this.timeZone,
     this.title = "",
     this.updatedAt,
@@ -201,8 +245,10 @@ class GeneratedDayReview {
       keptConversationIds: _readFieldValue<List<String>>(_readField(json, const ["kept_conversation_ids"]), "kept_conversation_ids", _readStringList, requiredField: false, nullable: true),
       mergedGroups: _readFieldValue<List<GeneratedDayReviewMergeGroup>>(_readField(json, const ["merged_groups"]), "merged_groups", (value) => _readObjectList(value, GeneratedDayReviewMergeGroup.fromJson), requiredField: false, nullable: true),
       rolledUpConversationIds: _readFieldValue<List<String>>(_readField(json, const ["rolled_up_conversation_ids"]), "rolled_up_conversation_ids", _readStringList, requiredField: false, nullable: true),
+      sections: _readFieldValue<List<GeneratedDayReviewSection>>(_readField(json, const ["sections"]), "sections", (value) => _readObjectList(value, GeneratedDayReviewSection.fromJson), requiredField: false, nullable: true),
       status: _required(_readFieldValue<String>(_readField(json, const ["status"]), "status", _readString, requiredField: false, nullable: false, defaultValue: "finalized"), "status"),
       summaryText: _required(_readFieldValue<String>(_readField(json, const ["summary_text"]), "summary_text", _readString, requiredField: false, nullable: false, defaultValue: ""), "summary_text"),
+      tags: _readFieldValue<List<String>>(_readField(json, const ["tags"]), "tags", _readStringList, requiredField: false, nullable: true),
       timeZone: _readFieldValue<String>(_readField(json, const ["time_zone"]), "time_zone", _readString, requiredField: false, nullable: true),
       title: _required(_readFieldValue<String>(_readField(json, const ["title"]), "title", _readString, requiredField: false, nullable: false, defaultValue: ""), "title"),
       updatedAt: _readFieldValue<DateTime>(_readField(json, const ["updated_at"]), "updated_at", _readDateTime, requiredField: false, nullable: true),
@@ -221,8 +267,10 @@ class GeneratedDayReview {
       'kept_conversation_ids': keptConversationIds,
       'merged_groups': mergedGroups?.map((value) => value.toJson()).toList(),
       'rolled_up_conversation_ids': rolledUpConversationIds,
+      'sections': sections?.map((value) => value.toJson()).toList(),
       'status': status,
       'summary_text': summaryText,
+      'tags': tags,
       'time_zone': timeZone,
       'title': title,
       'updated_at': updatedAt?.toUtc().toIso8601String(),
@@ -241,6 +289,7 @@ class GeneratedDayReviewConversation {
   final bool rolledUp;
   final bool starred;
   final DateTime? startedAt;
+  final List<String>? tags;
   final String title;
   final String transcriptSnippet;
   final int wordCount;
@@ -256,6 +305,7 @@ class GeneratedDayReviewConversation {
     this.rolledUp = false,
     this.starred = false,
     this.startedAt,
+    this.tags,
     this.title = "",
     this.transcriptSnippet = "",
     this.wordCount = 0,
@@ -273,6 +323,7 @@ class GeneratedDayReviewConversation {
       rolledUp: _required(_readFieldValue<bool>(_readField(json, const ["rolled_up"]), "rolled_up", _readBool, requiredField: false, nullable: false, defaultValue: false), "rolled_up"),
       starred: _required(_readFieldValue<bool>(_readField(json, const ["starred"]), "starred", _readBool, requiredField: false, nullable: false, defaultValue: false), "starred"),
       startedAt: _readFieldValue<DateTime>(_readField(json, const ["started_at"]), "started_at", _readDateTime, requiredField: false, nullable: true),
+      tags: _readFieldValue<List<String>>(_readField(json, const ["tags"]), "tags", _readStringList, requiredField: false, nullable: true),
       title: _required(_readFieldValue<String>(_readField(json, const ["title"]), "title", _readString, requiredField: false, nullable: false, defaultValue: ""), "title"),
       transcriptSnippet: _required(_readFieldValue<String>(_readField(json, const ["transcript_snippet"]), "transcript_snippet", _readString, requiredField: false, nullable: false, defaultValue: ""), "transcript_snippet"),
       wordCount: _required(_readFieldValue<int>(_readField(json, const ["word_count"]), "word_count", _readInt, requiredField: false, nullable: false, defaultValue: 0), "word_count"),
@@ -291,6 +342,7 @@ class GeneratedDayReviewConversation {
       'rolled_up': rolledUp,
       'starred': starred,
       'started_at': startedAt?.toUtc().toIso8601String(),
+      'tags': tags,
       'title': title,
       'transcript_snippet': transcriptSnippet,
       'word_count': wordCount,
@@ -406,6 +458,342 @@ class GeneratedReopenDayReviewResponse {
       'merged_count': mergedCount,
       'restored_count': restoredCount,
       'status': status,
+    };
+  }
+}
+
+class GeneratedFavoriteDayReviewSectionRequest {
+  final bool favorited;
+
+  const GeneratedFavoriteDayReviewSectionRequest({
+    this.favorited = true,
+  });
+
+  factory GeneratedFavoriteDayReviewSectionRequest.fromJson(Map<String, dynamic> json) {
+    return GeneratedFavoriteDayReviewSectionRequest(
+      favorited: _required(_readFieldValue<bool>(_readField(json, const ["favorited"]), "favorited", _readBool, requiredField: false, nullable: false, defaultValue: true), "favorited"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'favorited': favorited,
+    };
+  }
+}
+
+class GeneratedSetConversationTagsRequest {
+  final List<String>? tags;
+
+  const GeneratedSetConversationTagsRequest({
+    this.tags,
+  });
+
+  factory GeneratedSetConversationTagsRequest.fromJson(Map<String, dynamic> json) {
+    return GeneratedSetConversationTagsRequest(
+      tags: _readFieldValue<List<String>>(_readField(json, const ["tags"]), "tags", _readStringList, requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'tags': tags,
+    };
+  }
+}
+
+class GeneratedConversationTagCount {
+  final int count;
+  final String tag;
+
+  const GeneratedConversationTagCount({
+    required this.count,
+    required this.tag,
+  });
+
+  factory GeneratedConversationTagCount.fromJson(Map<String, dynamic> json) {
+    return GeneratedConversationTagCount(
+      count: _required(_readFieldValue<int>(_readField(json, const ["count"]), "count", _readInt, requiredField: true, nullable: false), "count"),
+      tag: _required(_readFieldValue<String>(_readField(json, const ["tag"]), "tag", _readString, requiredField: true, nullable: false), "tag"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'count': count,
+      'tag': tag,
+    };
+  }
+}
+
+class GeneratedConversationTagCatalogResponse {
+  final List<GeneratedConversationTagCount>? tags;
+
+  const GeneratedConversationTagCatalogResponse({
+    this.tags,
+  });
+
+  factory GeneratedConversationTagCatalogResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedConversationTagCatalogResponse(
+      tags: _readFieldValue<List<GeneratedConversationTagCount>>(_readField(json, const ["tags"]), "tags", (value) => _readObjectList(value, GeneratedConversationTagCount.fromJson), requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'tags': tags?.map((value) => value.toJson()).toList(),
+    };
+  }
+}
+
+class GeneratedCalDavSettingsResponse {
+  final bool bundled;
+  final String calendarHref;
+  final bool configured;
+  final bool enabled;
+  final bool hasPassword;
+  final String lastError;
+  final Map<String, dynamic>? lastReport;
+  final DateTime? lastSyncAt;
+  final bool pullEvents;
+  final bool pullTasks;
+  final bool pushConversationEvents;
+  final bool pushConversations;
+  final bool pushDaySummaries;
+  final bool pushTasks;
+  final String tasksHref;
+  final String url;
+  final String username;
+
+  const GeneratedCalDavSettingsResponse({
+    this.bundled = false,
+    this.calendarHref = "",
+    required this.configured,
+    this.enabled = true,
+    this.hasPassword = false,
+    this.lastError = "",
+    this.lastReport,
+    this.lastSyncAt,
+    this.pullEvents = true,
+    this.pullTasks = true,
+    this.pushConversationEvents = true,
+    this.pushConversations = false,
+    this.pushDaySummaries = true,
+    this.pushTasks = true,
+    this.tasksHref = "",
+    this.url = "",
+    this.username = "",
+  });
+
+  factory GeneratedCalDavSettingsResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedCalDavSettingsResponse(
+      bundled: _required(_readFieldValue<bool>(_readField(json, const ["bundled"]), "bundled", _readBool, requiredField: false, nullable: false, defaultValue: false), "bundled"),
+      calendarHref: _required(_readFieldValue<String>(_readField(json, const ["calendar_href"]), "calendar_href", _readString, requiredField: false, nullable: false, defaultValue: ""), "calendar_href"),
+      configured: _required(_readFieldValue<bool>(_readField(json, const ["configured"]), "configured", _readBool, requiredField: true, nullable: false), "configured"),
+      enabled: _required(_readFieldValue<bool>(_readField(json, const ["enabled"]), "enabled", _readBool, requiredField: false, nullable: false, defaultValue: true), "enabled"),
+      hasPassword: _required(_readFieldValue<bool>(_readField(json, const ["has_password"]), "has_password", _readBool, requiredField: false, nullable: false, defaultValue: false), "has_password"),
+      lastError: _required(_readFieldValue<String>(_readField(json, const ["last_error"]), "last_error", _readString, requiredField: false, nullable: false, defaultValue: ""), "last_error"),
+      lastReport: _readFieldValue<Map<String, dynamic>>(_readField(json, const ["last_report"]), "last_report", _readMap, requiredField: false, nullable: true),
+      lastSyncAt: _readFieldValue<DateTime>(_readField(json, const ["last_sync_at"]), "last_sync_at", _readDateTime, requiredField: false, nullable: true),
+      pullEvents: _required(_readFieldValue<bool>(_readField(json, const ["pull_events"]), "pull_events", _readBool, requiredField: false, nullable: false, defaultValue: true), "pull_events"),
+      pullTasks: _required(_readFieldValue<bool>(_readField(json, const ["pull_tasks"]), "pull_tasks", _readBool, requiredField: false, nullable: false, defaultValue: true), "pull_tasks"),
+      pushConversationEvents: _required(_readFieldValue<bool>(_readField(json, const ["push_conversation_events"]), "push_conversation_events", _readBool, requiredField: false, nullable: false, defaultValue: true), "push_conversation_events"),
+      pushConversations: _required(_readFieldValue<bool>(_readField(json, const ["push_conversations"]), "push_conversations", _readBool, requiredField: false, nullable: false, defaultValue: false), "push_conversations"),
+      pushDaySummaries: _required(_readFieldValue<bool>(_readField(json, const ["push_day_summaries"]), "push_day_summaries", _readBool, requiredField: false, nullable: false, defaultValue: true), "push_day_summaries"),
+      pushTasks: _required(_readFieldValue<bool>(_readField(json, const ["push_tasks"]), "push_tasks", _readBool, requiredField: false, nullable: false, defaultValue: true), "push_tasks"),
+      tasksHref: _required(_readFieldValue<String>(_readField(json, const ["tasks_href"]), "tasks_href", _readString, requiredField: false, nullable: false, defaultValue: ""), "tasks_href"),
+      url: _required(_readFieldValue<String>(_readField(json, const ["url"]), "url", _readString, requiredField: false, nullable: false, defaultValue: ""), "url"),
+      username: _required(_readFieldValue<String>(_readField(json, const ["username"]), "username", _readString, requiredField: false, nullable: false, defaultValue: ""), "username"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'bundled': bundled,
+      'calendar_href': calendarHref,
+      'configured': configured,
+      'enabled': enabled,
+      'has_password': hasPassword,
+      'last_error': lastError,
+      'last_report': lastReport,
+      'last_sync_at': lastSyncAt?.toUtc().toIso8601String(),
+      'pull_events': pullEvents,
+      'pull_tasks': pullTasks,
+      'push_conversation_events': pushConversationEvents,
+      'push_conversations': pushConversations,
+      'push_day_summaries': pushDaySummaries,
+      'push_tasks': pushTasks,
+      'tasks_href': tasksHref,
+      'url': url,
+      'username': username,
+    };
+  }
+}
+
+class GeneratedUpdateCalDavSettingsRequest {
+  final String? calendarHref;
+  final bool? enabled;
+  final String? password;
+  final bool? pullEvents;
+  final bool? pullTasks;
+  final bool? pushConversationEvents;
+  final bool? pushConversations;
+  final bool? pushDaySummaries;
+  final bool? pushTasks;
+  final String? tasksHref;
+  final String? url;
+  final String? username;
+
+  const GeneratedUpdateCalDavSettingsRequest({
+    this.calendarHref,
+    this.enabled,
+    this.password,
+    this.pullEvents,
+    this.pullTasks,
+    this.pushConversationEvents,
+    this.pushConversations,
+    this.pushDaySummaries,
+    this.pushTasks,
+    this.tasksHref,
+    this.url,
+    this.username,
+  });
+
+  factory GeneratedUpdateCalDavSettingsRequest.fromJson(Map<String, dynamic> json) {
+    return GeneratedUpdateCalDavSettingsRequest(
+      calendarHref: _readFieldValue<String>(_readField(json, const ["calendar_href"]), "calendar_href", _readString, requiredField: false, nullable: true),
+      enabled: _readFieldValue<bool>(_readField(json, const ["enabled"]), "enabled", _readBool, requiredField: false, nullable: true),
+      password: _readFieldValue<String>(_readField(json, const ["password"]), "password", _readString, requiredField: false, nullable: true),
+      pullEvents: _readFieldValue<bool>(_readField(json, const ["pull_events"]), "pull_events", _readBool, requiredField: false, nullable: true),
+      pullTasks: _readFieldValue<bool>(_readField(json, const ["pull_tasks"]), "pull_tasks", _readBool, requiredField: false, nullable: true),
+      pushConversationEvents: _readFieldValue<bool>(_readField(json, const ["push_conversation_events"]), "push_conversation_events", _readBool, requiredField: false, nullable: true),
+      pushConversations: _readFieldValue<bool>(_readField(json, const ["push_conversations"]), "push_conversations", _readBool, requiredField: false, nullable: true),
+      pushDaySummaries: _readFieldValue<bool>(_readField(json, const ["push_day_summaries"]), "push_day_summaries", _readBool, requiredField: false, nullable: true),
+      pushTasks: _readFieldValue<bool>(_readField(json, const ["push_tasks"]), "push_tasks", _readBool, requiredField: false, nullable: true),
+      tasksHref: _readFieldValue<String>(_readField(json, const ["tasks_href"]), "tasks_href", _readString, requiredField: false, nullable: true),
+      url: _readFieldValue<String>(_readField(json, const ["url"]), "url", _readString, requiredField: false, nullable: true),
+      username: _readFieldValue<String>(_readField(json, const ["username"]), "username", _readString, requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'calendar_href': calendarHref,
+      'enabled': enabled,
+      'password': password,
+      'pull_events': pullEvents,
+      'pull_tasks': pullTasks,
+      'push_conversation_events': pushConversationEvents,
+      'push_conversations': pushConversations,
+      'push_day_summaries': pushDaySummaries,
+      'push_tasks': pushTasks,
+      'tasks_href': tasksHref,
+      'url': url,
+      'username': username,
+    };
+  }
+}
+
+class GeneratedCalDavCalendar {
+  final List<String>? components;
+  final String href;
+  final String name;
+
+  const GeneratedCalDavCalendar({
+    this.components,
+    required this.href,
+    this.name = "",
+  });
+
+  factory GeneratedCalDavCalendar.fromJson(Map<String, dynamic> json) {
+    return GeneratedCalDavCalendar(
+      components: _readFieldValue<List<String>>(_readField(json, const ["components"]), "components", _readStringList, requiredField: false, nullable: true),
+      href: _required(_readFieldValue<String>(_readField(json, const ["href"]), "href", _readString, requiredField: true, nullable: false), "href"),
+      name: _required(_readFieldValue<String>(_readField(json, const ["name"]), "name", _readString, requiredField: false, nullable: false, defaultValue: ""), "name"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'components': components,
+      'href': href,
+      'name': name,
+    };
+  }
+}
+
+class GeneratedCalDavTestResponse {
+  final List<GeneratedCalDavCalendar>? calendars;
+  final String error;
+  final bool ok;
+
+  const GeneratedCalDavTestResponse({
+    this.calendars,
+    this.error = "",
+    required this.ok,
+  });
+
+  factory GeneratedCalDavTestResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedCalDavTestResponse(
+      calendars: _readFieldValue<List<GeneratedCalDavCalendar>>(_readField(json, const ["calendars"]), "calendars", (value) => _readObjectList(value, GeneratedCalDavCalendar.fromJson), requiredField: false, nullable: true),
+      error: _required(_readFieldValue<String>(_readField(json, const ["error"]), "error", _readString, requiredField: false, nullable: false, defaultValue: ""), "error"),
+      ok: _required(_readFieldValue<bool>(_readField(json, const ["ok"]), "ok", _readBool, requiredField: true, nullable: false), "ok"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'calendars': calendars?.map((value) => value.toJson()).toList(),
+      'error': error,
+      'ok': ok,
+    };
+  }
+}
+
+class GeneratedCalDavSyncResponse {
+  final String error;
+  final List<String>? errors;
+  final int eventsPulled;
+  final int eventsPushed;
+  final bool ok;
+  final int tasksImported;
+  final int tasksPulled;
+  final int tasksPushed;
+
+  const GeneratedCalDavSyncResponse({
+    this.error = "",
+    this.errors,
+    this.eventsPulled = 0,
+    this.eventsPushed = 0,
+    required this.ok,
+    this.tasksImported = 0,
+    this.tasksPulled = 0,
+    this.tasksPushed = 0,
+  });
+
+  factory GeneratedCalDavSyncResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedCalDavSyncResponse(
+      error: _required(_readFieldValue<String>(_readField(json, const ["error"]), "error", _readString, requiredField: false, nullable: false, defaultValue: ""), "error"),
+      errors: _readFieldValue<List<String>>(_readField(json, const ["errors"]), "errors", _readStringList, requiredField: false, nullable: true),
+      eventsPulled: _required(_readFieldValue<int>(_readField(json, const ["events_pulled"]), "events_pulled", _readInt, requiredField: false, nullable: false, defaultValue: 0), "events_pulled"),
+      eventsPushed: _required(_readFieldValue<int>(_readField(json, const ["events_pushed"]), "events_pushed", _readInt, requiredField: false, nullable: false, defaultValue: 0), "events_pushed"),
+      ok: _required(_readFieldValue<bool>(_readField(json, const ["ok"]), "ok", _readBool, requiredField: true, nullable: false), "ok"),
+      tasksImported: _required(_readFieldValue<int>(_readField(json, const ["tasks_imported"]), "tasks_imported", _readInt, requiredField: false, nullable: false, defaultValue: 0), "tasks_imported"),
+      tasksPulled: _required(_readFieldValue<int>(_readField(json, const ["tasks_pulled"]), "tasks_pulled", _readInt, requiredField: false, nullable: false, defaultValue: 0), "tasks_pulled"),
+      tasksPushed: _required(_readFieldValue<int>(_readField(json, const ["tasks_pushed"]), "tasks_pushed", _readInt, requiredField: false, nullable: false, defaultValue: 0), "tasks_pushed"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'error': error,
+      'errors': errors,
+      'events_pulled': eventsPulled,
+      'events_pushed': eventsPushed,
+      'ok': ok,
+      'tasks_imported': tasksImported,
+      'tasks_pulled': tasksPulled,
+      'tasks_pushed': tasksPushed,
     };
   }
 }
