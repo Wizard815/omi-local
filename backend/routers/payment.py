@@ -41,6 +41,7 @@ from config.stt_cap_dispatch import any_execution_admission_enabled as funded_pr
 from utils.fair_use import clear_fair_use_on_upgrade
 from utils.notifications import send_notification, send_subscription_paid_personalized_notification
 from models.users import PlanType, Subscription, SubscriptionStatus, PlanLimits
+from utils.self_hosting import is_self_hosted
 from utils.subscription import (
     get_basic_plan_limits,
     get_paid_plan_definitions,
@@ -457,13 +458,15 @@ def get_available_plans_endpoint(
     x_billing_currency: Optional[str] = Header(None, alias='X-Omi-Billing-Currency'),
 ):
     """Get available subscription plans with their price IDs and billing intervals."""
-    # Self-hosted deployments have no Stripe account configured — every
+    # Self-hosted deployments have no Stripe account — every
     # stripe.Price.retrieve() below would fail individually (caught and
     # logged per-plan), leaving pricing_options empty and always 500ing.
     # Report no purchasable plans instead of failing the request outright,
     # since this endpoint must stay reachable even for accounts with no
-    # paid plan (see get_current_user_uid_no_byok_validation above).
-    if not stripe.api_key:
+    # paid plan (see get_current_user_uid_no_byok_validation above). Keyed
+    # on the deployment flag, not on stripe.api_key: hosted tests exercise
+    # this catalog with a patched Stripe client and no key.
+    if is_self_hosted():
         return AvailablePlansResponse(plans=[])
     try:
         # Get user's current subscription to determine which plan is active
