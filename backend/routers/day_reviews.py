@@ -13,6 +13,7 @@ from models.day_review import (
     DayReview,
     DayReviewDayResponse,
     DayReviewsListResponse,
+    FavoriteDayReviewSectionRequest,
     FinalizeDayReviewRequest,
     PendingDayReviewsResponse,
     ReopenDayReviewResponse,
@@ -67,6 +68,36 @@ def finalize_day_review(
             [g.conversation_ids for g in request.merge_groups],
             request.drop_conversation_ids,
         )
+    except service.DayReviewError as e:
+        _raise(e)
+
+
+@router.post('/v1/users/day-reviews/{date}/bundle', tags=['day-reviews'], response_model=DayReview)
+def bundle_day(
+    date: str = _DATE,
+    uid: str = Depends(auth.get_current_user_uid),
+    x_app_platform: Optional[str] = Header(None, alias='X-App-Platform'),
+):
+    """Hands-off review: starred conversations stay, every other one is rolled into one sectioned day summary."""
+    enforce_chat_quota(uid, platform=x_app_platform)
+    try:
+        return service.bundle(uid, date)
+    except service.DayReviewError as e:
+        _raise(e)
+
+
+@router.post(
+    '/v1/users/day-reviews/{date}/sections/{section_id}/favorite', tags=['day-reviews'], response_model=DayReview
+)
+def favorite_day_review_section(
+    section_id: str,
+    request: FavoriteDayReviewSectionRequest,
+    date: str = _DATE,
+    uid: str = Depends(auth.get_current_user_uid),
+):
+    """Pull a section's conversations back out of the bundle as starred conversations (favorited=false folds them back)."""
+    try:
+        return service.favorite_section(uid, date, section_id, request.favorited)
     except service.DayReviewError as e:
         _raise(e)
 

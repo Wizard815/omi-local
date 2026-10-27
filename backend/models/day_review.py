@@ -47,6 +47,19 @@ class DayReviewMergeGroup(BaseModel):
     conversation_ids: List[str] = Field(default_factory=list, min_length=2, max_length=200)
 
 
+class DayReviewSection(BaseModel):
+    id: str
+    conversation_ids: List[str] = Field(
+        default_factory=list, description='The rolled-up conversations this part covers'
+    )
+    title: str = ''
+    text: str = ''
+    tags: List[str] = Field(default_factory=list)
+    favorited: bool = Field(
+        default=False, description='Its conversations were pulled back out as starred conversations'
+    )
+
+
 class DayReview(BaseModel):
     date: str
     status: Literal['finalized'] = 'finalized'
@@ -55,6 +68,10 @@ class DayReview(BaseModel):
     final_text: str = Field(
         default='', description='summary_text with redactions masked and pending corrections applied'
     )
+    sections: List[DayReviewSection] = Field(
+        default_factory=list, description='summary_text, split by source conversations'
+    )
+    tags: List[str] = Field(default_factory=list, description='Every section tag of the day')
     corrections: List[DayReviewCorrection] = Field(default_factory=list)
     kept_conversation_ids: List[str] = Field(default_factory=list)
     rolled_up_conversation_ids: List[str] = Field(default_factory=list)
@@ -77,6 +94,7 @@ class DayReviewConversation(BaseModel):
     started_at: Optional[datetime] = None
     finished_at: Optional[datetime] = None
     starred: bool = False
+    tags: List[str] = Field(default_factory=list)
     rolled_up: bool = Field(default=False, description='Folded into this day\'s summary (hidden from the normal list)')
     dropped: bool = Field(default=False, description='Dropped as noise by this review (hidden)')
     held: bool = Field(default=False, description='Transcript only so far; the review decides whether it is processed')
@@ -120,6 +138,10 @@ class FinalizeDayReviewRequest(BaseModel):
                 raise ValueError(f'Conversation {cid} is listed more than once')
             seen.add(cid)
         return self
+
+
+class FavoriteDayReviewSectionRequest(BaseModel):
+    favorited: bool = True
 
 
 class DayReviewsListResponse(BaseModel):

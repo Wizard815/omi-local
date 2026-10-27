@@ -61,7 +61,21 @@ async def run_hourly(
 
 
 async def run_local_scheduler() -> None:
+    from utils.caldav.sync import tick as caldav_tick
+    from utils.day_bundle_scheduler import tick as day_bundle_tick
     from utils.other.notifications import start_cron_job
 
-    logger.info('local_scheduler started: daily-summary/notification job every hour at :%02d', TICK_MINUTE)
-    await run_hourly(start_cron_job)
+    async def job() -> None:
+        # The day bundle (utils/day_bundle_scheduler.py) and the CalDAV sync
+        # (utils/caldav/sync.py) run on the same tick, after the recap job; a
+        # failure in one never skips the next.
+        for step in (start_cron_job, day_bundle_tick, caldav_tick):
+            try:
+                await step()
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                logger.exception('local_scheduler step %s failed', getattr(step, '__name__', step))
+
+    logger.info('local_scheduler started: recap, day-bundle and caldav jobs every hour at :%02d', TICK_MINUTE)
+    await run_hourly(job)
