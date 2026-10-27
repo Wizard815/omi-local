@@ -53,6 +53,7 @@ INTEGRATION_PUBLIC_PATHS = (
     '/v2/integrations/{app_id}/tasks',
 )
 APP_CLIENT_PREFIXES = (
+    '/v1/caldav',  # omi-local: tasks + calendar sync settings
     '/v1/pending-work',
     '/v1/attention-items',
     '/v1/messaging/links',

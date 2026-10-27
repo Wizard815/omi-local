@@ -5784,6 +5784,208 @@
         "title": "ButtonEventRequest",
         "type": "object"
       },
+      "CalDavCalendar": {
+        "properties": {
+          "components": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Components",
+            "type": "array"
+          },
+          "href": {
+            "title": "Href",
+            "type": "string"
+          },
+          "name": {
+            "default": "",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "href"
+        ],
+        "title": "CalDavCalendar",
+        "type": "object"
+      },
+      "CalDavSettingsResponse": {
+        "properties": {
+          "bundled": {
+            "default": false,
+            "description": "Using omi-host's own CalDAV server (no settings stored)",
+            "title": "Bundled",
+            "type": "boolean"
+          },
+          "calendar_href": {
+            "default": "",
+            "title": "Calendar Href",
+            "type": "string"
+          },
+          "configured": {
+            "description": "A server is set (the user's own or the bundled one)",
+            "title": "Configured",
+            "type": "boolean"
+          },
+          "enabled": {
+            "default": true,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "has_password": {
+            "default": false,
+            "title": "Has Password",
+            "type": "boolean"
+          },
+          "last_error": {
+            "default": "",
+            "title": "Last Error",
+            "type": "string"
+          },
+          "last_report": {
+            "additionalProperties": true,
+            "title": "Last Report",
+            "type": "object"
+          },
+          "last_sync_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Sync At"
+          },
+          "pull_events": {
+            "default": true,
+            "title": "Pull Events",
+            "type": "boolean"
+          },
+          "pull_tasks": {
+            "default": true,
+            "title": "Pull Tasks",
+            "type": "boolean"
+          },
+          "push_conversation_events": {
+            "default": true,
+            "title": "Push Conversation Events",
+            "type": "boolean"
+          },
+          "push_conversations": {
+            "default": false,
+            "title": "Push Conversations",
+            "type": "boolean"
+          },
+          "push_day_summaries": {
+            "default": true,
+            "title": "Push Day Summaries",
+            "type": "boolean"
+          },
+          "push_tasks": {
+            "default": true,
+            "title": "Push Tasks",
+            "type": "boolean"
+          },
+          "tasks_href": {
+            "default": "",
+            "title": "Tasks Href",
+            "type": "string"
+          },
+          "url": {
+            "default": "",
+            "title": "Url",
+            "type": "string"
+          },
+          "username": {
+            "default": "",
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "configured"
+        ],
+        "title": "CalDavSettingsResponse",
+        "type": "object"
+      },
+      "CalDavSyncResponse": {
+        "properties": {
+          "error": {
+            "default": "",
+            "title": "Error",
+            "type": "string"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "events_pulled": {
+            "default": 0,
+            "title": "Events Pulled",
+            "type": "integer"
+          },
+          "events_pushed": {
+            "default": 0,
+            "title": "Events Pushed",
+            "type": "integer"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "tasks_imported": {
+            "default": 0,
+            "title": "Tasks Imported",
+            "type": "integer"
+          },
+          "tasks_pulled": {
+            "default": 0,
+            "title": "Tasks Pulled",
+            "type": "integer"
+          },
+          "tasks_pushed": {
+            "default": 0,
+            "title": "Tasks Pushed",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "CalDavSyncResponse",
+        "type": "object"
+      },
+      "CalDavTestResponse": {
+        "properties": {
+          "calendars": {
+            "items": {
+              "$ref": "#/components/schemas/CalDavCalendar"
+            },
+            "title": "Calendars",
+            "type": "array"
+          },
+          "error": {
+            "default": "",
+            "title": "Error",
+            "type": "string"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "CalDavTestResponse",
+        "type": "object"
+      },
       "CalendarCaptureGap": {
         "description": "An accepted calendar event with no overlapping kept conversation.",
         "properties": {
@@ -9547,6 +9749,13 @@
             ],
             "title": "Sync Relevance"
           },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
           "transcript_segments": {
             "default": [],
             "items": {
@@ -10886,6 +11095,13 @@
             ],
             "title": "Sync Relevance"
           },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
           "transcript_segments": {
             "default": [],
             "items": {
@@ -11253,6 +11469,37 @@
           "revision"
         ],
         "title": "ConversationSyncState",
+        "type": "object"
+      },
+      "ConversationTagCatalogResponse": {
+        "properties": {
+          "tags": {
+            "items": {
+              "$ref": "#/components/schemas/ConversationTagCount"
+            },
+            "title": "Tags",
+            "type": "array"
+          }
+        },
+        "title": "ConversationTagCatalogResponse",
+        "type": "object"
+      },
+      "ConversationTagCount": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "tag": {
+            "title": "Tag",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tag",
+          "count"
+        ],
+        "title": "ConversationTagCount",
         "type": "object"
       },
       "ConversationTestPromptResponse": {
@@ -13454,6 +13701,14 @@
             "title": "Rolled Up Conversation Ids",
             "type": "array"
           },
+          "sections": {
+            "description": "summary_text, split by source conversations",
+            "items": {
+              "$ref": "#/components/schemas/DayReviewSection"
+            },
+            "title": "Sections",
+            "type": "array"
+          },
           "status": {
             "const": "finalized",
             "default": "finalized",
@@ -13465,6 +13720,14 @@
             "description": "Model-written summary; correction offsets index this",
             "title": "Summary Text",
             "type": "string"
+          },
+          "tags": {
+            "description": "Every section tag of the day",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
           },
           "time_zone": {
             "anyOf": [
@@ -13569,6 +13832,13 @@
               }
             ],
             "title": "Started At"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
           },
           "title": {
             "default": "",
@@ -13749,6 +14019,50 @@
           }
         },
         "title": "DayReviewMergeGroup",
+        "type": "object"
+      },
+      "DayReviewSection": {
+        "properties": {
+          "conversation_ids": {
+            "description": "The rolled-up conversations this part covers",
+            "items": {
+              "type": "string"
+            },
+            "title": "Conversation Ids",
+            "type": "array"
+          },
+          "favorited": {
+            "default": false,
+            "description": "Its conversations were pulled back out as starred conversations",
+            "title": "Favorited",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "text": {
+            "default": "",
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "DayReviewSection",
         "type": "object"
       },
       "DayReviewsListResponse": {
@@ -17322,6 +17636,17 @@
           "weekly"
         ],
         "title": "FairUseUsagePctResponse",
+        "type": "object"
+      },
+      "FavoriteDayReviewSectionRequest": {
+        "properties": {
+          "favorited": {
+            "default": true,
+            "title": "Favorited",
+            "type": "boolean"
+          }
+        },
+        "title": "FavoriteDayReviewSectionRequest",
         "type": "object"
       },
       "FcmTokenResponse": {
@@ -30552,6 +30877,21 @@
         "title": "SetConversationStarredOperation",
         "type": "object"
       },
+      "SetConversationTagsRequest": {
+        "properties": {
+          "tags": {
+            "description": "Replaces the conversation's tags",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Tags",
+            "type": "array"
+          }
+        },
+        "title": "SetConversationTagsRequest",
+        "type": "object"
+      },
       "SetConversationTitleOperation": {
         "additionalProperties": false,
         "description": "User-owned title mutation carried by the durable sync endpoint.",
@@ -37181,6 +37521,153 @@
           }
         },
         "title": "UpdateAssistantSettingsRequest",
+        "type": "object"
+      },
+      "UpdateCalDavSettingsRequest": {
+        "properties": {
+          "calendar_href": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Events calendar (empty = auto)",
+            "title": "Calendar Href"
+          },
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "password": {
+            "anyOf": [
+              {
+                "maxLength": 1024,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Omitted = keep the stored one",
+            "title": "Password"
+          },
+          "pull_events": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pull Events"
+          },
+          "pull_tasks": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pull Tasks"
+          },
+          "push_conversation_events": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Push Conversation Events"
+          },
+          "push_conversations": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Push Conversations"
+          },
+          "push_day_summaries": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Push Day Summaries"
+          },
+          "push_tasks": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Push Tasks"
+          },
+          "tasks_href": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Tasks calendar (empty = auto)",
+            "title": "Tasks Href"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Server or calendar-home URL",
+            "title": "Url"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          }
+        },
+        "title": "UpdateCalDavSettingsRequest",
         "type": "object"
       },
       "UpdateChatSessionRequest": {
@@ -46434,6 +46921,401 @@
         ]
       }
     },
+    "/v1/caldav/settings": {
+      "delete": {
+        "description": "Forget the user's server (the bundled one, if any, applies again).",
+        "operationId": "delete_caldav_settings_v1_caldav_settings_delete",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalDavSettingsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Delete Caldav Settings",
+        "tags": [
+          "caldav"
+        ]
+      },
+      "get": {
+        "operationId": "get_caldav_settings_v1_caldav_settings_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalDavSettingsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Get Caldav Settings",
+        "tags": [
+          "caldav"
+        ]
+      },
+      "put": {
+        "description": "Set or change the server and what to sync. The password is stored encrypted and never returned.",
+        "operationId": "update_caldav_settings_v1_caldav_settings_put",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCalDavSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalDavSettingsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Update Caldav Settings",
+        "tags": [
+          "caldav"
+        ]
+      }
+    },
+    "/v1/caldav/sync": {
+      "post": {
+        "description": "Run the sync now (the scheduler also runs it every hour).",
+        "operationId": "sync_caldav_now_v1_caldav_sync_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalDavSyncResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Sync Caldav Now",
+        "tags": [
+          "caldav"
+        ]
+      }
+    },
+    "/v1/caldav/test": {
+      "post": {
+        "description": "Connect with the effective settings and list the calendars found.",
+        "operationId": "test_caldav_connection_v1_caldav_test_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalDavTestResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Test Caldav Connection",
+        "tags": [
+          "caldav"
+        ]
+      }
+    },
     "/v1/calendar/capture-gaps": {
       "get": {
         "description": "Accepted calendar events in [start, end] with no overlapping non-discarded conversation.\n\nThe honesty surface for the Conversations list (SCA-381): what was booked\nbut never recorded. Read-only against Google Calendar; it never creates or\nmutates conversations. Declined, cancelled, tentative, and all-day / >8h\nblocks are excluded by ``select_capture_gaps``.",
@@ -49127,6 +50009,24 @@
             }
           },
           {
+            "description": "Only conversations carrying this tag (newest first)",
+            "in": "query",
+            "name": "tag",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only conversations carrying this tag (newest first)",
+              "title": "Tag"
+            }
+          },
+          {
             "in": "header",
             "name": "authorization",
             "required": false,
@@ -49742,6 +50642,84 @@
           }
         ],
         "summary": "Search Conversations Endpoint",
+        "tags": [
+          "conversations"
+        ]
+      }
+    },
+    "/v1/conversations/tags": {
+      "get": {
+        "description": "Every tag the user's conversations carry, with counts (most used first).",
+        "operationId": "get_conversation_tag_catalog_v1_conversations_tags_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationTagCatalogResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Get Conversation Tag Catalog",
         "tags": [
           "conversations"
         ]
@@ -53576,6 +54554,103 @@
           }
         ],
         "summary": "Patch Conversation Summary",
+        "tags": [
+          "conversations"
+        ]
+      }
+    },
+    "/v1/conversations/{conversation_id}/tags": {
+      "put": {
+        "description": "Replace the conversation's tags. Tags are normalized (lowercase, dashes); the user's tag catalog follows.",
+        "operationId": "set_conversation_tags_v1_conversations__conversation_id__tags_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetConversationTagsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationMutationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Set Conversation Tags",
         "tags": [
           "conversations"
         ]
@@ -74897,6 +75972,96 @@
         ]
       }
     },
+    "/v1/users/day-reviews/{date}/bundle": {
+      "post": {
+        "description": "Hands-off review: starred conversations stay, every other one is rolled into one sectioned day summary.",
+        "operationId": "bundle_day_v1_users_day_reviews__date__bundle_post",
+        "parameters": [
+          {
+            "description": "Local calendar date, YYYY-MM-DD",
+            "in": "path",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "description": "Local calendar date, YYYY-MM-DD",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "title": "Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayReview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Bundle Day",
+        "tags": [
+          "day-reviews"
+        ]
+      }
+    },
     "/v1/users/day-reviews/{date}/corrections": {
       "post": {
         "operationId": "add_day_review_correction_v1_users_day_reviews__date__corrections_post",
@@ -75372,6 +76537,115 @@
           }
         ],
         "summary": "Reopen Day Review",
+        "tags": [
+          "day-reviews"
+        ]
+      }
+    },
+    "/v1/users/day-reviews/{date}/sections/{section_id}/favorite": {
+      "post": {
+        "description": "Pull a section's conversations back out of the bundle as starred conversations (favorited=false folds them back).",
+        "operationId": "favorite_day_review_section_v1_users_day_reviews__date__sections__section_id__favorite_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "section_id",
+            "required": true,
+            "schema": {
+              "title": "Section Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Local calendar date, YYYY-MM-DD",
+            "in": "path",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "description": "Local calendar date, YYYY-MM-DD",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "title": "Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FavoriteDayReviewSectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayReview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Favorite Day Review Section",
         "tags": [
           "day-reviews"
         ]
