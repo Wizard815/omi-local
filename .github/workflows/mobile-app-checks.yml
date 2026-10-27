@@ -582,6 +582,13 @@ jobs:
       # On main they were created by the APK compile in the same job before
       # this Gradle task ran. The parallel job never compiles an APK, so
       # generate those files only (`--config-only`).
+      # Gradle 8.14.2 cannot run on the runner image's default JDK (class file
+      # major version 69); the APK and emulator jobs pin JDK 21 the same way.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
       - name: Generate Android Gradle wrapper
         working-directory: app
         run: flutter build apk --debug --flavor dev --target-platform android-arm64 --config-only
