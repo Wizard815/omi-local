@@ -227,7 +227,10 @@ async def test_batch_drains_workers_on_failure_deadline_or_caller_cancel(monkeyp
                 {'input': [str(i) for i in range(100)]},
                 provider_ref=ProviderRef(provider='gemini', model='gemini-embedding-001'),
                 credentials=build_omi_managed_credential_context(ServiceCaller(name='backend')),
-                timeout_ms=30 if failure == 'deadline' else 1000,
+                # The deadline must outlast launching the 8 workers (started.set()
+                # below) on a loaded runner; the handler blocks forever past that,
+                # so 300ms still times out before any output.
+                timeout_ms=300 if failure == 'deadline' else 1000,
             )
         )
         await asyncio.wait_for(started.wait(), timeout=1)
