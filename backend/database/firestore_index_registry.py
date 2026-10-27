@@ -236,6 +236,20 @@ INDEX_ONLY_REQUIREMENTS = (
         'COLLECTION',
         (_asc('folder_id'), _desc('created_at'), _desc('__name__')),
     ),
+    # database.conversations.get_conversations_by_tag: tag filter, newest first,
+    # with and without the discarded filter.
+    FirestoreIndexRequirement(
+        'conversations_tags_contains_created',
+        'conversations',
+        'COLLECTION',
+        (_contains('tags'), _desc('created_at'), _desc('__name__')),
+    ),
+    FirestoreIndexRequirement(
+        'conversations_tags_contains_discarded_created',
+        'conversations',
+        'COLLECTION',
+        (_contains('tags'), _asc('discarded'), _desc('created_at'), _desc('__name__')),
+    ),
     FirestoreIndexRequirement(
         'conversations_status_finished',
         'conversations',

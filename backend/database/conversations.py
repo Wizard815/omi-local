@@ -1121,6 +1121,7 @@ def upsert_conversation_with_lifecycle(uid: str, conversation_data: dict):
             # stub's folder_id: None would revert every AI folder assignment.
             for field in (
                 'starred',
+                'tags',
                 'folder_id',
                 'visibility',
                 'user_title',
@@ -1317,6 +1318,7 @@ def persist_processing_result_with_lifecycle(
         # stub's folder_id: None would revert every AI folder assignment.
         for field in (
             'starred',
+            'tags',
             'folder_id',
             'visibility',
             'user_title',
@@ -4078,6 +4080,47 @@ def set_conversation_starred(uid: str, conversation_id: str, starred: bool):
     user_ref = db.collection('users').document(uid)
     conversation_ref = user_ref.collection(conversations_collection).document(conversation_id)
     conversation_ref.update({'starred': starred})
+
+
+def set_conversation_tags(uid: str, conversation_id: str, tags: List[str]) -> Tuple[List[str], List[str]]:
+    """Replace the conversation's tags (already normalized) and keep the per-user
+    tag catalog in step. Returns (added, removed)."""
+    from database import conversation_tags as catalog
+
+    conversation_ref = (
+        db.collection('users').document(uid).collection(conversations_collection).document(conversation_id)
+    )
+    snapshot = conversation_ref.get()
+    if not getattr(snapshot, 'exists', False):
+        return [], []
+    current = [str(t) for t in ((snapshot.to_dict() or {}).get('tags') or [])]
+    added = [t for t in tags if t not in current]
+    removed = [t for t in current if t not in tags]
+    conversation_ref.update({'tags': list(tags)})
+    catalog.apply_tag_delta(uid, added, removed)
+    return added, removed
+
+
+@prepare_for_read(decrypt_func=prepare_conversation_for_read)
+def get_conversations_by_tag(
+    uid: str, tag: str, limit: int = 100, include_discarded: bool = False
+) -> List[Dict[str, Any]]:
+    """Newest conversations carrying ``tag`` (list projection, no transcript)."""
+    conversations_ref = db.collection('users').document(uid).collection(conversations_collection)
+    query = conversations_ref.where(filter=FieldFilter('tags', 'array_contains', tag))
+    if not include_discarded:
+        query = query.where(filter=FieldFilter('discarded', '==', False))
+    query = query.order_by('created_at', direction=firestore.Query.DESCENDING).limit(limit)
+    rows: List[Dict[str, Any]] = []
+    for doc in query.stream():
+        data = doc.to_dict() or {}
+        if data.get('deleted'):
+            continue
+        data['id'] = doc.id
+        data.pop('transcript_segments', None)
+        data.pop('transcript_segments_compressed', None)
+        rows.append(data)
+    return rows
 
 
 def unlock_all_conversations(uid: str, *, limit: Optional[int] = None) -> int:
