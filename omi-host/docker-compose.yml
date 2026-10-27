@@ -110,6 +110,19 @@ services:
       # for small-context models.
       DAY_REVIEW_TIMEOUT_SECONDS: ${DAY_REVIEW_TIMEOUT_SECONDS:-240}
       DAY_REVIEW_MAX_INPUT_CHARS: ${DAY_REVIEW_MAX_INPUT_CHARS:-28000}
+      # Automatic day bundle: past days are folded into one sectioned summary
+      # once the local clock passes OMI_DAY_BUNDLE_HOUR; starred clips stay,
+      # favorite a section in the app to pull its clips back out.
+      OMI_DAY_BUNDLE_AUTO: ${OMI_DAY_BUNDLE_AUTO:-}
+      OMI_DAY_BUNDLE_HOUR: ${OMI_DAY_BUNDLE_HOUR:-3}
+      # CalDAV: tasks (VTODO) and the day summaries / conversation events
+      # (VEVENT) sync hourly with the bundled Radicale below unless a user sets
+      # their own server in the app. The same account works from the phone
+      # (DAVx5 + Tasks.org) at http://<host>:${CALDAV_PORT:-5232}/.
+      # Worked examples (Nextcloud, Baïkal, iCloud): examples/caldav/README.md.
+      CALDAV_DEFAULT_URL: ${CALDAV_DEFAULT_URL:-http://omi-radicale:5232/}
+      CALDAV_DEFAULT_USERNAME: ${CALDAV_USER:-omi}
+      CALDAV_DEFAULT_PASSWORD: ${CALDAV_PASSWORD:-}
       # Hourly daily-recap job, run in-process (no Cloud Scheduler here). The
       # recap is generated at each user's chosen local hour (default 22:00) —
       # set 0 to disable.
@@ -276,6 +289,53 @@ services:
       options: { max-size: "20m", max-file: "3" }
 
   # SearXNG — optional local metasearch engine
+  # CalDAV server for the stack's tasks and calendar (Radicale). Always on:
+  # the backend syncs with it by default (CALDAV_DEFAULT_URL above) and
+  # phones reach it on the LAN. Set CALDAV_PASSWORD in .env; with it empty the
+  # server refuses to start rather than serve an unauthenticated calendar.
+  omi-radicale:
+    image: tomsquest/docker-radicale:3.5.4.0
+    container_name: omi-radicale
+    restart: unless-stopped
+    init: true
+    read_only: true
+    ports:
+      - "${BIND_IP:-0.0.0.0}:${CALDAV_PORT:-5232}:5232"
+    environment:
+      CALDAV_USER: ${CALDAV_USER:-omi}
+      CALDAV_PASSWORD: ${CALDAV_PASSWORD:-}
+    entrypoint: ["/bin/sh", "-c"]
+    # One user, plain htpasswd written from the env at start; storage on the
+    # named volume so a `compose down` keeps the calendars.
+    command:
+      - |
+        set -e
+        if [ -z "$$CALDAV_PASSWORD" ]; then
+          echo "omi-radicale: set CALDAV_PASSWORD in .env (tasks and calendar sync stays off until then)" >&2
+          exit 1
+        fi
+        printf '%s:%s\n' "$$CALDAV_USER" "$$CALDAV_PASSWORD" > /tmp/users
+        cat > /tmp/config <<'CONF'
+        [server]
+        hosts = 0.0.0.0:5232
+        [auth]
+        type = htpasswd
+        htpasswd_filename = /tmp/users
+        htpasswd_encryption = plain
+        [storage]
+        filesystem_folder = /data/collections
+        [rights]
+        type = owner_only
+        CONF
+        exec radicale --config /tmp/config
+    volumes:
+      - radicale-data:/data
+    tmpfs:
+      - /tmp
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
   searxng:
     image: searxng/searxng:latest
     container_name: omi-searxng
@@ -382,4 +442,5 @@ services:
 
 volumes:
   omi-data:
+  radicale-data:
   searxng-data:

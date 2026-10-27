@@ -36,6 +36,7 @@ from routers import (
     chat_model_shortcuts,
     chat_receipts,
     dashboard,
+    caldav,
     day_reviews,
     device_calendar,
     dream_cohort,
@@ -260,6 +261,7 @@ ROUTER_MOUNTS: tuple[Mount, ...] = (
     Mount(wrapped),
     Mount(folders),
     Mount(day_reviews),  # omi-local
+    Mount(caldav),  # omi-local
     Mount(search),
     Mount(knowledge_graph),
     Mount(goals),
