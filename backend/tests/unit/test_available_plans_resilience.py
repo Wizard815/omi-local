@@ -5,7 +5,7 @@ with mocked Stripe, so a regression in the per-price try/except blocks
 would be caught.
 """
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
 import pytest
 import stripe
@@ -334,3 +334,16 @@ def test_all_prices_fail_returns_500(ctx):
     response = ctx["client"].get("/v1/payments/available-plans")
 
     assert response.status_code == 500
+
+
+def test_self_hosted_catalog_is_empty_without_touching_stripe(ctx, monkeypatch):
+    """A self-hosted backend has no Stripe account: the catalog answers empty
+    instead of failing per price. Keyed on OMI_SELF_HOSTED, not on the Stripe
+    key being unset, so hosted tests with a patched client still see plans."""
+    monkeypatch.setenv('OMI_SELF_HOSTED', '1')
+    retrieve = Mock(side_effect=AssertionError('Stripe must not be called when self-hosted'))
+    monkeypatch.setattr(stripe.Price, 'retrieve', retrieve)
+    response = ctx['client'].get('/v1/payments/available-plans')
+    assert response.status_code == 200, response.text
+    assert response.json()['plans'] == []
+    retrieve.assert_not_called()
