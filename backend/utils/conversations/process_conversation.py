@@ -106,6 +106,7 @@ from utils.conversations.reprocess_contract import (
 )
 from config.jev_decisions import relevance_arm, relevance_experiment_active
 from config import conversation_hold
+import database.day_bundle_users as day_bundle_users_db
 from utils.conversations.relevance_io import (
     adjacent_conversation,
     apply_relevance,
@@ -2248,6 +2249,7 @@ def _store_held_conversation(uid, conversation, trigger, user_kept):
     apply_relevance(result, payload, decision)
     payload[TERMINAL_NO_DERIVED_EFFECTS_FIELD] = True
     payload[conversation_hold.HOLD_RULE_FIELD] = decision.reason
+    day_bundle_users_db.mark_active(uid)
     if initial:
         persisted = lifecycle_service.create_completed_conversation(uid, payload, idempotent=True)
     else:

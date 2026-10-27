@@ -235,3 +235,94 @@ def test_pending_dates_skip_reviewed_days(world, monkeypatch):
     assert service.pending_dates('u1', days=3) == {'today': '2026-10-11', 'pending_dates': [DAY]}
     service.finalize('u1', DAY, [])
     assert service.pending_dates('u1', days=3)['pending_dates'] == []
+
+
+# --- bundle, sections, favorite-out, auto tags ----------------------------------------------
+
+
+@pytest.fixture
+def bundled(world, monkeypatch):
+    convs, reviews, llm, submitted = world
+    tagged = {}
+
+    def set_tags(uid, cid, tags):
+        tagged[cid] = list(tags)
+        convs[cid]['tags'] = list(tags)
+
+    monkeypatch.setattr(service.conversations_db, 'set_conversation_tags', set_tags)
+    monkeypatch.setattr(service.day_bundle_users_db, 'mark_active', lambda uid: None)
+    llm.reply = (
+        'TITLE: Coffee and calls\n\n'
+        'SECTION c1+c2: Morning coffee\nYou talked shop over coffee.\nTAGS: coffee, work\n\n'
+        'SECTION c3: Lunch\nYou had lunch.\nTAGS: lunch\n\n'
+        'SECTION c4+c5: Afternoon\nHallway noise, then mom called.\nTAGS: family\n'
+    )
+    return convs, reviews, llm, submitted, tagged
+
+
+def test_bundle_keeps_starred_and_sections_the_rest_with_tags(bundled):
+    convs, reviews, llm, submitted, tagged = bundled
+    review = service.bundle('u1', DAY)
+    assert review['kept_conversation_ids'] == ['budget']
+    assert review['rolled_up_conversation_ids'] == ['held-a', 'held-b', 'lunch', 'held-c', 'call']
+    assert [s['conversation_ids'] for s in review['sections']] == [['held-a', 'held-b'], ['lunch'], ['held-c', 'call']]
+    assert [s['title'] for s in review['sections']] == ['Morning coffee', 'Lunch', 'Afternoon']
+    assert review['tags'] == ['coffee', 'family', 'lunch', 'work']
+    assert review['final_text'] == 'You talked shop over coffee.\n\nYou had lunch.\n\nHallway noise, then mom called.'
+    # the material labelled every rolled conversation in day order
+    assert '[c1] 09:00' in llm.prompts[0] and '[c5] 19:00' in llm.prompts[0] and 'Budget' not in llm.prompts[0]
+    assert tagged == {
+        'held-a': ['coffee', 'work'],
+        'held-b': ['coffee', 'work'],
+        'lunch': ['lunch'],
+        'held-c': ['family'],
+        'call': ['family'],
+    }
+    assert all(convs[c]['discarded'] for c in review['rolled_up_conversation_ids'])
+    assert not convs['budget']['discarded'] and convs['budget']['starred']
+
+
+def test_bundle_refuses_a_future_day_and_a_reviewed_day(bundled):
+    with pytest.raises(service.DayReviewError) as e:
+        service.bundle('u1', '2099-01-01')
+    assert e.value.status_code == 422
+    service.bundle('u1', DAY)
+    with pytest.raises(service.DayReviewError) as e:
+        service.bundle('u1', DAY)
+    assert e.value.status_code == 409
+
+
+def test_favorite_a_section_pulls_its_conversations_back_out_and_unfavorite_folds_them_in(bundled):
+    convs, reviews, llm, submitted, tagged = bundled
+    service.bundle('u1', DAY)
+    submitted.clear()
+    review = service.favorite_section('u1', DAY, 's1', True)
+    assert review['sections'][0]['favorited'] is True
+    assert review['kept_conversation_ids'] == ['budget', 'held-a', 'held-b']
+    assert review['rolled_up_conversation_ids'] == ['lunch', 'held-c', 'call']
+    for cid in ('held-a', 'held-b'):
+        assert not convs[cid]['discarded'] and convs[cid]['starred']
+    # the held clips get the full pipeline, the review text is unchanged
+    assert submitted == [('_enrich_held', 'u1', 'held-a'), ('_enrich_held', 'u1', 'held-b')]
+    assert review['final_text'].startswith('You talked shop over coffee.')
+    assert service.favorite_section('u1', DAY, 's1', True)['sections'][0]['favorited'] is True  # idempotent
+
+    review = service.favorite_section('u1', DAY, 's1', False)
+    assert review['sections'][0]['favorited'] is False
+    assert review['kept_conversation_ids'] == ['budget']
+    assert review['rolled_up_conversation_ids'] == ['lunch', 'held-c', 'call', 'held-a', 'held-b']
+    assert convs['held-a']['discarded'] and not convs['held-a']['starred']
+    with pytest.raises(service.DayReviewError) as e:
+        service.favorite_section('u1', DAY, 'nope', True)
+    assert e.value.status_code == 404
+
+
+def test_regenerate_keeps_a_favorited_section_favorited_and_retags(bundled):
+    convs, reviews, llm, submitted, tagged = bundled
+    service.bundle('u1', DAY)
+    service.favorite_section('u1', DAY, 's2', True)
+    llm.reply = 'TITLE: Again\n\nSECTION c1+c2+c3: Everything\nAll of it.\nTAGS: all\n\nSECTION c4+c5: Later\nLater.\n'
+    service.add_correction('u1', DAY, {'type': 'paragraph', 'text': 'Also: the dentist called.'})
+    review = service.regenerate('u1', DAY)
+    assert [s['favorited'] for s in review['sections']] == [True, False]
+    assert tagged['lunch'] == ['lunch', 'all'] and tagged['held-a'] == ['coffee', 'work', 'all']

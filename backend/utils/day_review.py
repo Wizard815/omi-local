@@ -23,9 +23,11 @@ replaces the text, so stale offsets are never used.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Iterable, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
+
+from utils.conversations.tags import normalize_tags
 
 REDACTED = '[redacted]'
 CORRECTION_TYPES = ('paragraph', 'highlight', 'redaction')
@@ -123,6 +125,19 @@ class MaterialItem:
     overview: str
     action_items: List[str]
     transcript: str
+    # Short reference the prompt and the model use to name this conversation
+    # ("c3"); sections come back keyed on it. Empty = unlabelled material.
+    ref: str = ''
+
+
+@dataclass
+class Section:
+    """One part of the day summary and the conversations it was written from."""
+
+    refs: List[str]
+    title: str
+    text: str = ''
+    tags: List[str] = field(default_factory=list)
 
 
 def _time_label(started: Optional[datetime], finished: Optional[datetime], tz: Any) -> str:
@@ -155,7 +170,8 @@ def render_material(
     )
     heads: List[str] = []
     for it in ordered:
-        lines = [f'### {_time_label(it.started_at, it.finished_at, tz)} — {it.title or "Untitled conversation"}']
+        label = f'[{it.ref}] ' if it.ref else ''
+        lines = [f'### {label}{_time_label(it.started_at, it.finished_at, tz)} — {it.title or "Untitled conversation"}']
         if it.overview:
             lines.append(it.overview.strip()[:_OVERVIEW_CAP])
         if it.action_items:
@@ -200,14 +216,21 @@ def build_prompt(
 
     sections = [
         f'You are writing the user\'s personal end-of-day summary for {date_label}.',
-        'Below are the conversations of that day that the user chose to fold into one summary '
-        '(their highlights were kept separately). Write it in second person ("you").',
+        'Below are the conversations of that day that were folded into one summary '
+        '(the ones the user starred were kept separately). Write it in second person ("you").',
         '',
         'Rules:',
-        '- Write a long, chronological narrative: what happened, with whom, what was decided, what is left to do.',
-        '- Plain text only: no markdown, no bullet symbols, no headings. Separate paragraphs with one blank line.',
-        '- 4 to 12 paragraphs depending on how much happened. Do not invent details that are not in the material.',
-        '- Start with one line "TITLE: <a short title for the day>", then a blank line, then the summary.',
+        '- Write a chronological narrative: what happened, with whom, what was decided, what is left to do.',
+        '- Plain text only: no markdown, no bullet symbols. Separate paragraphs with one blank line.',
+        '- Do not invent details that are not in the material.',
+        '- Start with one line "TITLE: <a short title for the day>", then a blank line.',
+        '- Then write the day as sections. Each conversation is labelled [c1], [c2], ... in the material. '
+        'Begin each section with one line "SECTION <labels>: <short heading>" naming the conversation(s) it '
+        'covers, for example "SECTION c3: Lunch with Dana" or "SECTION c5+c6+c7: Quick errands". Small or '
+        'passing conversations may share one section; a substantial one gets its own. Keep the material\'s '
+        'order and cover every label exactly once.',
+        '- After each section\'s paragraphs add one line "TAGS: <2 to 5 short lowercase tags>" '
+        '(people, places, projects, topics) for that section.',
     ]
     if fact_lines:
         sections += [
@@ -251,3 +274,96 @@ def parse_summary_output(raw: str, *, redactions: Sequence[str] = ()) -> Tuple[s
         first = split_paragraphs(body)[0] if body else ''
         title = (first.split('. ')[0][:80]).strip() or 'Your day'
     return apply_redactions(title, redactions), apply_redactions(body, redactions)
+
+
+_SECTION_LINE = re.compile(r'^\s*SECTION\s+([A-Za-z0-9+,\s]+?)\s*:\s*(.*?)\s*$', re.IGNORECASE)
+_TAGS_LINE = re.compile(r'^\s*TAGS?\s*:\s*(.*?)\s*$', re.IGNORECASE)
+_REF = re.compile(r'[A-Za-z]\d+')
+
+
+def _clean_body(text: str) -> str:
+    text = text.replace('**', '').replace('__', '')
+    text = _MARKDOWN_NOISE.sub('', text)
+    return join_paragraphs(split_paragraphs(text))
+
+
+def parse_sections(raw: str, refs: Sequence[str], *, redactions: Sequence[str] = ()) -> Tuple[str, str, List[Section]]:
+    """(title, body, sections) from the model's sectioned answer.
+
+    ``refs`` are the labels the material carried, in order. Labels the model
+    never mentioned are appended to the last section (or to one fallback
+    section when it ignored the format entirely), so every rolled-up
+    conversation belongs to exactly one section and can be favorited out.
+    ``body`` is the sections' text joined by blank lines: that is what
+    corrections anchor on, so headings and tag lines never appear in it.
+    """
+    text = (raw or '').strip()
+    text = re.sub(r'^```[a-zA-Z]*\n?|\n?```$', '', text).strip()
+    title = ''
+    match = re.match(r'^\s*\**TITLE:\**\s*(.+?)\s*(?:\n|$)', text, flags=re.IGNORECASE)
+    if match:
+        title = match.group(1).strip().strip('"').replace('**', '')
+        text = text[match.end() :].strip()
+
+    sections: List[Section] = []
+    current: Optional[Section] = None
+    buffer: List[str] = []
+    seen: set[str] = set()
+
+    def close() -> None:
+        nonlocal current, buffer
+        if current is not None:
+            current.text = _clean_body('\n'.join(buffer))
+            sections.append(current)
+        current, buffer = None, []
+
+    for line in text.split('\n'):
+        section_match = _SECTION_LINE.match(line.replace('**', '').lstrip('# '))
+        if section_match:
+            close()
+            labels = [r.lower() for r in _REF.findall(section_match.group(1))]
+            labels = [r for r in labels if r in refs and r not in seen]
+            seen.update(labels)
+            current = Section(refs=labels, title=section_match.group(2).strip().strip('"'))
+            continue
+        tags_match = _TAGS_LINE.match(line)
+        if tags_match and current is not None:
+            current.tags = normalize_tags(t for t in re.split(r'[,;]', tags_match.group(1)) if t.strip())
+            continue
+        if current is None and line.strip():
+            # Text before any SECTION line: the model ignored the format.
+            current = Section(refs=[], title='')
+        buffer.append(line)
+    close()
+
+    sections = [sec for sec in sections if sec.text or sec.refs]
+    missing = [r for r in refs if r not in seen]
+    if not sections:
+        sections = [Section(refs=list(refs), title='', text=_clean_body(text))]
+    elif missing:
+        sections[-1].refs.extend(missing)
+    for sec in sections:
+        sec.title = apply_redactions(sec.title, redactions)
+        sec.text = apply_redactions(sec.text, redactions)
+    body = join_paragraphs(sec.text for sec in sections)
+    if not title:
+        first = split_paragraphs(body)[0] if body else ''
+        title = (first.split('. ')[0][:80]).strip() or 'Your day'
+    return apply_redactions(title, redactions), body, sections
+
+
+def sections_to_rows(sections: Sequence[Section], ref_to_id: Mapping[str, str]) -> List[Dict[str, Any]]:
+    """Stored shape of the sections: ids instead of prompt labels."""
+    rows: List[Dict[str, Any]] = []
+    for index, sec in enumerate(sections, start=1):
+        rows.append(
+            {
+                'id': f's{index}',
+                'conversation_ids': [ref_to_id[r] for r in sec.refs if r in ref_to_id],
+                'title': sec.title,
+                'text': sec.text,
+                'tags': list(sec.tags),
+                'favorited': False,
+            }
+        )
+    return rows

@@ -9,6 +9,13 @@ the hold kept raw, config/conversation_hold.py), merge each group into one new
 conversation, and discard the dropped and rolled-up ones (tagged
 ``day_review_date``). ``reopen`` restores the dropped and rolled-up ones; a
 merge deleted its sources and stays.
+
+The summary is written in sections, each naming the conversations it came
+from (utils/day_review.parse_sections). ``bundle`` is the hands-off form of
+finalize (starred clips stay, everything else is rolled up; the scheduler in
+utils/day_bundle_scheduler.py runs it), and ``favorite_section`` pulls a
+section's conversations back out of the bundle as starred conversations.
+The model's per-section tags land on those conversations (utils/conversations/tags.py).
 """
 
 from __future__ import annotations
@@ -23,6 +30,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 import pytz
 
 import database.conversations as conversations_db
+import database.day_bundle_users as day_bundle_users_db
 import database.day_reviews as day_reviews_db
 import database.notifications as notification_db
 from config import conversation_hold
@@ -31,14 +39,16 @@ from utils.conversations import lifecycle
 from utils.conversations.factory import deserialize_conversation
 from utils.conversations.processing_trigger import ProcessingTrigger
 from utils.executors import postprocess_executor
+from utils.conversations.tags import normalize_tags
 from utils.day_review import (
     DEFAULT_MAX_INPUT_CHARS,
     MaterialItem,
     build_prompt,
     compose_final_text,
-    parse_summary_output,
+    parse_sections,
     redaction_quotes,
     render_material,
+    sections_to_rows,
 )
 from utils.llm.clients import get_llm
 from utils.llm.usage_tracker import Features, track_usage
@@ -77,11 +87,14 @@ def parse_date(value: str) -> date_cls:
         raise DayReviewError(422, 'Invalid date format. Use YYYY-MM-DD')
 
 
-def _tz(tz_name: Optional[str]):
+def timezone_for(tz_name: Optional[str]):
     try:
         return pytz.timezone(tz_name) if tz_name else pytz.utc
     except pytz.UnknownTimeZoneError:
         return pytz.utc
+
+
+_tz = timezone_for
 
 
 def local_today(tz_name: Optional[str]) -> date_cls:
@@ -168,9 +181,10 @@ def _transcript(conversation: Conversation) -> str:
         )
 
 
-def _material_item(conversation: Conversation) -> MaterialItem:
+def _material_item(conversation: Conversation, ref: str = '') -> MaterialItem:
     structured = conversation.structured
     return MaterialItem(
+        ref=ref,
         started_at=conversation.started_at or conversation.created_at,
         finished_at=conversation.finished_at,
         title=str(getattr(structured, 'title', '') or ''),
@@ -189,10 +203,15 @@ def generate_summary(
     conversations: Sequence[Conversation],
     corrections: Sequence[Dict[str, Any]],
     previous_summary: Optional[str] = None,
-) -> Tuple[str, str]:
+) -> Tuple[str, str, List[Dict[str, Any]]]:
+    """(title, body, section rows) for the rolled-up conversations, in day order."""
     quotes = redaction_quotes(corrections)
+    key = lambda c: (c.started_at or c.created_at) or datetime.min.replace(tzinfo=timezone.utc)  # noqa: E731
+    ordered = sorted(conversations, key=key)
+    refs = [f'c{i}' for i in range(1, len(ordered) + 1)]
+    ref_to_id = dict(zip(refs, (c.id for c in ordered)))
     material = render_material(
-        [_material_item(c) for c in conversations],
+        [_material_item(c, ref) for c, ref in zip(ordered, refs)],
         redactions=quotes,
         max_chars=_max_input_chars(),
         tz=_tz(tz_name),
@@ -211,10 +230,10 @@ def generate_summary(
     content = getattr(response, 'content', response)
     if isinstance(content, list):
         content = ''.join(str(part.get('text', '')) if isinstance(part, dict) else str(part) for part in content)
-    title, body = parse_summary_output(str(content or ''), redactions=quotes)
+    title, body, sections = parse_sections(str(content or ''), refs, redactions=quotes)
     if not body:
         raise DayReviewError(502, 'The model returned an empty day summary')
-    return title, body
+    return title, body, sections_to_rows(sections, ref_to_id)
 
 
 def _snippet(conversation: Conversation) -> str:
@@ -229,12 +248,55 @@ def _word_count(conversation: Conversation) -> int:
 def present(review: Dict[str, Any]) -> Dict[str, Any]:
     """Stored review + the derived reader-facing text."""
     corrections = list(review.get('corrections') or [])
-    return {**review, 'final_text': compose_final_text(review.get('summary_text') or '', corrections)}
+    quotes = redaction_quotes(corrections)
+    sections = []
+    for row in review.get('sections') or []:
+        sections.append(
+            {
+                **row,
+                'title': _apply_quotes(str(row.get('title') or ''), quotes),
+                'text': _apply_quotes(str(row.get('text') or ''), quotes),
+            }
+        )
+    return {
+        **review,
+        'sections': sections,
+        'tags': sorted({t for row in sections for t in (row.get('tags') or [])}),
+        'final_text': compose_final_text(review.get('summary_text') or '', corrections),
+    }
+
+
+def _apply_quotes(text: str, quotes: Sequence[str]) -> str:
+    from utils.day_review import apply_redactions
+
+    return apply_redactions(text, quotes)
+
+
+def _apply_section_tags(uid: str, conversations: Sequence[Conversation], sections: Sequence[Dict[str, Any]]) -> None:
+    """The model's section tags land on the conversations the section came from, on top of the user's own."""
+    by_id = {c.id: c for c in conversations}
+    for row in sections:
+        tags = list(row.get('tags') or [])
+        if not tags:
+            continue
+        for cid in row.get('conversation_ids') or []:
+            conversation = by_id.get(cid)
+            if conversation is None:
+                continue
+            merged = normalize_tags([*(getattr(conversation, 'tags', None) or []), *tags])
+            if merged != list(getattr(conversation, 'tags', None) or []):
+                try:
+                    conversations_db.set_conversation_tags(uid, cid, merged)
+                except Exception as error:  # noqa: BLE001 — tags are a bonus; the bundle stands without them
+                    import logging
+
+                    logging.getLogger(__name__).warning('day review: tagging %s failed: %s', cid, type(error).__name__)
 
 
 def get_day(uid: str, date_str: str) -> Dict[str, Any]:
     day = parse_date(date_str)
     tz_name = notification_db.get_user_time_zone(uid)
+    day_bundle_users_db.mark_active(uid)
     loaded = load_day(uid, day, tz_name)
     review = day_reviews_db.get_day_review(uid, date_str)
 
@@ -249,6 +311,7 @@ def get_day(uid: str, date_str: str) -> Dict[str, Any]:
             'started_at': conversation.started_at,
             'finished_at': conversation.finished_at,
             'starred': bool(getattr(conversation, 'starred', False)),
+            'tags': list(getattr(conversation, 'tags', None) or []),
             'rolled_up': rolled_up,
             'dropped': dropped,
             'held': held,
@@ -339,15 +402,16 @@ def finalize(
 
     # Generate before mutating anything: a model failure leaves the day untouched.
     if rolled:
-        title, body = generate_summary(uid, day, tz_name, rolled, [])
+        title, body, sections = generate_summary(uid, day, tz_name, rolled, [])
     else:
-        title, body = 'Everything kept', ''
+        title, body, sections = 'Everything kept', '', []
 
     now = datetime.now(timezone.utc)
     review = {
         'status': 'finalized',
         'title': title,
         'summary_text': body,
+        'sections': sections,
         'corrections': [],
         'kept_conversation_ids': [c.id for c in keep],
         'rolled_up_conversation_ids': [c.id for c in rolled],
@@ -372,7 +436,57 @@ def finalize(
     for conversation in [*dropped, *rolled]:
         conversations_db.update_conversation(uid, conversation.id, {DAY_REVIEW_DATE_FIELD: date_str})
         lifecycle.discard(uid, conversation.id)
+    _apply_section_tags(uid, rolled, sections)
     return present({**review, 'date': date_str})
+
+
+def bundle(uid: str, date_str: str) -> Dict[str, Any]:
+    """The hands-off review: starred conversations stay, every other completed
+    one is rolled into the sectioned day summary. Nothing is dropped or merged;
+    favorite a section afterwards to pull its conversations back out."""
+    day = parse_date(date_str)
+    tz_name = notification_db.get_user_time_zone(uid)
+    loaded = load_day(uid, day, tz_name)
+    keep = [c.id for c in loaded.visible if getattr(c, 'starred', False)]
+    return finalize(uid, date_str, keep)
+
+
+def favorite_section(uid: str, date_str: str, section_id: str, favorited: bool) -> Dict[str, Any]:
+    """Pull a section's conversations out of the bundle as starred conversations
+    (or fold them back in). The section text stays in the summary either way."""
+    review = _require_review(uid, date_str)
+    sections = list(review.get('sections') or [])
+    section = next((s for s in sections if s.get('id') == section_id), None)
+    if section is None:
+        raise DayReviewError(404, 'Section not found')
+    if bool(section.get('favorited')) == favorited:
+        return present(review)
+    ids = [cid for cid in (section.get('conversation_ids') or []) if conversations_db.get_conversation(uid, cid)]
+    kept = [cid for cid in (review.get('kept_conversation_ids') or []) if cid not in ids]
+    rolled = [cid for cid in (review.get('rolled_up_conversation_ids') or []) if cid not in ids]
+    if favorited:
+        for cid in ids:
+            lifecycle.restore_discarded(uid, cid)
+            conversations_db.set_conversation_starred(uid, cid, True)
+            _submit(_enrich_held, uid, cid)
+        kept.extend(ids)
+    else:
+        for cid in ids:
+            conversations_db.set_conversation_starred(uid, cid, False)
+            conversations_db.update_conversation(uid, cid, {DAY_REVIEW_DATE_FIELD: date_str})
+            lifecycle.discard(uid, cid)
+        rolled.extend(ids)
+    section['favorited'] = favorited
+    review.update(
+        {
+            'sections': sections,
+            'kept_conversation_ids': kept,
+            'rolled_up_conversation_ids': rolled,
+            'updated_at': datetime.now(timezone.utc),
+        }
+    )
+    day_reviews_db.set_day_review(uid, date_str, review)
+    return present(review)
 
 
 def _require_review(uid: str, date_str: str) -> Dict[str, Any]:
@@ -425,7 +539,12 @@ def delete_correction(uid: str, date_str: str, correction_id: str) -> Dict[str, 
 def regenerate(uid: str, date_str: str) -> Dict[str, Any]:
     """Rewrite the summary with every correction as ground truth."""
     review = _require_review(uid, date_str)
+    # The summary still covers a favorited section's conversations: favoriting
+    # pulls them out of the bundle, it does not remove them from the day.
     rolled_ids = list(review.get('rolled_up_conversation_ids') or [])
+    for section in review.get('sections') or []:
+        if section.get('favorited'):
+            rolled_ids.extend(cid for cid in (section.get('conversation_ids') or []) if cid not in rolled_ids)
     if not rolled_ids:
         raise DayReviewError(400, 'Nothing was rolled up for this day, so there is no summary to rewrite')
     raw = conversations_db.get_conversations_by_id(uid, rolled_ids, include_discarded=True)
@@ -433,7 +552,7 @@ def regenerate(uid: str, date_str: str) -> Dict[str, Any]:
     if not conversations:
         raise DayReviewError(410, 'The rolled-up conversations no longer exist')
     corrections = list(review.get('corrections') or [])
-    title, body = generate_summary(
+    title, body, sections = generate_summary(
         uid,
         parse_date(date_str),
         review.get('time_zone') or notification_db.get_user_time_zone(uid),
@@ -441,6 +560,12 @@ def regenerate(uid: str, date_str: str) -> Dict[str, Any]:
         corrections,
         previous_summary=review.get('summary_text') or None,
     )
+    # A favorited section stays favorited when its conversations land in a new section.
+    favorited_ids = {
+        cid for s in (review.get('sections') or []) if s.get('favorited') for cid in (s.get('conversation_ids') or [])
+    }
+    for row in sections:
+        row['favorited'] = bool(favorited_ids) and any(cid in favorited_ids for cid in row['conversation_ids'])
     now = datetime.now(timezone.utc)
     for c in corrections:
         # The model folded paragraphs/highlights into the new text; redactions
@@ -451,6 +576,7 @@ def regenerate(uid: str, date_str: str) -> Dict[str, Any]:
         {
             'title': title,
             'summary_text': body,
+            'sections': sections,
             'corrections': corrections,
             'updated_at': now,
             'generated_at': now,
@@ -458,6 +584,7 @@ def regenerate(uid: str, date_str: str) -> Dict[str, Any]:
         }
     )
     day_reviews_db.set_day_review(uid, date_str, review)
+    _apply_section_tags(uid, conversations, sections)
     return present(review)
 
 

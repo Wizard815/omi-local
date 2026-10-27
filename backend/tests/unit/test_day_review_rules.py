@@ -84,3 +84,51 @@ def test_output_parsing_strips_markdown_and_enforces_redactions():
     assert title == 'Busy Saturday'
     assert body == 'Morning\nCoffee at [redacted] with Sam.\n\nNoon budget talk.'
     assert dr.parse_summary_output('Just one paragraph. More.')[0] == 'Just one paragraph'
+
+
+# --- sectioned output ---------------------------------------------------------------------
+from utils.day_review import parse_sections, sections_to_rows  # noqa: E402
+
+
+def test_sections_are_parsed_with_their_labels_tags_and_a_plain_body():
+    raw = (
+        'TITLE: A busy Tuesday\n\n'
+        'SECTION c1: Coffee with Sam\nYou met Sam early.\n\nHe asked about the demo.\nTAGS: Sam, Coffee, demo\n\n'
+        '## SECTION c2+c3: Errands\nYou picked up the parcel and called the bank.\nTags: errands\n'
+    )
+    title, body, sections = parse_sections(raw, ['c1', 'c2', 'c3'])
+    assert title == 'A busy Tuesday'
+    assert [s.refs for s in sections] == [['c1'], ['c2', 'c3']]
+    assert [s.title for s in sections] == ['Coffee with Sam', 'Errands']
+    assert sections[0].tags == ['sam', 'coffee', 'demo'] and sections[1].tags == ['errands']
+    assert sections[0].text == 'You met Sam early.\n\nHe asked about the demo.'
+    assert body == sections[0].text + '\n\n' + sections[1].text
+    assert 'SECTION' not in body and 'TAGS' not in body
+    rows = sections_to_rows(sections, {'c1': 'a', 'c2': 'b', 'c3': 'c'})
+    assert rows[0] == {
+        'id': 's1',
+        'conversation_ids': ['a'],
+        'title': 'Coffee with Sam',
+        'text': sections[0].text,
+        'tags': ['sam', 'coffee', 'demo'],
+        'favorited': False,
+    }
+    assert rows[1]['conversation_ids'] == ['b', 'c']
+
+
+def test_labels_the_model_skipped_land_in_the_last_section_and_unknown_ones_are_ignored():
+    raw = 'TITLE: Day\n\nSECTION c1: One\nText one.\n\nSECTION c9: Ghost\nText two.\n'
+    _, _, sections = parse_sections(raw, ['c1', 'c2', 'c3'])
+    assert [s.refs for s in sections] == [['c1'], ['c2', 'c3']]
+
+
+def test_an_unsectioned_answer_becomes_one_section_covering_everything():
+    title, body, sections = parse_sections('You had a quiet day. Nothing much happened.', ['c1', 'c2'])
+    assert title == 'You had a quiet day'
+    assert len(sections) == 1 and sections[0].refs == ['c1', 'c2'] and sections[0].text == body
+
+
+def test_section_text_and_titles_are_redacted():
+    raw = 'TITLE: Day\n\nSECTION c1: Lunch with Sam\nSam paid.\nTAGS: sam\n'
+    title, body, sections = parse_sections(raw, ['c1'], redactions=['Sam'])
+    assert sections[0].title == 'Lunch with [redacted]' and body == '[redacted] paid.'
