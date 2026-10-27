@@ -62,12 +62,9 @@ def env_reads(source):
                         constants[target.id] = node.value.value
     for node in ast.walk(tree):
         key = None
-        if (
-            isinstance(node, ast.Call)
-            and name(node.func) in {'os.getenv', 'os.environ.get', 'os.environ.__getitem__'}
-            and node.args
-        ):
-            key = node.args[0]
+        if isinstance(node, ast.Call) and name(node.func) in {'os.getenv', 'os.environ.get', 'os.environ.__getitem__'}:
+            # getenv(key=...) and environ.get(key=...) read the same name as the positional form.
+            key = node.args[0] if node.args else next((k.value for k in node.keywords if k.arg == 'key'), None)
         elif isinstance(node, ast.Subscript) and isinstance(node.ctx, ast.Load) and name(node.value) == 'os.environ':
             key = node.slice
         if isinstance(key, ast.Constant):
@@ -91,7 +88,8 @@ RESOLUTION_EDGES = {
     'utils/batch_pipeline/live_upload.py': {'registered_record_response'},
     'utils/batch_pipeline/scheduler.py': {'enqueue_in_transaction'},
     'utils/conversations/transcription_shadow.py': {'_run_shadow', '_claim_shadow_owner'},
-    'utils/sync/reprocess.py': {'update', 'claim'},  # First-summary outbox CAS callbacks.
+    # First-summary outbox CAS callbacks (moved from utils/sync/reprocess.py by C2; reprocess.py is an alias).
+    'utils/enrichment/outbox.py': {'update', 'stamp_claim_policy'},
     'routers/sync.py': {'sync_local_files', 'sync_local_files_v2'},
     'routers/listen/policy.py': {'initialize_session_policy'},
 }

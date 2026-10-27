@@ -16,6 +16,9 @@ enum SettingsDestination {
   helpGroup,
   notifications,
   planAndUsage,
+
+  /// The trial paywall, from the Upgrade row shown to free readers who can still start a trial.
+  upgrade,
   offlineSync,
   device,
   integrations,

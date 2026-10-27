@@ -4418,6 +4418,10 @@ class AppLocalizationsEt extends AppLocalizations {
   String get continueText => 'Jätka';
 
   @override
+  String get checkoutExistingSubscription =>
+      'Sul on juba tellimus. Halda oma praegust tellimust uue alustamise asemel.';
+
+  @override
   String get resubscribeFirstToChangePlans => 'Paketi muutmiseks tellige esmalt uuesti.';
 
   @override
@@ -8589,6 +8593,9 @@ class AppLocalizationsEt extends AppLocalizations {
       'Transkribeerimine pole saadaval — salvestamine jätkub ja sinu heli salvestatakse.';
 
   @override
+  String get captureNoAudioFromPendant => 'Ripatsist ei tule heli';
+
+  @override
   String get capturing => 'Salvestamine';
 
   @override
@@ -11078,6 +11085,12 @@ class AppLocalizationsEt extends AppLocalizations {
       'Bluetooth-ühendus sinu Omiga on seiskunud, seega ei jõua heli rakendusse. Omi jätkab salvestamist seadmes ja sünkroonib, kui ühendus taastub. Uuesti proovimine ühendab lingi uuesti; kui see ikka ebaõnnestub, kontrolli seadet jaotises Seaded > Seade.';
 
   @override
+  String get captureConnecting => 'Ühendamine…';
+
+  @override
+  String get captureNoAudioDetail => 'Ripats on ühendatud, kuid ükski heli ei jõua teie telefonini';
+
+  @override
   String get captureIngressNeedsReconnect => 'Heli ei jõua rakendusse — ühenda Omi uuesti';
 
   @override
@@ -11106,13 +11119,6 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get captureStorageAlmostFull => 'Mälu on peaaegu täis';
-
-  @override
-  String get capturePendantDisconnectedDetail =>
-      'Ripats kaotas ühenduse selle telefoniga. Omi loob ühenduse ise uuesti, kui ripats on sisse lülitatud ja lähedal. Kõik varem salvestatu on alles.';
-
-  @override
-  String get capturePendantDisconnectedShort => 'Omi loob ühenduse ise uuesti';
 
   @override
   String participantsSummaryUncounted(String name) {
@@ -12242,12 +12248,6 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get playbackAudioNetworkFailed => 'Kontrollige ühendust';
-
-  @override
-  String get forYou => 'Sulle';
-
-  @override
-  String get stopThese => 'Peata need';
 
   @override
   String get dismiss => 'Peida';
@@ -13390,9 +13390,6 @@ class AppLocalizationsEt extends AppLocalizations {
   }
 
   @override
-  String get paywallTrialSecondary => 'Jätka tasuta plaaniga';
-
-  @override
   String get paywallTrialCancelNote => 'Tühista igal ajal. Ei mingeid tasusid ega trahve.';
 
   @override
@@ -14412,6 +14409,25 @@ class AppLocalizationsEt extends AppLocalizations {
   }
 
   @override
+  String get episodeNotesUnavailable => 'Jooksvad märkmed ei uuene. Vaata praegu transkriptsiooni.';
+
+  @override
+  String episodeCaptureFor(String duration) {
+    return 'Salvestamine · $duration';
+  }
+
+  @override
+  String get episodePrevious => 'Eelmine episood';
+
+  @override
+  String captureChunksPending(int pending) {
+    return 'Ootel lõigud: $pending';
+  }
+
+  @override
+  String get episodeOpenPrevious => 'Ava eelmine episood';
+
+  @override
   String get episodeNotesSoon => 'Märkmed ilmuvad pärast esimesi vestlusminuteid.';
 
   @override
@@ -14830,4 +14846,104 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get heldForDayReview => 'Ootab teie päeva ülevaadet';
+
+  @override
+  String homeBackgroundLine(String items) {
+    return 'Lisaks: $items';
+  }
+
+  @override
+  String get deviceOnboardingPressButtonTitle => 'Vajuta Omi nuppu';
+
+  @override
+  String get deviceOnboardingPressButtonSubtitle => 'Üks lühike vajutus. Siis küsi mida iganes.';
+
+  @override
+  String get deviceOnboardingAskNowTitle => 'Esita oma küsimus';
+
+  @override
+  String get deviceOnboardingAskNowSubtitle => 'Ütle see valjusti. Omi kuulab.';
+
+  @override
+  String get deviceOnboardingPressAgainHint => 'Valmis? Vajuta nuppu uuesti, et saata.';
+
+  @override
+  String trialUpsellTitle(int days) {
+    return 'Said $days päeva tasuta';
+  }
+
+  @override
+  String trialUpsellBody(int days) {
+    return '$days päeva Omi Pro meie kulul. Tuletame enne tasu võtmist meelde. Tühista igal ajal.';
+  }
+
+  @override
+  String trialUpsellClaim(int days) {
+    return 'Võta $days-päevane proov';
+  }
+
+  @override
+  String settingsUpgradeTrialSubtitle(int days) {
+    return 'Alusta $days-päevast tasuta proovi';
+  }
+
+  @override
+  String get pairingPowerOnTitle => 'Lülita Omi sisse';
+
+  @override
+  String get pairingPowerOnSubtitle => 'Vajuta korra nuppu ja hoia telefoni lähedal.';
+
+  @override
+  String get walkthroughBackgroundRecordingNote => 'Ongi kõik. Omi salvestab su vestlusi taustal edasi.';
+
+  @override
+  String get noThanks => 'Ei, aitäh';
+
+  @override
+  String get recapInTheBackground => 'Taustal';
+
+  @override
+  String retentionOfferAccept(int percent) {
+    return 'Jää $percent% allahindlusega';
+  }
+
+  @override
+  String retentionOfferBody(String price, int months) {
+    return 'Jää ja maksa $price kuus järgmised $months kuud.';
+  }
+
+  @override
+  String retentionOfferApplied(int percent, int months) {
+    return 'Valmis. $percent% allahindlust järgmised $months kuud.';
+  }
+
+  @override
+  String get othersSpeakerLabel => 'Teised';
+
+  @override
+  String get livePreviewLabel => 'Live preview';
+
+  @override
+  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
+
+  @override
+  String get livePreviewListening => 'Listening… words appear here as you speak.';
+
+  @override
+  String get livePreviewStarting => 'Starting live preview…';
+
+  @override
+  String get livePreviewTranscribingTitle => 'Transcribing…';
+
+  @override
+  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
+
+  @override
+  String get openLoopAnswerDone => 'Tehtud';
+
+  @override
+  String get openLoopAnswerRemind => 'Meenuta hiljem';
+
+  @override
+  String get openLoopAnswerDrop => 'Jäta ära';
 }

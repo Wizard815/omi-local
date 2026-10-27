@@ -4425,6 +4425,10 @@ class AppLocalizationsFi extends AppLocalizations {
   String get continueText => 'Jatka';
 
   @override
+  String get checkoutExistingSubscription =>
+      'Sinulla on jo tilaus. Hallitse nykyistä tilaustasi uuden aloittamisen sijaan.';
+
+  @override
   String get resubscribeFirstToChangePlans => 'Tilaa ensin uudelleen, jotta voit vaihtaa pakettia.';
 
   @override
@@ -8596,6 +8600,9 @@ class AppLocalizationsFi extends AppLocalizations {
       'Litterointi ei ole käytettävissä — tallennus jatkuu ja äänesi tallennetaan.';
 
   @override
+  String get captureNoAudioFromPendant => 'Riipuksesta ei kuulu ääntä';
+
+  @override
   String get capturing => 'Tallennetaan';
 
   @override
@@ -11088,6 +11095,12 @@ class AppLocalizationsFi extends AppLocalizations {
       'Omi-laitteeseen muodostettu Bluetooth-yhteys on pysähtynyt, joten ääni ei päädy sovellukseen. Omi jatkaa tallentamista laitteella ja synkronoi, kun yhteys palaa. Uudelleenyrittäminen yhdistää linkin uudelleen; jos se epäonnistuu jatkuvasti, tarkista laittesi kohdasta Asetukset > Laite.';
 
   @override
+  String get captureConnecting => 'Yhdistetään…';
+
+  @override
+  String get captureNoAudioDetail => 'Riipus on yhdistetty, mutta mikään ääni ei ala puhelimeesi';
+
+  @override
   String get captureIngressNeedsReconnect => 'Ääni ei tavoita sovellusta — yhdistä Omi uudelleen';
 
   @override
@@ -11116,13 +11129,6 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get captureStorageAlmostFull => 'Tallennustila melkein täynnä';
-
-  @override
-  String get capturePendantDisconnectedDetail =>
-      'Riipus menetti yhteyden tähän puhelimeen. Omi yhdistää itsestään uudelleen, kun riipus on päällä ja lähellä. Kaikki tätä ennen tallennettu on tallessa.';
-
-  @override
-  String get capturePendantDisconnectedShort => 'Omi yhdistää itsestään uudelleen';
 
   @override
   String participantsSummaryUncounted(String name) {
@@ -12252,12 +12258,6 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get playbackAudioNetworkFailed => 'Tarkista yhteys';
-
-  @override
-  String get forYou => 'Sinulle';
-
-  @override
-  String get stopThese => 'Lopeta nämä';
 
   @override
   String get dismiss => 'Hylkää';
@@ -13401,9 +13401,6 @@ class AppLocalizationsFi extends AppLocalizations {
   }
 
   @override
-  String get paywallTrialSecondary => 'Jatka ilmaisella suunnitelmalla';
-
-  @override
   String get paywallTrialCancelNote => 'Peruuta milloin tahansa. Ei maksuja, ei sakkoja.';
 
   @override
@@ -14424,6 +14421,25 @@ class AppLocalizationsFi extends AppLocalizations {
   }
 
   @override
+  String get episodeNotesUnavailable => 'Jatkuvat muistiinpanot eivät päivity. Katso toistaiseksi litterointi.';
+
+  @override
+  String episodeCaptureFor(String duration) {
+    return 'Tallennetaan · $duration';
+  }
+
+  @override
+  String get episodePrevious => 'Edellinen jakso';
+
+  @override
+  String captureChunksPending(int pending) {
+    return 'Odottavat osat: $pending';
+  }
+
+  @override
+  String get episodeOpenPrevious => 'Avaa edellinen jakso';
+
+  @override
   String get episodeNotesSoon => 'Muistiinpanot näkyvät ensimmäisten puheminuuttien jälkeen.';
 
   @override
@@ -14842,4 +14858,104 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get heldForDayReview => 'Odottaa päiväkatsaustasi';
+
+  @override
+  String homeBackgroundLine(String items) {
+    return 'Lisäksi: $items';
+  }
+
+  @override
+  String get deviceOnboardingPressButtonTitle => 'Paina Omin painiketta';
+
+  @override
+  String get deviceOnboardingPressButtonSubtitle => 'Yksi lyhyt painallus. Kysy sitten mitä tahansa.';
+
+  @override
+  String get deviceOnboardingAskNowTitle => 'Esitä kysymyksesi';
+
+  @override
+  String get deviceOnboardingAskNowSubtitle => 'Sano se ääneen. Omi kuuntelee.';
+
+  @override
+  String get deviceOnboardingPressAgainHint => 'Valmis? Paina painiketta uudelleen lähettääksesi.';
+
+  @override
+  String trialUpsellTitle(int days) {
+    return 'Sait $days päivää ilmaiseksi';
+  }
+
+  @override
+  String trialUpsellBody(int days) {
+    return '$days päivää Omi Prota meidän piikkiimme. Muistutamme ennen veloitusta. Peru milloin vain.';
+  }
+
+  @override
+  String trialUpsellClaim(int days) {
+    return 'Ota $days päivän kokeilu';
+  }
+
+  @override
+  String settingsUpgradeTrialSubtitle(int days) {
+    return 'Aloita $days päivän ilmainen kokeilu';
+  }
+
+  @override
+  String get pairingPowerOnTitle => 'Käynnistä Omi';
+
+  @override
+  String get pairingPowerOnSubtitle => 'Paina painiketta kerran ja pidä se lähellä puhelinta.';
+
+  @override
+  String get walkthroughBackgroundRecordingNote => 'Siinä kaikki. Omi jatkaa keskustelujesi tallentamista taustalla.';
+
+  @override
+  String get noThanks => 'Ei kiitos';
+
+  @override
+  String get recapInTheBackground => 'Taustalla';
+
+  @override
+  String retentionOfferAccept(int percent) {
+    return 'Jatka $percent % alennuksella';
+  }
+
+  @override
+  String retentionOfferBody(String price, int months) {
+    return 'Jatka ja maksa $price kuukaudessa seuraavat $months kuukautta.';
+  }
+
+  @override
+  String retentionOfferApplied(int percent, int months) {
+    return 'Valmis. $percent % alennus seuraavat $months kuukautta.';
+  }
+
+  @override
+  String get othersSpeakerLabel => 'Muut';
+
+  @override
+  String get livePreviewLabel => 'Live preview';
+
+  @override
+  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
+
+  @override
+  String get livePreviewListening => 'Listening… words appear here as you speak.';
+
+  @override
+  String get livePreviewStarting => 'Starting live preview…';
+
+  @override
+  String get livePreviewTranscribingTitle => 'Transcribing…';
+
+  @override
+  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
+
+  @override
+  String get openLoopAnswerDone => 'Valmis';
+
+  @override
+  String get openLoopAnswerRemind => 'Muistuta myöhemmin';
+
+  @override
+  String get openLoopAnswerDrop => 'Ohita';
 }

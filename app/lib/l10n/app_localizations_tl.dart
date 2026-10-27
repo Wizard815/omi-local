@@ -4460,6 +4460,10 @@ class AppLocalizationsTl extends AppLocalizations {
   String get continueText => 'Magpatuloy';
 
   @override
+  String get checkoutExistingSubscription =>
+      'May subscription ka na. Pamahalaan ang kasalukuyan mong subscription sa halip na magsimula ng bago.';
+
+  @override
   String get resubscribeFirstToChangePlans => 'Mag-subscribe muna ulit para magpalit ng plan.';
 
   @override
@@ -8670,6 +8674,9 @@ class AppLocalizationsTl extends AppLocalizations {
       'Hindi available ang transcription — tuloy ang pagre-record at naka-save ang iyong audio.';
 
   @override
+  String get captureNoAudioFromPendant => 'Walang audio mula sa pendant';
+
+  @override
   String get capturing => 'Kumukuha';
 
   @override
@@ -11180,6 +11187,12 @@ class AppLocalizationsTl extends AppLocalizations {
       'Nag-stall ang Bluetooth link sa iyong Omi, kaya hindi umaabot sa app ang audio. Patuloy na nagre-record ang Omi sa device at mag-si-sync kapag nakabawi ang link. Ang pag-subok muli ay muling nagkokonekta ng link; kung patuloy itong nabibigo, tingnan ang iyong device sa Mga Setting > Device.';
 
   @override
+  String get captureConnecting => 'Kumokonekta…';
+
+  @override
+  String get captureNoAudioDetail => 'Nakakonekta ang pendant, ngunit walang audio na umaabot sa iyong telepono';
+
+  @override
   String get captureIngressNeedsReconnect => 'Hindi naabot ng audio ang app — i-reconnect ang iyong Omi';
 
   @override
@@ -11208,13 +11221,6 @@ class AppLocalizationsTl extends AppLocalizations {
 
   @override
   String get captureStorageAlmostFull => 'Halos puno na ang storage';
-
-  @override
-  String get capturePendantDisconnectedDetail =>
-      'Nawalan ng koneksyon ang iyong pendant sa teleponong ito. Kusang kokonekta muli ang Omi kapag naka-on at malapit ang pendant. Ligtas ang lahat ng na-record bago nito.';
-
-  @override
-  String get capturePendantDisconnectedShort => 'Kusang kokonekta muli ang Omi';
 
   @override
   String participantsSummaryUncounted(String name) {
@@ -12349,12 +12355,6 @@ class AppLocalizationsTl extends AppLocalizations {
 
   @override
   String get playbackAudioNetworkFailed => 'Suriin ang Koneksyon';
-
-  @override
-  String get forYou => 'Para Sa Iyo';
-
-  @override
-  String get stopThese => 'Itigil Ang Mga Ito';
 
   @override
   String get dismiss => 'Isara';
@@ -13502,9 +13502,6 @@ class AppLocalizationsTl extends AppLocalizations {
   }
 
   @override
-  String get paywallTrialSecondary => 'Magpatuloy sa libreng plano';
-
-  @override
   String get paywallTrialCancelNote => 'Magkansela anumang oras. Walang bayad, walang multa.';
 
   @override
@@ -14533,6 +14530,25 @@ class AppLocalizationsTl extends AppLocalizations {
   }
 
   @override
+  String get episodeNotesUnavailable => 'Hindi nag-a-update ang mga live na tala. Tingnan muna ang transcript.';
+
+  @override
+  String episodeCaptureFor(String duration) {
+    return 'Nagre-record · $duration';
+  }
+
+  @override
+  String get episodePrevious => 'Nakaraang episode';
+
+  @override
+  String captureChunksPending(int pending) {
+    return 'Mga nakabinbing chunk: $pending';
+  }
+
+  @override
+  String get episodeOpenPrevious => 'Buksan ang Nakaraang Episode';
+
+  @override
   String get episodeNotesSoon => 'Lalabas ang mga tala pagkatapos ng unang ilang minuto ng usapan.';
 
   @override
@@ -14951,4 +14967,105 @@ class AppLocalizationsTl extends AppLocalizations {
 
   @override
   String get heldForDayReview => 'Naghihintay sa iyong review ng araw';
+
+  @override
+  String homeBackgroundLine(String items) {
+    return 'Gayundin: $items';
+  }
+
+  @override
+  String get deviceOnboardingPressButtonTitle => 'Pindutin ang button sa iyong Omi';
+
+  @override
+  String get deviceOnboardingPressButtonSubtitle => 'Isang maikling pindot. Pagkatapos, magtanong ng kahit ano.';
+
+  @override
+  String get deviceOnboardingAskNowTitle => 'Itanong ang iyong tanong';
+
+  @override
+  String get deviceOnboardingAskNowSubtitle => 'Sabihin nang malakas. Nakikinig si Omi.';
+
+  @override
+  String get deviceOnboardingPressAgainHint => 'Tapos na? Pindutin muli ang button para ipadala.';
+
+  @override
+  String trialUpsellTitle(int days) {
+    return 'Na-upgrade ka sa $days araw na libre';
+  }
+
+  @override
+  String trialUpsellBody(int days) {
+    return '$days araw ng Omi Pro, libre mula sa amin. Paalalahanan ka namin bago masingil. Kanselahin anumang oras.';
+  }
+
+  @override
+  String trialUpsellClaim(int days) {
+    return 'Kunin ang $days-araw na trial';
+  }
+
+  @override
+  String settingsUpgradeTrialSubtitle(int days) {
+    return 'Simulan ang $days-araw na libreng trial';
+  }
+
+  @override
+  String get pairingPowerOnTitle => 'I-on ang iyong Omi';
+
+  @override
+  String get pairingPowerOnSubtitle => 'Pindutin nang isang beses ang button at ilapit sa iyong phone.';
+
+  @override
+  String get walkthroughBackgroundRecordingNote =>
+      'Ayan na. Patuloy na irerekord ni Omi ang iyong mga usapan sa background.';
+
+  @override
+  String get noThanks => 'Hindi, salamat';
+
+  @override
+  String get recapInTheBackground => 'Sa background';
+
+  @override
+  String retentionOfferAccept(int percent) {
+    return 'Manatili nang may $percent% diskwento';
+  }
+
+  @override
+  String retentionOfferBody(String price, int months) {
+    return 'Manatili at magbayad ng $price kada buwan sa susunod na $months buwan.';
+  }
+
+  @override
+  String retentionOfferApplied(int percent, int months) {
+    return 'Tapos na. $percent% diskwento sa susunod na $months buwan.';
+  }
+
+  @override
+  String get othersSpeakerLabel => 'Iba pa';
+
+  @override
+  String get livePreviewLabel => 'Live preview';
+
+  @override
+  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
+
+  @override
+  String get livePreviewListening => 'Listening… words appear here as you speak.';
+
+  @override
+  String get livePreviewStarting => 'Starting live preview…';
+
+  @override
+  String get livePreviewTranscribingTitle => 'Transcribing…';
+
+  @override
+  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
+
+  @override
+  String get openLoopAnswerDone => 'Tapos';
+
+  @override
+  String get openLoopAnswerRemind => 'Ipaalala sa akin mamaya';
+
+  @override
+  String get openLoopAnswerDrop => 'Iwanan';
 }

@@ -167,6 +167,13 @@ PHOTO_PROFILES = (
         'day-review-pending', photo=True, date_field=['started_at'], start_date=[FROZEN_NOW], end_date=[FROZEN_LATER]
     ),
     _profile(
+        'open-loops-daily-pass',
+        photo=True,
+        date_field=['started_at'],
+        start_date=[FROZEN_NOW],
+        end_date=[FROZEN_LATER],
+    ),
+    _profile(
         'calendar-capture-gaps',
         photo=True,
         date_field=['started_at'],

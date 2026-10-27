@@ -9,25 +9,34 @@ import 'package:omi/providers/capture_provider.dart';
 import 'package:omi/backend/preferences.dart';
 import 'package:omi/l10n/app_localizations.dart';
 import 'package:omi/ui/ui.dart';
+import 'package:omi/utils/live_start_anchor.dart';
 import 'package:omi/utils/enums.dart';
 import 'package:omi/widgets/speaker_label.dart';
 
 /// Shared rules for how a live episode reads on Home, its page and the device page.
 abstract final class EpisodePresentation {
-  /// A running length in whole minutes once past a minute, so the label does not tick every second.
+  /// The shared localized live length keeps seconds as the episode grows.
   static String runningLength(Duration elapsed, AppLocalizations l10n) {
-    final seconds = elapsed.inSeconds < 60 ? elapsed.inSeconds : (elapsed.inSeconds ~/ 60) * 60;
-    return OmiDuration.compact(seconds, l10n);
+    return OmiDuration.live(elapsed.inSeconds, l10n);
   }
 
-  /// How long the live episode has run: from its first moment, else from the capture's first line.
-  static Duration elapsed(Episode? episode, CaptureProvider capture, DateTime now) {
-    if (episode != null) {
-      final span = now.difference(episode.startedAt);
-      if (!span.isNegative) return span;
-    }
-    final last = capture.segments.lastOrNull;
-    return last == null ? Duration.zero : Duration(milliseconds: (last.end * 1000).round());
+  /// How long the live episode has run, counted from one stable start: the episode's own start
+  /// (the server opens it at the first words), else the earliest capture start seen while
+  /// streaming. [anchor] keeps that start across the moments a source briefly reads null (a
+  /// pendant health lease lapsing, a socket reconnect), so the label never drops to 0s and back.
+  static Duration elapsed(Episode? episode, CaptureProvider capture, DateTime now, {LiveStartAnchor? anchor}) {
+    final start = (anchor ?? LiveStartAnchor()).resolve(
+      episode: episode,
+      captureStart: capture.liveCaptureStartedAt,
+      // Phone recordings have a stable per-recording identity through pause/reconnect.
+      // Pendant session rolls remain part of the continuous wear timer.
+      captureId: capture.liveCaptureSource == 'phone' ? capture.activeRecordingId : null,
+      streaming: streamingSource(capture) != null,
+      now: now,
+    );
+    if (start == null) return Duration.zero;
+    final span = now.difference(start);
+    return span.isNegative ? Duration.zero : span;
   }
 
   /// The last two moment headings, newest last: "lunch plans, git support for agents".
@@ -44,22 +53,26 @@ abstract final class EpisodePresentation {
   /// Who is in the conversation, named exactly as the transcript names them: the owner, then each
   /// speaker resolved to one of the user's people, in order of first appearance. An unresolved
   /// speaker ("Speaker 1") is not named here, so the header never knows more than the transcript.
-  static List<String> participants(List<TranscriptSegment> segments, List<Person> people, AppLocalizations l10n) {
+  static List<String> participants(List<TranscriptSegment> segments, List<Person> people, AppLocalizations l10n,
+      {String? ownerLabel, String? Function(String personId)? personName}) {
     final names = SpeakerNames.forSegments(segments, people: people, l10n: l10n);
     final owner = <String>{};
-    final others = <String>{};
+    // Display names are not identities: two People records can share a name.
+    final others = <String, String>{};
     for (final segment in segments) {
       if (segment.isUser) {
-        final name = names.forSegment(segment);
+        final name = ownerLabel ?? names.forSegment(segment);
         if (name.isNotEmpty) owner.add(name);
         continue;
       }
       final person = personById(people, segment.personId);
-      if (person == null) continue;
-      final name = names.forSegment(segment, person: person);
-      if (name.isNotEmpty) others.add(name);
+      final name = (segment.personId == null ? null : personName?.call(segment.personId!)) ??
+          (person == null ? null : names.forSegment(segment, person: person));
+      if (segment.personId != null && name != null && name.trim().isNotEmpty) {
+        others.putIfAbsent(segment.personId!, () => name.trim());
+      }
     }
-    return [...owner, ...others];
+    return [...owner, ...others.values];
   }
 
   /// The source capturing right now, or null when nothing is streaming live (Transcribe Later,
@@ -86,10 +99,18 @@ abstract final class EpisodePresentation {
       readerPaused: provider.isPaused || provider.isPhoneMicPaused,
       osHoldsMic: provider.isCallActive,
     );
+    // The pendant's own audio health outranks the transcription connection: a
+    // link that owes audio is either failing (recovery exhausted) or still being
+    // verified, and neither may claim Listening. A confirmed-subscription quiet
+    // verifies (CaptureIngressHealth), so silence between words stays Listening.
+    final pendantLive = provider.liveCaptureSource != null && provider.liveCaptureSource != 'phone';
+    final pendantPaused = provider.isPaused || provider.isPhoneMicPaused || provider.isCallActive;
     return liveCaptureDisplayState(
       audioInterrupted: interruption == CaptureInterruption.micTaken,
       reconnecting: interruption == CaptureInterruption.recovering,
       paused: provider.isPaused || provider.isPhoneMicPaused || provider.isCallActive,
+      pendantNoAudio: pendantLive && !pendantPaused && provider.pendantCaptureActionRequired,
+      pendantUnverified: pendantLive && !pendantPaused && !provider.pendantCaptureVerified,
       transcriptionUnavailable: provider.terminalTranscriptionFailure != null || provider.localSttFailure != null,
       bufferingFor: provider.customSttBufferingDuration,
       capturingPhotos: provider.photos.isNotEmpty,

@@ -10,7 +10,11 @@ import 'package:omi/backend/preferences.dart';
 import 'package:omi/backend/schema/bt_device/bt_device.dart';
 import 'package:omi/gen/pigeon_communicator.g.dart';
 import 'package:omi/pages/conversations/auto_sync_page.dart';
+import 'package:omi/pages/conversations/on_the_way_page.dart';
+import 'package:omi/pages/settings/device/device_catching_up_card.dart';
+import 'package:omi/services/pending_work/pending_work_store.dart';
 import 'package:omi/pages/conversations/sync_page.dart';
+import 'package:omi/pages/conversations/sync_pending_work.dart';
 import 'package:omi/pages/home/firmware_update.dart';
 import 'package:omi/pages/home/omiglass_ota_update.dart';
 import 'package:omi/pages/onboarding/interactive_device_onboarding/interactive_device_onboarding_wrapper.dart';
@@ -22,7 +26,6 @@ import 'package:omi/pages/episodes/live_episode_page.dart';
 import 'package:omi/backend/schema/conversation.dart';
 import 'package:omi/providers/conversation_provider.dart';
 import 'package:omi/providers/episode_provider.dart';
-import 'package:omi/utils/sync/offline_sync_amounts.dart';
 import 'package:omi/pages/settings/device/device_page_header.dart';
 import 'package:omi/pages/settings/device_diagnostics.dart';
 import 'package:omi/pages/settings/transcription_settings_page.dart';
@@ -38,6 +41,7 @@ import 'package:omi/utils/error_message.dart';
 import 'package:omi/utils/firmware_update_build_policy.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 import 'package:omi/utils/logger.dart';
+import 'package:omi/utils/alerts/app_snackbar.dart';
 import 'package:omi/utils/other/temp.dart';
 import 'package:omi/utils/platform/platform_manager.dart';
 
@@ -47,7 +51,10 @@ import 'package:omi/utils/platform/platform_manager.dart';
 /// the home-screen quick action, and (through the `ConnectedDevice` alias in
 /// `pages/home/device.dart`) the header battery pill.
 class DeviceSettings extends StatefulWidget {
-  const DeviceSettings({super.key});
+  const DeviceSettings({super.key, this.pendingWork});
+
+  /// Defaults to the same shared server view used by Home and the bell.
+  final PendingWorkStore? pendingWork;
 
   @override
   State<DeviceSettings> createState() => _DeviceSettingsState();
@@ -66,6 +73,8 @@ class _DeviceSettingsState extends State<DeviceSettings> {
   static const Duration _findDeviceRequestTimeout = Duration(seconds: 30);
 
   CaptureProvider? _captureProvider;
+
+  PendingWorkStore get _pendingWork => widget.pendingWork ?? PendingWorkStore.instance;
 
   double _dimRatio = 100.0;
   bool _isDimRatioLoaded = false;
@@ -90,6 +99,7 @@ class _DeviceSettingsState extends State<DeviceSettings> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
+      unawaited(_pendingWork.refresh());
       // Register for streaming metrics right away, so an early unmount cannot race the
       // async device-info fetch below and leak the listener.
       _captureProvider = _maybeProvider<CaptureProvider>(context, listen: false);
@@ -655,17 +665,25 @@ extension _DeviceLiveSections on _DeviceSettingsState {
     const gap = SizedBox(height: OmiSpacing.xxl);
     return Builder(builder: (context) {
       // One WAL pass per sync notification, shared by Stats and Right now.
-      // Capture/episode updates subscribe below this builder and never rescan it.
-      final sync = context.select<SyncProvider?, ({bool syncing, int onDevice, int waiting, int moved})>((s) {
-        if (s == null) return (syncing: false, onDevice: 0, waiting: 0, moved: 0);
-        final amounts = SyncPipelineAmounts.of(s.allWals);
-        return (
-          syncing: s.isSyncing,
-          onDevice: amounts.onDeviceSeconds,
-          waiting: amounts.onDeviceSeconds + amounts.onPhoneSeconds + amounts.processingSeconds,
-          moved: amounts.onPhoneSeconds + amounts.processingSeconds,
-        );
-      });
+      // Capture/episode updates subscribe below this builder and never rescan it;
+      // deviceCatchUpLocal memoizes on the WAL list identity, so a progress-only
+      // notify reuses the last snapshot instead of rescanning, and the server
+      // flag and status line select on their own.
+      final l10n = context.l10n;
+      final local =
+          context.select<SyncProvider?, DeviceCatchUpLocal>((s) => deviceCatchUpLocal(s?.allWals ?? const []));
+      final serverProcessing = context.select<SyncProvider?, bool>((s) => s?.syncState.isProcessing ?? false);
+      // The status line reads sync state only; whether server jobs exist comes
+      // from the memoized snapshot, so a progress tick never rescans the inventory.
+      final syncStatus = context.select<SyncProvider?, String>((s) => s == null
+          ? ''
+          : SyncPendingWork.stageLabelFor(
+              s.syncState,
+              l10n,
+              rateLimited: s.isRateLimited,
+              rateLimitReason: s.isRateLimited ? s.rateLimitReason : null,
+              serverJobs: local.hasUploaded || s.syncState.isProcessing,
+            ));
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -675,14 +693,18 @@ extension _DeviceLiveSections on _DeviceSettingsState {
                       batteryLevel: batteryLevel,
                       isCharging: isCharging,
                       heardTodaySeconds: _heardTodaySeconds(context),
-                      onDeviceSeconds: sync.onDevice,
+                      onDeviceSeconds: local.onDeviceSeconds,
                     )),
             gap,
           ],
-          Builder(builder: (context) {
-            final rightNow = _rightNow(context, syncing: sync.syncing, waiting: sync.waiting, moved: sync.moved);
-            return rightNow.hasContent ? Column(children: [rightNow, gap]) : const SizedBox.shrink();
-          }),
+          ListenableBuilder(
+            listenable: _pendingWork,
+            builder: (context, _) {
+              final rightNow =
+                  _rightNow(context, local: local, serverProcessing: serverProcessing, syncStatus: syncStatus);
+              return rightNow.hasContent ? Column(children: [rightNow, gap]) : const SizedBox.shrink();
+            },
+          ),
         ],
       );
     });
@@ -699,26 +721,71 @@ extension _DeviceLiveSections on _DeviceSettingsState {
   }
 
   DeviceRightNowGroup _rightNow(BuildContext context,
-      {required bool syncing, required int waiting, required int moved}) {
+      {required DeviceCatchUpLocal local, required bool serverProcessing, required String syncStatus}) {
+    final conversations = context.watch<ConversationProvider?>();
     final capture = context.read<CaptureProvider?>();
-    // Only the visible source and running length depend on capture, not its
-    // transcript text, socket state, or BLE/network rate samples.
-    final (source, _) = context.select<CaptureProvider?, (String?, double)>(
-      (c) => (c?.liveCaptureSource, c?.segments.lastOrNull?.end ?? 0),
+    // Only the visible source, its running length and its audio health depend on
+    // capture, not its transcript text, socket state, or BLE/network rate samples.
+    final (source, _, pendantFailed, pendantVerified, reconnecting) =
+        context.select<CaptureProvider?, (String?, DateTime?, bool, bool, bool)>(
+      (c) => (
+        c?.liveCaptureSource,
+        c?.liveCaptureStartedAt,
+        c?.pendantCaptureActionRequired ?? false,
+        c?.pendantCaptureVerified ?? true,
+        c?.pendantReconnectInFlight ?? false,
+      ),
     );
     final deviceStreaming = source != null && source != 'phone';
     final episodes = _maybeProvider<EpisodeProvider>(context);
     final live = episodes != null && episodes.enabled && deviceStreaming ? episodes.live : null;
     final l10n = context.l10n;
+    // The pendant's own audio health names the row: a confirmed-subscription quiet
+    // is Listening with a running length, a wait shows no length, and an exhausted
+    // recovery is a failure with the one action that can fix it.
+    final noAudio = deviceStreaming && pendantFailed;
+    final connecting = deviceStreaming && !pendantFailed && !pendantVerified;
     return DeviceRightNowGroup(
-      liveTitle: live == null ? null : (live.title.isEmpty ? l10n.episodeListeningNow : live.title),
-      liveLength: live == null || capture == null
+      liveTitle: noAudio
+          ? l10n.captureNoAudioFromPendant
+          : live == null
+              ? null
+              : (live.title.isEmpty ? l10n.episodeListeningNow : live.title),
+      liveSubtitle: noAudio
+          ? l10n.captureNoAudioDetail
+          : connecting
+              ? l10n.captureConnecting
+              : null,
+      liveProblem: noAudio,
+      // No tap while a reconnect runs: the controller ignores one anyway, and the
+      // row saying nothing is quieter than a second teardown racing the first.
+      onFixProblem: noAudio && capture != null && !reconnecting
+          ? () {
+              OmiHaptics.medium();
+              final message = l10n.somethingWentWrong;
+              capture.reconnectRecordingPendant().catchError((Object error) {
+                AppSnackbar.showSnackbar(message);
+              });
+            }
+          : null,
+      liveLengthNow: live == null || capture == null || connecting
           ? null
-          : EpisodePresentation.runningLength(EpisodePresentation.elapsed(live, capture, episodes!.now()), l10n),
+          : (_) => EpisodePresentation.runningLength(
+              EpisodePresentation.elapsed(live, capture, episodes!.now(), anchor: episodes.liveAnchor), l10n),
       onOpenLive: capture == null
           ? null
           : () => routeToPage(context, LiveEpisodePage(topConversationId: capture.topConversationId)),
-      catchingUp: syncing && waiting > 0 ? (doneSeconds: moved, totalSeconds: waiting) : null,
+      catchingUp: DeviceCatchUpSummary.from(
+        local: local,
+        serverProcessing: serverProcessing,
+        // Local or phone-run work reads On the Way's own stage; server work the
+        // phone did not start has no local stage to report.
+        status: local.hasPending || serverProcessing ? syncStatus : l10n.processing,
+        pending: _pendingWork.pending,
+        conversations: conversations?.conversations ?? const [],
+        processing: conversations?.processingConversations ?? const [],
+      ),
+      onOpenCatchingUp: () => routeToPage(context, OnTheWayPage(pendingWork: _pendingWork)),
     );
   }
 

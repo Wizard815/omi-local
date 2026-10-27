@@ -15,13 +15,16 @@ from utils.stt_cap_dispatch import LiveAdmission, current_live_admission, suppre
 from utils.manual_speaker_assignments import acknowledged_teaching
 from utils.other.live_audio_archive import LiveAudioArchive
 from utils.sync.live_cap_hold import LiveHeldAudio
+from utils.sync.cap_hold_lifecycle import SHUTDOWN_DELIVERY_SECONDS
 from collections import OrderedDict, deque
 from typing import Any, Dict, List, Optional, Tuple, cast
 
 from config import audio_timeline as audio_flags
+from config.cloud_live_stt import OFF, STREAM, resolve_cloud_live_stt_mode, suppresses_provider_stream
 from config.translation import resolve_ondemand_config
 from routers.listen.contracts import ConversationCaptureOrigin
 from routers.listen.batch_preview import capture_batch_preview
+from routers.listen.local_preview import admit_local_preview
 from routers.listen.demand_routing import attach_live_demand
 from routers.listen.demand_switch import switch_live_demand
 from routers.listen.lane_meter import LiveLaneMeter
@@ -73,6 +76,7 @@ from utils.stt.live_failure import (
     live_stt_socket_is_dead,
     live_stt_terminal_reason,
     live_stt_upstream_failure,
+    local_tail_terminal_reason,
     send_live_stt_audio,
     settle_terminal_socket,
     terminate_live_stt_session,
@@ -158,6 +162,7 @@ from utils.observability.fallback import record_fallback
 from utils.observability.listen_close import note_ws_close
 from utils.observability.listen_loop import FrameTimer
 from utils.observability.transcription import (
+    bounded_client_platform as _bounded_client_platform,
     emit_listen_vad_gate_metrics,
     record_listen_audio_outcome,
     record_listen_realtime_demand,
@@ -170,6 +175,9 @@ from utils.metrics import (
     OMI_AUDIO_TIMELINE_ELAPSED_VALIDATION_TOTAL,
     OMI_AUDIO_TIMELINE_PROVIDER_SOCKETS_TOTAL,
     OMI_AUDIO_TIMELINE_SEGMENTS_TOTAL,
+    OMI_CLOUD_LIVE_STT_MODE_SESSIONS_TOTAL,
+    OMI_CLOUD_LIVE_STT_SAVED_SECONDS_TOTAL,
+    OMI_LISTEN_DEFERRED_STREAM_OPENED_TOTAL,
     OMI_LISTEN_AUDIO_DECODE_FAILURES_TOTAL,
     audio_timeline_provider_label,
 )
@@ -181,9 +189,9 @@ logger = logging.getLogger(__name__)
 def mark_listen_internal_error(state: Any) -> None:
     """Close the listen socket when a turn raised after audio was not staged.
 
-    A staged publication returns. The receive loop does not call this, and the
-    socket stays up so the redrive can seal. A staging write that did not land
-    still raises, and both listen failure sites close with 1011 through here.
+    Published fragments and encrypted journals keep custody with redrive.
+    Retained PCM stays live through transient failures. This path remains for
+    failures where the receiver cannot retain or durably hand off more audio.
     """
     state.close_code = 1011
 
@@ -192,7 +200,6 @@ def mark_listen_internal_error(state: Any) -> None:
 # to terminate a zombie "Listening" session promptly, far below ws_receive_timeout.
 STT_DEATH_POLL_INTERVAL_SECONDS = 1.0
 
-SHUTDOWN_DELIVERY_SECONDS = 28.0
 SHUTDOWN_CLEANUP_SECONDS = 2.0
 
 # Longest frame the Opus format can carry, in milliseconds.
@@ -271,7 +278,7 @@ def _strip_capture_word_ranges(segments: List[Dict[str, Any]]) -> None:
 
 class ListenReceiver(ReplayFilterMixin):
     def __init__(self, host: Any, channel_configs: List[ChannelConfig], channel_id_to_index: Dict[int, int]):
-        self.soniox_idle_budget = SonioxIdleBudget()
+        self.soniox_idle_budget = SonioxIdleBudget(uid_provider=lambda: host.request.uid)
         self.host = host
         self.cap_admission: LiveAdmission | None = None
         if stt_cap_dispatch_configured() and not host.use_custom_stt:
@@ -842,6 +849,28 @@ class ListenReceiver(ReplayFilterMixin):
         )
         pending.note_failure(typed if isinstance(typed, str) else None, continuing=continuing or departing)
 
+    def _record_cloud_live_saved_seconds(self, request: Any, decoded_audio_bytes: int) -> None:
+        """Provider stream seconds this session's policy mode would not have spent. Telemetry only."""
+
+        try:
+            mode = getattr(self, '_cloud_live_mode', None) or STREAM
+            if mode == STREAM:
+                return
+            sample_rate = max(1, int(getattr(request, 'sample_rate', 16000)))
+            if mode == OFF:
+                if not getattr(self, 'cloud_live_suppressed', False):
+                    return  # The deferred stream opened; this audio went to a provider.
+                OMI_CLOUD_LIVE_STT_SAVED_SECONDS_TOTAL.labels(mode=mode).inc(decoded_audio_bytes / (sample_rate * 2))
+                return
+            # when_watched: hidden seconds (background + foreground-not-visible)
+            # would leave the paid vendor lane for the Parakeet window leg.
+            totals = self.host.state.realtime_demand.totals()
+            OMI_CLOUD_LIVE_STT_SAVED_SECONDS_TOTAL.labels(mode=mode).inc(
+                totals.get('background', 0.0) + totals.get('foreground', 0.0)
+            )
+        except Exception as error:
+            logger.warning('Cloud live mode telemetry failed type=%s', type(error).__name__)
+
     def _emit_realtime_demand(self, request: Any, decoded_audio_bytes: int) -> None:
         """Report who could have watched this session live. Telemetry only; never raises."""
 
@@ -1022,6 +1051,7 @@ class ListenReceiver(ReplayFilterMixin):
                     self.host.stt_language,
                     profile=self.host.language_profile,
                     idle_budget=self.soniox_idle_budget,
+                    uid=self.host.request.uid,
                 )
             # Soniox identifies language itself, so no language gate on the fallbacks;
             # they inherit the same chain a Modulate primary uses.
@@ -1047,6 +1077,7 @@ class ListenReceiver(ReplayFilterMixin):
                     self.host.stt_language,
                     profile=self.host.language_profile,
                     idle_budget=self.soniox_idle_budget,
+                    uid=self.host.request.uid,
                 ),
                 connect_modulate=(
                     (
@@ -1278,6 +1309,30 @@ class ListenReceiver(ReplayFilterMixin):
 
     async def _initialize_stt(self) -> bool:
         capture_batch_preview(self.host, select_provider=False)
+        mode = resolve_cloud_live_stt_mode()
+        if getattr(self, '_cloud_live_mode', None) is None:
+            self._cloud_live_mode = mode
+            try:
+                OMI_CLOUD_LIVE_STT_MODE_SESSIONS_TOTAL.labels(
+                    mode=mode,
+                    local_preview='true' if getattr(self.host.request, 'local_preview', False) else 'false',
+                    client_platform=_bounded_client_platform(self._telemetry_platform()),
+                ).inc()
+            except Exception:
+                pass  # Session telemetry must never interrupt initialization.
+        if not getattr(self, '_cloud_live_opening', False):
+            local_preview = admit_local_preview(self.host)
+            off = suppresses_provider_stream(mode, use_custom_stt=bool(getattr(self.host, 'use_custom_stt', False)))
+            # Multi-channel audio never reaches the deferred-open seam in _flush_stt_buffer.
+            self.cloud_live_suppressed = (local_preview or off) and not getattr(self.host, 'is_multi_channel', False)
+            if self.cloud_live_suppressed:
+                # Deferred, never dropped: no cloud streaming STT session opens yet
+                # (neither vendor nor the Parakeet window leg). Live segments are what
+                # keep a listen conversation alive and register it for batch, so the
+                # first audio that reaches the socket opens the stream as usual. A
+                # local-preview phone journals pendant audio for batch and sends none.
+                self._cloud_live_deferred_by = 'local_preview' if local_preview else 'off'
+                return True
         admission = getattr(self, 'cap_admission', None)
         if admission is not None:
             await admission.refresh(force=False)
@@ -1398,7 +1453,49 @@ class ListenReceiver(ReplayFilterMixin):
             return False
 
     async def _switch_live_demand(self, lane: str) -> bool:
+        if getattr(self, 'cloud_live_suppressed', False):
+            return False
         return await switch_live_demand(self, lane)
+
+    def ensure_live_demand_routing(self) -> Any:
+        """Start demand routing once a stream exists; idempotent for deferred and cap-paused starts."""
+
+        demand = getattr(self, 'live_demand', None)
+        supervisor = getattr(self.host, 'task_supervisor', None)
+        if demand is None or supervisor is None or getattr(self, '_live_demand_routing_started', False):
+            return None
+        self._live_demand_routing_started = True
+        # A task started after supervise() snapshots its monitored set is still
+        # tracked (drained and cancelled at teardown, exceptions logged) but cannot
+        # end the session: a routing failure only leaves it on its current lane.
+        return supervisor.create_lifetime_task(demand.run(), name='live_demand_routing')
+
+    def note_deferred_stream_opened(self) -> None:
+        """Count a deferred session's stream once, whether it opened on audio or on cap recovery."""
+
+        if not getattr(self, '_cloud_live_opening', False) or getattr(self, '_deferred_open_counted', False):
+            return
+        self._deferred_open_counted = True
+        try:
+            OMI_LISTEN_DEFERRED_STREAM_OPENED_TOTAL.labels(
+                deferred_by=getattr(self, '_cloud_live_deferred_by', None) or 'off'
+            ).inc()
+        except Exception:
+            pass  # Telemetry never blocks the stream.
+
+    async def _open_deferred_stream(self) -> bool:
+        """Audio reached a deferred session: open the provider stream it would have had."""
+
+        self._cloud_live_opening = True
+        self.cloud_live_suppressed = False
+        if not await self.initialize_stt():
+            return False
+        if self.stt_socket is not None or any(self.stt_sockets_multi):
+            self.note_deferred_stream_opened()
+            self.ensure_live_demand_routing()
+        # Otherwise cap admission paused it (audio goes to LiveHeldAudio); credit
+        # refresh re-initializes and starts demand routing when the cap recovers.
+        return True
 
     async def _failover_stt_socket(self) -> bool:
         """Serialize monitor/send-path failover so only one replacement is adopted."""
@@ -1914,6 +2011,9 @@ class ListenReceiver(ReplayFilterMixin):
             await hold.notice()
 
     async def _flush_stt_buffer(self, buffer: bytearray, *, force: bool = False) -> None:
+        if buffer and getattr(self, 'cloud_live_suppressed', False):
+            if not await self._open_deferred_stream():
+                return
         admission = getattr(self, 'cap_admission', None)
         if admission is not None and getattr(self, 'cap_paused', False) and admission.allowed(self.host.stt_service):
             if not await self.initialize_stt():
@@ -2001,11 +2101,13 @@ class ListenReceiver(ReplayFilterMixin):
                             self._recover_ingested_audio(), name='stt_replay_recovery'
                         )
                     if self.recovery.exhausted and not self.recovery.client_has_left():
+                        # Not accepted means the live tail hit one of its own
+                        # bounds; this site never votes on the provider circuit.
                         await terminate_live_stt_session(
                             request.websocket,
                             self.host.state,
                             failure=live_stt_upstream_failure(self._serving_provider()),
-                            reason='capacity_full',
+                            reason=local_tail_terminal_reason(delivery),
                             platform=self._telemetry_platform(),
                         )
                     return
@@ -2106,12 +2208,15 @@ class ListenReceiver(ReplayFilterMixin):
                 platform=self._telemetry_platform(),
             )
 
-    async def _handle_multi_channel_audio(self, data: bytes, now: float | None = None) -> int:
+    async def _handle_multi_channel_audio(
+        self, data: bytes, now: float | None = None, source_claim: dict | None = None
+    ) -> int:
         if now is None:
             now = time.time()
         request = self.host.request
         channel_index = self.channel_id_to_index.get(data[0])
         if channel_index is None:
+            await self.raw_archive.append(bytes(data), self.host.state.current_conversation_id, now, 0, -1)
             # A whole call's worth of frames can land here if a client prefixes
             # its channels differently than build_channel_config expects; that
             # used to be indistinguishable from silence, so count and log it.
@@ -2137,12 +2242,20 @@ class ListenReceiver(ReplayFilterMixin):
                 )
             except Exception as error:
                 await self.raw_archive.append(
-                    captured_audio, self.host.state.current_conversation_id, now, 0, channel_index
+                    captured_audio,
+                    self.host.state.current_conversation_id,
+                    now,
+                    0,
+                    channel_index,
+                    source_frame=parse_live_frame(source_claim, len(data)) if source_claim else None,
                 )
                 self._record_decode_failure('opus', error, len(audio), channel=channel_index)
                 return 0
             self.decode_failure_streak = 0
             if not audio:
+                await self.raw_archive.append(
+                    captured_audio, self.host.state.current_conversation_id, now, 0, channel_index
+                )
                 return 0
         await self.raw_archive.append(
             captured_audio,
@@ -2151,6 +2264,7 @@ class ListenReceiver(ReplayFilterMixin):
             len(audio) // 2,
             channel_index,
             decoded=bytes(audio),
+            source_frame=parse_live_frame(source_claim, len(data)) if source_claim else None,
         )
         # Audio activity only counts once the channel prefix resolved and an
         # opus frame decoded; rejected frames above cannot renew the lease.
@@ -2292,6 +2406,7 @@ class ListenReceiver(ReplayFilterMixin):
                     MessageServiceStatusEvent(
                         status='mobile_batch_admission',
                         mobile_standard_batch=self.host.mobile_standard_batch,
+                        local_preview=True if getattr(self.host, 'local_preview_batch', False) else None,
                     )
                 )
             if not self.host.state.realtime_demand.observe(payload):
@@ -2451,7 +2566,7 @@ class ListenReceiver(ReplayFilterMixin):
                         # after the channel prefix is known-good (and an opus
                         # frame decoded), so unknown-prefix frames leave the
                         # session eligible for a no_audio teardown.
-                        decoded_audio_bytes += await self._handle_multi_channel_audio(data, now)
+                        decoded_audio_bytes += await self._handle_multi_channel_audio(data, now, source_claim)
                         continue
                     try:
                         decoded: bytes = data
@@ -2471,6 +2586,7 @@ class ListenReceiver(ReplayFilterMixin):
                         continue
                     self.decode_failure_streak = 0
                     if not decoded:
+                        await self.raw_archive.append(bytes(data), self.host.state.current_conversation_id, now, 0)
                         continue
                     self._note_audio_activity()
                     self._mark_first_audio(now)
@@ -2504,6 +2620,7 @@ class ListenReceiver(ReplayFilterMixin):
                             self.capture_timeline.wall(start_sample),
                             len(decoded) // 2,
                             decoded=decoded,
+                            source_frame=parse_live_frame(source_claim, len(data)) if source_claim else None,
                         )
                         self._note_accepted_frame(start_sample, end_sample)
                         self._write_ring_buffer_frame(decoded, now, start_sample)
@@ -2664,6 +2781,7 @@ class ListenReceiver(ReplayFilterMixin):
             self._replay_delivery.finish()
         if decoded_audio_bytes:
             self._emit_realtime_demand(request, decoded_audio_bytes)
+            self._record_cloud_live_saved_seconds(request, decoded_audio_bytes)
             sample_rate = max(1, int(getattr(request, 'sample_rate', 16000)))
             emit_product_event(
                 uid=str(getattr(request, 'uid', '') or ''),

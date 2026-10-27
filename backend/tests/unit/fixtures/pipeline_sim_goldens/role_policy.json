@@ -14,6 +14,7 @@
     "failure": "worker_failed",
     "fresh_capture": true,
     "late_capture": false,
+    "measured_held_vad_speech_seconds": 552.98,
     "merge_pending": false,
     "owner_id": "owner-1",
     "policy": {
@@ -26,9 +27,12 @@
      "live_record_enabled": false,
      "live_stt_retired": false,
      "policy_id": "c333f30e783eb1528047aa1522f6b1ea42977444c24e9f1625524f335904ba13",
+     "provider_reason": "none",
+     "provider_service": "none",
      "retire_percent": 0.0,
      "schema_version": 1,
-     "source_role": "sync"
+     "source_role": "sync",
+     "stt_route": "parakeet"
     },
     "policy_parts": {
      "first_summary": {
@@ -88,7 +92,14 @@
      "outcome": "success"
     },
     "state": "committed",
-    "unit_kind": "capture_span"
+    "unit_kind": "capture_span",
+    "worker_vad_receipt": {
+     "captured_samples": 8847680,
+     "sample_rate_hz": 16000,
+     "speech_samples": 8847680,
+     "state": "measured",
+     "version": 1
+    }
    },
    "final_result": {
     "conversation_id": "conv-1",
@@ -159,6 +170,7 @@
     "failure": "worker_failed",
     "fresh_capture": true,
     "late_capture": false,
+    "measured_held_vad_speech_seconds": 447.66,
     "merge_pending": false,
     "owner_id": "owner-1",
     "policy": {
@@ -171,9 +183,12 @@
      "live_record_enabled": false,
      "live_stt_retired": false,
      "policy_id": "c333f30e783eb1528047aa1522f6b1ea42977444c24e9f1625524f335904ba13",
+     "provider_reason": "none",
+     "provider_service": "none",
      "retire_percent": 0.0,
      "schema_version": 1,
-     "source_role": "sync"
+     "source_role": "sync",
+     "stt_route": "parakeet"
     },
     "policy_parts": {
      "first_summary": {
@@ -223,7 +238,14 @@
      "outcome": "success"
     },
     "state": "committed",
-    "unit_kind": "capture_span"
+    "unit_kind": "capture_span",
+    "worker_vad_receipt": {
+     "captured_samples": 7162560,
+     "sample_rate_hz": 16000,
+     "speech_samples": 7162560,
+     "state": "measured",
+     "version": 1
+    }
    },
    "final_result": {
     "conversation_id": "conv-2",
@@ -294,6 +316,7 @@
     "failure": "worker_failed",
     "fresh_capture": true,
     "late_capture": false,
+    "measured_held_vad_speech_seconds": 525.29,
     "merge_pending": false,
     "owner_id": "owner-1",
     "policy": {
@@ -306,9 +329,12 @@
      "live_record_enabled": false,
      "live_stt_retired": false,
      "policy_id": "c333f30e783eb1528047aa1522f6b1ea42977444c24e9f1625524f335904ba13",
+     "provider_reason": "none",
+     "provider_service": "none",
      "retire_percent": 0.0,
      "schema_version": 1,
-     "source_role": "sync"
+     "source_role": "sync",
+     "stt_route": "parakeet"
     },
     "policy_parts": {
      "first_summary": {
@@ -358,7 +384,14 @@
      "outcome": "success"
     },
     "state": "committed",
-    "unit_kind": "capture_span"
+    "unit_kind": "capture_span",
+    "worker_vad_receipt": {
+     "captured_samples": 8404640,
+     "sample_rate_hz": 16000,
+     "speech_samples": 8404640,
+     "state": "measured",
+     "version": 1
+    }
    },
    "final_result": {
     "conversation_id": "conv-3",
@@ -429,6 +462,7 @@
     "failure": "worker_failed",
     "fresh_capture": true,
     "late_capture": true,
+    "measured_held_vad_speech_seconds": 176.93,
     "merge_pending": false,
     "owner_id": "owner-1",
     "policy": {
@@ -441,9 +475,12 @@
      "live_record_enabled": false,
      "live_stt_retired": false,
      "policy_id": "c333f30e783eb1528047aa1522f6b1ea42977444c24e9f1625524f335904ba13",
+     "provider_reason": "none",
+     "provider_service": "none",
      "retire_percent": 0.0,
      "schema_version": 1,
-     "source_role": "sync"
+     "source_role": "sync",
+     "stt_route": "parakeet"
     },
     "policy_parts": {
      "first_summary": {
@@ -503,7 +540,14 @@
      "outcome": "success"
     },
     "state": "committed",
-    "unit_kind": "capture_span"
+    "unit_kind": "capture_span",
+    "worker_vad_receipt": {
+     "captured_samples": 2830880,
+     "sample_rate_hz": 16000,
+     "speech_samples": 2830880,
+     "state": "measured",
+     "version": 1
+    }
    },
    "final_result": {
     "conversation_id": "conv-4",

@@ -11,9 +11,23 @@ String _keyDigits(int index) {
   return String.fromCharCodes(codes);
 }
 
+/// Keep the transcript iterable lazy until a bracket/link needs exact membership.
+/// Plain titles only materialize IDs actually present in the text for the bare-ID
+/// removal pass; they do not allocate and sort the entire transcript's ID set.
+class _KnownIDs {
+  _KnownIDs(this.source);
+
+  final Iterable<String> source;
+  Set<String>? _materialized;
+
+  bool contains(String id) => (_materialized ??= source.where((id) => id.isNotEmpty).toSet()).contains(id);
+
+  List<String> matching(String text) =>
+      text.isEmpty ? [] : (_materialized ?? source).where((id) => id.isNotEmpty && text.contains(id)).toList();
+}
+
 /// Read-time note repair. Never writes a conversation; numeric chat citations remain separate.
-({String text, List<String> sourceIDs}) _repairPass(String input, Iterable<String> knownIDs) {
-  final valid = knownIDs.toSet();
+({String text, List<String> sourceIDs}) _repairPass(String input, _KnownIDs valid) {
   final protected = <String, String>{};
   var prefix = '\uE000';
   while (input.contains(prefix)) {
@@ -82,10 +96,10 @@ String _keyDigits(int index) {
     if (mixedIDs.isNotEmpty) {
       recovered.addAll(mixedIDs);
       return cleanSeparators(
-          content.replaceAllMapped(RegExp(r'[^\s,;]+'), (match) => valid.contains(match[0]) ? '' : match[0]!));
+          content.replaceAllMapped(RegExp(r'[^\s,;]+'), (match) => valid.contains(match[0]!) ? '' : match[0]!));
     }
     if (tokens.isEmpty ||
-        RegExp(r'^(?:spk|speaker)[ _]\p{Nd}+:?$', caseSensitive: false, unicode: true).hasMatch(content) ||
+        _titleSpeaker.hasMatch(content) ||
         RegExp(r'^(?:[A-Za-z0-9][A-Za-z0-9._:-]{0,95}|\^\d+)$').hasMatch(content)) {
       return remove();
     }
@@ -95,17 +109,18 @@ String _keyDigits(int index) {
   text = text.replaceAllMapped(
       RegExp(r'\[[^\[\]\n]*\]\([^\n)]*\)|(?<!\])\(((?:[^()\n]|\([^()\n]*\))+)\)|[\[［【][^\[\]［］【】\n]*[\]］】]'),
       (match) => unit(match[0]!));
-  final sorted = valid.toList()..sort((a, b) => b.length.compareTo(a.length));
+  final sorted = valid.matching(text)..sort((a, b) => b.length.compareTo(a.length));
   for (final id in sorted) {
+    // Home rows normally contain none of their transcript's hundreds/thousands
+    // of IDs. Do not compile Unicode boundary patterns for absent literals:
+    // regexp parsing/canonicalization alone can consume the scene watchdog.
+    if (!text.contains(id)) continue;
     text =
         text.replaceAll(RegExp('(?<![\\p{L}\\p{N}_-])${RegExp.escape(id)}(?![\\p{L}\\p{N}_-])', unicode: true), marker);
   }
   // Word boundaries and digits are Unicode, as in Python generation and Swift (ICU): an ID or
   // speaker label glued to CJK text is part of a word, not a citation, and `Speaker_١٢` is a label.
-  text = text.replaceAll(
-      RegExp(r'(?<![\p{L}\p{N}_])(?:spk|speaker)[ _]\p{Nd}+(?![\p{L}\p{N}_]):?[ \t]*',
-          caseSensitive: false, unicode: true),
-      marker);
+  text = text.replaceAll(_bareSpeaker, marker);
   while (true) {
     final cleaned = text.replaceAllMapped(RegExp(r'\([^()\n]*\)'), (match) {
       final value = match[0]!;
@@ -140,7 +155,10 @@ String _keyDigits(int index) {
   // An id-less segment reaches here as '' (TranscriptSegment.fromGenerated); as a pattern it would
   // match between every two non-word characters and the cleanup would then eat the whitespace
   // around each match. Web and macOS drop empty ids before calling their repair; do the same.
-  final ids = knownIDs.where((id) => id.isNotEmpty).toList();
+  return _repairNoteCitations(input, _KnownIDs(knownIDs));
+}
+
+({String text, List<String> sourceIDs}) _repairNoteCitations(String input, _KnownIDs ids) {
   final recovered = <String>[];
   var text = input;
   while (true) {
@@ -157,6 +175,8 @@ final _titleCitationToken = RegExp(
     r'^(?:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|s[0-9]{4,}|\^[0-9]+)$',
     caseSensitive: false);
 final _titleSpeaker = RegExp(r'^(?:spk|speaker)[ _]\p{Nd}+:?$', caseSensitive: false, unicode: true);
+final _bareSpeaker = RegExp(r'(?<![\p{L}\p{N}_])(?:spk|speaker)[ _]\p{Nd}+(?![\p{L}\p{N}_]):?[ \t]*',
+    caseSensitive: false, unicode: true);
 const _titleOpen = '[［【';
 const _titleClose = ']］】';
 const _slotBase = 0xF00; // slot digits U+E100..U+EFFF
@@ -194,13 +214,13 @@ List<_TitleGroup> _titleBracketGroups(String input) {
   return groups..sort((a, b) => a.start.compareTo(b.start));
 }
 
-bool _isTitleCitation(String content, Set<String> known) {
+bool _isTitleCitation(String content, _KnownIDs known) {
   final bare = content.replaceAll(RegExp('[​‌‍⁠﻿]'), '').trim();
   if (_titleSpeaker.hasMatch(bare)) return true;
   return bare
       .split(RegExp(r'[\s,;]+'))
       .where((token) => token.isNotEmpty)
-      .every((token) => known.contains(token) || _titleCitationToken.hasMatch(token));
+      .every((token) => _titleCitationToken.hasMatch(token) || known.contains(token));
 }
 
 String _slotDigits(int index) {
@@ -217,7 +237,7 @@ String _slotDigits(int index) {
 /// speaker label are debris, and a nested group ("[Project [s01234]]") is kept whole. Everything else
 /// the note repair does applies as for any note text.
 String presentableNoteTitle(String text, Iterable<String> knownIDs) {
-  final known = knownIDs.where((id) => id.isNotEmpty).toSet();
+  final known = _KnownIDs(knownIDs);
   var mask = '';
   while (text.contains(mask)) {
     mask += '';
@@ -235,7 +255,7 @@ String presentableNoteTitle(String text, Iterable<String> knownIDs) {
     last = group.end;
   }
   masked.write(text.substring(last));
-  return repairNoteCitations(masked.toString(), known).text.replaceAllMapped(
+  return _repairNoteCitations(masked.toString(), known).text.replaceAllMapped(
     RegExp('${RegExp.escape(mask)}([-]+)'),
     (match) {
       var index = 0;

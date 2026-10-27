@@ -4440,6 +4440,10 @@ class AppLocalizationsKn extends AppLocalizations {
   String get continueText => 'ಮುಂದುವರಿಸಿ';
 
   @override
+  String get checkoutExistingSubscription =>
+      'ನೀವು ಈಗಾಗಲೇ ಚಂದಾದಾರಿಕೆಯನ್ನು ಹೊಂದಿದ್ದೀರಿ. ಹೊಸದನ್ನು ಪ್ರಾರಂಭಿಸುವ ಬದಲು ಪ್ರಸ್ತುತ ಚಂದಾದಾರಿಕೆಯನ್ನು ನಿರ್ವಹಿಸಿ.';
+
+  @override
   String get resubscribeFirstToChangePlans => 'ಯೋಜನೆ ಬದಲಾಯಿಸಲು ಮೊದಲು ಮರುಸದಸ್ಯರಾಗಿ.';
 
   @override
@@ -8625,6 +8629,9 @@ class AppLocalizationsKn extends AppLocalizations {
       'ಪ್ರತಿಲೇಖನ ಲಭ್ಯವಿಲ್ಲ — ರೆಕಾರ್ಡಿಂಗ್ ಮುಂದುವರಿಯುತ್ತದೆ ಮತ್ತು ನಿಮ್ಮ ಆಡಿಯೊ ಉಳಿಸಲಾಗುತ್ತದೆ.';
 
   @override
+  String get captureNoAudioFromPendant => 'ಪೆಂಡೆಂಟ್‌ನಿಂದ ಆಡಿಯೊ ಇಲ್ಲ';
+
+  @override
   String get capturing => 'ಸೆರೆಹಿಡಿಯಲಾಗುತ್ತಿದೆ';
 
   @override
@@ -11121,6 +11128,12 @@ class AppLocalizationsKn extends AppLocalizations {
       'ನಿಮ್ಮ Omi ಗೆ Bluetooth ಸಂಪರ್ಕ ನಿಂತಿದೆ, ಆದ್ದರಿಂದ ಆಡಿಯೊ ಆ್ಯಪ್ ತಲುಪುತ್ತಿಲ್ಲ. Omi ಸಾಧನದಲ್ಲಿ ರೆಕಾರ್ಡ್ ಮಾಡುವುದನ್ನು ಮುಂದುವರಿಸುತ್ತದೆ ಮತ್ತು ಸಂಪರ್ಕ ಮರಳಿ ಬಂದಾಗ ಸಿಂಕ್ ಆಗುತ್ತದೆ. ಮರುಪ್ರಯತ್ನಿಸುವುದರಿಂದ ಸಂಪರ್ಕ ಮರಳಿ ಜೋಡಿಸಲ್ಪಡುತ್ತದೆ; ಇದು ಮುಂದುವರಿದು ವಿಫಲವಾದರೆ, ಸೆಟ್ಟಿಂಗ್‌ಗಳು > ಸಾಧನದಲ್ಲಿ ನಿಮ್ಮ ಸಾಧನವನ್ನು ಪರಿಶೀಲಿಸಿ.';
 
   @override
+  String get captureConnecting => 'ಸಂಪರ್ಕಿಸಲಾಗುತ್ತಿದೆ…';
+
+  @override
+  String get captureNoAudioDetail => 'ಪೆಂಡೆಂಟ್ ಸಂಪರ್ಕಗೊಂಡಿದೆ, ಆದರೆ ಯಾವುದೇ ಆಡಿಯೊ ನಿಮ್ಮ ಫೋನ್ ತಲುಪುತ್ತಿಲ್ಲ';
+
+  @override
   String get captureIngressNeedsReconnect => 'ಆಡಿಯೊ ಅಪ್ಲಿಕೇಶನ್ ಅನ್ನು ತಲುಪುತ್ತಿಲ್ಲ — ನಿಮ್ಮ Omi ಅನ್ನು ಮರುಸಂಪರ್ಕಿಸಿ';
 
   @override
@@ -11149,13 +11162,6 @@ class AppLocalizationsKn extends AppLocalizations {
 
   @override
   String get captureStorageAlmostFull => 'ಸಂಗ್ರಹಣೆ ಬಹುತೇಕ ತುಂಬಿದೆ';
-
-  @override
-  String get capturePendantDisconnectedDetail =>
-      'ನಿಮ್ಮ ಪೆಂಡೆಂಟ್ ಈ ಫೋನ್‌ನೊಂದಿಗೆ ಸಂಪರ್ಕ ಕಳೆದುಕೊಂಡಿದೆ. ಪೆಂಡೆಂಟ್ ಆನ್ ಆಗಿದ್ದು ಹತ್ತಿರದಲ್ಲಿದ್ದಾಗ Omi ತಾನಾಗಿಯೇ ಮರುಸಂಪರ್ಕಿಸುತ್ತದೆ. ಇದಕ್ಕೂ ಮೊದಲು ರೆಕಾರ್ಡ್ ಆದದ್ದೆಲ್ಲ ಸುರಕ್ಷಿತವಾಗಿದೆ.';
-
-  @override
-  String get capturePendantDisconnectedShort => 'Omi ತಾನಾಗಿಯೇ ಮರುಸಂಪರ್ಕಿಸುತ್ತದೆ';
 
   @override
   String participantsSummaryUncounted(String name) {
@@ -12286,12 +12292,6 @@ class AppLocalizationsKn extends AppLocalizations {
 
   @override
   String get playbackAudioNetworkFailed => 'ಸಂಪರ್ಕ ಪರಿಶೀಲಿಸಿ';
-
-  @override
-  String get forYou => 'ನಿಮಗಾಗಿ';
-
-  @override
-  String get stopThese => 'ಇವುಗಳನ್ನು ನಿಲ್ಲಿಸಿ';
 
   @override
   String get dismiss => 'ಮರೆಮಾಡಿ';
@@ -13436,9 +13436,6 @@ class AppLocalizationsKn extends AppLocalizations {
   }
 
   @override
-  String get paywallTrialSecondary => 'ಉಚಿತ ಯೋಜನೆಯೊಂದಿಗೆ ಮುಂದುವರಿಯಿರಿ';
-
-  @override
   String get paywallTrialCancelNote => 'ಯಾವುದೇ ಸಮಯದಲ್ಲಿ ರದ್ದುಗೊಳಿಸಿ. ಯಾವುದೇ ಶುಲ್ಕಗಳಿಲ್ಲ, ಯಾವುದೇ ದಂಡಗಳಿಲ್ಲ.';
 
   @override
@@ -14466,6 +14463,25 @@ class AppLocalizationsKn extends AppLocalizations {
   }
 
   @override
+  String get episodeNotesUnavailable => 'ಚಾಲ್ತಿಯಲ್ಲಿರುವ ಟಿಪ್ಪಣಿಗಳು ನವೀಕರಿಸುತ್ತಿಲ್ಲ. ಸದ್ಯಕ್ಕೆ ಪ್ರತಿಲೇಖನವನ್ನು ನೋಡಿ.';
+
+  @override
+  String episodeCaptureFor(String duration) {
+    return 'ರೆಕಾರ್ಡಿಂಗ್ · $duration';
+  }
+
+  @override
+  String get episodePrevious => 'ಹಿಂದಿನ ಸಂಚಿಕೆ';
+
+  @override
+  String captureChunksPending(int pending) {
+    return 'ಬಾಕಿ ಇರುವ ತುಣುಕುಗಳು: $pending';
+  }
+
+  @override
+  String get episodeOpenPrevious => 'ಹಿಂದಿನ ಸಂಚಿಕೆಯನ್ನು ತೆರೆಯಿರಿ';
+
+  @override
   String get episodeNotesSoon => 'ಮಾತಿನ ಮೊದಲ ಕೆಲವು ನಿಮಿಷಗಳ ನಂತರ ಟಿಪ್ಪಣಿಗಳು ಕಾಣಿಸುತ್ತವೆ.';
 
   @override
@@ -14884,4 +14900,105 @@ class AppLocalizationsKn extends AppLocalizations {
 
   @override
   String get heldForDayReview => 'ನಿಮ್ಮ ದಿನದ ಪರಿಶೀಲನೆಗಾಗಿ ಕಾಯುತ್ತಿದೆ';
+
+  @override
+  String homeBackgroundLine(String items) {
+    return 'ಜೊತೆಗೆ: $items';
+  }
+
+  @override
+  String get deviceOnboardingPressButtonTitle => 'உங்கள் Omi பொத்தானை அழுத்துங்கள்';
+
+  @override
+  String get deviceOnboardingPressButtonSubtitle => 'ಒಂದು ಸಣ್ಣ ಒತ್ತು. ನಂತರ ಏನು ಬೇಕಾದರೂ ಕೇಳಿ.';
+
+  @override
+  String get deviceOnboardingAskNowTitle => 'ನಿಮ್ಮ ಪ್ರಶ್ನೆ ಕೇಳಿ';
+
+  @override
+  String get deviceOnboardingAskNowSubtitle => 'ಜೋರಾಗಿ ಹೇಳಿ. Omi ಕೇಳುತ್ತಿದೆ.';
+
+  @override
+  String get deviceOnboardingPressAgainHint => 'ಮುಗಿಯಿತೇ? ಕಳುಹಿಸಲು ಮತ್ತೆ ಬಟನ್ ಒತ್ತಿ.';
+
+  @override
+  String trialUpsellTitle(int days) {
+    return 'ನಿಮಗೆ $days ದಿನ ಉಚಿತ ಸಿಕ್ಕಿದೆ';
+  }
+
+  @override
+  String trialUpsellBody(int days) {
+    return '$days ದಿನ Omi Pro ನಮ್ಮಿಂದ ಉಚಿತ. ಶುಲ್ಕಕ್ಕೆ ಮೊದಲು ನೆನಪಿಸುತ್ತೇವೆ. ಯಾವಾಗ ಬೇಕಾದರೂ ರದ್ದು ಮಾಡಿ.';
+  }
+
+  @override
+  String trialUpsellClaim(int days) {
+    return '$days ದಿನದ ಪ್ರಯೋಗ ಪಡೆಯಿರಿ';
+  }
+
+  @override
+  String settingsUpgradeTrialSubtitle(int days) {
+    return '$days ದಿನಗಳ ಉಚಿತ ಪ್ರಯೋಗ ಪ್ರಾರಂಭಿಸಿ';
+  }
+
+  @override
+  String get pairingPowerOnTitle => 'ನಿಮ್ಮ Omi ಆನ್ ಮಾಡಿ';
+
+  @override
+  String get pairingPowerOnSubtitle => 'ಒಮ್ಮೆ ಬಟನ್ ಒತ್ತಿ ಫೋನ್ ಹತ್ತಿರ ಇರಿಸಿ.';
+
+  @override
+  String get walkthroughBackgroundRecordingNote =>
+      'ಅಷ್ಟೇ. Omi ಹಿನ್ನೆಲೆಯಲ್ಲಿ ನಿಮ್ಮ ಸಂಭಾಷಣೆಗಳನ್ನು ರೆಕಾರ್ಡ್ ಮಾಡುತ್ತಲೇ ಇರುತ್ತದೆ.';
+
+  @override
+  String get noThanks => 'ಬೇಡ, ಧನ್ಯವಾದ';
+
+  @override
+  String get recapInTheBackground => 'ಹಿನ್ನೆಲೆಯಲ್ಲಿ';
+
+  @override
+  String retentionOfferAccept(int percent) {
+    return '$percent% ರಿಯಾಯಿತಿಯೊಂದಿಗೆ ಮುಂದುವರಿಸಿ';
+  }
+
+  @override
+  String retentionOfferBody(String price, int months) {
+    return 'ಮುಂದುವರಿಸಿ ಮತ್ತು ತಿಂಗಳಿಗೆ $price ಪಾವತಿಸಿ, ಮುಂದಿನ $months ತಿಂಗಳು.';
+  }
+
+  @override
+  String retentionOfferApplied(int percent, int months) {
+    return 'ಆಯಿತು. $percent% ರಿಯಾಯಿತಿ, ಮುಂದಿನ $months ತಿಂಗಳು.';
+  }
+
+  @override
+  String get othersSpeakerLabel => 'ಇತರರು';
+
+  @override
+  String get livePreviewLabel => 'Live preview';
+
+  @override
+  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
+
+  @override
+  String get livePreviewListening => 'Listening… words appear here as you speak.';
+
+  @override
+  String get livePreviewStarting => 'Starting live preview…';
+
+  @override
+  String get livePreviewTranscribingTitle => 'Transcribing…';
+
+  @override
+  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
+
+  @override
+  String get openLoopAnswerDone => 'ಮುಗಿದಿದೆ';
+
+  @override
+  String get openLoopAnswerRemind => 'ನಂತರ ನೆನಪಿಸು';
+
+  @override
+  String get openLoopAnswerDrop => 'ಬಿಡು';
 }

@@ -4419,6 +4419,9 @@ class AppLocalizationsSk extends AppLocalizations {
   String get continueText => 'Pokračovať';
 
   @override
+  String get checkoutExistingSubscription => 'Predplatné už máte. Namiesto nového predplatného spravujte to súčasné.';
+
+  @override
   String get resubscribeFirstToChangePlans => 'Ak chcete zmeniť plán, najprv sa znova prihláste.';
 
   @override
@@ -8584,6 +8587,9 @@ class AppLocalizationsSk extends AppLocalizations {
       'Prepis nie je k dispozícii — nahrávanie pokračuje a váš zvuk sa ukladá.';
 
   @override
+  String get captureNoAudioFromPendant => 'Žiadny zvuk z prívesku';
+
+  @override
   String get capturing => 'Záznam';
 
   @override
@@ -11077,6 +11083,12 @@ class AppLocalizationsSk extends AppLocalizations {
       'Bluetoothové prepojenie s vaším zariadením Omi sa zastavilo, takže zvuk sa do aplikácie nedostáva. Omi naďalej nahráva na zariadení a po obnovení prepojenia sa synchronizuje. Opätovný pokus prepojenie znovu naviaže; ak to naďalej zlyháva, skontrolujte zariadenie v Nastavenia > Zariadenie.';
 
   @override
+  String get captureConnecting => 'Pripája sa…';
+
+  @override
+  String get captureNoAudioDetail => 'Prívesok je pripojený, ale žiadny zvuk sa nedostáva do vášho telefónu';
+
+  @override
   String get captureIngressNeedsReconnect => 'Zvuk sa do aplikácie nedostáva — znovu pripojte Omi';
 
   @override
@@ -11105,13 +11117,6 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get captureStorageAlmostFull => 'Úložisko je takmer plné';
-
-  @override
-  String get capturePendantDisconnectedDetail =>
-      'Prívesok stratil spojenie s týmto telefónom. Omi sa znova pripojí sám, keď bude prívesok zapnutý a nablízku. Všetko nahraté predtým je v bezpečí.';
-
-  @override
-  String get capturePendantDisconnectedShort => 'Omi sa znova pripojí sám';
 
   @override
   String participantsSummaryUncounted(String name) {
@@ -12243,12 +12248,6 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get playbackAudioNetworkFailed => 'Skontrolujte pripojenie';
-
-  @override
-  String get forYou => 'Pre vás';
-
-  @override
-  String get stopThese => 'Zastaviť tieto';
 
   @override
   String get dismiss => 'Skryť';
@@ -13393,9 +13392,6 @@ class AppLocalizationsSk extends AppLocalizations {
   }
 
   @override
-  String get paywallTrialSecondary => 'Pokračovať s bezplatným plánom';
-
-  @override
   String get paywallTrialCancelNote => 'Zrušiť kedykoľvek. Žiadne poplatky, žiadne pokuty.';
 
   @override
@@ -14415,6 +14411,25 @@ class AppLocalizationsSk extends AppLocalizations {
   }
 
   @override
+  String get episodeNotesUnavailable => 'Priebežné poznámky sa neaktualizujú. Zatiaľ si pozrite prepis.';
+
+  @override
+  String episodeCaptureFor(String duration) {
+    return 'Nahrávanie · $duration';
+  }
+
+  @override
+  String get episodePrevious => 'Predchádzajúca epizóda';
+
+  @override
+  String captureChunksPending(int pending) {
+    return 'Čakajúce časti: $pending';
+  }
+
+  @override
+  String get episodeOpenPrevious => 'Otvoriť predchádzajúcu epizódu';
+
+  @override
   String get episodeNotesSoon => 'Poznámky sa zobrazia po prvých minútach rozhovoru.';
 
   @override
@@ -14838,4 +14853,104 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get heldForDayReview => 'Čaká na vaše zhodnotenie dňa';
+
+  @override
+  String homeBackgroundLine(String items) {
+    return 'Tiež: $items';
+  }
+
+  @override
+  String get deviceOnboardingPressButtonTitle => 'Stlačte tlačidlo na Omi';
+
+  @override
+  String get deviceOnboardingPressButtonSubtitle => 'Jedno krátke stlačenie. Potom sa spýtajte na čokoľvek.';
+
+  @override
+  String get deviceOnboardingAskNowTitle => 'Položte otázku';
+
+  @override
+  String get deviceOnboardingAskNowSubtitle => 'Povedzte to nahlas. Omi počúva.';
+
+  @override
+  String get deviceOnboardingPressAgainHint => 'Hotovo? Stlačte tlačidlo znova na odoslanie.';
+
+  @override
+  String trialUpsellTitle(int days) {
+    return 'Získali ste $days dní zadarmo';
+  }
+
+  @override
+  String trialUpsellBody(int days) {
+    return '$days dní Omi Pro na nás. Pripomenieme sa pred účtovaním. Zrušte kedykoľvek.';
+  }
+
+  @override
+  String trialUpsellClaim(int days) {
+    return 'Chcem skúšobné obdobie $days dní';
+  }
+
+  @override
+  String settingsUpgradeTrialSubtitle(int days) {
+    return 'Začnite skúšobné obdobie $days dní zadarmo';
+  }
+
+  @override
+  String get pairingPowerOnTitle => 'Zapnite Omi';
+
+  @override
+  String get pairingPowerOnSubtitle => 'Raz stlačte tlačidlo a držte ho pri telefóne.';
+
+  @override
+  String get walkthroughBackgroundRecordingNote => 'To je všetko. Omi bude ďalej nahrávať vaše rozhovory na pozadí.';
+
+  @override
+  String get noThanks => 'Nie, ďakujem';
+
+  @override
+  String get recapInTheBackground => 'V pozadí';
+
+  @override
+  String retentionOfferAccept(int percent) {
+    return 'Zostať so zľavou $percent %';
+  }
+
+  @override
+  String retentionOfferBody(String price, int months) {
+    return 'Zostaňte a plaťte $price mesačne počas ďalších $months mesiacov.';
+  }
+
+  @override
+  String retentionOfferApplied(int percent, int months) {
+    return 'Hotovo. Zľava $percent % na ďalšie $months mesiace.';
+  }
+
+  @override
+  String get othersSpeakerLabel => 'Ostatní';
+
+  @override
+  String get livePreviewLabel => 'Live preview';
+
+  @override
+  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
+
+  @override
+  String get livePreviewListening => 'Listening… words appear here as you speak.';
+
+  @override
+  String get livePreviewStarting => 'Starting live preview…';
+
+  @override
+  String get livePreviewTranscribingTitle => 'Transcribing…';
+
+  @override
+  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
+
+  @override
+  String get openLoopAnswerDone => 'Hotovo';
+
+  @override
+  String get openLoopAnswerRemind => 'Pripomenúť neskôr';
+
+  @override
+  String get openLoopAnswerDrop => 'Zahodiť';
 }

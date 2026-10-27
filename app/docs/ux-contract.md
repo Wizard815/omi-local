@@ -198,6 +198,7 @@ order and a 12-hour clock on everyone.
 | `timeRange` | 10:17 – 11:19 AM | a span; across days both ends carry the date |
 | `OmiDuration.offset` | 0:05 · 3:38 · 1:02:05 | a position in a recording, time remaining |
 | `OmiDuration.compact` | 8s · 4m 10s · 42m · 1h 5m | a length — the list row and the detail page use the same one |
+| `OmiDuration.live` | 8s · 10m 1s · 1h 5m 1s | an elapsed live length that keeps ticking every second |
 | `OmiDuration.long` | 12 mins 34 secs | screen-reader labels and sentences |
 
 A row inside a day group shows only the time. Group rows by the same date the row displays.
@@ -216,11 +217,13 @@ participant lists, the speaker filter and every copied, shared or exported trans
 - Everyone else is **Speaker N**, N dense per conversation (1, 2, 3… in order of first
   appearance, skipping the owner and Omi). Never a raw id, never a gap. Naming a person does not
   renumber the others. `TranscriptSegment.getDisplaySpeakerId` returns the same N.
+- Live capture passes `deferShortVoices: true`: unnamed voices remain plain **Speaker** until five seconds of non-overlapping placed speech. Unplaced text cannot qualify. Number at qualification time so a short earlier voice cannot renumber an established voice; owner and known-person names still use their existing authority. This display floor does not identify or merge voices.
 - When the server could not resolve speakers across the conversation (`speaker_resolution.status`
   is `unavailable`), raw ids from different recordings are not comparable, so an unnamed voice is
   the plain **Speaker** (`l10n.unnamedSpeakerLabel`), never "Speaker ?" and never a number, and the
   transcript heading omits its speaker count. A saved transcript names each speaker once per turn
   (consecutive lines from the same voice), so a change of voice is still visible.
+- When diarization splits into more than eight unnamed voices, group tiny-evidence voices as **Others** and omit exact counts in conversation headers and the transcript heading. `DiarizationLabel` keeps storage ids out of display text.
 - On-device overflow transcripts (`stt_provider=on_device:<engine>`) have one **unlabeled** voice: omit speaker names and the speaker count. Local engines never imply diarization or identity.
 - The speaker filter is "Filter by speaker" (`l10n.filterBySpeaker`), never the loudspeaker string
   `phoneSpeaker`.

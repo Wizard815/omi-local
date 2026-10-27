@@ -420,9 +420,9 @@ wheels = [{ url = "https://files.pythonhosted.org/packages/fd/5b/8f0c4a5bb9fd491
 
 [[packages]]
 name = "gitpython"
-version = "3.1.62"
-sdist = { url = "https://files.pythonhosted.org/packages/e0/db/3ca813cbacb23ab6fe46ff38a9b5ef8e73e970c8051f2ce903aacafe0446/gitpython-3.1.62.tar.gz", upload-time = 2026-09-07T02:57:21Z, size = 231728, hashes = { sha256 = "1791de66309bc0c7cfca40bf8d2e3de7ca091cbf94e6051be1ad0722c61062af" } }
-wheels = [{ url = "https://files.pythonhosted.org/packages/d6/0b/29d7965215f8ef830a7ca1f42997fe13e5693d85e9edb18f938d063ef5f2/gitpython-3.1.62-py3-none-any.whl", upload-time = 2026-09-07T02:57:19Z, size = 222753, hashes = { sha256 = "7002251225e10e29d2e1f49e6532613fe5d5d9f0b6f1f02997a52b38fe56899e" } }]
+version = "3.2.1"
+sdist = { url = "https://files.pythonhosted.org/packages/c0/ff/fee293f1ec3e1b64db6eb270e00964f29c086d769201474cedb8d1608930/gitpython-3.2.1.tar.gz", upload-time = 2026-10-14T12:20:20Z, size = 241688, hashes = { sha256 = "0f1229ec5c057bdabdeeda8bda4f17bda679ab33dbccc00f24e6a480553c8613" } }
+wheels = [{ url = "https://files.pythonhosted.org/packages/6b/50/2a923c4dc02522ff9567f07c67ed1deca6d5fa9474f4708168b8088dfa37/gitpython-3.2.1-py3-none-any.whl", upload-time = 2026-10-14T12:20:18Z, size = 231548, hashes = { sha256 = "d66b0832aa8755c1a84892937282df0befb16c97e5a64aeebd68be9c5e323f53" } }]
 
 [[packages]]
 name = "google-ai-generativelanguage"
@@ -1207,6 +1207,18 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/06/db/49b05966fd208ae3f44dcd33837b6243b4915c57561d730a43f881f24dea/protobuf-5.29.6-cp38-abi3-macosx_10_9_universal2.whl", upload-time = 2026-02-04T22:54:30Z, size = 418619, hashes = { sha256 = "b5a169e664b4057183a34bdc424540e86eea47560f3c123a0d64de4e137f9269" } },
     { url = "https://files.pythonhosted.org/packages/5a/cb/e3065b447186cb70aa65acc70c86baf482d82bf75625bf5a2c4f6919c6a3/protobuf-5.29.6-py3-none-any.whl", upload-time = 2026-02-04T22:54:39Z, size = 173126, hashes = { sha256 = "6b9edb641441b2da9fa8f428760fc136a49cf97a52076010cf22a2ff73438a86" } },
 ]
+
+[[packages]]
+name = "psycopg"
+version = "3.2.10"
+sdist = { url = "https://files.pythonhosted.org/packages/a9/f1/0258a123c045afaf3c3b60c22ccff077bceeb24b8dc2c593270899353bd0/psycopg-3.2.10.tar.gz", upload-time = 2025-09-08T09:13:37Z, size = 160380, hashes = { sha256 = "0bce99269d16ed18401683a8569b2c5abd94f72f8364856d56c0389bcd50972a" } }
+wheels = [{ url = "https://files.pythonhosted.org/packages/4a/90/422ffbbeeb9418c795dae2a768db860401446af0c6768bc061ce22325f58/psycopg-3.2.10-py3-none-any.whl", upload-time = 2025-09-08T09:07:50Z, size = 206586, hashes = { sha256 = "ab5caf09a9ec42e314a21f5216dbcceac528e0e05142e42eea83a3b28b320ac3" } }]
+
+[[packages]]
+name = "psycopg-binary"
+version = "3.2.10"
+marker = "implementation_name != 'pypy'"
+wheels = [{ url = "https://files.pythonhosted.org/packages/df/8c/f15bd09a0cc09f010c1462f1cb846d7d2706f0f6226ef8e953328243edcc/psycopg_binary-3.2.10-cp311-cp311-macosx_10_9_x86_64.whl", upload-time = 2025-09-08T09:08:49Z, size = 4002654, hashes = { sha256 = "db0eb06a19e4c64a08db0db80875ede44939af6a2afc281762c338fad5d6e547" } }]
 
 [[packages]]
 name = "ptyprocess"

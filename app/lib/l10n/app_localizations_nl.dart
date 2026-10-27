@@ -4433,6 +4433,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get continueText => 'Doorgaan';
 
   @override
+  String get checkoutExistingSubscription =>
+      'Je hebt al een abonnement. Beheer je huidige abonnement in plaats van een nieuw te starten.';
+
+  @override
   String get resubscribeFirstToChangePlans => 'Abonneer je eerst opnieuw om van abonnement te wisselen.';
 
   @override
@@ -8616,6 +8620,9 @@ class AppLocalizationsNl extends AppLocalizations {
       'Transcriptie is niet beschikbaar — de opname gaat door en je audio wordt bewaard.';
 
   @override
+  String get captureNoAudioFromPendant => 'Geen audio van hanger';
+
+  @override
   String get capturing => 'Bezig met vastleggen';
 
   @override
@@ -11115,6 +11122,12 @@ class AppLocalizationsNl extends AppLocalizations {
       'De Bluetooth-verbinding met je Omi is vastgelopen, dus audio komt de app niet meer binnen. Omi blijft opnemen op het apparaat en synchroniseert zodra de verbinding herstelt. Opnieuw proberen herstelt de verbinding; als het blijft mislukken, controleer je apparaat onder Instellingen > Apparaat.';
 
   @override
+  String get captureConnecting => 'Verbinden…';
+
+  @override
+  String get captureNoAudioDetail => 'De hanger is verbonden, maar er bereikt geen audio je telefoon';
+
+  @override
   String get captureIngressNeedsReconnect => 'Audio bereikt de app niet — verbind je Omi opnieuw';
 
   @override
@@ -11143,13 +11156,6 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get captureStorageAlmostFull => 'Opslag bijna vol';
-
-  @override
-  String get capturePendantDisconnectedDetail =>
-      'Je hanger heeft de verbinding met deze telefoon verloren. Omi maakt vanzelf opnieuw verbinding zodra de hanger aan staat en in de buurt is. Alles wat eerder is opgenomen, is veilig.';
-
-  @override
-  String get capturePendantDisconnectedShort => 'Omi maakt vanzelf opnieuw verbinding';
 
   @override
   String participantsSummaryUncounted(String name) {
@@ -12282,12 +12288,6 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get playbackAudioNetworkFailed => 'Controleer verbinding';
-
-  @override
-  String get forYou => 'Voor jou';
-
-  @override
-  String get stopThese => 'Deze stoppen';
 
   @override
   String get dismiss => 'Verbergen';
@@ -13432,9 +13432,6 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get paywallTrialSecondary => 'Ga verder met het gratis abonnement';
-
-  @override
   String get paywallTrialCancelNote => 'Annuleer op elk moment. Geen kosten, geen boetes.';
 
   @override
@@ -14458,6 +14455,25 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
+  String get episodeNotesUnavailable => 'De live notities worden niet bijgewerkt. Bekijk voorlopig het transcript.';
+
+  @override
+  String episodeCaptureFor(String duration) {
+    return 'Opnemen · $duration';
+  }
+
+  @override
+  String get episodePrevious => 'Vorige aflevering';
+
+  @override
+  String captureChunksPending(int pending) {
+    return 'Wachtende fragmenten: $pending';
+  }
+
+  @override
+  String get episodeOpenPrevious => 'Vorige aflevering openen';
+
+  @override
   String get episodeNotesSoon => 'Notities verschijnen na de eerste minuten van het gesprek.';
 
   @override
@@ -14877,4 +14893,104 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get heldForDayReview => 'Wacht op je dagoverzicht';
+
+  @override
+  String homeBackgroundLine(String items) {
+    return 'Ook: $items';
+  }
+
+  @override
+  String get deviceOnboardingPressButtonTitle => 'Druk op de knop van je Omi';
+
+  @override
+  String get deviceOnboardingPressButtonSubtitle => 'Eén korte druk. Vraag daarna wat je wilt.';
+
+  @override
+  String get deviceOnboardingAskNowTitle => 'Stel je vraag';
+
+  @override
+  String get deviceOnboardingAskNowSubtitle => 'Zeg het hardop. Omi luistert.';
+
+  @override
+  String get deviceOnboardingPressAgainHint => 'Klaar? Druk nogmaals op de knop om te versturen.';
+
+  @override
+  String trialUpsellTitle(int days) {
+    return 'Je krijgt $days dagen gratis';
+  }
+
+  @override
+  String trialUpsellBody(int days) {
+    return '$days dagen Omi Pro van ons. We herinneren je voor er iets wordt afgeschreven. Altijd opzegbaar.';
+  }
+
+  @override
+  String trialUpsellClaim(int days) {
+    return 'Mijn proefperiode van $days dagen';
+  }
+
+  @override
+  String settingsUpgradeTrialSubtitle(int days) {
+    return 'Start je gratis proefperiode van $days dagen';
+  }
+
+  @override
+  String get pairingPowerOnTitle => 'Zet je Omi aan';
+
+  @override
+  String get pairingPowerOnSubtitle => 'Druk één keer op de knop en houd hem bij je telefoon.';
+
+  @override
+  String get walkthroughBackgroundRecordingNote => 'Dat is alles. Omi blijft je gesprekken op de achtergrond opnemen.';
+
+  @override
+  String get noThanks => 'Nee, bedankt';
+
+  @override
+  String get recapInTheBackground => 'Op de achtergrond';
+
+  @override
+  String retentionOfferAccept(int percent) {
+    return 'Blijf met $percent% korting';
+  }
+
+  @override
+  String retentionOfferBody(String price, int months) {
+    return 'Blijf en betaal $price per maand de komende $months maanden.';
+  }
+
+  @override
+  String retentionOfferApplied(int percent, int months) {
+    return 'Klaar. $percent% korting de komende $months maanden.';
+  }
+
+  @override
+  String get othersSpeakerLabel => 'Anderen';
+
+  @override
+  String get livePreviewLabel => 'Live preview';
+
+  @override
+  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
+
+  @override
+  String get livePreviewListening => 'Listening… words appear here as you speak.';
+
+  @override
+  String get livePreviewStarting => 'Starting live preview…';
+
+  @override
+  String get livePreviewTranscribingTitle => 'Transcribing…';
+
+  @override
+  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
+
+  @override
+  String get openLoopAnswerDone => 'Klaar';
+
+  @override
+  String get openLoopAnswerRemind => 'Herinner me later';
+
+  @override
+  String get openLoopAnswerDrop => 'Negeren';
 }

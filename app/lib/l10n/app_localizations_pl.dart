@@ -4430,6 +4430,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String get continueText => 'Kontynuuj';
 
   @override
+  String get checkoutExistingSubscription =>
+      'Masz już subskrypcję. Zarządzaj obecną subskrypcją zamiast rozpoczynać nową.';
+
+  @override
   String get resubscribeFirstToChangePlans => 'Najpierw subskrybuj ponownie, aby zmienić plan.';
 
   @override
@@ -8613,6 +8617,9 @@ class AppLocalizationsPl extends AppLocalizations {
       'Transkrypcja jest niedostępna — nagrywanie trwa, a dźwięk jest zapisywany.';
 
   @override
+  String get captureNoAudioFromPendant => 'Brak dźwięku z wisiorka';
+
+  @override
   String get capturing => 'Rejestrowanie';
 
   @override
@@ -11121,6 +11128,12 @@ class AppLocalizationsPl extends AppLocalizations {
       'Połączenie Bluetooth z urządzeniem Omi się zawiesiło, więc dźwięk nie dociera do aplikacji. Omi nadal nagrywa na urządzeniu i zsynchronizuje się, gdy połączenie wróci. Ponowienie próby ponownie nawiązuje połączenie; jeśli nadal się nie udaje, sprawdź urządzenie w Ustawienia > Urządzenie.';
 
   @override
+  String get captureConnecting => 'Łączenie…';
+
+  @override
+  String get captureNoAudioDetail => 'Wisior jest połączony, ale żaden dźwięk nie dociera do Twojego telefonu';
+
+  @override
   String get captureIngressNeedsReconnect => 'Dźwięk nie dociera do aplikacji — połącz ponownie urządzenie Omi';
 
   @override
@@ -11149,13 +11162,6 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get captureStorageAlmostFull => 'Pamięć prawie pełna';
-
-  @override
-  String get capturePendantDisconnectedDetail =>
-      'Wisiorek utracił połączenie z tym telefonem. Omi połączy się ponownie samo, gdy wisiorek będzie włączony i w pobliżu. Wszystko nagrane wcześniej jest bezpieczne.';
-
-  @override
-  String get capturePendantDisconnectedShort => 'Omi połączy się ponownie samo';
 
   @override
   String participantsSummaryUncounted(String name) {
@@ -12285,12 +12291,6 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get playbackAudioNetworkFailed => 'Sprawdź połączenie';
-
-  @override
-  String get forYou => 'Dla Ciebie';
-
-  @override
-  String get stopThese => 'Zatrzymaj te';
 
   @override
   String get dismiss => 'Ukryj';
@@ -13436,9 +13436,6 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
-  String get paywallTrialSecondary => 'Kontynuuj z planem darmowym';
-
-  @override
   String get paywallTrialCancelNote => 'Anuluj w dowolnym momencie. Bez opłat, bez kar.';
 
   @override
@@ -14462,6 +14459,25 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
+  String get episodeNotesUnavailable => 'Bieżące notatki nie są aktualizowane. Na razie zobacz transkrypcję.';
+
+  @override
+  String episodeCaptureFor(String duration) {
+    return 'Nagrywanie · $duration';
+  }
+
+  @override
+  String get episodePrevious => 'Poprzedni odcinek';
+
+  @override
+  String captureChunksPending(int pending) {
+    return 'Oczekujące fragmenty: $pending';
+  }
+
+  @override
+  String get episodeOpenPrevious => 'Otwórz poprzedni odcinek';
+
+  @override
   String get episodeNotesSoon => 'Notatki pojawią się po pierwszych minutach rozmowy.';
 
   @override
@@ -14890,4 +14906,104 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get heldForDayReview => 'Czeka na Twój przegląd dnia';
+
+  @override
+  String homeBackgroundLine(String items) {
+    return 'Także: $items';
+  }
+
+  @override
+  String get deviceOnboardingPressButtonTitle => 'Naciśnij przycisk na Omi';
+
+  @override
+  String get deviceOnboardingPressButtonSubtitle => 'Jedno krótkie naciśnięcie. Potem zapytaj o cokolwiek.';
+
+  @override
+  String get deviceOnboardingAskNowTitle => 'Zadaj pytanie';
+
+  @override
+  String get deviceOnboardingAskNowSubtitle => 'Powiedz to na głos. Omi słucha.';
+
+  @override
+  String get deviceOnboardingPressAgainHint => 'Gotowe? Naciśnij przycisk ponownie, aby wysłać.';
+
+  @override
+  String trialUpsellTitle(int days) {
+    return 'Masz $days dni za darmo';
+  }
+
+  @override
+  String trialUpsellBody(int days) {
+    return '$days dni Omi Pro na nasz koszt. Przypomnimy przed obciążeniem. Anuluj w każdej chwili.';
+  }
+
+  @override
+  String trialUpsellClaim(int days) {
+    return 'Odbierz $days-dniowy okres próbny';
+  }
+
+  @override
+  String settingsUpgradeTrialSubtitle(int days) {
+    return 'Rozpocznij $days-dniowy bezpłatny okres próbny';
+  }
+
+  @override
+  String get pairingPowerOnTitle => 'Włącz Omi';
+
+  @override
+  String get pairingPowerOnSubtitle => 'Naciśnij przycisk raz i trzymaj blisko telefonu.';
+
+  @override
+  String get walkthroughBackgroundRecordingNote => 'To wszystko. Omi będzie dalej nagrywać Twoje rozmowy w tle.';
+
+  @override
+  String get noThanks => 'Nie, dziękuję';
+
+  @override
+  String get recapInTheBackground => 'W tle';
+
+  @override
+  String retentionOfferAccept(int percent) {
+    return 'Zostań z rabatem $percent%';
+  }
+
+  @override
+  String retentionOfferBody(String price, int months) {
+    return 'Zostań i płać $price miesięcznie przez kolejne $months miesiące.';
+  }
+
+  @override
+  String retentionOfferApplied(int percent, int months) {
+    return 'Gotowe. $percent% rabatu przez kolejne $months miesiące.';
+  }
+
+  @override
+  String get othersSpeakerLabel => 'Inni';
+
+  @override
+  String get livePreviewLabel => 'Live preview';
+
+  @override
+  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
+
+  @override
+  String get livePreviewListening => 'Listening… words appear here as you speak.';
+
+  @override
+  String get livePreviewStarting => 'Starting live preview…';
+
+  @override
+  String get livePreviewTranscribingTitle => 'Transcribing…';
+
+  @override
+  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
+
+  @override
+  String get openLoopAnswerDone => 'Gotowe';
+
+  @override
+  String get openLoopAnswerRemind => 'Przypomnij później';
+
+  @override
+  String get openLoopAnswerDrop => 'Odrzuć';
 }

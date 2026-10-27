@@ -6,14 +6,13 @@ no expiring lock that lets a late worker overwrite a newer transcript.
 """
 
 from copy import deepcopy
-from datetime import datetime
 import logging
-import math
 from typing import TYPE_CHECKING, Any, Callable, NamedTuple, Optional, TypeVar
 
 from config.conversation_smart_merge import smart_merge_flatten_chain_repair_enabled, smart_merge_flatten_enabled
 from config.sync_live_dedupe import sync_live_dedupe_active_for
 from config.sync_safety_wal import sync_safety_wal_enabled
+from config.sync_lineage import sync_lineage_resolve_enabled
 from database._client import firestore_document_kind, firestore_error_document_path, is_document_size_limit_error
 from utils.firestore_document_size import FIRESTORE_MAX_DOCUMENT_BYTES, estimate_firestore_document_bytes
 from utils.observability.fallback import record_fallback
@@ -38,11 +37,15 @@ from utils.sync.live_speech_dedupe import (
     pinned_audio_timeline,
 )
 from utils.sync.merge_dedupe import dedupe_segments_for_merge
+from utils.sync.assignment_telemetry import lineage_span_delta_bucket as _lineage_span_delta_bucket
+from utils.sync.assignment_telemetry import created_sync_row_observation
+from utils.capture.dedupe import choose_segments
+from utils.capture.identity import assignment_keys_compatible, persist_identity
 from utils.sync.assignment_index import AssignmentIndex
 from utils.sync.live_overlap import choose_live_overlap, compatible_capture, live_overlap_enabled
 from utils.sync.assignment_errors import SyncAssignmentConflict, SyncAssignmentSuperseded
 from utils.sync.assignment_errors import SyncAssignmentConflictReason as Reason
-from utils.conversation_continuity import intervals_connect
+from models.conversation_continuity import intervals_connect
 from utils.stt.speaker_identity import ConversationSpeakerIdAllocator
 
 if TYPE_CHECKING:
@@ -51,6 +54,11 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 _T = TypeVar('_T')
+
+
+class SyncAssignmentDiscoveryRequired(Exception):
+    """Restart read-only stamp-gap planning with bounded live metadata hints."""
+
 
 # Firestore rejects any write that leaves a document above 1 MiB
 # (FIRESTORE_MAX_DOCUMENT_BYTES), and a temporal merge only ever grows the
@@ -64,11 +72,11 @@ _T = TypeVar('_T')
 SYNC_CONVERSATION_BYTE_BUDGET = FIRESTORE_MAX_DOCUMENT_BYTES - 124 * 1024  # 900 KiB
 
 
-def capture_mismatch(left: dict, right: dict) -> str:
-    """Which partition fields differ, as one of sixteen fixed tokens.
+def capture_mismatch(left: dict, right: dict, uid: str | None = None) -> str:
+    """Which partition fields differ, using fixed tokens and no field values.
 
-    ``none`` exactly when ``compatible_capture`` holds: every field is compared
-    for equality, so two locked captures match. Never exposes field values.
+    Legacy checks match ``compatible_capture``. Serving also requires equality
+    of explicit capture keys; two locked captures still match.
     """
     fields = [
         name for key, name in (('source', 'source'), ('client_device_id', 'device')) if left.get(key) != right.get(key)
@@ -77,6 +85,8 @@ def capture_mismatch(left: dict, right: dict) -> str:
         fields.append('lock')
     if left.get(SYNC_CLOCK_RUN_FIELD) != right.get(SYNC_CLOCK_RUN_FIELD):
         fields.append('clock')
+    if not assignment_keys_compatible(left, right, uid):
+        fields.append('capture_key')
     return '_'.join(fields) or 'none'
 
 
@@ -130,45 +140,6 @@ def auto_mergeable(row: dict) -> bool:
     )
 
 
-def _row_epoch(value: Any) -> float:
-    return value.timestamp() if isinstance(value, datetime) else float(value)
-
-
-def _lineage_span_delta_bucket(
-    stamp_fallback: bool, live_target_id: Optional[str], current: Optional[dict], result: dict
-) -> str:
-    """Fixed extent-growth bucket for a stamp-fallback append to the explicit live row.
-
-    Growth compares row ``started_at``/``finished_at`` only — never transcript
-    sums, ids or text. A rollover elsewhere leaves the live extent unchanged,
-    which is a zero growth, not a stretch of the new sync row.
-    """
-    if not stamp_fallback:
-        return 'none'
-    if not live_target_id:
-        return 'unknown'
-    if current is None or result.get('id') != live_target_id:
-        return '0'
-    try:
-        grown_end = _row_epoch(result.get('finished_at'))
-        grown_start = _row_epoch(result.get('started_at'))
-        prior_end = _row_epoch(current.get('finished_at'))
-        prior_start = _row_epoch(current.get('started_at'))
-    except Exception:
-        return 'unknown'
-    endpoints = (grown_end, grown_start, prior_end, prior_start)
-    if not all(map(math.isfinite, endpoints)) or grown_end < grown_start or prior_end < prior_start:
-        return 'unknown'
-    growth = (grown_end - grown_start) - (prior_end - prior_start)
-    if growth <= 0:
-        return '0'
-    if growth <= 60:
-        return '0_60'
-    if growth <= 300:
-        return '60_300'
-    return 'gt_300'
-
-
 def _flatten_rejected(reason: str) -> SyncAssignmentConflict:
     # ``reason`` is one of merge_ancestry's bounded constants, never row data.
     logger.warning('event=sync_ancestry_flatten outcome=rejected reason=%s', reason)
@@ -212,6 +183,9 @@ def assign_in_transaction(
     full_ids: frozenset[str] = frozenset(),
     live_candidate_ids: tuple[str, ...] = (),
     absorbed: list[str] | None = None,
+    live_lookup_complete: bool = False,
+    live_lookup_incomplete_reason: str | None = None,
+    discover_on_stamp_gap: bool = False,
 ) -> tuple[dict, bool, list[dict]]:
     """Production transaction body; injected codecs preserve encryption in adapters.
 
@@ -231,6 +205,7 @@ def assign_in_transaction(
     if absorbed is not None:
         absorbed.clear()
     incoming = deepcopy(incoming)
+    lineage_eligible = incoming.pop('_sync_lineage_eligible', False) is True
     lineage_binding = incoming.pop('_sync_lineage_binding', None)
     require_live_target = incoming.pop('_batch_require_live_target', False)
     record_span = incoming.pop('_batch_replace_live', None)
@@ -330,12 +305,13 @@ def assign_in_transaction(
         # redirects its late repair audio to the survivor; temporal fallback would
         # recreate the donor as a duplicate row. A deleted survivor supersedes it.
         target_id, target = resolve(target_id)
+
     # Discovery is a hint only. Re-read every candidate under the same
     # transaction as the append, so deletion, lifecycle and provenance win.
     temporal_live = False
     if not target_id and live_candidate_ids and live_overlap_enabled():
         live_rows = [row for cid in live_candidate_ids if (row := load(cid)) and cid not in full_ids]
-        live_id = choose_live_overlap(live_rows, incoming)
+        live_id = choose_live_overlap(live_rows, incoming, uid=user_ref.id)
         if live_id:
             target_id, target = live_id, load(live_id)
             temporal_live = True
@@ -343,7 +319,7 @@ def assign_in_transaction(
     if target and not target.get('deleted'):
         # Explicit capture proof is authoritative even before live STT produced
         # words. Only timestamp hints must exclude live-owned rows.
-        mismatch = capture_mismatch(target, incoming)
+        mismatch = capture_mismatch(target, incoming, user_ref.id)
         if mismatch != 'none':
             if redirected:
                 raise SyncAssignmentConflict('sync target provenance mismatch', subtype=Reason.PROVENANCE_MISMATCH)
@@ -374,7 +350,7 @@ def assign_in_transaction(
         and target is not None
         and sync_live_dedupe_active_for(user_ref.id)
     )
-    anchor_mismatch = capture_mismatch(own_anchor, incoming) if own_anchor else 'none'
+    anchor_mismatch = capture_mismatch(own_anchor, incoming, user_ref.id) if own_anchor else 'none'
     if anchor_mismatch != 'none':
         logger.warning('event=sync_assignment_target outcome=anchor_rejected mismatch=%s', anchor_mismatch)
         # The stored retry anchor changed source, device or lock state since it
@@ -417,7 +393,12 @@ def assign_in_transaction(
             candidates = []
             for cid in sorted(ids - matched.keys()):
                 raw = load(cid)
-                if raw and not raw.get('deleted') and interval_matches(raw, extent):
+                if (
+                    raw
+                    and not raw.get('deleted')
+                    and interval_matches(raw, extent)
+                    and assignment_keys_compatible(raw, incoming, user_ref.id)
+                ):
                     # Live and user-managed rows can only be explicit targets.
                     if not auto_mergeable(raw) and cid != plan_target_id:
                         continue
@@ -492,7 +473,17 @@ def assign_in_transaction(
                 duration = segment['end'] - segment['start']
                 segment['start'] = segment['timestamp'] - origin
                 segment['end'] = segment['start'] + duration
+            # refactor: superseded by utils.capture.dedupe when CAPTURE_COVERAGE_MODE=serve
             retained = dedupe_segments_for_merge(origin, existing, new, text_match_slop_seconds=0)
+            retained = choose_segments(
+                user_ref.id,
+                'bridge',
+                existing,
+                new,
+                retained,
+                incoming_row=row,
+                reference_row=result,
+            )
             if row['id'] != canonical:
                 for segment in retained:
                     if not segment.get('speaker_id_scope'):
@@ -567,6 +558,18 @@ def assign_in_transaction(
                 # broader clock-offset matches still require the batch gate.
                 single_match_slop_seconds=2 if plan_target and result['sync_live_target'] else 0,
             )
+        # refactor: superseded by utils.capture.dedupe when CAPTURE_COVERAGE_MODE=serve
+        survivors = choose_segments(
+            user_ref.id,
+            'incoming',
+            existing,
+            new,
+            survivors,
+            incoming_row=incoming,
+            reference_row=live_row or result,
+            conversation_rows=records,
+            proof=capture_covered_indices,
+        )
         surviving = {id(segment) for segment in survivors}
         kept = tuple(i for i, segment in indexed_new if id(segment) in surviving)
         for segment in survivors:
@@ -601,6 +604,7 @@ def assign_in_transaction(
                 result['capture_evidence'] = bounded_envelope(combined)
             else:
                 result['capture_evidence'] = incoming['capture_evidence']
+        persist_identity(user_ref.id, result, incoming, live_row)
         result['has_content'] = bool(segments)
         result['sync_content_revision'] = max([row.get('sync_content_revision') or 0 for row in records] + [0]) + 1
         verdict, rule = fragment_rule(segments)
@@ -709,11 +713,20 @@ def assign_in_transaction(
             if no_op['id'] == target_id and live_stats is not None and live_stats['sync_retry']:
                 no_op['_sync_lineage_completion_pending'] = True
             return no_op, False, []
+        if discover_on_stamp_gap:
+            # No writes have happened. The adapter discovers outside this
+            # transaction, then retries the target, deletion and lease fences
+            # along with every candidate read before committing the reroute.
+            raise SyncAssignmentDiscoveryRequired()
         refused_id = target_id
         target_id, target, target_hint = None, None, None
         live_stats = None
         stamp_fallback_live = False
         excluded = frozenset({refused_id})
+        # Reroute discovery is observation-only. Read every hint before writes
+        # for contention and gate-3 classification, without adopting a live row.
+        for cid in live_candidate_ids:
+            load(cid)
         chosen = plan(excluded, chosen.kept)
         stamp_gap_refused = True
     if (
@@ -824,6 +837,18 @@ def assign_in_transaction(
     index.write(result, set(matched) | {canonical})
     if absorbed is not None:
         absorbed[:] = sorted(cid for cid in matched if cid != canonical)
+    if created and lineage_eligible and sync_lineage_resolve_enabled():
+        # The adapter emits only the final successful transaction's observation,
+        # after commit. Neither this marker nor eligibility enters the write codec.
+        candidates_read = all(cid in read for cid in live_candidate_ids)
+        result['_sync_lineage_created'] = created_sync_row_observation(
+            [row for row in read.values() if row is not None],
+            result,
+            incoming,
+            lookup_complete=live_lookup_complete and candidates_read,
+            lookup_incomplete_reason=live_lookup_incomplete_reason,
+            candidates_read=candidates_read,
+        )
     if live_stats is not None:
         # Transient telemetry only: the encoded plan already committed above.
         appended = bounded_span_seconds(survivors)
