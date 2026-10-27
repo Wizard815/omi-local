@@ -14561,6 +14561,106 @@ class AppLocalizationsHu extends AppLocalizations {
   String get deviceControls => 'Vezérlők';
 
   @override
+  String homeBackgroundLine(String items) {
+    return 'Továbbá: $items';
+  }
+
+  @override
+  String get deviceOnboardingPressButtonTitle => 'Nyomd meg az Omi gombját';
+
+  @override
+  String get deviceOnboardingPressButtonSubtitle => 'Egy rövid nyomás. Aztán kérdezz bármit.';
+
+  @override
+  String get deviceOnboardingAskNowTitle => 'Tedd fel a kérdésed';
+
+  @override
+  String get deviceOnboardingAskNowSubtitle => 'Mondd ki hangosan. Az Omi figyel.';
+
+  @override
+  String get deviceOnboardingPressAgainHint => 'Kész? Nyomd meg újra a gombot a küldéshez.';
+
+  @override
+  String trialUpsellTitle(int days) {
+    return '$days nap ingyen a tiéd';
+  }
+
+  @override
+  String trialUpsellBody(int days) {
+    return '$days nap Omi Pro, a mi vendégünk vagy. Terhelés előtt emlékeztetünk. Bármikor lemondható.';
+  }
+
+  @override
+  String trialUpsellClaim(int days) {
+    return 'Kérem a $days napos próbát';
+  }
+
+  @override
+  String settingsUpgradeTrialSubtitle(int days) {
+    return 'Indítsd el a $days napos ingyenes próbát';
+  }
+
+  @override
+  String get pairingPowerOnTitle => 'Kapcsold be az Omit';
+
+  @override
+  String get pairingPowerOnSubtitle => 'Nyomd meg egyszer a gombot, és tartsd a telefon közelében.';
+
+  @override
+  String get walkthroughBackgroundRecordingNote => 'Ennyi. Az Omi a háttérben tovább rögzíti a beszélgetéseidet.';
+
+  @override
+  String get noThanks => 'Nem, köszönöm';
+
+  @override
+  String get recapInTheBackground => 'A háttérben';
+
+  @override
+  String retentionOfferAccept(int percent) {
+    return 'Maradj $percent% kedvezménnyel';
+  }
+
+  @override
+  String retentionOfferBody(String price, int months) {
+    return 'Maradj, és fizess havi $price összeget a következő $months hónapban.';
+  }
+
+  @override
+  String retentionOfferApplied(int percent, int months) {
+    return 'Kész. $percent% kedvezmény a következő $months hónapban.';
+  }
+
+  @override
+  String get othersSpeakerLabel => 'Mások';
+
+  @override
+  String get livePreviewLabel => 'Live preview';
+
+  @override
+  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
+
+  @override
+  String get livePreviewListening => 'Listening… words appear here as you speak.';
+
+  @override
+  String get livePreviewStarting => 'Starting live preview…';
+
+  @override
+  String get livePreviewTranscribingTitle => 'Transcribing…';
+
+  @override
+  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
+
+  @override
+  String get openLoopAnswerDone => 'Kész';
+
+  @override
+  String get openLoopAnswerRemind => 'Emlékeztessen később';
+
+  @override
+  String get openLoopAnswerDrop => 'Eldobás';
+
+  @override
   String get dayReviewTitle => 'Napi áttekintés';
 
   @override
@@ -14913,104 +15013,4 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get heldForDayReview => 'A napi áttekintésedre vár';
-
-  @override
-  String homeBackgroundLine(String items) {
-    return 'Továbbá: $items';
-  }
-
-  @override
-  String get deviceOnboardingPressButtonTitle => 'Nyomd meg az Omi gombját';
-
-  @override
-  String get deviceOnboardingPressButtonSubtitle => 'Egy rövid nyomás. Aztán kérdezz bármit.';
-
-  @override
-  String get deviceOnboardingAskNowTitle => 'Tedd fel a kérdésed';
-
-  @override
-  String get deviceOnboardingAskNowSubtitle => 'Mondd ki hangosan. Az Omi figyel.';
-
-  @override
-  String get deviceOnboardingPressAgainHint => 'Kész? Nyomd meg újra a gombot a küldéshez.';
-
-  @override
-  String trialUpsellTitle(int days) {
-    return '$days nap ingyen a tiéd';
-  }
-
-  @override
-  String trialUpsellBody(int days) {
-    return '$days nap Omi Pro, a mi vendégünk vagy. Terhelés előtt emlékeztetünk. Bármikor lemondható.';
-  }
-
-  @override
-  String trialUpsellClaim(int days) {
-    return 'Kérem a $days napos próbát';
-  }
-
-  @override
-  String settingsUpgradeTrialSubtitle(int days) {
-    return 'Indítsd el a $days napos ingyenes próbát';
-  }
-
-  @override
-  String get pairingPowerOnTitle => 'Kapcsold be az Omit';
-
-  @override
-  String get pairingPowerOnSubtitle => 'Nyomd meg egyszer a gombot, és tartsd a telefon közelében.';
-
-  @override
-  String get walkthroughBackgroundRecordingNote => 'Ennyi. Az Omi a háttérben tovább rögzíti a beszélgetéseidet.';
-
-  @override
-  String get noThanks => 'Nem, köszönöm';
-
-  @override
-  String get recapInTheBackground => 'A háttérben';
-
-  @override
-  String retentionOfferAccept(int percent) {
-    return 'Maradj $percent% kedvezménnyel';
-  }
-
-  @override
-  String retentionOfferBody(String price, int months) {
-    return 'Maradj, és fizess havi $price összeget a következő $months hónapban.';
-  }
-
-  @override
-  String retentionOfferApplied(int percent, int months) {
-    return 'Kész. $percent% kedvezmény a következő $months hónapban.';
-  }
-
-  @override
-  String get othersSpeakerLabel => 'Mások';
-
-  @override
-  String get livePreviewLabel => 'Live preview';
-
-  @override
-  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
-
-  @override
-  String get livePreviewListening => 'Listening… words appear here as you speak.';
-
-  @override
-  String get livePreviewStarting => 'Starting live preview…';
-
-  @override
-  String get livePreviewTranscribingTitle => 'Transcribing…';
-
-  @override
-  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
-
-  @override
-  String get openLoopAnswerDone => 'Kész';
-
-  @override
-  String get openLoopAnswerRemind => 'Emlékeztessen később';
-
-  @override
-  String get openLoopAnswerDrop => 'Eldobás';
 }

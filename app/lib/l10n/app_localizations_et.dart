@@ -14496,6 +14496,106 @@ class AppLocalizationsEt extends AppLocalizations {
   String get deviceControls => 'Juhtimine';
 
   @override
+  String homeBackgroundLine(String items) {
+    return 'Lisaks: $items';
+  }
+
+  @override
+  String get deviceOnboardingPressButtonTitle => 'Vajuta Omi nuppu';
+
+  @override
+  String get deviceOnboardingPressButtonSubtitle => 'Üks lühike vajutus. Siis küsi mida iganes.';
+
+  @override
+  String get deviceOnboardingAskNowTitle => 'Esita oma küsimus';
+
+  @override
+  String get deviceOnboardingAskNowSubtitle => 'Ütle see valjusti. Omi kuulab.';
+
+  @override
+  String get deviceOnboardingPressAgainHint => 'Valmis? Vajuta nuppu uuesti, et saata.';
+
+  @override
+  String trialUpsellTitle(int days) {
+    return 'Said $days päeva tasuta';
+  }
+
+  @override
+  String trialUpsellBody(int days) {
+    return '$days päeva Omi Pro meie kulul. Tuletame enne tasu võtmist meelde. Tühista igal ajal.';
+  }
+
+  @override
+  String trialUpsellClaim(int days) {
+    return 'Võta $days-päevane proov';
+  }
+
+  @override
+  String settingsUpgradeTrialSubtitle(int days) {
+    return 'Alusta $days-päevast tasuta proovi';
+  }
+
+  @override
+  String get pairingPowerOnTitle => 'Lülita Omi sisse';
+
+  @override
+  String get pairingPowerOnSubtitle => 'Vajuta korra nuppu ja hoia telefoni lähedal.';
+
+  @override
+  String get walkthroughBackgroundRecordingNote => 'Ongi kõik. Omi salvestab su vestlusi taustal edasi.';
+
+  @override
+  String get noThanks => 'Ei, aitäh';
+
+  @override
+  String get recapInTheBackground => 'Taustal';
+
+  @override
+  String retentionOfferAccept(int percent) {
+    return 'Jää $percent% allahindlusega';
+  }
+
+  @override
+  String retentionOfferBody(String price, int months) {
+    return 'Jää ja maksa $price kuus järgmised $months kuud.';
+  }
+
+  @override
+  String retentionOfferApplied(int percent, int months) {
+    return 'Valmis. $percent% allahindlust järgmised $months kuud.';
+  }
+
+  @override
+  String get othersSpeakerLabel => 'Teised';
+
+  @override
+  String get livePreviewLabel => 'Live preview';
+
+  @override
+  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
+
+  @override
+  String get livePreviewListening => 'Listening… words appear here as you speak.';
+
+  @override
+  String get livePreviewStarting => 'Starting live preview…';
+
+  @override
+  String get livePreviewTranscribingTitle => 'Transcribing…';
+
+  @override
+  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
+
+  @override
+  String get openLoopAnswerDone => 'Tehtud';
+
+  @override
+  String get openLoopAnswerRemind => 'Meenuta hiljem';
+
+  @override
+  String get openLoopAnswerDrop => 'Jäta ära';
+
+  @override
   String get dayReviewTitle => 'Päeva ülevaade';
 
   @override
@@ -14846,104 +14946,4 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get heldForDayReview => 'Ootab teie päeva ülevaadet';
-
-  @override
-  String homeBackgroundLine(String items) {
-    return 'Lisaks: $items';
-  }
-
-  @override
-  String get deviceOnboardingPressButtonTitle => 'Vajuta Omi nuppu';
-
-  @override
-  String get deviceOnboardingPressButtonSubtitle => 'Üks lühike vajutus. Siis küsi mida iganes.';
-
-  @override
-  String get deviceOnboardingAskNowTitle => 'Esita oma küsimus';
-
-  @override
-  String get deviceOnboardingAskNowSubtitle => 'Ütle see valjusti. Omi kuulab.';
-
-  @override
-  String get deviceOnboardingPressAgainHint => 'Valmis? Vajuta nuppu uuesti, et saata.';
-
-  @override
-  String trialUpsellTitle(int days) {
-    return 'Said $days päeva tasuta';
-  }
-
-  @override
-  String trialUpsellBody(int days) {
-    return '$days päeva Omi Pro meie kulul. Tuletame enne tasu võtmist meelde. Tühista igal ajal.';
-  }
-
-  @override
-  String trialUpsellClaim(int days) {
-    return 'Võta $days-päevane proov';
-  }
-
-  @override
-  String settingsUpgradeTrialSubtitle(int days) {
-    return 'Alusta $days-päevast tasuta proovi';
-  }
-
-  @override
-  String get pairingPowerOnTitle => 'Lülita Omi sisse';
-
-  @override
-  String get pairingPowerOnSubtitle => 'Vajuta korra nuppu ja hoia telefoni lähedal.';
-
-  @override
-  String get walkthroughBackgroundRecordingNote => 'Ongi kõik. Omi salvestab su vestlusi taustal edasi.';
-
-  @override
-  String get noThanks => 'Ei, aitäh';
-
-  @override
-  String get recapInTheBackground => 'Taustal';
-
-  @override
-  String retentionOfferAccept(int percent) {
-    return 'Jää $percent% allahindlusega';
-  }
-
-  @override
-  String retentionOfferBody(String price, int months) {
-    return 'Jää ja maksa $price kuus järgmised $months kuud.';
-  }
-
-  @override
-  String retentionOfferApplied(int percent, int months) {
-    return 'Valmis. $percent% allahindlust järgmised $months kuud.';
-  }
-
-  @override
-  String get othersSpeakerLabel => 'Teised';
-
-  @override
-  String get livePreviewLabel => 'Live preview';
-
-  @override
-  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
-
-  @override
-  String get livePreviewListening => 'Listening… words appear here as you speak.';
-
-  @override
-  String get livePreviewStarting => 'Starting live preview…';
-
-  @override
-  String get livePreviewTranscribingTitle => 'Transcribing…';
-
-  @override
-  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
-
-  @override
-  String get openLoopAnswerDone => 'Tehtud';
-
-  @override
-  String get openLoopAnswerRemind => 'Meenuta hiljem';
-
-  @override
-  String get openLoopAnswerDrop => 'Jäta ära';
 }

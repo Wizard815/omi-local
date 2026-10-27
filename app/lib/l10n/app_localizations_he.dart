@@ -14400,6 +14400,106 @@ class AppLocalizationsHe extends AppLocalizations {
   String get deviceControls => 'פקדים';
 
   @override
+  String homeBackgroundLine(String items) {
+    return 'גם: $items';
+  }
+
+  @override
+  String get deviceOnboardingPressButtonTitle => 'לחץ על הכפתור ב‑Omi';
+
+  @override
+  String get deviceOnboardingPressButtonSubtitle => 'לחיצה קצרה אחת. ואז שאל מה שתרצה.';
+
+  @override
+  String get deviceOnboardingAskNowTitle => 'שאל את השאלה שלך';
+
+  @override
+  String get deviceOnboardingAskNowSubtitle => 'אמור זאת בקול. Omi מקשיב.';
+
+  @override
+  String get deviceOnboardingPressAgainHint => 'סיימת? לחץ שוב על הכפתור כדי לשלוח.';
+
+  @override
+  String trialUpsellTitle(int days) {
+    return 'שודרגת ל‑$days ימים חינם';
+  }
+
+  @override
+  String trialUpsellBody(int days) {
+    return '$days ימים של Omi Pro עלינו. נזכיר לך לפני כל חיוב. ביטול בכל עת.';
+  }
+
+  @override
+  String trialUpsellClaim(int days) {
+    return 'קבל ניסיון של $days ימים';
+  }
+
+  @override
+  String settingsUpgradeTrialSubtitle(int days) {
+    return 'התחל ניסיון חינם של $days ימים';
+  }
+
+  @override
+  String get pairingPowerOnTitle => 'הפעל את ה‑Omi';
+
+  @override
+  String get pairingPowerOnSubtitle => 'לחץ פעם אחת על הכפתור והשאר אותו קרוב לטלפון.';
+
+  @override
+  String get walkthroughBackgroundRecordingNote => 'זהו. Omi ימשיך להקליט את השיחות שלך ברקע.';
+
+  @override
+  String get noThanks => 'לא, תודה';
+
+  @override
+  String get recapInTheBackground => 'ברקע';
+
+  @override
+  String retentionOfferAccept(int percent) {
+    return 'הישארו עם $percent% הנחה';
+  }
+
+  @override
+  String retentionOfferBody(String price, int months) {
+    return 'הישארו ושלמו $price לחודש ב-$months החודשים הבאים.';
+  }
+
+  @override
+  String retentionOfferApplied(int percent, int months) {
+    return 'בוצע. $percent% הנחה ב-$months החודשים הבאים.';
+  }
+
+  @override
+  String get othersSpeakerLabel => 'אחרים';
+
+  @override
+  String get livePreviewLabel => 'Live preview';
+
+  @override
+  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
+
+  @override
+  String get livePreviewListening => 'Listening… words appear here as you speak.';
+
+  @override
+  String get livePreviewStarting => 'Starting live preview…';
+
+  @override
+  String get livePreviewTranscribingTitle => 'Transcribing…';
+
+  @override
+  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
+
+  @override
+  String get openLoopAnswerDone => 'בוצע';
+
+  @override
+  String get openLoopAnswerRemind => 'הזכר לי מאוחר יותר';
+
+  @override
+  String get openLoopAnswerDrop => 'ותר על זה';
+
+  @override
   String get dayReviewTitle => 'סקירת יום';
 
   @override
@@ -14745,104 +14845,4 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get heldForDayReview => 'ממתין לסיכום היום שלך';
-
-  @override
-  String homeBackgroundLine(String items) {
-    return 'גם: $items';
-  }
-
-  @override
-  String get deviceOnboardingPressButtonTitle => 'לחץ על הכפתור ב‑Omi';
-
-  @override
-  String get deviceOnboardingPressButtonSubtitle => 'לחיצה קצרה אחת. ואז שאל מה שתרצה.';
-
-  @override
-  String get deviceOnboardingAskNowTitle => 'שאל את השאלה שלך';
-
-  @override
-  String get deviceOnboardingAskNowSubtitle => 'אמור זאת בקול. Omi מקשיב.';
-
-  @override
-  String get deviceOnboardingPressAgainHint => 'סיימת? לחץ שוב על הכפתור כדי לשלוח.';
-
-  @override
-  String trialUpsellTitle(int days) {
-    return 'שודרגת ל‑$days ימים חינם';
-  }
-
-  @override
-  String trialUpsellBody(int days) {
-    return '$days ימים של Omi Pro עלינו. נזכיר לך לפני כל חיוב. ביטול בכל עת.';
-  }
-
-  @override
-  String trialUpsellClaim(int days) {
-    return 'קבל ניסיון של $days ימים';
-  }
-
-  @override
-  String settingsUpgradeTrialSubtitle(int days) {
-    return 'התחל ניסיון חינם של $days ימים';
-  }
-
-  @override
-  String get pairingPowerOnTitle => 'הפעל את ה‑Omi';
-
-  @override
-  String get pairingPowerOnSubtitle => 'לחץ פעם אחת על הכפתור והשאר אותו קרוב לטלפון.';
-
-  @override
-  String get walkthroughBackgroundRecordingNote => 'זהו. Omi ימשיך להקליט את השיחות שלך ברקע.';
-
-  @override
-  String get noThanks => 'לא, תודה';
-
-  @override
-  String get recapInTheBackground => 'ברקע';
-
-  @override
-  String retentionOfferAccept(int percent) {
-    return 'הישארו עם $percent% הנחה';
-  }
-
-  @override
-  String retentionOfferBody(String price, int months) {
-    return 'הישארו ושלמו $price לחודש ב-$months החודשים הבאים.';
-  }
-
-  @override
-  String retentionOfferApplied(int percent, int months) {
-    return 'בוצע. $percent% הנחה ב-$months החודשים הבאים.';
-  }
-
-  @override
-  String get othersSpeakerLabel => 'אחרים';
-
-  @override
-  String get livePreviewLabel => 'Live preview';
-
-  @override
-  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
-
-  @override
-  String get livePreviewListening => 'Listening… words appear here as you speak.';
-
-  @override
-  String get livePreviewStarting => 'Starting live preview…';
-
-  @override
-  String get livePreviewTranscribingTitle => 'Transcribing…';
-
-  @override
-  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
-
-  @override
-  String get openLoopAnswerDone => 'בוצע';
-
-  @override
-  String get openLoopAnswerRemind => 'הזכר לי מאוחר יותר';
-
-  @override
-  String get openLoopAnswerDrop => 'ותר על זה';
 }

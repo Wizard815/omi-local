@@ -1,5 +1,5 @@
 // Derived by python3 tool/perf_shell.py from main.dart. Do not hand edit.
-// Extracted shell SHA256 (imports, telemetry field, builder chain): c493dd9098cd21e93eaf0006850fc3cf7f4009e6880a4d3f9554ac7c75232324
+// Extracted shell SHA256 (imports, telemetry field, builder chain): ffe7aee5088efb017c0a934fd726074a8e89833394e2413eecb3302554fbfedb
 // ignore_for_file: unused_import, unnecessary_import
 import 'package:omi/services/on_device/on_device_background.dart';
 import 'package:omi/services/onboarding_sync_runtime.dart';
@@ -13,15 +13,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:omi/services/dev_controls/semantic_controls.dart';
-import 'package:marionette_flutter/marionette_flutter.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:omi/gen/pigeon_communicator.g.dart';
 import 'package:omi/services/bridges/ble_bridge.dart';
-import 'package:omi/services/app_review_service.dart';
 import 'package:omi/services/account_cutover/account_cutover_runtime.dart';
 import 'package:omi/widgets/bluetooth_guidance_listener.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
@@ -91,6 +88,7 @@ import 'package:omi/providers/usage_provider.dart';
 import 'package:omi/providers/user_provider.dart';
 import 'package:omi/providers/voice_recorder_provider.dart';
 import 'package:omi/providers/phone_call_provider.dart';
+import 'package:omi/services/auth/emulator_login_retirement.dart';
 import 'package:omi/services/auth_service.dart';
 import 'package:omi/ui/omi_theme.dart';
 import 'package:omi/ui/omi_tokens.dart';
@@ -162,7 +160,7 @@ class _PerfProductionShellState extends State<PerfProductionShell> {
           OmiColors.active = OmiColors.forBrightness(brightness);
           return WithForegroundTask(
             child: MaterialApp(
-              debugShowCheckedModeBanner: F.env == Environment.dev,
+              debugShowCheckedModeBanner: false,
               title: F.title,
               navigatorKey: MyApp.navigatorKey,
               navigatorObservers: [if (!PhysicalQualification.enabled) _performanceTelemetry],
