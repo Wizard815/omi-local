@@ -168,8 +168,15 @@ def _jwt_secret(*, required: bool) -> Optional[str]:
     return secret or None
 
 
-def create_remote_login_token(uid: str) -> str:
+def _require_jwt_secret() -> str:
     secret = _jwt_secret(required=True)
+    if secret is None:  # unreachable: required=True raises instead
+        raise HTTPException(status_code=503, detail='Login is not configured on this server.')
+    return secret
+
+
+def create_remote_login_token(uid: str) -> str:
+    secret = _require_jwt_secret()
     now = int(time.time())
     payload = {'uid': uid, 'iat': now, 'exp': now + _SESSION_TTL_SECONDS, 'iss': _JWT_ISSUER}
     return jwt.encode(payload, secret, algorithm=_JWT_ALGORITHM)

@@ -40,7 +40,7 @@ from utils.llm.model_config import (
     _active_profile_name,
     _byok_profile,
     _byok_profile_name,
-    _get_local_embedding_model,
+    get_local_embedding_model,
     feature_request_timeout,
     get_active_profile,
     get_active_profile_name,
@@ -309,7 +309,7 @@ class _OpenAIEmbeddingsProxy:
             # selection → env → default) rather than fixing the model at
             # startup, so the dashboard can swap embedding models without a
             # restart. The client is only rebuilt when the name changes.
-            current_model = _get_local_embedding_model() or self._model
+            current_model = get_local_embedding_model() or self._model
             if current_model != self._model:
                 object.__setattr__(self, '_model', current_model)
                 object.__setattr__(self, '_default', None)
