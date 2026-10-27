@@ -6,17 +6,18 @@ Implements the same interface as the Pinecone paths in vector_db.py.
 
 import logging
 import os
-import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import chromadb
+from chromadb.api import ClientAPI
+from chromadb.api.models.Collection import Collection
 from chromadb.config import Settings
 
 logger = logging.getLogger(__name__)
 
 # Chroma client & collection (lazy init)
-_chroma_client: Optional[chromadb.PersistentClient] = None
-_chroma_collection: Optional[Any] = None
+_chroma_client: Optional[ClientAPI] = None
+_chroma_collection: Optional[Collection] = None
 _chroma_enabled = False
 
 CHROMA_PATH = os.environ.get("CHROMA_DATA_PATH", "/data/chroma/vector_db")
@@ -46,15 +47,15 @@ def _init_chroma() -> None:
         _chroma_enabled = False
 
 
-def _ready() -> bool:
-    """Open the store on first use; True once the collection is usable.
+def _collection() -> Optional[Collection]:
+    """Open the store on first use; the collection once it is usable, else None.
 
     Every function used to return on `not _chroma_enabled` before calling
     _init_chroma(), the only thing that sets it, so the store never opened:
     with LOCAL_VECTOR_DB=chroma nothing was stored and every search was empty.
     """
     _init_chroma()
-    return _chroma_enabled
+    return _chroma_collection if _chroma_enabled else None
 
 
 def is_chroma_enabled() -> bool:
@@ -67,10 +68,11 @@ def chroma_upsert(
     metadata: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Upsert a single vector into Chroma."""
-    if not _ready():
+    collection = _collection()
+    if collection is None:
         return
     try:
-        _chroma_collection.upsert(
+        collection.upsert(
             ids=[doc_id],
             embeddings=[vector],
             metadatas=[metadata or {}],
@@ -85,13 +87,16 @@ def chroma_upsert_batch(
     metadatas: Optional[List[Dict[str, Any]]] = None,
 ) -> None:
     """Upsert multiple vectors into Chroma."""
-    if not ids or not _ready():
+    collection = _collection()
+    if not ids or collection is None:
         return
     try:
-        _chroma_collection.upsert(
+        # chromadb's parameter types are invariant Sequence/Mapping aliases;
+        # these plain lists are exactly what it accepts at runtime.
+        collection.upsert(
             ids=ids,
-            embeddings=vectors,
-            metadatas=metadatas or [{}] * len(ids),
+            embeddings=cast(Any, vectors),
+            metadatas=cast(Any, metadatas or [{}] * len(ids)),
         )
     except Exception as e:
         logger.error(f"Chroma batch upsert failed: {e}")
@@ -106,7 +111,8 @@ def chroma_query(
     filter_created_before: Optional[int] = None,
 ) -> List[str]:
     """Query Chroma and return matching document IDs."""
-    if not _ready():
+    collection = _collection()
+    if collection is None:
         return []
 
     try:
@@ -128,9 +134,9 @@ def chroma_query(
             kwargs["where"] = {"$and": conditions}
 
         if query_vector is not None:
-            results = _chroma_collection.query(query_embeddings=[query_vector], **kwargs)
+            results = collection.query(query_embeddings=[query_vector], **kwargs)
         elif query_text is not None:
-            results = _chroma_collection.query(query_texts=[query_text], **kwargs)
+            results = collection.query(query_texts=[query_text], **kwargs)
         else:
             return []
 
@@ -144,29 +150,32 @@ def chroma_query(
 
 def chroma_delete(ids: List[str]) -> None:
     """Delete vectors by ID."""
-    if not ids or not _ready():
+    collection = _collection()
+    if not ids or collection is None:
         return
     try:
-        _chroma_collection.delete(ids=ids)
+        collection.delete(ids=ids)
     except Exception as e:
         logger.error(f"Chroma delete failed: {e}")
 
 
 def chroma_delete_by_uid(uid: str) -> None:
     """Delete all vectors for a user."""
-    if not _ready():
+    collection = _collection()
+    if collection is None:
         return
     try:
-        _chroma_collection.delete(where={"uid": uid})
+        collection.delete(where={"uid": uid})
     except Exception as e:
         logger.error(f"Chroma delete by uid failed: {e}")
 
 
 def chroma_count() -> int:
     """Return number of vectors stored."""
-    if not _ready():
+    collection = _collection()
+    if collection is None:
         return 0
     try:
-        return _chroma_collection.count()
+        return collection.count()
     except Exception:
         return 0

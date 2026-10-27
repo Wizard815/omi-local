@@ -141,7 +141,7 @@ _DEV_KEY = 'omi_dev_' + 'a' * 32
 _MCP_KEY = 'omi_mcp_' + 'a' * 32
 
 BODY_DIGEST = {
-    'database.chroma_vector.chroma_count': 'cc8b3a1c0d22e546cabd0a1ac6066bf35a5c3555732e7e7d29c21f2f8c20720d',
+    'database.chroma_vector.chroma_count': '5afcfa78a69b5d786a83b429b5cf725428c5bc77140b6a672aff967c3d476d47',
     'database.monthly_usage_totals._rebuild': '2c9be83589399a6824fbb2ef7376cd7baf8492e8a780671e31b67a8294b40db0',
     'database.batch_pipeline_shadow.ShadowStore._busy': '3be03e458c8e65c535fed1475cbfae9c97421970c89dc751e2f4eaa4a46a4467',
     'database.batch_pipeline_shadow.ShadowStore.reap': 'e5ea33125389c09c8ad556fab4a6319142f223e4dfa655095dcd89c64e976a8d',

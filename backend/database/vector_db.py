@@ -153,15 +153,6 @@ index: Any = None
 # ChromaDB is already a dependency (used for RAG) — no new packages needed.
 _use_chroma = os.environ.get("LOCAL_VECTOR_DB", "").lower() == "chroma"
 if _use_chroma:
-    from database.chroma_vector import (
-        chroma_count,
-        chroma_delete,
-        chroma_upsert,
-        chroma_upsert_batch,
-        chroma_query,
-        is_chroma_enabled,
-    )
-
     logger.info("Vector DB: ChromaDB (local). Set PINECONE_API_KEY to override.")
 elif _pinecone_api_key and _pinecone_index_name:
     pc = Pinecone(api_key=_pinecone_api_key)
@@ -169,6 +160,14 @@ elif _pinecone_api_key and _pinecone_index_name:
     logger.info("Vector DB: Pinecone (cloud)")
 else:
     logger.info("Vector DB: none (no Pinecone key and LOCAL_VECTOR_DB not 'chroma')")
+
+
+def _chroma():
+    """The local store module, imported on first use so a Pinecone deployment
+    never loads chromadb."""
+    from database import chroma_vector
+
+    return chroma_vector
 
 
 def _get_data(uid: str, conversation_id: str, vector: List[float]) -> VectorRecordDoc:
@@ -186,7 +185,7 @@ def _get_data(uid: str, conversation_id: str, vector: List[float]) -> VectorReco
 
 def upsert_vector(uid: str, conversation_id: str, vector: List[float]) -> None:
     if _use_chroma:
-        chroma_upsert(
+        _chroma().chroma_upsert(
             f'{uid}-{conversation_id}',
             vector,
             {'uid': uid, 'conversation_id': conversation_id, 'created_at': int(datetime.now(timezone.utc).timestamp())},
@@ -208,7 +207,7 @@ def upsert_vector2(uid: str, conversation_id: str, vector: List[float], metadata
             **metadata,
         }
         try:
-            chroma_upsert(f'{uid}-{conversation_id}', vector, meta)
+            _chroma().chroma_upsert(f'{uid}-{conversation_id}', vector, meta)
         except Exception:
             OMI_CONVERSATION_SUMMARY_VECTOR_UPSERTS_TOTAL.labels(outcome='error').inc()
             raise
@@ -245,7 +244,7 @@ def upsert_vectors(uid: str, vectors: List[List[float]], conversation_ids: List[
             {'uid': uid, 'conversation_id': cid, 'created_at': int(datetime.now(timezone.utc).timestamp())}
             for cid in conversation_ids
         ]
-        chroma_upsert_batch(ids, vectors, metas)
+        _chroma().chroma_upsert_batch(ids, vectors, metas)
         return
     if index is None:
         return
@@ -278,7 +277,7 @@ def query_vectors(
 ) -> List[str]:
     if _use_chroma:
         xq = query_vector if query_vector is not None else embeddings.embed_query(query)
-        ids = chroma_query(
+        ids = _chroma().chroma_query(
             query_vector=xq,
             uid=uid,
             top_k=k,
@@ -384,7 +383,7 @@ def delete_vector(uid: str, conversation_id: str) -> None:
     Note: Vectors are stored with ID format '{uid}-{conversation_id}'
     """
     if _use_chroma:
-        chroma_delete([f'{uid}-{conversation_id}'])
+        _chroma().chroma_delete([f'{uid}-{conversation_id}'])
         return
     if index is None:
         logger.warning('Pinecone index not initialized, skipping conversation vector delete')

@@ -10,6 +10,7 @@ import socket
 import time
 from datetime import datetime, timezone
 from urllib.parse import urlparse
+from typing import Optional
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -26,7 +27,7 @@ STARTED_AT = time.time()
 _dashboard_basic_auth = HTTPBasic(auto_error=False)
 
 
-def require_dashboard_auth(credentials: HTTPBasicCredentials = Depends(_dashboard_basic_auth)) -> None:
+def require_dashboard_auth(credentials: Optional[HTTPBasicCredentials] = Depends(_dashboard_basic_auth)) -> None:
     """Gate every route on this router behind HTTP Basic Auth, when configured.
 
     This dashboard was built LAN-only (model picker, conversation retry,
@@ -202,14 +203,14 @@ async def dashboard(request: Request):
 
     # Resolve current models (Redis → env)
     from utils.llm.model_config import (
-        _get_local_primary_model,
-        _get_local_chat_agent_model,
-        _get_local_embedding_model,
+        get_local_primary_model,
+        get_local_chat_agent_model,
+        get_local_embedding_model,
     )
 
-    primary_model = _get_local_primary_model() or "-"
-    chat_agent_model = _get_local_chat_agent_model() or "(same as primary)"
-    embedding_model = _get_local_embedding_model() or "-"
+    primary_model = get_local_primary_model() or "-"
+    chat_agent_model = get_local_chat_agent_model() or "(same as primary)"
+    embedding_model = get_local_embedding_model() or "-"
 
     component_rows = ""
     for name, info in sorted(components.items()):
@@ -790,7 +791,7 @@ async def models_allow_set(req: ModelAllowRequest):
     Dashboard picker and mobile APK will show only allowed models.
     """
     try:
-        from database.redis_db import set_model_allowlist, get_model_allowlist
+        from database.redis_db import set_model_allowlist
     except Exception as e:
         return JSONResponse(
             status_code=500,
@@ -818,14 +819,14 @@ async def models_allow_set(req: ModelAllowRequest):
 def models_current():
     """Return the currently active models (Redis → env fallback)."""
     from utils.llm.model_config import (
-        _get_local_primary_model,
-        _get_local_chat_agent_model,
-        _get_local_embedding_model,
+        get_local_primary_model,
+        get_local_chat_agent_model,
+        get_local_embedding_model,
     )
 
-    primary = _get_local_primary_model() or ""
-    chat_agent = _get_local_chat_agent_model() or ""
-    embedding = _get_local_embedding_model() or ""
+    primary = get_local_primary_model() or ""
+    chat_agent = get_local_chat_agent_model() or ""
+    embedding = get_local_embedding_model() or ""
     openai_base = os.getenv("OPENAI_BASE_URL", "")
 
     # Check if overrides are from Redis or env
@@ -881,16 +882,16 @@ def models_select(req: ModelSelectRequest):
 
     # Report back what's now active
     from utils.llm.model_config import (
-        _get_local_primary_model,
-        _get_local_chat_agent_model,
-        _get_local_embedding_model,
+        get_local_primary_model,
+        get_local_chat_agent_model,
+        get_local_embedding_model,
     )
 
     return {
         "ok": True,
-        "primary": _get_local_primary_model() or "",
-        "chat_agent": _get_local_chat_agent_model() or "",
-        "embedding": _get_local_embedding_model() or "",
+        "primary": get_local_primary_model() or "",
+        "chat_agent": get_local_chat_agent_model() or "",
+        "embedding": get_local_embedding_model() or "",
         "note": "Models applied. Next LLM call will use the new selection.",
     }
 
@@ -923,11 +924,11 @@ def models_shortcuts_save(req: ShortcutSaveRequest):
 @router.get("/dashboard/models", response_class=JSONResponse)
 async def model_config():
     """Legacy endpoint — returns current config. Prefer /models/available + /models/current."""
-    from utils.llm.model_config import _get_local_primary_model, _get_local_chat_agent_model
+    from utils.llm.model_config import get_local_primary_model, get_local_chat_agent_model
 
-    local_model = _get_local_primary_model()
+    local_model = get_local_primary_model()
     openai_base = os.getenv("OPENAI_BASE_URL", "")
-    local_llm_model = _get_local_chat_agent_model()
+    local_llm_model = get_local_chat_agent_model()
     provider_mode = os.getenv("PROVIDER_MODE", "offline")
 
     discovered_models = []
