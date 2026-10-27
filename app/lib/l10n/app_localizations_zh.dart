@@ -4349,6 +4349,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get continueText => '继续';
 
   @override
+  String get checkoutExistingSubscription => '您已有订阅。请管理现有订阅，而不要开始新的订阅。';
+
+  @override
   String get resubscribeFirstToChangePlans => '请先重新订阅再更改套餐。';
 
   @override
@@ -8462,6 +8465,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get transcriptionUnavailableRecordingSaved => '转录不可用 — 录音仍在继续，你的音频已保存。';
 
   @override
+  String get captureNoAudioFromPendant => '挂件没有音频';
+
+  @override
   String get capturing => '正在捕获';
 
   @override
@@ -10902,6 +10908,12 @@ class AppLocalizationsZh extends AppLocalizations {
       '与 Omi 的蓝牙连接已中断，因此音频无法传输到应用。Omi 会继续在设备上录音，并在连接恢复后同步。重试会重新建立连接；如果仍然失败，请在“设置 > 设备”中检查你的设备。';
 
   @override
+  String get captureConnecting => '正在连接…';
+
+  @override
+  String get captureNoAudioDetail => '挂件已连接，但没有音频传输到您的手机';
+
+  @override
   String get captureIngressNeedsReconnect => '音频未送达应用 — 请重新连接您的 Omi';
 
   @override
@@ -10928,12 +10940,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get captureStorageAlmostFull => '存储空间即将用完';
-
-  @override
-  String get capturePendantDisconnectedDetail => '吊坠与这部手机的连接已断开。吊坠开机并在附近时，Omi 会自动重新连接。此前录下的内容都已保存。';
-
-  @override
-  String get capturePendantDisconnectedShort => 'Omi 会自动重新连接';
 
   @override
   String participantsSummaryUncounted(String name) {
@@ -12052,12 +12058,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get playbackAudioNetworkFailed => '请检查网络连接';
-
-  @override
-  String get forYou => '为你推荐';
-
-  @override
-  String get stopThese => '停止此类推荐';
 
   @override
   String get dismiss => '忽略';
@@ -13190,9 +13190,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get paywallTrialSecondary => '继续使用免费计划';
-
-  @override
   String get paywallTrialCancelNote => '随时取消。无费用，无罚款。';
 
   @override
@@ -14195,6 +14192,25 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get episodeNotesUnavailable => '实时笔记未在更新。请暂时查看转录文本。';
+
+  @override
+  String episodeCaptureFor(String duration) {
+    return '录音中 · $duration';
+  }
+
+  @override
+  String get episodePrevious => '上一段记录';
+
+  @override
+  String captureChunksPending(int pending) {
+    return '待处理音频块: $pending';
+  }
+
+  @override
+  String get episodeOpenPrevious => '打开上一段记录';
+
+  @override
   String get episodeNotesSoon => '交谈几分钟后会显示笔记。';
 
   @override
@@ -14606,4 +14622,104 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get heldForDayReview => '等待您的当日回顾';
+
+  @override
+  String homeBackgroundLine(String items) {
+    return '另外：$items';
+  }
+
+  @override
+  String get deviceOnboardingPressButtonTitle => '按一下 Omi 上的按钮';
+
+  @override
+  String get deviceOnboardingPressButtonSubtitle => '短按一下，然后随便问。';
+
+  @override
+  String get deviceOnboardingAskNowTitle => '说出你的问题';
+
+  @override
+  String get deviceOnboardingAskNowSubtitle => '大声说出来，Omi 正在听。';
+
+  @override
+  String get deviceOnboardingPressAgainHint => '说完了？再按一下按钮发送。';
+
+  @override
+  String trialUpsellTitle(int days) {
+    return '已升级为 $days 天免费';
+  }
+
+  @override
+  String trialUpsellBody(int days) {
+    return 'Omi Pro 免费 $days 天。扣费前会提醒你。随时可取消。';
+  }
+
+  @override
+  String trialUpsellClaim(int days) {
+    return '领取 $days 天试用';
+  }
+
+  @override
+  String settingsUpgradeTrialSubtitle(int days) {
+    return '开始 $days 天免费试用';
+  }
+
+  @override
+  String get pairingPowerOnTitle => '打开 Omi 电源';
+
+  @override
+  String get pairingPowerOnSubtitle => '按一下按钮，并放在手机附近。';
+
+  @override
+  String get walkthroughBackgroundRecordingNote => '就这样。Omi 会在后台继续记录你的对话。';
+
+  @override
+  String get noThanks => '不用了，谢谢';
+
+  @override
+  String get recapInTheBackground => '背景中';
+
+  @override
+  String retentionOfferAccept(int percent) {
+    return '享受 $percent% 折扣继续使用';
+  }
+
+  @override
+  String retentionOfferBody(String price, int months) {
+    return '继续使用，每月只需 $price，持续 $months 个月。';
+  }
+
+  @override
+  String retentionOfferApplied(int percent, int months) {
+    return '完成。$percent% 折扣，持续 $months 个月。';
+  }
+
+  @override
+  String get othersSpeakerLabel => '其他人';
+
+  @override
+  String get livePreviewLabel => 'Live preview';
+
+  @override
+  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
+
+  @override
+  String get livePreviewListening => 'Listening… words appear here as you speak.';
+
+  @override
+  String get livePreviewStarting => 'Starting live preview…';
+
+  @override
+  String get livePreviewTranscribingTitle => 'Transcribing…';
+
+  @override
+  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
+
+  @override
+  String get openLoopAnswerDone => '完成';
+
+  @override
+  String get openLoopAnswerRemind => '稍后提醒';
+
+  @override
+  String get openLoopAnswerDrop => '放弃';
 }

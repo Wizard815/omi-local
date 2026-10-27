@@ -4389,6 +4389,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get continueText => 'متابعة';
 
   @override
+  String get checkoutExistingSubscription => 'لديك اشتراك بالفعل. يمكنك إدارة اشتراكك الحالي بدلاً من بدء اشتراك جديد.';
+
+  @override
   String get resubscribeFirstToChangePlans => 'أعد الاشتراك أولاً لتغيير الخطط.';
 
   @override
@@ -8535,6 +8538,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get transcriptionUnavailableRecordingSaved => 'النسخ غير متاح — يستمر التسجيل ويتم حفظ الصوت.';
 
   @override
+  String get captureNoAudioFromPendant => 'لا يوجد صوت من القلادة';
+
+  @override
   String get capturing => 'جارٍ الالتقاط';
 
   @override
@@ -11019,6 +11025,12 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعطّل اتصال البلوتوث بجهاز Omi، لذا لا يصل الصوت إلى التطبيق. يواصل Omi التسجيل على الجهاز وسيتمت المزامنة بمجرد استعادة الاتصال. إعادة المحاولة تعيد إنشاء الاتصال؛ إذا استمر الفشل، تحقق من جهازك من الإعدادات > الجهاز.';
 
   @override
+  String get captureConnecting => 'جارٍ الاتصال…';
+
+  @override
+  String get captureNoAudioDetail => 'القلادة متصلة، لكن لا صوت يصل إلى هاتفك';
+
+  @override
   String get captureIngressNeedsReconnect => 'الصوت لا يصل إلى التطبيق — أعد توصيل Omi';
 
   @override
@@ -11047,13 +11059,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get captureStorageAlmostFull => 'المساحة ممتلئة تقريبًا';
-
-  @override
-  String get capturePendantDisconnectedDetail =>
-      'فقد القلادة اتصالها بهذا الهاتف. سيعيد Omi الاتصال تلقائيًا عندما تكون القلادة قيد التشغيل وقريبة. كل ما سُجّل قبل ذلك محفوظ.';
-
-  @override
-  String get capturePendantDisconnectedShort => 'سيعيد Omi الاتصال تلقائيًا';
 
   @override
   String participantsSummaryUncounted(String name) {
@@ -12179,12 +12184,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get playbackAudioNetworkFailed => 'تحقق من الاتصال';
-
-  @override
-  String get forYou => 'من أجلك';
-
-  @override
-  String get stopThese => 'إيقاف هذه';
 
   @override
   String get dismiss => 'تجاهل';
@@ -13323,9 +13322,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get paywallTrialSecondary => 'استمر بالخطة المجانية';
-
-  @override
   String get paywallTrialCancelNote => 'يمكنك الإلغاء في أي وقت. لا توجد رسوم أو غرامات.';
 
   @override
@@ -14339,6 +14335,25 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get episodeNotesUnavailable => 'الملاحظات المباشرة لا تتحدث. اعرض النص في الوقت الحالي.';
+
+  @override
+  String episodeCaptureFor(String duration) {
+    return 'جارٍ التسجيل · $duration';
+  }
+
+  @override
+  String get episodePrevious => 'الحلقة السابقة';
+
+  @override
+  String captureChunksPending(int pending) {
+    return 'مقاطع قيد الانتظار: $pending';
+  }
+
+  @override
+  String get episodeOpenPrevious => 'افتح الحلقة السابقة';
+
+  @override
   String get episodeNotesSoon => 'تظهر الملاحظات بعد الدقائق الأولى من الحديث.';
 
   @override
@@ -14754,4 +14769,104 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get heldForDayReview => 'بانتظار مراجعة اليوم';
+
+  @override
+  String homeBackgroundLine(String items) {
+    return 'أيضًا: $items';
+  }
+
+  @override
+  String get deviceOnboardingPressButtonTitle => 'اضغط زر Omi';
+
+  @override
+  String get deviceOnboardingPressButtonSubtitle => 'ضغطة قصيرة واحدة. ثم اسأل أي شيء.';
+
+  @override
+  String get deviceOnboardingAskNowTitle => 'اطرح سؤالك';
+
+  @override
+  String get deviceOnboardingAskNowSubtitle => 'قلها بصوت عالٍ. Omi يستمع.';
+
+  @override
+  String get deviceOnboardingPressAgainHint => 'انتهيت؟ اضغط الزر مرة أخرى للإرسال.';
+
+  @override
+  String trialUpsellTitle(int days) {
+    return 'تمت ترقيتك إلى $days يومًا مجانًا';
+  }
+
+  @override
+  String trialUpsellBody(int days) {
+    return '$days يومًا من Omi Pro على حسابنا. سنذكّرك قبل أي خصم. يمكنك الإلغاء في أي وقت.';
+  }
+
+  @override
+  String trialUpsellClaim(int days) {
+    return 'احصل على تجربة $days يومًا';
+  }
+
+  @override
+  String settingsUpgradeTrialSubtitle(int days) {
+    return 'ابدأ تجربتك المجانية لمدة $days أيام';
+  }
+
+  @override
+  String get pairingPowerOnTitle => 'شغّل جهاز Omi';
+
+  @override
+  String get pairingPowerOnSubtitle => 'اضغط الزر مرة واحدة وأبقه قريبًا من هاتفك.';
+
+  @override
+  String get walkthroughBackgroundRecordingNote => 'هذا كل شيء. سيستمر Omi في تسجيل محادثاتك في الخلفية.';
+
+  @override
+  String get noThanks => 'لا، شكرًا';
+
+  @override
+  String get recapInTheBackground => 'في الخلفية';
+
+  @override
+  String retentionOfferAccept(int percent) {
+    return 'ابقَ بخصم $percent%';
+  }
+
+  @override
+  String retentionOfferBody(String price, int months) {
+    return 'ابقَ وادفع $price شهريًا لمدة $months أشهر قادمة.';
+  }
+
+  @override
+  String retentionOfferApplied(int percent, int months) {
+    return 'تم. خصم $percent% لمدة $months أشهر قادمة.';
+  }
+
+  @override
+  String get othersSpeakerLabel => 'آخرون';
+
+  @override
+  String get livePreviewLabel => 'Live preview';
+
+  @override
+  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
+
+  @override
+  String get livePreviewListening => 'Listening… words appear here as you speak.';
+
+  @override
+  String get livePreviewStarting => 'Starting live preview…';
+
+  @override
+  String get livePreviewTranscribingTitle => 'Transcribing…';
+
+  @override
+  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
+
+  @override
+  String get openLoopAnswerDone => 'تم';
+
+  @override
+  String get openLoopAnswerRemind => 'ذكّرني لاحقًا';
+
+  @override
+  String get openLoopAnswerDrop => 'استبعدها';
 }

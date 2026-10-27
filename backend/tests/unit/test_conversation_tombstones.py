@@ -185,6 +185,9 @@ def test_account_wipe_enumerates_tombstones_even_without_root(store, monkeypatch
     data_plane = Store()
     data_plane.rows['rollout_cohorts/u'] = {'cohorts': {'dev': {'batch-pipeline': True}}}
     monkeypatch.setattr(user_data_deletion, 'get_data_plane_firestore_client', lambda: data_plane)
+    # Global quiet-job pagination is covered by the real Firestore emulator.
+    quiet_cleanup = MagicMock()
+    monkeypatch.setattr(user_data_deletion, 'stop_quiet_checks_for_account', quiet_cleanup)
 
     def purge(ref, **kwargs):
         for path in list(store.rows):
@@ -201,6 +204,7 @@ def test_account_wipe_enumerates_tombstones_even_without_root(store, monkeypatch
         },
     )
     wipe('u')
+    quiet_cleanup.assert_called_once_with('u', firestore_client=store)
     assert data_plane.rows == {}
     assert store.rows == {}
     assert not tombstones.is_deleted('u', 'c')
@@ -315,3 +319,32 @@ def test_repeated_delete_after_hard_cleanup_preserves_original_metadata(store):
     store.rows.pop('users/u/conversations/c')
     tombstones.record_deletion('u', 'c')
     assert store.rows['users/u/deleted_conversations/c'] == original
+
+
+@pytest.mark.parametrize('parent_exists', [True, False])
+def test_deletion_purges_all_staged_chunks_after_durable_intent_even_without_parent(store, parent_exists):
+    if not parent_exists:
+        store.rows.pop('users/u/conversations/c')
+    for index in (0, 17, 127):
+        store.rows[f'users/u/from_segments_chunks/c-{index:03d}'] = {'payload': 'encrypted'}
+    store.rows['users/u/from_segments_chunks/another-000'] = {'payload': 'encrypted'}
+    tombstones.record_deletion('u', 'c')
+    assert tombstones.is_deleted('u', 'c')
+    assert not any(path.startswith('users/u/from_segments_chunks/c-') for path in store.rows)
+    assert 'users/u/from_segments_chunks/another-000' in store.rows
+
+
+def test_staging_cleanup_failure_leaves_deletion_intent_durable_and_retryable(store, monkeypatch):
+    from database import from_segments_chunks
+
+    calls = []
+
+    def fail(owner, cid, **kwargs):
+        calls.append(tombstones.is_deleted(owner, cid))
+        raise RuntimeError('synthetic storage failure')
+
+    monkeypatch.setattr(from_segments_chunks, 'purge_chunks', fail)
+    with pytest.raises(RuntimeError, match='synthetic storage failure'):
+        tombstones.record_deletion('u', 'c')
+    assert calls == [True]
+    assert tombstones.is_deleted('u', 'c')

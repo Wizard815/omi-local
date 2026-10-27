@@ -1,3 +1,11 @@
+from config.refactor_modes import serving_for
+from utils.speakers.person_pool import (
+    pool_profile,
+    retract_profile,
+    remove_sample,
+    PersonVoiceQualityError,
+    shadow_profile,
+)
 from config.firestore_read_levers import lever_enabled
 import uuid
 from database.fsr_read_cache import cache_writer, cached_read, memo, plane_id, ttl, user_snapshot, writing
@@ -32,6 +40,7 @@ from database.person_aliases import (
 from database.read_boundary import parse_payload_strict, parse_snapshot_or_none, parse_snapshot_strict
 from database.speaker_learning_fields import project_person_learning, speech_sample_source, voice_learning_fields
 from database.speaker_profile_authority import person_teaching_authorized
+from database import speaker_auto_enroll as auto_enroll_db
 from database.redis_db import (
     delete_cached_user_geolocation,
     try_acquire_client_device_write_lock,
@@ -269,8 +278,7 @@ def get_user_private_cloud_sync_enabled(uid: str) -> bool:
 
 def set_user_private_cloud_sync_enabled(uid: str, value: bool):
     """Enable or disable private cloud sync for a user."""
-    user_ref = db.collection('users').document(uid)
-    user_ref.update({'private_cloud_sync_enabled': value})
+    auto_enroll_db.update_privacy(uid, {'private_cloud_sync_enabled': value}, firestore_client=db)
 
 
 def set_user_cancellation_feedback(uid: str, reason: str, reason_details: Optional[str] = None):
@@ -1046,6 +1054,7 @@ def dismiss_person(uid: str, person_id: str) -> bool:
 
 
 def delete_person(uid: str, person_id: str):
+    auto_enroll_db.revoke_person(uid, person_id, firestore_client=db)
     person_ref = db.collection('users').document(uid).collection('people').document(person_id)
     person_ref.delete()
 
@@ -1109,21 +1118,46 @@ def get_person_speech_samples_count(uid: str, person_id: str) -> int:
 
 @transactional
 def _replace_speech_profile_transaction(
-    transaction, person_ref, expected_updated_at, profile, user_ref=None, source=None
+    transaction, person_ref, expected_updated_at, profile, user_ref=None, source=None, enrollment_privacy_version=None
 ):
     if source and not person_teaching_authorized(transaction, user_ref, person_ref.id, *source):
         return None
     snapshot = person_ref.get(transaction=transaction)
     if not snapshot.exists:
         return None
-    if user_ref is not None and not (user_ref.get(transaction=transaction).to_dict() or {}).get(
-        'save_other_voice_profiles', True
+    user_doc = (user_ref.get(transaction=transaction).to_dict() or {}) if user_ref is not None else {}
+    if user_ref is not None and not user_doc.get('save_other_voice_profiles', True):
+        return None
+    if enrollment_privacy_version is not None and (
+        not source
+        or not auto_enroll_db.authorize_audio(
+            transaction,
+            user_ref,
+            user_doc,
+            person_ref.id,
+            source,
+            profile.get('speaker_embedding'),
+            enrollment_privacy_version,
+            firestore_client=db,
+        )
     ):
         return None
     person = snapshot.to_dict()
+    if person.get('speaker_auto_enroll_revoked'):
+        return None
     if person.get('updated_at') != expected_updated_at:
         return None  # Deleted, corrected or replaced while audio work was in flight.
     old_samples = person.get('speech_samples', [])
+    if source:
+        shadow_profile(source[0], person, profile)
+    # refactor: superseded by utils.speakers.person_pool when SPEAKER_EVIDENCE_MODE=serve
+    if source and serving_for('SPEAKER_EVIDENCE_MODE', source[0]):
+        try:
+            profile, old_samples = pool_profile(person, profile)
+        except PersonVoiceQualityError:
+            return None  # Caller retires the unpublished blob; existing enrollment is untouched.
+    elif person.get('person_voice_confirmations') is not None:
+        profile = {**profile, 'person_voice_confirmations': None, 'person_voice_base': None}
     transaction.update(person_ref, {**profile, 'updated_at': datetime.now(timezone.utc)})
     return old_samples
 
@@ -1140,6 +1174,7 @@ def replace_person_speech_profile(
     *,
     speech_seconds: Optional[float] = None,
     expected_receipt_generation: Optional[int] = None,
+    enrollment_privacy_version: Optional[int] = None,
 ) -> Optional[list[str]]:
     """Publish verified teaching atomically; None means its source/version fence failed."""
     user_ref = db.collection('users').document(uid)
@@ -1159,6 +1194,7 @@ def replace_person_speech_profile(
         profile,
         user_ref=user_ref,
         source=(uid, conversation_id, segment_ids, expected_receipt_generation),
+        enrollment_privacy_version=enrollment_privacy_version,
     )
 
 
@@ -1171,8 +1207,10 @@ def _invalidate_speech_profile_transaction(transaction, person_ref, conversation
     source = person.get('speech_sample_source') or {}
     # Always fence in-flight teaching, even when it has not published provenance yet.
     update = {'updated_at': datetime.now(timezone.utc)}
-    removed = []
-    if source.get('conversation_id') == conversation_id and set(source.get('segment_ids', [])) & set(segment_ids):
+    pooled, removed = retract_profile(person, [conversation_id], segment_ids)
+    if person.get('person_voice_confirmations') is not None:
+        update.update(pooled)
+    elif source.get('conversation_id') == conversation_id and set(source.get('segment_ids', [])) & set(segment_ids):
         removed = person.get('speech_samples', [])
         update.update(
             speech_samples=[], speech_sample_transcripts=[], speaker_embedding=None, speech_sample_source=None
@@ -1219,24 +1257,14 @@ def _remove_sample_transaction(transaction, person_ref, sample_path: str) -> boo
             'speaker_embedding': None,
             'speech_sample_source': None,
             'updated_at': datetime.now(timezone.utc),
+            **remove_sample(person_data, sample_path),
         },
     )
     return True
 
 
 def remove_person_speech_sample(uid: str, person_id: str, sample_path: str) -> bool:
-    """
-    Remove a speech sample path from person's speech_samples list.
-    Also removes the corresponding transcript at the same index to keep arrays in sync.
-
-    Args:
-        uid: User ID
-        person_id: Person ID
-        sample_path: GCS path to remove
-
-    Returns:
-        True if removed, False if person or sample not found
-    """
+    """Remove sample, transcript and pooled vector; False if already absent."""
     person_ref = db.collection('users').document(uid).collection('people').document(person_id)
     transaction = db.transaction()
     return _remove_sample_transaction(transaction, person_ref, sample_path)

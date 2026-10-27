@@ -4411,6 +4411,10 @@ class AppLocalizationsDa extends AppLocalizations {
   String get continueText => 'Fortsæt';
 
   @override
+  String get checkoutExistingSubscription =>
+      'Du har allerede et abonnement. Administrer dit nuværende abonnement i stedet for at starte et nyt.';
+
+  @override
   String get resubscribeFirstToChangePlans => 'Gentilmelding først for at skifte abonnement.';
 
   @override
@@ -8584,6 +8588,9 @@ class AppLocalizationsDa extends AppLocalizations {
       'Transskription er ikke tilgængelig — optagelsen fortsætter, og din lyd gemmes.';
 
   @override
+  String get captureNoAudioFromPendant => 'Ingen lyd fra vedhænget';
+
+  @override
   String get capturing => 'Optager';
 
   @override
@@ -11073,6 +11080,12 @@ class AppLocalizationsDa extends AppLocalizations {
       'Bluetooth-forbindelsen til din Omi er gået i stå, så lyden når ikke frem til appen. Omi optager videre på enheden og synkroniseres, når forbindelsen er tilbage. Prøv igen opretter forbindelsen igen; hvis det fortsat fejler, tjek din enhed under Indstillinger > Enhed.';
 
   @override
+  String get captureConnecting => 'Forbinder…';
+
+  @override
+  String get captureNoAudioDetail => 'Pendanten er forbundet, men der når ingen lyd din telefon';
+
+  @override
   String get captureIngressNeedsReconnect => 'Lyden når ikke appen — tilslut din Omi igen';
 
   @override
@@ -11101,13 +11114,6 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String get captureStorageAlmostFull => 'Lageret er næsten fuldt';
-
-  @override
-  String get capturePendantDisconnectedDetail =>
-      'Dit vedhæng mistede forbindelsen til denne telefon. Omi genopretter forbindelsen af sig selv, når vedhænget er tændt og i nærheden. Alt optaget før dette er i sikkerhed.';
-
-  @override
-  String get capturePendantDisconnectedShort => 'Omi genopretter forbindelsen af sig selv';
 
   @override
   String participantsSummaryUncounted(String name) {
@@ -12236,12 +12242,6 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String get playbackAudioNetworkFailed => 'Tjek forbindelsen';
-
-  @override
-  String get forYou => 'Til dig';
-
-  @override
-  String get stopThese => 'Stop disse';
 
   @override
   String get dismiss => 'Afvis';
@@ -13383,9 +13383,6 @@ class AppLocalizationsDa extends AppLocalizations {
   }
 
   @override
-  String get paywallTrialSecondary => 'Fortsæt med gratisplanen';
-
-  @override
   String get paywallTrialCancelNote => 'Opsig når som helst. Ingen gebyrer, ingen straf.';
 
   @override
@@ -14409,6 +14406,25 @@ class AppLocalizationsDa extends AppLocalizations {
   }
 
   @override
+  String get episodeNotesUnavailable => 'Løbende noter opdateres ikke. Se transskriptionen indtil videre.';
+
+  @override
+  String episodeCaptureFor(String duration) {
+    return 'Optager · $duration';
+  }
+
+  @override
+  String get episodePrevious => 'Forrige episode';
+
+  @override
+  String captureChunksPending(int pending) {
+    return 'Afventende dele: $pending';
+  }
+
+  @override
+  String get episodeOpenPrevious => 'Åbn forrige episode';
+
+  @override
   String get episodeNotesSoon => 'Noterne vises efter de første minutters snak.';
 
   @override
@@ -14826,4 +14842,105 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String get heldForDayReview => 'Venter på din dagsgennemgang';
+
+  @override
+  String homeBackgroundLine(String items) {
+    return 'Også: $items';
+  }
+
+  @override
+  String get deviceOnboardingPressButtonTitle => 'Tryk på knappen på din Omi';
+
+  @override
+  String get deviceOnboardingPressButtonSubtitle => 'Ét kort tryk. Spørg derefter om hvad som helst.';
+
+  @override
+  String get deviceOnboardingAskNowTitle => 'Stil dit spørgsmål';
+
+  @override
+  String get deviceOnboardingAskNowSubtitle => 'Sig det højt. Omi lytter.';
+
+  @override
+  String get deviceOnboardingPressAgainHint => 'Færdig? Tryk på knappen igen for at sende.';
+
+  @override
+  String trialUpsellTitle(int days) {
+    return 'Du har fået $days dage gratis';
+  }
+
+  @override
+  String trialUpsellBody(int days) {
+    return '$days dage Omi Pro på os. Vi minder dig om det før betaling. Opsig når som helst.';
+  }
+
+  @override
+  String trialUpsellClaim(int days) {
+    return 'Få min prøveperiode på $days dage';
+  }
+
+  @override
+  String settingsUpgradeTrialSubtitle(int days) {
+    return 'Start din gratis prøveperiode på $days dage';
+  }
+
+  @override
+  String get pairingPowerOnTitle => 'Tænd din Omi';
+
+  @override
+  String get pairingPowerOnSubtitle => 'Tryk én gang på knappen og hold den tæt på din telefon.';
+
+  @override
+  String get walkthroughBackgroundRecordingNote =>
+      'Det var det. Omi bliver ved med at optage dine samtaler i baggrunden.';
+
+  @override
+  String get noThanks => 'Nej tak';
+
+  @override
+  String get recapInTheBackground => 'I baggrunden';
+
+  @override
+  String retentionOfferAccept(int percent) {
+    return 'Bliv for $percent% rabat';
+  }
+
+  @override
+  String retentionOfferBody(String price, int months) {
+    return 'Bliv og betal $price om måneden de næste $months måneder.';
+  }
+
+  @override
+  String retentionOfferApplied(int percent, int months) {
+    return 'Færdig. $percent% rabat de næste $months måneder.';
+  }
+
+  @override
+  String get othersSpeakerLabel => 'Andre';
+
+  @override
+  String get livePreviewLabel => 'Live preview';
+
+  @override
+  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
+
+  @override
+  String get livePreviewListening => 'Listening… words appear here as you speak.';
+
+  @override
+  String get livePreviewStarting => 'Starting live preview…';
+
+  @override
+  String get livePreviewTranscribingTitle => 'Transcribing…';
+
+  @override
+  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
+
+  @override
+  String get openLoopAnswerDone => 'Færdig';
+
+  @override
+  String get openLoopAnswerRemind => 'Mind mig senere';
+
+  @override
+  String get openLoopAnswerDrop => 'Drop det';
 }

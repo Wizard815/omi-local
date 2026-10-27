@@ -4422,6 +4422,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get continueText => 'Continue';
 
   @override
+  String get checkoutExistingSubscription =>
+      'You already have a subscription. Manage your current subscription instead of starting a new one.';
+
+  @override
   String get resubscribeFirstToChangePlans => 'Resubscribe first to change plans.';
 
   @override
@@ -8590,6 +8594,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Transcription is unavailable — recording continues and your audio is saved.';
 
   @override
+  String get captureNoAudioFromPendant => 'No audio from pendant';
+
+  @override
   String get capturing => 'Capturing';
 
   @override
@@ -11074,6 +11081,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'The Bluetooth link to your Omi stalled, so audio isn\'t reaching the app. Omi keeps recording on the device and will sync once the link recovers. Retrying reconnects the link; if it keeps failing, check your device in Settings > Device.';
 
   @override
+  String get captureConnecting => 'Connecting…';
+
+  @override
+  String get captureNoAudioDetail => 'Pendant connected, but no audio is reaching your phone';
+
+  @override
   String get captureIngressNeedsReconnect => 'Audio isn\'t reaching the app — reconnect your Omi';
 
   @override
@@ -11102,13 +11115,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get captureStorageAlmostFull => 'Storage almost full';
-
-  @override
-  String get capturePendantDisconnectedDetail =>
-      'Your pendant lost its connection to this phone. Omi reconnects on its own when the pendant is on and nearby. Everything recorded before this is safe.';
-
-  @override
-  String get capturePendantDisconnectedShort => 'Omi reconnects on its own';
 
   @override
   String participantsSummaryUncounted(String name) {
@@ -12235,12 +12241,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playbackAudioNetworkFailed => 'Check Connection';
-
-  @override
-  String get forYou => 'For You';
-
-  @override
-  String get stopThese => 'Stop These';
 
   @override
   String get dismiss => 'Dismiss';
@@ -13377,11 +13377,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String paywallTrialCta(String price) {
-    return 'Start for $price';
+    return 'Try for $price';
   }
-
-  @override
-  String get paywallTrialSecondary => 'Continue with the free plan';
 
   @override
   String get paywallTrialCancelNote => 'Cancel anytime. No fees, no penalties.';
@@ -14404,6 +14401,25 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get episodeNotesUnavailable => 'Running notes aren’t updating. View the transcript for now.';
+
+  @override
+  String episodeCaptureFor(String duration) {
+    return 'Capturing · $duration';
+  }
+
+  @override
+  String get episodePrevious => 'Previous episode';
+
+  @override
+  String captureChunksPending(int pending) {
+    return 'Chunks pending: $pending';
+  }
+
+  @override
+  String get episodeOpenPrevious => 'Open Previous Episode';
+
+  @override
   String get episodeNotesSoon => 'Running notes appear after the first few minutes of talk.';
 
   @override
@@ -14821,4 +14837,105 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get heldForDayReview => 'Waiting for your day review';
+
+  @override
+  String homeBackgroundLine(String items) {
+    return 'Also: $items';
+  }
+
+  @override
+  String get deviceOnboardingPressButtonTitle => 'Press the button on your Omi';
+
+  @override
+  String get deviceOnboardingPressButtonSubtitle => 'One short press. Then ask anything.';
+
+  @override
+  String get deviceOnboardingAskNowTitle => 'Ask your question';
+
+  @override
+  String get deviceOnboardingAskNowSubtitle => 'Say it out loud. Omi is listening.';
+
+  @override
+  String get deviceOnboardingPressAgainHint => 'Done? Press the button again to send.';
+
+  @override
+  String trialUpsellTitle(int days) {
+    return 'You\'ve been upgraded to $days days free';
+  }
+
+  @override
+  String trialUpsellBody(int days) {
+    return '$days days of Omi Pro, on us. We\'ll remind you before anything is charged. Cancel anytime.';
+  }
+
+  @override
+  String trialUpsellClaim(int days) {
+    return 'Claim my $days-day trial';
+  }
+
+  @override
+  String settingsUpgradeTrialSubtitle(int days) {
+    return 'Start your $days-day free trial';
+  }
+
+  @override
+  String get pairingPowerOnTitle => 'Power on your Omi';
+
+  @override
+  String get pairingPowerOnSubtitle => 'Press the button once and keep it near your phone.';
+
+  @override
+  String get walkthroughBackgroundRecordingNote =>
+      'That\'s it. Omi will keep recording your conversations in the background.';
+
+  @override
+  String get noThanks => 'No thanks';
+
+  @override
+  String get recapInTheBackground => 'In the background';
+
+  @override
+  String retentionOfferAccept(int percent) {
+    return 'Stay for $percent% off';
+  }
+
+  @override
+  String retentionOfferBody(String price, int months) {
+    return 'Stay and pay $price a month for the next $months months.';
+  }
+
+  @override
+  String retentionOfferApplied(int percent, int months) {
+    return 'Done. $percent% off your next $months months.';
+  }
+
+  @override
+  String get othersSpeakerLabel => 'Others';
+
+  @override
+  String get livePreviewLabel => 'Live preview';
+
+  @override
+  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
+
+  @override
+  String get livePreviewListening => 'Listening… words appear here as you speak.';
+
+  @override
+  String get livePreviewStarting => 'Starting live preview…';
+
+  @override
+  String get livePreviewTranscribingTitle => 'Transcribing…';
+
+  @override
+  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
+
+  @override
+  String get openLoopAnswerDone => 'Done';
+
+  @override
+  String get openLoopAnswerRemind => 'Remind me later';
+
+  @override
+  String get openLoopAnswerDrop => 'Drop it';
 }

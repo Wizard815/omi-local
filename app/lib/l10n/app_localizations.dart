@@ -8433,6 +8433,12 @@ abstract class AppLocalizations {
   /// **'Continue'**
   String get continueText;
 
+  /// Checkout is blocked because an existing subscription must be managed, not purchased a second time. Not the pending-cancellation upgrade error.
+  ///
+  /// In en, this message translates to:
+  /// **'You already have a subscription. Manage your current subscription instead of starting a new one.'**
+  String get checkoutExistingSubscription;
+
   /// Why another price is refused while cancellation is pending
   ///
   /// In en, this message translates to:
@@ -16065,6 +16071,12 @@ abstract class AppLocalizations {
   /// **'Transcription is unavailable — recording continues and your audio is saved.'**
   String get transcriptionUnavailableRecordingSaved;
 
+  /// Capture status when the pendant is connected but its audio never arrived and automatic recovery is exhausted. Same wording as the Live Activity notice.
+  ///
+  /// In en, this message translates to:
+  /// **'No audio from pendant'**
+  String get captureNoAudioFromPendant;
+
   /// Live-capture app bar title while both audio and photos are being captured
   ///
   /// In en, this message translates to:
@@ -20157,6 +20169,18 @@ abstract class AppLocalizations {
   /// **'The Bluetooth link to your Omi stalled, so audio isn\'t reaching the app. Omi keeps recording on the device and will sync once the link recovers. Retrying reconnects the link; if it keeps failing, check your device in Settings > Device.'**
   String get captureWedgeBleExplanation;
 
+  /// Capture status while a pendant link is being verified: no Listening claim and no timer until the subscription is confirmed (CaptureIngressHealth).
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get captureConnecting;
+
+  /// Detail line under the no-audio-from-pendant warning: the link is fine, the audio is not flowing.
+  ///
+  /// In en, this message translates to:
+  /// **'Pendant connected, but no audio is reaching your phone'**
+  String get captureNoAudioDetail;
+
   /// Capture recovery banner title for an ingress_recovery_failed episode: automatic recovery is exhausted, so the reader must manually reconnect the device. Not a retry affordance and not an in-progress claim.
   ///
   /// In en, this message translates to:
@@ -20210,18 +20234,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Storage almost full'**
   String get captureStorageAlmostFull;
-
-  /// Details sheet from the Home live capture card when the pendant disconnected in the middle of a capture.
-  ///
-  /// In en, this message translates to:
-  /// **'Your pendant lost its connection to this phone. Omi reconnects on its own when the pendant is on and nearby. Everything recorded before this is safe.'**
-  String get capturePendantDisconnectedDetail;
-
-  /// Listening pill, after the status, when the pendant dropped and is not reconnecting yet: the one-line reassurance. The details sheet has the full explanation.
-  ///
-  /// In en, this message translates to:
-  /// **'Omi reconnects on its own'**
-  String get capturePendantDisconnectedShort;
 
   /// Conversation header people chip when other voices spoke but could not be counted reliably, e.g. 'David + others'
   ///
@@ -21884,18 +21896,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Check Connection'**
   String get playbackAudioNetworkFailed;
-
-  /// Home proactivity feed section title
-  ///
-  /// In en, this message translates to:
-  /// **'For You'**
-  String get forYou;
-
-  /// Disable the producer of a For You card
-  ///
-  /// In en, this message translates to:
-  /// **'Stop These'**
-  String get stopThese;
 
   /// Hide a For You card
   ///
@@ -23820,14 +23820,8 @@ abstract class AppLocalizations {
   /// Paywall primary button; price is a formatted zero price like $0.00
   ///
   /// In en, this message translates to:
-  /// **'Start for {price}'**
+  /// **'Try for {price}'**
   String paywallTrialCta(String price);
-
-  /// Paywall secondary button
-  ///
-  /// In en, this message translates to:
-  /// **'Continue with the free plan'**
-  String get paywallTrialSecondary;
 
   /// Paywall footnote
   ///
@@ -25527,6 +25521,36 @@ abstract class AppLocalizations {
   /// **'Updated {minutes} min ago · full notes when it wraps up'**
   String episodeUpdatedMinutesAgo(int minutes);
 
+  /// No description provided for @episodeNotesUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Running notes aren’t updating. View the transcript for now.'**
+  String get episodeNotesUnavailable;
+
+  /// No description provided for @episodeCaptureFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Capturing · {duration}'**
+  String episodeCaptureFor(String duration);
+
+  /// No description provided for @episodePrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous episode'**
+  String get episodePrevious;
+
+  /// No description provided for @captureChunksPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Chunks pending: {pending}'**
+  String captureChunksPending(int pending);
+
+  /// No description provided for @episodeOpenPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Previous Episode'**
+  String get episodeOpenPrevious;
+
   /// Shown in the running notes card before the first notes exist.
   ///
   /// In en, this message translates to:
@@ -26168,6 +26192,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Waiting for your day review'**
   String get heldForDayReview;
+
+  /// Home, under a day header: one line listing that day's background conversations (TV playing, a passing remark), each as its title and length, joined by ' · '. Tapping it shows them. Episodes beta only.
+  ///
+  /// In en, this message translates to:
+  /// **'Also: {items}'**
+  String homeBackgroundLine(String items);
+
+  /// Device walkthrough, Ask Omi step: PressButtonTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Press the button on your Omi'**
+  String get deviceOnboardingPressButtonTitle;
+
+  /// Device walkthrough, Ask Omi step: PressButtonSubtitle
+  ///
+  /// In en, this message translates to:
+  /// **'One short press. Then ask anything.'**
+  String get deviceOnboardingPressButtonSubtitle;
+
+  /// Device walkthrough, Ask Omi step: AskNowTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Ask your question'**
+  String get deviceOnboardingAskNowTitle;
+
+  /// Device walkthrough, Ask Omi step: AskNowSubtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Say it out loud. Omi is listening.'**
+  String get deviceOnboardingAskNowSubtitle;
+
+  /// Device walkthrough, Ask Omi step: PressAgainHint
+  ///
+  /// In en, this message translates to:
+  /// **'Done? Press the button again to send.'**
+  String get deviceOnboardingPressAgainHint;
+
+  /// Pocket onboarding arm: trialUpsellTitle
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve been upgraded to {days} days free'**
+  String trialUpsellTitle(int days);
+
+  /// Pocket onboarding arm: trialUpsellBody
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days of Omi Pro, on us. We\'ll remind you before anything is charged. Cancel anytime.'**
+  String trialUpsellBody(int days);
+
+  /// Pocket onboarding arm: trialUpsellClaim
+  ///
+  /// In en, this message translates to:
+  /// **'Claim my {days}-day trial'**
+  String trialUpsellClaim(int days);
+
+  /// Pocket onboarding arm: settingsUpgradeTrialSubtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Start your {days}-day free trial'**
+  String settingsUpgradeTrialSubtitle(int days);
+
+  /// Pocket onboarding arm: pairingPowerOnTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Power on your Omi'**
+  String get pairingPowerOnTitle;
+
+  /// Pocket onboarding arm: pairingPowerOnSubtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Press the button once and keep it near your phone.'**
+  String get pairingPowerOnSubtitle;
+
+  /// Pocket onboarding arm: walkthroughBackgroundRecordingNote
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s it. Omi will keep recording your conversations in the background.'**
+  String get walkthroughBackgroundRecordingNote;
+
+  /// Pocket onboarding arm: noThanks
+  ///
+  /// In en, this message translates to:
+  /// **'No thanks'**
+  String get noThanks;
+
+  /// Daily recap section listing the day's background conversations, which Home no longer shows
+  ///
+  /// In en, this message translates to:
+  /// **'In the background'**
+  String get recapInTheBackground;
+
+  /// Primary button on the last cancel step: keep the subscription with a discount
+  ///
+  /// In en, this message translates to:
+  /// **'Stay for {percent}% off'**
+  String retentionOfferAccept(int percent);
+
+  /// Offer shown on the last cancel step; price is the discounted monthly price
+  ///
+  /// In en, this message translates to:
+  /// **'Stay and pay {price} a month for the next {months} months.'**
+  String retentionOfferBody(String price, int months);
+
+  /// Toast after accepting the stay offer
+  ///
+  /// In en, this message translates to:
+  /// **'Done. {percent}% off your next {months} months.'**
+  String retentionOfferApplied(int percent, int months);
+
+  /// Collective label for unidentified voices with too little evidence in an over-split transcript; not a participant count.
+  ///
+  /// In en, this message translates to:
+  /// **'Others'**
+  String get othersSpeakerLabel;
+
+  /// Small caption above the on-device live transcript preview while recording
+  ///
+  /// In en, this message translates to:
+  /// **'Live preview'**
+  String get livePreviewLabel;
+
+  /// One-line explanation under the Live preview caption: the provisional text is made on the phone and replaced by the final transcript
+  ///
+  /// In en, this message translates to:
+  /// **'On-device preview. The final transcript replaces it shortly.'**
+  String get livePreviewExplanation;
+
+  /// Live preview is running on the phone but no words have been recognized yet
+  ///
+  /// In en, this message translates to:
+  /// **'Listening… words appear here as you speak.'**
+  String get livePreviewListening;
+
+  /// The on-device live preview engine is starting
+  ///
+  /// In en, this message translates to:
+  /// **'Starting live preview…'**
+  String get livePreviewStarting;
+
+  /// Calm state when this phone has no on-device preview: the recording is being transcribed after capture
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribing…'**
+  String get livePreviewTranscribingTitle;
+
+  /// Explains, under Transcribing…, where and when the transcript appears; not an error
+  ///
+  /// In en, this message translates to:
+  /// **'Your transcript appears in Conversations when processing finishes.'**
+  String get livePreviewTranscribingMessage;
+
+  /// Answer button on an open-loop Review card: the follow-up happened.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get openLoopAnswerDone;
+
+  /// Answer button on an open-loop Review card: ask again in two days.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind me later'**
+  String get openLoopAnswerRemind;
+
+  /// Answer button on an open-loop Review card: stop asking about this follow-up.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop it'**
+  String get openLoopAnswerDrop;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

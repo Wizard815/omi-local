@@ -533,15 +533,17 @@ an empty multilingual response from Modulate alone stays `failed_held` rather
 than terminal-empty. Timeouts, malformed responses, uncertain calls, missing
 evidence, and provider failures stay held. There are no paid-intent resets.
 
-**Second multilingual provider (long-speech units).** A unit with
-`padded_retry=skipped_long_speech` evidence, at least 5 s of strict-VAD speech
-and a validated empty Modulate response gets exactly one more call, to cloud
-Deepgram nova-3 with language detection (`second_transcribe`), inside the same
-`running` intent. Deepgram is the only other provider with a batch client
-(Soniox is streaming-only), and `config/stt_provider_policy.py` names it
-`HELD_RECOVERY_SECOND_PROVIDER` without admitting it to the general
-pre-recorded route. The batch allowance and consent are rechecked first; the
-client's own retry is disabled. Outcomes:
+**Second multilingual provider (long-speech units) — retired 2026-08-27.**
+This step used to spend exactly one more call, to cloud Deepgram nova-3 with
+language detection (`second_transcribe`), inside the same `running` intent.
+Deepgram is retired (no contract since 2026-08-27), so
+`config.stt_provider_policy.HELD_RECOVERY_SECOND_PROVIDER` is `None` and
+`second_provider_eligible` answers False for every unit: no second call is
+spent, and an empty multilingual Modulate response settles `failed_held`
+(Modulate-only recovery, the same behavior as
+`BATCH_PIPELINE_SECOND_MULTILINGUAL_ENABLED=false`). The wiring, flag and
+metering stay so a future second batch provider can be introduced by naming it
+in the policy again. Historical behavior, kept for reference:
 
 - Deepgram returns words: the unit recovers with those words (ordinary
   `success` result).
@@ -862,6 +864,17 @@ fence are unchanged. The successor lookup is two equality filters ordered by
 Two matches fail closed.
 
 ### Sweep owner-chain continuation and pending-only assignment page
+
+`BATCH_PIPELINE_PROJECTION_PREDECESSOR_REPLAY_ENABLED` defaults to `true`.
+When a discovered successor lacks a predecessor projection receipt, the sweep
+requests the owner's existing drain, or runs one bounded owner-chain walk when
+the drain is off. The walk starts at the projection watermark, rebuilding the
+missing predecessor before retrying successors in the same pass. This also
+works when the assignment cursor has already passed the head. `false` restores
+the previous blocked-page behavior. Binding, privacy, predecessor, replay and
+multipart fences remain authoritative; a head blocked by one of those fences
+still requires that underlying condition to be resolved. Already committed
+work does not need another GPU run.
 
 `BATCH_PIPELINE_SWEEP_OWNER_CHAIN_ENABLED` defaults to `true` (kill switch:
 `false` restores one attempt per page row). Rows from one owner's ordered chain

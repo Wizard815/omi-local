@@ -4431,6 +4431,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get continueText => 'Devam Et';
 
   @override
+  String get checkoutExistingSubscription =>
+      'Zaten bir aboneliğiniz var. Yeni bir abonelik başlatmak yerine mevcut aboneliğinizi yönetin.';
+
+  @override
   String get resubscribeFirstToChangePlans => 'Plan değiştirmek için önce yeniden abone olun.';
 
   @override
@@ -8606,6 +8610,9 @@ class AppLocalizationsTr extends AppLocalizations {
       'Transkripsiyon kullanılamıyor — kayıt devam ediyor ve sesiniz kaydediliyor.';
 
   @override
+  String get captureNoAudioFromPendant => 'Kolyeden ses gelmiyor';
+
+  @override
   String get capturing => 'Kaydediliyor';
 
   @override
@@ -11096,6 +11103,12 @@ class AppLocalizationsTr extends AppLocalizations {
       'Omi cihazınızdaki Bluetooth bağlantısı kesildi, bu nedenle ses uygulamaya ulaşmıyor. Omi cihazda kaydetmeye devam ediyor ve bağlantı geri geldiğinde senkronize olacak. Yeniden denemek bağlantıyı yeniden kurar; başarısız olmaya devam ederse Ayarlar > Cihaz bölümünden cihazınızı kontrol edin.';
 
   @override
+  String get captureConnecting => 'Bağlanıyor…';
+
+  @override
+  String get captureNoAudioDetail => 'Kolye bağlı, ancak telefonunuza hiçbir ses ulaşmıyor';
+
+  @override
   String get captureIngressNeedsReconnect => 'Ses uygulamaya ulaşmıyor — Omi\'nizi yeniden bağlayın';
 
   @override
@@ -11124,13 +11137,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get captureStorageAlmostFull => 'Depolama neredeyse dolu';
-
-  @override
-  String get capturePendantDisconnectedDetail =>
-      'Kolyenin bu telefonla bağlantısı kesildi. Kolye açık ve yakındayken Omi kendiliğinden yeniden bağlanır. Bundan önce kaydedilen her şey güvende.';
-
-  @override
-  String get capturePendantDisconnectedShort => 'Omi kendiliğinden yeniden bağlanır';
 
   @override
   String participantsSummaryUncounted(String name) {
@@ -12259,12 +12265,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get playbackAudioNetworkFailed => 'Bağlantıyı Kontrol Edin';
-
-  @override
-  String get forYou => 'Sizin İçin';
-
-  @override
-  String get stopThese => 'Bunları Durdur';
 
   @override
   String get dismiss => 'Gizle';
@@ -13410,9 +13410,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get paywallTrialSecondary => 'Ücretsiz planla devam et';
-
-  @override
   String get paywallTrialCancelNote => 'İstediğiniz zaman iptal edin. Ücret yok, ceza yok.';
 
   @override
@@ -14432,6 +14429,25 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get episodeNotesUnavailable => 'Canlı notlar güncellenmiyor. Şimdilik dökümü görüntüleyin.';
+
+  @override
+  String episodeCaptureFor(String duration) {
+    return 'Kaydediliyor · $duration';
+  }
+
+  @override
+  String get episodePrevious => 'Önceki bölüm';
+
+  @override
+  String captureChunksPending(int pending) {
+    return 'Bekleyen parçalar: $pending';
+  }
+
+  @override
+  String get episodeOpenPrevious => 'Önceki Bölümü Aç';
+
+  @override
   String get episodeNotesSoon => 'Notlar konuşmanın ilk birkaç dakikasından sonra görünür.';
 
   @override
@@ -14850,4 +14866,104 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get heldForDayReview => 'Gün değerlendirmenizi bekliyor';
+
+  @override
+  String homeBackgroundLine(String items) {
+    return 'Ayrıca: $items';
+  }
+
+  @override
+  String get deviceOnboardingPressButtonTitle => 'Omi\'nin düğmesine bas';
+
+  @override
+  String get deviceOnboardingPressButtonSubtitle => 'Kısa bir basış. Sonra istediğini sor.';
+
+  @override
+  String get deviceOnboardingAskNowTitle => 'Sorunu sor';
+
+  @override
+  String get deviceOnboardingAskNowSubtitle => 'Yüksek sesle söyle. Omi dinliyor.';
+
+  @override
+  String get deviceOnboardingPressAgainHint => 'Bitti mi? Göndermek için düğmeye tekrar bas.';
+
+  @override
+  String trialUpsellTitle(int days) {
+    return '$days gün ücretsiz kazandın';
+  }
+
+  @override
+  String trialUpsellBody(int days) {
+    return '$days gün Omi Pro bizden. Ücret alınmadan önce hatırlatırız. İstediğin zaman iptal et.';
+  }
+
+  @override
+  String trialUpsellClaim(int days) {
+    return '$days günlük denemeyi al';
+  }
+
+  @override
+  String settingsUpgradeTrialSubtitle(int days) {
+    return '$days günlük ücretsiz denemeyi başlat';
+  }
+
+  @override
+  String get pairingPowerOnTitle => 'Omi\'ni aç';
+
+  @override
+  String get pairingPowerOnSubtitle => 'Düğmeye bir kez bas ve telefonunun yanında tut.';
+
+  @override
+  String get walkthroughBackgroundRecordingNote => 'Bu kadar. Omi konuşmalarını arka planda kaydetmeye devam edecek.';
+
+  @override
+  String get noThanks => 'Hayır, teşekkürler';
+
+  @override
+  String get recapInTheBackground => 'Arka planda';
+
+  @override
+  String retentionOfferAccept(int percent) {
+    return '%$percent indirimle kal';
+  }
+
+  @override
+  String retentionOfferBody(String price, int months) {
+    return 'Kal ve ayda $price öde, önümüzdeki $months ay boyunca.';
+  }
+
+  @override
+  String retentionOfferApplied(int percent, int months) {
+    return 'Tamam. %$percent indirim, önümüzdeki $months ay.';
+  }
+
+  @override
+  String get othersSpeakerLabel => 'Diğerleri';
+
+  @override
+  String get livePreviewLabel => 'Live preview';
+
+  @override
+  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
+
+  @override
+  String get livePreviewListening => 'Listening… words appear here as you speak.';
+
+  @override
+  String get livePreviewStarting => 'Starting live preview…';
+
+  @override
+  String get livePreviewTranscribingTitle => 'Transcribing…';
+
+  @override
+  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
+
+  @override
+  String get openLoopAnswerDone => 'Tamamlandı';
+
+  @override
+  String get openLoopAnswerRemind => 'Daha sonra hatırlat';
+
+  @override
+  String get openLoopAnswerDrop => 'Yoksay';
 }

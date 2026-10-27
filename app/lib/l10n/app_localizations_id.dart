@@ -4428,6 +4428,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get continueText => 'Lanjutkan';
 
   @override
+  String get checkoutExistingSubscription =>
+      'Anda sudah memiliki langganan. Kelola langganan saat ini alih-alih memulai yang baru.';
+
+  @override
   String get resubscribeFirstToChangePlans => 'Berlangganan lagi dulu untuk mengubah paket.';
 
   @override
@@ -8598,6 +8602,9 @@ class AppLocalizationsId extends AppLocalizations {
       'Transkripsi tidak tersedia — perekaman berlanjut dan audio Anda tersimpan.';
 
   @override
+  String get captureNoAudioFromPendant => 'Tidak ada audio dari liontin';
+
+  @override
   String get capturing => 'Merekam';
 
   @override
@@ -11090,6 +11097,12 @@ class AppLocalizationsId extends AppLocalizations {
       'Sambungan Bluetooth ke Omi Anda terhenti, sehingga audio tidak sampai ke aplikasi. Omi terus merekam di perangkat dan akan disinkronkan setelah sambungan pulih. Mencoba lagi menyambungkan ulang tautan; jika terus gagal, periksa perangkat Anda di Setelan > Perangkat.';
 
   @override
+  String get captureConnecting => 'Menyambungkan…';
+
+  @override
+  String get captureNoAudioDetail => 'Pendant terhubung, tetapi tidak ada audio yang mencapai ponsel Anda';
+
+  @override
   String get captureIngressNeedsReconnect => 'Audio tidak mencapai aplikasi — sambungkan ulang Omi Anda';
 
   @override
@@ -11118,13 +11131,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get captureStorageAlmostFull => 'Penyimpanan hampir penuh';
-
-  @override
-  String get capturePendantDisconnectedDetail =>
-      'Liontin kehilangan koneksi dengan ponsel ini. Omi akan menyambung kembali sendiri saat liontin menyala dan berada di dekat Anda. Semua yang direkam sebelumnya aman.';
-
-  @override
-  String get capturePendantDisconnectedShort => 'Omi akan menyambung kembali sendiri';
 
   @override
   String participantsSummaryUncounted(String name) {
@@ -12254,12 +12260,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get playbackAudioNetworkFailed => 'Periksa Koneksi';
-
-  @override
-  String get forYou => 'Untuk Anda';
-
-  @override
-  String get stopThese => 'Hentikan Ini';
 
   @override
   String get dismiss => 'Tutup';
@@ -13407,9 +13407,6 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get paywallTrialSecondary => 'Lanjutkan dengan paket gratis';
-
-  @override
   String get paywallTrialCancelNote => 'Batalkan kapan saja. Tanpa biaya, tanpa penalti.';
 
   @override
@@ -14433,6 +14430,25 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
+  String get episodeNotesUnavailable => 'Catatan langsung tidak diperbarui. Lihat transkrip untuk sementara.';
+
+  @override
+  String episodeCaptureFor(String duration) {
+    return 'Merekam · $duration';
+  }
+
+  @override
+  String get episodePrevious => 'Episode sebelumnya';
+
+  @override
+  String captureChunksPending(int pending) {
+    return 'Bagian tertunda: $pending';
+  }
+
+  @override
+  String get episodeOpenPrevious => 'Buka Episode Sebelumnya';
+
+  @override
   String get episodeNotesSoon => 'Catatan muncul setelah beberapa menit pertama percakapan.';
 
   @override
@@ -14852,4 +14868,104 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get heldForDayReview => 'Menunggu tinjauan hari Anda';
+
+  @override
+  String homeBackgroundLine(String items) {
+    return 'Juga: $items';
+  }
+
+  @override
+  String get deviceOnboardingPressButtonTitle => 'Tekan tombol di Omi kamu';
+
+  @override
+  String get deviceOnboardingPressButtonSubtitle => 'Satu tekanan singkat. Lalu tanyakan apa saja.';
+
+  @override
+  String get deviceOnboardingAskNowTitle => 'Ajukan pertanyaanmu';
+
+  @override
+  String get deviceOnboardingAskNowSubtitle => 'Ucapkan dengan lantang. Omi mendengarkan.';
+
+  @override
+  String get deviceOnboardingPressAgainHint => 'Selesai? Tekan tombol lagi untuk mengirim.';
+
+  @override
+  String trialUpsellTitle(int days) {
+    return 'Kamu dapat $days hari gratis';
+  }
+
+  @override
+  String trialUpsellBody(int days) {
+    return '$days hari Omi Pro gratis dari kami. Kami ingatkan sebelum ada tagihan. Batalkan kapan saja.';
+  }
+
+  @override
+  String trialUpsellClaim(int days) {
+    return 'Ambil uji coba $days hari';
+  }
+
+  @override
+  String settingsUpgradeTrialSubtitle(int days) {
+    return 'Mulai uji coba gratis $days hari';
+  }
+
+  @override
+  String get pairingPowerOnTitle => 'Nyalakan Omi kamu';
+
+  @override
+  String get pairingPowerOnSubtitle => 'Tekan tombol sekali dan dekatkan ke ponsel.';
+
+  @override
+  String get walkthroughBackgroundRecordingNote => 'Selesai. Omi akan terus merekam percakapanmu di latar belakang.';
+
+  @override
+  String get noThanks => 'Tidak, terima kasih';
+
+  @override
+  String get recapInTheBackground => 'Di latar belakang';
+
+  @override
+  String retentionOfferAccept(int percent) {
+    return 'Tetap dengan diskon $percent%';
+  }
+
+  @override
+  String retentionOfferBody(String price, int months) {
+    return 'Tetap dan bayar $price per bulan selama $months bulan ke depan.';
+  }
+
+  @override
+  String retentionOfferApplied(int percent, int months) {
+    return 'Selesai. Diskon $percent% untuk $months bulan ke depan.';
+  }
+
+  @override
+  String get othersSpeakerLabel => 'Lainnya';
+
+  @override
+  String get livePreviewLabel => 'Live preview';
+
+  @override
+  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
+
+  @override
+  String get livePreviewListening => 'Listening… words appear here as you speak.';
+
+  @override
+  String get livePreviewStarting => 'Starting live preview…';
+
+  @override
+  String get livePreviewTranscribingTitle => 'Transcribing…';
+
+  @override
+  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
+
+  @override
+  String get openLoopAnswerDone => 'Selesai';
+
+  @override
+  String get openLoopAnswerRemind => 'Ingatkan saya nanti';
+
+  @override
+  String get openLoopAnswerDrop => 'Abaikan';
 }

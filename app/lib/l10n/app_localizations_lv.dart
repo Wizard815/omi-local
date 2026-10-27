@@ -4431,6 +4431,10 @@ class AppLocalizationsLv extends AppLocalizations {
   String get continueText => 'Turpināt';
 
   @override
+  String get checkoutExistingSubscription =>
+      'Jums jau ir abonements. Pārvaldiet pašreizējo abonementu, nevis sāciet jaunu.';
+
+  @override
   String get resubscribeFirstToChangePlans => 'Lai mainītu plānu, vispirms abonējiet vēlreiz.';
 
   @override
@@ -8614,6 +8618,9 @@ class AppLocalizationsLv extends AppLocalizations {
       'Transkripcija nav pieejama — ierakstīšana turpinās, un jūsu audio tiek saglabāts.';
 
   @override
+  String get captureNoAudioFromPendant => 'No kulona nav audio';
+
+  @override
   String get capturing => 'Notiek ierakstīšana';
 
   @override
@@ -11113,6 +11120,12 @@ class AppLocalizationsLv extends AppLocalizations {
       'Bluetooth savienojums ar jūsu Omi ir apstājies, tāpēc audio nesasniedz lietotni. Omi turpina ierakstīt ierīcē un sinhronizēsies, kad savienojums atjaunosies. Atkārtots mēģinājums atkal izveido savienojumu; ja tas joprojām neizdodas, pārbaudiet ierīci sadaļā Iestatījumi > Ierīce.';
 
   @override
+  String get captureConnecting => 'Savienojas…';
+
+  @override
+  String get captureNoAudioDetail => 'Kulons ir savienots, taču nekāds skaņas signāls nesasniedz jūsu tālruni';
+
+  @override
   String get captureIngressNeedsReconnect => 'Audio nesasniedz lietotni — atkārtoti pievienojiet Omi';
 
   @override
@@ -11141,13 +11154,6 @@ class AppLocalizationsLv extends AppLocalizations {
 
   @override
   String get captureStorageAlmostFull => 'Krātuve gandrīz pilna';
-
-  @override
-  String get capturePendantDisconnectedDetail =>
-      'Kulons zaudēja savienojumu ar šo tālruni. Omi pats atjaunos savienojumu, kad kulons būs ieslēgts un tuvumā. Viss, kas ierakstīts līdz šim, ir drošībā.';
-
-  @override
-  String get capturePendantDisconnectedShort => 'Omi pats atjaunos savienojumu';
 
   @override
   String participantsSummaryUncounted(String name) {
@@ -12276,12 +12282,6 @@ class AppLocalizationsLv extends AppLocalizations {
 
   @override
   String get playbackAudioNetworkFailed => 'Pārbaudiet savienojumu';
-
-  @override
-  String get forYou => 'Jums';
-
-  @override
-  String get stopThese => 'Apturēt šos';
 
   @override
   String get dismiss => 'Paslēpt';
@@ -13427,9 +13427,6 @@ class AppLocalizationsLv extends AppLocalizations {
   }
 
   @override
-  String get paywallTrialSecondary => 'Turpināt ar bezmaksas plānu';
-
-  @override
   String get paywallTrialCancelNote => 'Atcelt jebkurā laikā. Bez maksas, bez soda sankcijām.';
 
   @override
@@ -14451,6 +14448,25 @@ class AppLocalizationsLv extends AppLocalizations {
   }
 
   @override
+  String get episodeNotesUnavailable => 'Pašreizējās piezīmes netiek atjauninātas. Pagaidām skatiet transkripciju.';
+
+  @override
+  String episodeCaptureFor(String duration) {
+    return 'Ierakstīšana · $duration';
+  }
+
+  @override
+  String get episodePrevious => 'Iepriekšējā epizode';
+
+  @override
+  String captureChunksPending(int pending) {
+    return 'Gaidošie fragmenti: $pending';
+  }
+
+  @override
+  String get episodeOpenPrevious => 'Atvērt iepriekšējo epizodi';
+
+  @override
   String get episodeNotesSoon => 'Piezīmes parādās pēc pirmajām sarunas minūtēm.';
 
   @override
@@ -14871,4 +14887,104 @@ class AppLocalizationsLv extends AppLocalizations {
 
   @override
   String get heldForDayReview => 'Gaida jūsu dienas pārskatu';
+
+  @override
+  String homeBackgroundLine(String items) {
+    return 'Arī: $items';
+  }
+
+  @override
+  String get deviceOnboardingPressButtonTitle => 'Nospiediet Omi pogu';
+
+  @override
+  String get deviceOnboardingPressButtonSubtitle => 'Viens īss spiediens. Tad jautājiet jebko.';
+
+  @override
+  String get deviceOnboardingAskNowTitle => 'Uzdodiet jautājumu';
+
+  @override
+  String get deviceOnboardingAskNowSubtitle => 'Sakiet skaļi. Omi klausās.';
+
+  @override
+  String get deviceOnboardingPressAgainHint => 'Gatavs? Nospiediet pogu vēlreiz, lai nosūtītu.';
+
+  @override
+  String trialUpsellTitle(int days) {
+    return 'Jums $days dienas bez maksas';
+  }
+
+  @override
+  String trialUpsellBody(int days) {
+    return '$days dienas Omi Pro uz mūsu rēķina. Atgādināsim pirms maksas. Atceliet jebkurā brīdī.';
+  }
+
+  @override
+  String trialUpsellClaim(int days) {
+    return 'Saņemt $days dienu izmēģinājumu';
+  }
+
+  @override
+  String settingsUpgradeTrialSubtitle(int days) {
+    return 'Sāciet $days dienu bezmaksas izmēģinājumu';
+  }
+
+  @override
+  String get pairingPowerOnTitle => 'Ieslēdziet Omi';
+
+  @override
+  String get pairingPowerOnSubtitle => 'Nospiediet pogu vienreiz un turiet tuvu tālrunim.';
+
+  @override
+  String get walkthroughBackgroundRecordingNote => 'Tas arī viss. Omi turpinās ierakstīt jūsu sarunas fonā.';
+
+  @override
+  String get noThanks => 'Nē, paldies';
+
+  @override
+  String get recapInTheBackground => 'Fonā';
+
+  @override
+  String retentionOfferAccept(int percent) {
+    return 'Palikt ar $percent% atlaidi';
+  }
+
+  @override
+  String retentionOfferBody(String price, int months) {
+    return 'Paliec un maksā $price mēnesī nākamos $months mēnešus.';
+  }
+
+  @override
+  String retentionOfferApplied(int percent, int months) {
+    return 'Gatavs. $percent% atlaide nākamos $months mēnešus.';
+  }
+
+  @override
+  String get othersSpeakerLabel => 'Citi';
+
+  @override
+  String get livePreviewLabel => 'Live preview';
+
+  @override
+  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
+
+  @override
+  String get livePreviewListening => 'Listening… words appear here as you speak.';
+
+  @override
+  String get livePreviewStarting => 'Starting live preview…';
+
+  @override
+  String get livePreviewTranscribingTitle => 'Transcribing…';
+
+  @override
+  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
+
+  @override
+  String get openLoopAnswerDone => 'Pabeigts';
+
+  @override
+  String get openLoopAnswerRemind => 'Atgādināt vēlāk';
+
+  @override
+  String get openLoopAnswerDrop => 'Atmest';
 }

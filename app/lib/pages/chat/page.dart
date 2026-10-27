@@ -86,9 +86,13 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
   bool _showLatestJump = false;
   Timer? _latestJumpIdleTimer;
   final List<Timer> _pendingScrollTimers = [];
+  bool _postFrameScrollPending = false;
+  bool _postFrameScrollAnimated = false;
+  bool _postFrameScrollForce = false;
   final List<Timer> _ownedLifecycleTimers = [];
   bool _isProgrammaticScroll = false;
   int _lastObservedMessageCount = 0;
+  int _sendTurn = 0;
   String? _lastObservedMessageId;
   int _lastObservedTextLength = 0;
   int _lastObservedContentBlockCount = 0;
@@ -126,6 +130,7 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
       provider.readAloud.active = true;
       // Listen for quota exceeded from any send path (text or voice)
       provider.addListener(_onMessageProviderChanged);
+      _observeMessagesForAutoScroll(provider);
       // Every entry resumes the current conversation, including while a reply or voice send is active.
       if (provider.messages.isEmpty && !provider.isFreshChat) {
         provider.refreshMessages();
@@ -182,6 +187,7 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
 
   void _onMessageProviderChanged() {
     final provider = context.read<MessageProvider>();
+    _observeMessagesForAutoScroll(provider);
     if (mounted && provider.isChatQuotaExceeded && !_quotaSheetShown) {
       _quotaSheetShown = true;
       if (provider.chatAtCap == null) _showPlansSheetOnQuotaExceeded();
@@ -262,9 +268,37 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
     super.build(context);
 
     return ChatEntrance(
-      child: Consumer2<MessageProvider, ConnectivityProvider>(
-        builder: (context, provider, connectivityProvider, child) {
-          _observeMessagesForAutoScroll(provider);
+      child: Selector2<MessageProvider, ConnectivityProvider, Object>(
+        // Streamed text belongs to its message slot, not the header, composer,
+        // or transcript membership. Keep this key independent of reply text.
+        selector: (_, provider, connectivity) => (
+          provider,
+          provider.messages,
+          provider.messages.length,
+          provider.messages.isEmpty ? null : _chatMessageRowKey(provider.messages.last),
+          provider.isLoadingMessages,
+          provider.hasCachedMessages,
+          provider.isClearingChat,
+          provider.firstTimeLoadingText,
+          provider.historyProblem,
+          provider.hasOlderMessages,
+          provider.loadingOlderMessages,
+          provider.canSwitchChat,
+          provider.chatApps,
+          provider.chatApps.length,
+          provider.chatAtCap,
+          provider.chatMutationInProgress,
+          provider.canStopReply,
+          provider.sendingMessage,
+          provider.isUploadingFiles,
+          provider.selectedFiles.length,
+          // A follow-up is only shown after the reply finishes.
+          provider.chatMutationInProgress || provider.messages.isEmpty ? null : provider.messages.last.followUpQuestion,
+          connectivity.isConnected,
+        ),
+        builder: (context, _, child) {
+          final provider = context.read<MessageProvider>();
+          final connectivityProvider = context.read<ConnectivityProvider>();
           // Empty, the sheet is glass over the blurred page underneath (chat_route.dart); once there
           // is a transcript it turns solid so long answers stay readable.
           final isGlass = provider.messages.isEmpty && !provider.isLoadingMessages && !provider.isClearingChat;
@@ -346,9 +380,10 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
   }
 
   Widget _buildTranscript(MessageProvider provider) {
+    // Keyboard animation changes constraints, not transcript membership.
+    final messageKeys = [for (final message in provider.messages) _chatMessageRowKey(message)];
     return LayoutBuilder(
       builder: (context, constraints) {
-        final messageKeys = [for (final message in provider.messages) _chatMessageRowKey(message)];
         return Theme(
           data: Theme.of(context).copyWith(
             textSelectionTheme: TextSelectionThemeData(
@@ -598,6 +633,18 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
                           ValueListenableBuilder<TextEditingValue>(
                             valueListenable: textController,
                             builder: (context, value, child) {
+                              // While Omi answers, the empty composer offers Stop.
+                              if (value.text.isEmpty && provider.canStopReply) {
+                                return ChatComposerRoundButton(
+                                  buttonKey: const ValueKey('omi.chat.stop'),
+                                  icon: const Icon(Icons.stop),
+                                  label: context.l10n.stop,
+                                  onPressed: () {
+                                    OmiHaptics.light();
+                                    provider.stopReply();
+                                  },
+                                );
+                              }
                               if (value.text.isEmpty) {
                                 return ChatComposerRoundButton(
                                   icon: const FaIcon(FontAwesomeIcons.microphone),
@@ -610,7 +657,10 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
                                 );
                               }
                               final hasText = value.text.trim().isNotEmpty;
-                              if (!hasText || provider.sendingMessage) return const SizedBox.shrink();
+                              // A message sent while Omi answers replaces that reply.
+                              if (!hasText || (provider.sendingMessage && !provider.canStopReply)) {
+                                return const SizedBox.shrink();
+                              }
                               final canSend = !provider.isUploadingFiles && connectivityProvider.isConnected;
                               return ChatComposerRoundButton(
                                 buttonKey: const ValueKey('omi.chat.send'),
@@ -709,6 +759,18 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
 
   _sendMessageUtil(String text) async {
     var provider = context.read<MessageProvider>();
+    // A new message while Omi is still answering stops that reply first. The
+    // earlier message stays in the thread, so the next reply sees both.
+    if (provider.canStopReply && !provider.isUploadingFiles) {
+      final draft = textController.text;
+      textController.clear();
+      await provider.stopReply(superseded: true);
+      if (!mounted) return;
+      if (provider.chatMutationInProgress) {
+        if (textController.text.isEmpty) textController.text = draft;
+        return;
+      }
+    }
     // Guard against re-entry (rapid double-tap of send, voice→transcribeSuccess
     // race firing onTranscriptReady twice, etc.). Without this the chat could
     // submit the same text twice and the AI replies twice.
@@ -750,10 +812,13 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
 
     _resumeFollowingAndScroll(delayMs: 300, animated: true);
 
+    final turn = ++_sendTurn;
     await provider.sendMessageStreamToServer(text, context: _chatScope, modelShortcut: modelShortcut);
 
     // Plans sheet is shown reactively via _onMessageProviderChanged listener
 
+    // A newer message may already own the composer if this reply was replaced.
+    if (turn != _sendTurn) return;
     provider.clearSelectedFiles();
     provider.setSendingMessage(false);
   }
@@ -1010,7 +1075,7 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
 
     if (_chatScrollMode == ChatScrollMode.followingBottom &&
         (addedMessages || lastMessageChanged || streamedTextChanged || streamedBlocksChanged)) {
-      _scheduleModeAwareScroll(delayMs: 0, animated: streamedTextChanged || streamedBlocksChanged);
+      _schedulePostFrameModeAwareScroll(animated: streamedTextChanged || streamedBlocksChanged);
     }
   }
 
@@ -1076,9 +1141,18 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
   }
 
   void _schedulePostFrameModeAwareScroll({bool animated = false, bool force = false}) {
+    _postFrameScrollAnimated = _postFrameScrollAnimated || animated;
+    _postFrameScrollForce = _postFrameScrollForce || force;
+    if (_postFrameScrollPending) return;
+    _postFrameScrollPending = true;
     SchedulerBinding.instance.addPostFrameCallback((_) {
+      _postFrameScrollPending = false;
+      final shouldAnimate = _postFrameScrollAnimated;
+      final shouldForce = _postFrameScrollForce;
+      _postFrameScrollAnimated = false;
+      _postFrameScrollForce = false;
       if (!mounted) return;
-      _scheduleModeAwareScroll(delayMs: 0, animated: animated, force: force);
+      _scheduleModeAwareScroll(delayMs: 0, animated: shouldAnimate, force: shouldForce);
     });
   }
 
@@ -1092,6 +1166,8 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
   }
 
   void _cancelPendingScrolls() {
+    _postFrameScrollAnimated = false;
+    _postFrameScrollForce = false;
     for (final timer in _pendingScrollTimers) {
       timer.cancel();
     }
@@ -1436,6 +1512,7 @@ class _StableChatMessageDelegate extends SliverChildBuilderDelegate {
 
   @override
   bool shouldRebuild(covariant _StableChatMessageDelegate oldDelegate) {
+    if (identical(_messageKeys, oldDelegate._messageKeys)) return false;
     final previous = oldDelegate._messageKeys;
     if (_messageKeys.length < previous.length) return true;
     for (var i = 0; i < previous.length; i++) {

@@ -4425,6 +4425,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get continueText => 'Fortsätt';
 
   @override
+  String get checkoutExistingSubscription =>
+      'Du har redan en prenumeration. Hantera din nuvarande prenumeration i stället för att starta en ny.';
+
+  @override
   String get resubscribeFirstToChangePlans => 'Prenumerera igen först för att byta plan.';
 
   @override
@@ -8598,6 +8602,9 @@ class AppLocalizationsSv extends AppLocalizations {
       'Transkribering är inte tillgänglig — inspelningen fortsätter och ditt ljud sparas.';
 
   @override
+  String get captureNoAudioFromPendant => 'Inget ljud från hänget';
+
+  @override
   String get capturing => 'Spelar in';
 
   @override
@@ -11091,6 +11098,12 @@ class AppLocalizationsSv extends AppLocalizations {
       'Bluetooth-länken till din Omi har stannat, så ljudet når inte appen. Omi fortsätter spela in på enheten och synkar när länken återkommer. Försök igen återupprättar länken; om det fortsätter att misslyckas, kontrollera din enhet i Inställningar > Enhet.';
 
   @override
+  String get captureConnecting => 'Ansluter…';
+
+  @override
+  String get captureNoAudioDetail => 'Pendanten är ansluten, men ingen ljud når din telefon';
+
+  @override
   String get captureIngressNeedsReconnect => 'Ljudet når inte appen — anslut din Omi igen';
 
   @override
@@ -11119,13 +11132,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get captureStorageAlmostFull => 'Lagringen är nästan full';
-
-  @override
-  String get capturePendantDisconnectedDetail =>
-      'Hängsmycket tappade anslutningen till den här telefonen. Omi ansluter igen av sig själv när hängsmycket är på och i närheten. Allt som spelats in innan är säkert.';
-
-  @override
-  String get capturePendantDisconnectedShort => 'Omi ansluter igen av sig själv';
 
   @override
   String participantsSummaryUncounted(String name) {
@@ -12254,12 +12260,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get playbackAudioNetworkFailed => 'Kontrollera anslutningen';
-
-  @override
-  String get forYou => 'För dig';
-
-  @override
-  String get stopThese => 'Stoppa dessa';
 
   @override
   String get dismiss => 'Avvisa';
@@ -13402,9 +13402,6 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get paywallTrialSecondary => 'Fortsätt med gratisplanen';
-
-  @override
   String get paywallTrialCancelNote => 'Avbryt när som helst. Inga avgifter, inga påföljder.';
 
   @override
@@ -14427,6 +14424,25 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
+  String get episodeNotesUnavailable => 'Löpande anteckningar uppdateras inte. Visa transkriptionen tills vidare.';
+
+  @override
+  String episodeCaptureFor(String duration) {
+    return 'Spelar in · $duration';
+  }
+
+  @override
+  String get episodePrevious => 'Föregående avsnitt';
+
+  @override
+  String captureChunksPending(int pending) {
+    return 'Väntande delar: $pending';
+  }
+
+  @override
+  String get episodeOpenPrevious => 'Öppna föregående avsnitt';
+
+  @override
   String get episodeNotesSoon => 'Anteckningarna visas efter de första minuterna av samtalet.';
 
   @override
@@ -14845,4 +14861,104 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get heldForDayReview => 'Väntar på din dagsgenomgång';
+
+  @override
+  String homeBackgroundLine(String items) {
+    return 'Även: $items';
+  }
+
+  @override
+  String get deviceOnboardingPressButtonTitle => 'Tryck på knappen på din Omi';
+
+  @override
+  String get deviceOnboardingPressButtonSubtitle => 'Ett kort tryck. Fråga sedan vad som helst.';
+
+  @override
+  String get deviceOnboardingAskNowTitle => 'Ställ din fråga';
+
+  @override
+  String get deviceOnboardingAskNowSubtitle => 'Säg det högt. Omi lyssnar.';
+
+  @override
+  String get deviceOnboardingPressAgainHint => 'Klar? Tryck på knappen igen för att skicka.';
+
+  @override
+  String trialUpsellTitle(int days) {
+    return 'Du har fått $days dagar gratis';
+  }
+
+  @override
+  String trialUpsellBody(int days) {
+    return '$days dagar Omi Pro på oss. Vi påminner dig före debitering. Avsluta när som helst.';
+  }
+
+  @override
+  String trialUpsellClaim(int days) {
+    return 'Ta min $days-dagars prövning';
+  }
+
+  @override
+  String settingsUpgradeTrialSubtitle(int days) {
+    return 'Starta din $days-dagars gratis prövning';
+  }
+
+  @override
+  String get pairingPowerOnTitle => 'Slå på din Omi';
+
+  @override
+  String get pairingPowerOnSubtitle => 'Tryck en gång på knappen och håll den nära telefonen.';
+
+  @override
+  String get walkthroughBackgroundRecordingNote => 'Det var allt. Omi fortsätter spela in dina samtal i bakgrunden.';
+
+  @override
+  String get noThanks => 'Nej tack';
+
+  @override
+  String get recapInTheBackground => 'I bakgrunden';
+
+  @override
+  String retentionOfferAccept(int percent) {
+    return 'Stanna kvar med $percent % rabatt';
+  }
+
+  @override
+  String retentionOfferBody(String price, int months) {
+    return 'Stanna och betala $price i månaden de kommande $months månaderna.';
+  }
+
+  @override
+  String retentionOfferApplied(int percent, int months) {
+    return 'Klart. $percent % rabatt de kommande $months månaderna.';
+  }
+
+  @override
+  String get othersSpeakerLabel => 'Andra';
+
+  @override
+  String get livePreviewLabel => 'Live preview';
+
+  @override
+  String get livePreviewExplanation => 'On-device preview. The final transcript replaces it shortly.';
+
+  @override
+  String get livePreviewListening => 'Listening… words appear here as you speak.';
+
+  @override
+  String get livePreviewStarting => 'Starting live preview…';
+
+  @override
+  String get livePreviewTranscribingTitle => 'Transcribing…';
+
+  @override
+  String get livePreviewTranscribingMessage => 'Your transcript appears in Conversations when processing finishes.';
+
+  @override
+  String get openLoopAnswerDone => 'Klar';
+
+  @override
+  String get openLoopAnswerRemind => 'Påminn mig senare';
+
+  @override
+  String get openLoopAnswerDrop => 'Släpp det';
 }

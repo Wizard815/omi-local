@@ -12,10 +12,11 @@ from config.batch_pipeline import FRESH_CAPTURE_LAG_SECONDS, scheduler_control_k
 from config.policy import resolve_batch_policy
 from database.batch_pipeline_policy import stage_in_transaction, record_policy_observations
 from utils.batch_pipeline.correctness_metrics import record as record_correctness
-from utils.batch_pipeline.contracts import LeasedWork, Priority, WorkItem, WorkResult, PoolCapacity
+from utils.batch_pipeline.contracts import LeasedWork, Priority, WorkItem, WorkResult, PoolCapacity, attach_held_vad
 from utils.batch_pipeline.metrics import QueueMetrics
 from utils.batch_pipeline.control import read_control, activate, field, migrate_legacy
 from utils.batch_pipeline.errors import validate_worker_failure
+from utils.batch_pipeline.retry_policy import quarantine_job, expire_lease, observe_recovery
 
 QUANTUM_SECONDS = 30.0
 LEASE_SECONDS = 120.0
@@ -24,6 +25,15 @@ MAX_ACTIVE_OWNERS = 1024
 MAX_VISITS = 128
 HEAD_OWNER_BUDGET = 64
 logger = logging.getLogger(__name__)
+
+
+def _admission_retry_delay(value: object, streak: int) -> float:
+    minimum = min(300, 30 * 2 ** (streak - 1))
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return minimum
+    if isinstance(value, float) and not math.isfinite(value):
+        return minimum
+    return max(minimum, min(86400, value))
 
 
 def owner_key(owner_id: str) -> str:
@@ -443,6 +453,7 @@ class Scheduler:
                 return False, False
             job.update(state='result_ready', result=asdict(result), ready_at=now)
             job.pop('retry_started_at', None)
+            job.pop('admission_refusals', None)
             tx.put('jobs', result.segment_id, job)
             return True, True
 
@@ -461,6 +472,8 @@ class Scheduler:
         padded_retry_empty: bool = False,
         padded_retry: str | None = None,
         worker_failure: dict | None = None,
+        measured_held_vad_speech_seconds: float | None = None,
+        worker_vad_receipt: dict | None = None,
     ) -> bool:
         if worker_failure is not None:
             validate_worker_failure(worker_failure)
@@ -482,27 +495,13 @@ class Scheduler:
             if not owns_lease(job, token, now):
                 return None
             policy = stage_in_transaction(tx, job, 'scheduler', candidates=candidates, observations=observations)
+            attach_held_vad(job, measured_held_vad_speech_seconds, worker_vad_receipt)
             if quarantine or worker_failure is not None or job['attempt'] >= policy.max_attempts:
-                # Serialize removal from the ordered pending set against merge
-                # and admission. No success/silence result or cursor is invented.
-                owner = tx.get('owners', job['owner_key'])
-                owner['revision'] = owner.get('revision', 0) + 1
-                job.update(
-                    state='quarantined',
-                    merge_pending=False,
-                    token='',
-                    lease_until=0.0,
-                    failure='worker_failed',
-                    quarantine_reason='worker_failed',
-                    quarantined_at=now,
-                    recovery_state='held',
-                )
+                quarantine_job(tx, job, now, 'worker_failed')
                 if quarantine and padded_retry in {'empty', 'skipped_oversize', 'skipped_long_speech'}:
                     job['worker_empty_evidence'] = {'padded_retry': padded_retry, 'version': 1}
                 if worker_failure is not None:
                     job['worker_failure'] = dict(worker_failure)
-                job.pop('retry_started_at', None)
-                tx.put('owners', job['owner_key'], owner)
             else:
                 _defer(job, now, 'worker_failed')
             tx.put('jobs', segment_id, job)
@@ -536,24 +535,60 @@ class Scheduler:
                     pass
         return bool(outcome)
 
-    def defer(self, segment_id: str, token: str, now: float, retry_after: float = 30) -> bool:
-        """Policy/capacity refusal is waiting, not a provider failure attempt."""
+    def defer(
+        self,
+        segment_id: str,
+        token: str,
+        now: float,
+        retry_after: float = 30,
+        *,
+        held_reason: str | None = None,
+        admission_refused: bool = False,
+    ) -> bool:
+        """Policy/capacity refusal is waiting, not a provider failure attempt.
+
+        ``held_reason`` carries the bounded machine reason from the admission
+        decision that caused the defer; it records the latest decision in the
+        same transaction, so an outside reader can classify the wait without
+        a second round-trip. Refund defers (shutdown, GPU abort) pass none and
+        preserve the previously recorded decision.
+        """
 
         def commit(tx):
             job = tx.get('jobs', segment_id)
             if not owns_lease(job, token, now):
                 return False
+            delay = retry_after
+            if admission_refused:
+                previous = job.get('admission_refusals', 0)
+                previous = previous if type(previous) is int and 0 <= previous <= 5 else 0
+                streak = min(previous + 1, 5)
+                job['admission_refusals'] = streak
+                # Bad/missing authority stays deferred; it never grants compute.
+                delay = _admission_retry_delay(delay, streak)
+                if not held_reason:
+                    # A prior allow is not the latest decision when this RPC
+                    # was unevaluated. Preserve BLIND instead of a false hold.
+                    job.pop('compute_decision', None)
             job.update(
                 state='retry',
-                available_at=now + max(1, min(86400, retry_after)),
+                available_at=now + max(1, min(86400, delay)),
                 attempt=max(0, job['attempt'] - 1),
                 token='',
                 lease_until=0.0,
             )
+            if held_reason:
+                job['compute_decision'] = {'reason': held_reason, 'outcome': 'held', 'at': now}
             tx.put('jobs', segment_id, job)
             return True
 
-        return self.store.run(commit)
+        deferred = self.store.run(commit)
+        if deferred and admission_refused and self.metrics:
+            try:
+                self.metrics.record('admission_policy_deferred' if held_reason else 'admission_unevaluated_deferred')
+            except Exception:
+                pass  # Metrics cannot turn a committed defer into a retry.
+        return deferred
 
     def release(self, segment_id: str, token: str, now: float) -> bool:
         """Expire a held lease now: the lease-expiry transition without the wait.
@@ -576,33 +611,42 @@ class Scheduler:
     def recover(self, now: float, limit: int = 100) -> int:
         self.store.run(lambda tx: migrate_legacy(tx, now))
         recovered = 0
+        candidates, observations = {}, []
         for state in ('leased', 'retry'):
             for segment_id in self.store.due(state, now, limit):
 
-                def commit(tx: Transaction) -> str | None:
+                def commit(tx: Transaction):
+                    observations.clear()
                     job = tx.get('jobs', segment_id)
                     if job.get('state') == 'leased' and job['lease_until'] <= now:
-                        _defer(job, now, 'lease_expired')
-                        event = 'lease_expired'
+                        outcome = expire_lease(
+                            tx,
+                            job,
+                            now,
+                            stage_policy=stage_in_transaction,
+                            candidates=candidates,
+                            observations=observations,
+                            defer=_defer,
+                        )
                     elif job.get('state') == 'retry' and job['available_at'] <= now:
                         control = read_control(tx, scheduler_control_key(job['owner_key']))
                         job['state'] = 'ready'
                         _append(tx, control, job)
-                        event = 'retry'
+                        outcome = ('retry', 0, None)
                     else:
                         return None
                     tx.put('jobs', segment_id, job)
-                    return event
+                    return outcome
 
                 try:
-                    event = self.store.run(commit)
+                    outcome = self.store.run(commit)
+                    record_policy_observations(observations)
                 except BatchPrivacyBlocked:
                     self.store.quarantine_fenced(segment_id, now)
                     continue
-                if event:
+                if outcome:
                     recovered += 1
-                    if self.metrics:
-                        self.metrics.record(event)
+                    observe_recovery(outcome, self.metrics)
         return recovered
 
     @staticmethod
