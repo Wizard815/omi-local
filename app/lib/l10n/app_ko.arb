@@ -4570,5 +4570,14 @@
     "caldavSyncResult": "Pushed {tasks} tasks and {events} events, pulled {pulled} changes",
     "caldavCalendarsFound": "{count} calendar(s) found",
     "caldavFailed": "CalDAV: {error}",
-    "caldavSaved": "CalDAV settings saved"
+    "caldavSaved": "CalDAV settings saved",
+    "muteBrightnessTitle": "Mute & screen",
+    "muteBrightnessToggle": "Dim the screen while muted",
+    "muteBrightnessExplainer": "While capture is muted the phone's screen is set to the muted level; when it listens again, to the normal level. Your own brightness changes in between are left alone.",
+    "muteBrightnessMutedLevel": "Brightness while muted",
+    "muteBrightnessNormalLevel": "Brightness while listening",
+    "muteBrightnessPermissionTitle": "Allow Omi to change the screen",
+    "muteBrightnessPermissionBody": "Android asks you to let Omi modify system settings. Nothing else changes.",
+    "muteBrightnessPermissionButton": "Open Android settings",
+    "muteBrightnessUnsupported": "Available on Android phones only."
 }

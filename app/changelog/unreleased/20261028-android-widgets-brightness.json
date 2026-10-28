@@ -1,0 +1,1 @@
+{"change": "Android: Home Screen widgets (Mute, Live transcript, Day summary, Recent conversations, To do) and a Mute & screen setting that sets the phone's brightness while muted and while listening. The self-hosted APK builds without a google-services.json and without the Twilio voice SDK."}

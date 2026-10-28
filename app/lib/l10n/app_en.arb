@@ -18580,5 +18580,41 @@
     "caldavSaved": "CalDAV settings saved",
     "@caldavSaved": {
         "description": "Toast"
+    },
+    "muteBrightnessTitle": "Mute & screen",
+    "@muteBrightnessTitle": {
+        "description": "Settings page title: screen brightness tied to the capture mute"
+    },
+    "muteBrightnessToggle": "Dim the screen while muted",
+    "@muteBrightnessToggle": {
+        "description": "Toggle that turns the mute-linked brightness on"
+    },
+    "muteBrightnessExplainer": "While capture is muted the phone's screen is set to the muted level; when it listens again, to the normal level. Your own brightness changes in between are left alone.",
+    "@muteBrightnessExplainer": {
+        "description": "Footer under the toggle"
+    },
+    "muteBrightnessMutedLevel": "Brightness while muted",
+    "@muteBrightnessMutedLevel": {
+        "description": "Slider title"
+    },
+    "muteBrightnessNormalLevel": "Brightness while listening",
+    "@muteBrightnessNormalLevel": {
+        "description": "Slider title"
+    },
+    "muteBrightnessPermissionTitle": "Allow Omi to change the screen",
+    "@muteBrightnessPermissionTitle": {
+        "description": "Row shown until Android grants the permission"
+    },
+    "muteBrightnessPermissionBody": "Android asks you to let Omi modify system settings. Nothing else changes.",
+    "@muteBrightnessPermissionBody": {
+        "description": "Row subtitle"
+    },
+    "muteBrightnessPermissionButton": "Open Android settings",
+    "@muteBrightnessPermissionButton": {
+        "description": "Row action"
+    },
+    "muteBrightnessUnsupported": "Available on Android phones only.",
+    "@muteBrightnessUnsupported": {
+        "description": "Shown on iOS"
     }
 }

@@ -693,6 +693,20 @@ class SharedPreferencesUtil {
   // puts this saved value back so the device's LED returns to the user's setting.
   int get ledDimRatio => getInt('ledDimRatio', defaultValue: 100);
 
+  // Mute-linked screen brightness (Android, Settings > Mute & screen): the phone's screen is set
+  // to one level while capture is muted and another while it listens.
+  bool get muteBrightnessEnabled => getBool('muteBrightnessEnabled');
+
+  set muteBrightnessEnabled(bool value) => saveBool('muteBrightnessEnabled', value);
+
+  int get mutedBrightnessPercent => getInt('mutedBrightnessPercent', defaultValue: 5);
+
+  set mutedBrightnessPercent(int value) => saveInt('mutedBrightnessPercent', value.clamp(1, 100));
+
+  int get unmutedBrightnessPercent => getInt('unmutedBrightnessPercent', defaultValue: 60);
+
+  set unmutedBrightnessPercent(int value) => saveInt('unmutedBrightnessPercent', value.clamp(1, 100));
+
   set ledDimRatio(int value) => saveInt('ledDimRatio', value);
 
   // Transcribe Later: one-shot flag — when set, the native writer finalizes the

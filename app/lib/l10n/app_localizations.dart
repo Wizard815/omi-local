@@ -26612,6 +26612,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'CalDAV settings saved'**
   String get caldavSaved;
+
+  /// Settings page title: screen brightness tied to the capture mute
+  ///
+  /// In en, this message translates to:
+  /// **'Mute & screen'**
+  String get muteBrightnessTitle;
+
+  /// Toggle that turns the mute-linked brightness on
+  ///
+  /// In en, this message translates to:
+  /// **'Dim the screen while muted'**
+  String get muteBrightnessToggle;
+
+  /// Footer under the toggle
+  ///
+  /// In en, this message translates to:
+  /// **'While capture is muted the phone\'s screen is set to the muted level; when it listens again, to the normal level. Your own brightness changes in between are left alone.'**
+  String get muteBrightnessExplainer;
+
+  /// Slider title
+  ///
+  /// In en, this message translates to:
+  /// **'Brightness while muted'**
+  String get muteBrightnessMutedLevel;
+
+  /// Slider title
+  ///
+  /// In en, this message translates to:
+  /// **'Brightness while listening'**
+  String get muteBrightnessNormalLevel;
+
+  /// Row shown until Android grants the permission
+  ///
+  /// In en, this message translates to:
+  /// **'Allow Omi to change the screen'**
+  String get muteBrightnessPermissionTitle;
+
+  /// Row subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Android asks you to let Omi modify system settings. Nothing else changes.'**
+  String get muteBrightnessPermissionBody;
+
+  /// Row action
+  ///
+  /// In en, this message translates to:
+  /// **'Open Android settings'**
+  String get muteBrightnessPermissionButton;
+
+  /// Shown on iOS
+  ///
+  /// In en, this message translates to:
+  /// **'Available on Android phones only.'**
+  String get muteBrightnessUnsupported;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

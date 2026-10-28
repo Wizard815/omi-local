@@ -260,6 +260,27 @@ counts. **Search → Tags** lists the catalog; a tag opens its conversations, ne
 API: `PUT /v1/conversations/{id}/tags`, `GET /v1/conversations/tags`,
 `GET /v1/conversations?tag=work`.
 
+### Home Screen widgets (Android)
+
+Long-press the Home Screen → Widgets → **Omi Local**: Mute (one-tap mute/unmute),
+Live transcript, Day summary, Recent conversations and To do. The what / where / why,
+and when the mute button needs the app running, are in
+`omi-host/examples/android-widgets/README.md`.
+
+### Mute & screen (Android)
+
+Settings → **Mute & screen** sets the phone's brightness while capture is muted
+(default 5%) and while it listens (default 60%); it changes only when the mute
+changes. Android asks once to let Omi modify system settings. Same README.
+
+### APK build (October 2026)
+
+`app/scripts/build_local_apk.sh` builds without a `google-services.json`: the
+Google Services Gradle plugin is gone (Firebase is configured from
+`lib/firebase_options_*.dart`), as are the Twilio voice SDK and its native plugin
+(the phone-call feature is hidden), the Instabug-era storage/Wi-Fi permissions
+and the PostHog manifest entry. Not built here (no Android SDK on the dev box).
+
 ### Calendar & tasks (CalDAV)
 Tasks and the day's events live outside Omi too. `omi-host` runs **Radicale** (`omi-radicale`,
 port `CALDAV_PORT`, default 5232; set `CALDAV_PASSWORD` in `.env` or it refuses to start) and

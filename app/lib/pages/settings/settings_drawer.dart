@@ -207,6 +207,12 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
               title: l10n.caldavSettingsTitle,
             ),
             _row(
+              SettingsDestination.muteBrightness,
+              key: 'settings_row_mute_brightness',
+              icon: FontAwesomeIcons.sun,
+              title: l10n.muteBrightnessTitle,
+            ),
+            _row(
               SettingsDestination.connectAgent,
               key: 'settings_row_connect_agent',
               icon: FontAwesomeIcons.terminal,

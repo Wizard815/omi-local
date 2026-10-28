@@ -1,4 +1,5 @@
 import 'package:omi/pages/phone_calls/phone_calls_feature.dart';
+import 'package:omi/providers/usage_provider.dart';
 import 'package:omi/l10n/app_localizations.dart';
 
 /// Where a Settings row (or a search result for it) takes the reader.
@@ -24,6 +25,7 @@ enum SettingsDestination {
   integrations,
   taskIntegrations,
   caldav,
+  muteBrightness,
   permissions,
   memories,
   goals,
@@ -128,6 +130,9 @@ final List<SettingsSearchEntry> settingsSearchEntries = [
 
   // Plan (on the sheet)
   SettingsSearchEntry('planAndUsage', (l) => l.planAndUsage, SettingsDestination.planAndUsage, _drawer),
+  // The trial Upgrade row: a billing surface a self-hosted stack never shows.
+  SettingsSearchEntry('upgrade', (l) => l.upgrade, SettingsDestination.upgrade, _drawer,
+      visible: (_) => !UsageProvider.isSelfHosted),
 
   // Device group
   SettingsSearchEntry(
@@ -205,7 +210,8 @@ final List<SettingsSearchEntry> settingsSearchEntries = [
   SettingsSearchEntry('taskIntegrations', (l) => l.taskIntegrations, SettingsDestination.taskIntegrations,
       'lib/pages/settings/integrations_page.dart'),
   // omi-local: CalDAV tasks + calendar sync.
-  SettingsSearchEntry('caldav', (l) => l.caldavSettingsTitle, SettingsDestination.caldav, _drawer),
+  SettingsSearchEntry('caldavSettingsTitle', (l) => l.caldavSettingsTitle, SettingsDestination.caldav, _drawer),
+  SettingsSearchEntry('muteBrightnessTitle', (l) => l.muteBrightnessTitle, SettingsDestination.muteBrightness, _drawer),
 
   // Data & Privacy group
   SettingsSearchEntry('dataProtection', (l) => l.dataProtection, SettingsDestination.dataPrivacy, _groups),

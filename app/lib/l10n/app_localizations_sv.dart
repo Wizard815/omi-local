@@ -15106,4 +15106,33 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get caldavSaved => 'CalDAV settings saved';
+
+  @override
+  String get muteBrightnessTitle => 'Mute & screen';
+
+  @override
+  String get muteBrightnessToggle => 'Dim the screen while muted';
+
+  @override
+  String get muteBrightnessExplainer =>
+      'While capture is muted the phone\'s screen is set to the muted level; when it listens again, to the normal level. Your own brightness changes in between are left alone.';
+
+  @override
+  String get muteBrightnessMutedLevel => 'Brightness while muted';
+
+  @override
+  String get muteBrightnessNormalLevel => 'Brightness while listening';
+
+  @override
+  String get muteBrightnessPermissionTitle => 'Allow Omi to change the screen';
+
+  @override
+  String get muteBrightnessPermissionBody =>
+      'Android asks you to let Omi modify system settings. Nothing else changes.';
+
+  @override
+  String get muteBrightnessPermissionButton => 'Open Android settings';
+
+  @override
+  String get muteBrightnessUnsupported => 'Available on Android phones only.';
 }

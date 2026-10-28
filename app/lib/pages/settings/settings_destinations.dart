@@ -24,6 +24,7 @@ import 'package:omi/pages/settings/developer.dart';
 import 'package:omi/pages/settings/device_settings.dart';
 import 'package:omi/pages/settings/import_history_page.dart';
 import 'package:omi/pages/settings/caldav_settings_page.dart';
+import 'package:omi/pages/settings/mute_brightness_settings_page.dart';
 import 'package:omi/pages/settings/integrations_page.dart';
 import 'package:omi/pages/settings/task_integrations_page.dart';
 import 'package:omi/pages/settings/language_settings_page.dart';
@@ -89,6 +90,8 @@ Future<void> openSettingsDestination(BuildContext context, SettingsDestination d
       await routeToPage(context, const TaskIntegrationsPage());
     case SettingsDestination.caldav:
       await routeToPage(context, const CalDavSettingsPage());
+    case SettingsDestination.muteBrightness:
+      await routeToPage(context, const MuteBrightnessSettingsPage());
     case SettingsDestination.permissions:
       PlatformManager.instance.analytics.permissionsSettingsOpened();
       await routeToPage(context, const PermissionsPage());
