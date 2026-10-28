@@ -69,7 +69,15 @@ class _AppShellState extends State<AppShell> {
   }
 
   /// The places Omi's own links open (see [openAppLink]).
-  static const Set<String> _appLinkRoutes = {'action-items', 'capture', 'conversation', 'conversations', 'settings'};
+  static const Set<String> _appLinkRoutes = {
+    'action-items',
+    'capture',
+    'conversation',
+    'conversations',
+    'day-review',
+    'settings',
+    'task',
+  };
 
   void openAppLink(Uri uri) async {
     final externalHapticResult = await runExternalHapticTrigger(

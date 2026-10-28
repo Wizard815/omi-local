@@ -29,7 +29,10 @@ import 'package:omi/pages/action_items/widgets/task_selection_action_bar.dart';
 import 'package:omi/pages/conversations/widgets/merge_action_bar.dart';
 import 'package:omi/pages/home/home_content.dart';
 import 'package:omi/pages/home/widgets/home_tab_switcher.dart';
+import 'package:omi/backend/http/api/day_reviews.dart' show listDayReviews;
 import 'package:omi/pages/home/home_widgets_publisher.dart';
+import 'package:omi/services/home_widgets_service.dart';
+import 'package:omi/services/mute_brightness_link.dart';
 import 'package:omi/pages/phone_calls/active_call_banner.dart';
 import 'package:omi/pages/settings/settings_drawer.dart';
 import 'package:omi/pages/search/global_search.dart';
@@ -685,17 +688,30 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, Ticker
 
   /// The iOS Home Screen widgets (Devices, Up next, Latest) follow what this Home shows.
   HomeWidgetsPublisher? _homeWidgets;
+  MuteBrightnessLink? _muteBrightness;
 
   void _startHomeWidgets() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _homeWidgets != null) return;
+      final capture = context.read<CaptureProvider>();
       _homeWidgets = HomeWidgetsPublisher(
         devices: context.read<DeviceProvider>(),
         tasks: context.read<ActionItemsProvider>(),
         conversations: context.read<ConversationProvider>(),
+        capture: capture,
+        latestDayReview: () async => (await listDayReviews(limit: 1)).firstOrNull,
         l10n: () => context.l10n,
         dates: () => OmiDateFormat.of(context),
+        android: Platform.isAndroid,
       )..start();
+      // The Android Mute widget: the app owns the capture state machine, so the toggle runs here.
+      HomeWidgetsService.instance.onAction = (action) {
+        if (action != HomeWidgetsService.toggleMuteAction) return;
+        unawaited(capture.isPaused ? capture.resumeCapture() : capture.pauseCapture());
+      };
+      unawaited(HomeWidgetsService.instance.listen());
+      // Settings > Mute & screen: the phone's brightness follows the capture mute.
+      _muteBrightness = MuteBrightnessLink(muteSource: capture, isMuted: () => capture.isPaused)..start();
     });
   }
 
@@ -1109,6 +1125,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, Ticker
     _captureProviderForQuickActions = null;
     QuickActionsService.instance.reset();
     _homeWidgets?.dispose();
+    _muteBrightness?.dispose();
+    HomeWidgetsService.instance.onAction = null;
     // Clean up freemium handler
     if (_overflowEntitlementListener != null) _overflowUsage?.removeListener(_overflowEntitlementListener!);
     _onDeviceRunner?.dispose();

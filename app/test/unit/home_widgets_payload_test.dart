@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'package:omi/backend/schema/bt_device/bt_device.dart';
+import 'package:omi/backend/schema/day_review.dart';
 import 'package:omi/backend/schema/schema.dart';
 import 'package:omi/l10n/app_localizations.dart';
 import 'package:omi/services/home_widgets_service.dart';
@@ -157,6 +160,108 @@ void main() {
       expect(doc['title'], date.dateTime(startedAt));
       expect(doc['title'], isNot(contains('AM')));
       expect(doc['title'], isNot(contains('PM')));
+    });
+
+    test('Recent (Android): the newest kept, finished ones, at most five, as Latest describes them', () {
+      final list = [
+        conversation('live', status: ConversationStatus.in_progress),
+        conversation('gone', discarded: true),
+        for (var i = 0; i < 7; i++) conversation('kept-$i', title: 'Talk $i'),
+      ];
+      final doc = HomeWidgetsPayload.recent(list, en);
+      final rows = (doc['conversations'] as List).cast<Map<String, Object?>>();
+      expect(rows.map((r) => r['id']), ['kept-0', 'kept-1', 'kept-2', 'kept-3', 'kept-4']);
+      expect(rows.first['title'], 'Talk 0');
+      expect(rows.first['detail'], startsWith('1 task · '));
+    });
+  });
+
+  group('Android documents', () {
+    TranscriptSegment segment(String text, {String? speaker, bool isUser = false}) => TranscriptSegment(
+          id: text,
+          text: text,
+          speaker: speaker,
+          isUser: isUser,
+          personId: null,
+          start: 0,
+          end: 1,
+          translations: const [],
+        );
+
+    test('Live transcript: the last lines with the speaker labels the app shows; blanks dropped', () {
+      final doc = HomeWidgetsPayload.transcript(
+        [
+          segment('old'),
+          segment('  '),
+          segment('one', speaker: 'SPEAKER_01'),
+          segment('two', isUser: true),
+          segment('three', speaker: 'Chitapa'),
+        ],
+        en,
+        recording: true,
+        recordingId: 'rec-1',
+        limit: 4,
+      );
+      expect(doc['recording'], true);
+      expect(doc['recording_id'], 'rec-1');
+      final lines = (doc['lines'] as List).cast<Map<String, Object?>>();
+      expect(lines.map((l) => l['text']), ['one', 'two', 'three'],
+          reason: 'the oldest line fell off, the blank one too');
+      expect(lines[1]['speaker'], en.you);
+      expect(lines[2]['speaker'], 'Chitapa');
+    });
+
+    test('Day summary: title, the start of the text, up to six tags; none clears the widget', () {
+      final review = DayReview(
+        date: '2026-10-27',
+        title: ' A quiet Tuesday ',
+        summaryText: 'x' * 700,
+        finalText: 'y' * 700,
+        corrections: const [],
+        tags: const ['work', 'home', 'a', 'b', 'c', 'd', 'e'],
+        keptConversationIds: const [],
+        rolledUpConversationIds: const [],
+      );
+      final doc = HomeWidgetsPayload.daySummary(review)!;
+      expect(doc['date'], '2026-10-27');
+      expect(doc['title'], 'A quiet Tuesday');
+      expect((doc['text'] as String).length, 601, reason: '600 characters of the corrected text, then an ellipsis');
+      expect((doc['text'] as String), startsWith('yyy'));
+      expect(doc['tags'], ['work', 'home', 'a', 'b', 'c', 'd']);
+      expect(HomeWidgetsPayload.daySummary(null), isNull);
+    });
+
+    test('Mute: the state, and whether there is a capture to mute at all', () {
+      expect(
+          HomeWidgetsPayload.mute(muted: true, source: 'phone'), {'muted': true, 'available': true, 'source': 'phone'});
+      expect(HomeWidgetsPayload.mute(muted: false, source: null)['available'], false);
+    });
+  });
+
+  group('HomeWidgetsService', () {
+    test('publishes a document once until it changes, and clears every key on sign-out', () async {
+      final calls = <(String, Map<String, Object?>)>[];
+      final service = HomeWidgetsService.testing((method, args) async {
+        calls.add((method, args));
+        return null;
+      });
+      // Off iOS and Android nothing is published; the dedupe and the key set are what is checked here.
+      await service.publish(HomeWidgetsService.muteKey, {'muted': true});
+      await service.publish(HomeWidgetsService.muteKey, {'muted': true});
+      await service.clear();
+      if (!Platform.isIOS && !Platform.isAndroid) {
+        expect(calls, isEmpty);
+        return;
+      }
+      expect(calls.where((c) => c.$1 == 'updateWidgetData' && c.$2['json'] != null), hasLength(1));
+      expect(
+          calls.where((c) => c.$2['json'] == null).map((c) => c.$2['key']),
+          containsAll([
+            HomeWidgetsService.transcriptKey,
+            HomeWidgetsService.daySummaryKey,
+            HomeWidgetsService.recentKey,
+            HomeWidgetsService.muteKey,
+          ]));
     });
   });
 }

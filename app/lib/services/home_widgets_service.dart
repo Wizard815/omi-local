@@ -1,23 +1,28 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'package:omi/backend/schema/bt_device/bt_device.dart';
+import 'package:omi/backend/schema/day_review.dart';
 import 'package:omi/backend/schema/schema.dart';
 import 'package:omi/gen/assets.gen.dart';
 import 'package:omi/l10n/app_localizations.dart';
 import 'package:omi/ui/format/omi_date_format.dart';
 import 'package:omi/ui/format/omi_duration.dart';
+import 'package:omi/ui/format/speaker_names.dart';
 import 'package:omi/utils/analytics/registry/events.g.dart' show ConversationUntitledRenderedSurface;
 import 'package:omi/utils/conversations/conversation_title.dart';
 import 'package:omi/utils/device.dart';
 import 'package:omi/utils/logger.dart';
 import 'package:omi/widgets/extensions/string.dart';
 
-/// What the iOS Home Screen widgets show, as the JSON documents the widget extension reads
-/// (ios/BatteryWidget/SharedDefaults.swift): the reader's wearables, the next open tasks and the
-/// latest conversation. Pure, so each document can be checked without a phone.
+/// What the Home Screen widgets show, as the JSON documents the widget code reads
+/// (iOS: ios/BatteryWidget/SharedDefaults.swift; Android: android/.../widgets/HomeWidgetStore.kt):
+/// the reader's wearables, the next open tasks, the latest conversation, and on Android also the
+/// live transcript, the latest day summary, the recent list and the mute state. Pure, so each
+/// document can be checked without a phone.
 abstract final class HomeWidgetsPayload {
   /// The picture the widget shows for [device]: the product photo the app shows, from the widget's
   /// assets. An Omi pendant is "device-omi", which the widget swaps for its lights-off photo while
@@ -131,39 +136,154 @@ abstract final class HomeWidgetsPayload {
       ].join(' · '),
     };
   }
+
+  /// Recent (Android): the newest kept, finished conversations, each as [latest] describes it.
+  static Map<String, Object?> recent(
+    List<ServerConversation> conversations,
+    AppLocalizations l10n, {
+    OmiDateFormat? dates,
+    int limit = 5,
+  }) {
+    final kept = conversations.where(
+      (c) => !c.discarded && !c.deleted && c.status == ConversationStatus.completed,
+    );
+    return {
+      'conversations': [for (final c in kept.take(limit)) latest(c, l10n, dates: dates)],
+    };
+  }
+
+  /// Live transcript (Android): the last [limit] segments of the capture in progress, each with
+  /// the speaker label the app shows. [recording] false with no lines reads "nothing captured".
+  static Map<String, Object?> transcript(
+    List<TranscriptSegment> segments,
+    AppLocalizations l10n, {
+    required bool recording,
+    String? recordingId,
+    int limit = 6,
+  }) {
+    final tail = segments.length > limit ? segments.sublist(segments.length - limit) : segments;
+    return {
+      'recording': recording,
+      'recording_id': recordingId,
+      'lines': [
+        for (final segment in tail)
+          if (segment.text.trim().isNotEmpty)
+            {
+              'speaker': SpeakerNames.excerptLabel(isUser: segment.isUser, speakerLabel: segment.speaker, l10n: l10n),
+              'text': segment.text.trim(),
+            },
+      ],
+    };
+  }
+
+  /// Day summary (Android): the latest day review's title, the start of its text and its tags;
+  /// null clears the widget to "no day summary yet".
+  static Map<String, Object?>? daySummary(DayReview? review, {int textLimit = 600}) {
+    if (review == null) return null;
+    final text = review.finalText.trim();
+    return {
+      'date': review.date,
+      'title': review.title.trim(),
+      'text': text.length > textLimit ? '${text.substring(0, textLimit).trimRight()}…' : text,
+      'tags': review.tags.take(6).toList(),
+    };
+  }
+
+  /// Mute (Android): whether capture is muted and whether there is a capture to mute at all.
+  static Map<String, Object?> mute({required bool muted, required String? source}) {
+    return {'muted': muted, 'available': source != null, 'source': source};
+  }
 }
 
-/// Writes the widget documents to the App Group through the battery widget's channel, only when
-/// one changed, and asks iOS to redraw that widget. Nothing happens off iOS.
+/// Writes the widget documents through the platform channel, only when one changed, and asks
+/// the OS to redraw that widget: iOS through the battery widget's channel into the App Group,
+/// Android through `com.omi/home_widgets` into the widgets' preferences file. Nothing happens on
+/// other platforms. On Android the widgets also call back ([onAction]) and leave an action behind
+/// when the app was closed ([consumePendingAction]).
 class HomeWidgetsService {
-  HomeWidgetsService._();
+  HomeWidgetsService._() : _bridge = _platformBridge;
+
+  @visibleForTesting
+  HomeWidgetsService.testing(this._bridge);
 
   static final HomeWidgetsService instance = HomeWidgetsService._();
 
-  static const MethodChannel _channel = MethodChannel('com.omi.battery_widget');
+  static const MethodChannel _iosChannel = MethodChannel('com.omi.battery_widget');
+  static const MethodChannel _androidChannel = MethodChannel('com.omi/home_widgets');
 
   static const String devicesKey = 'widget_devices';
   static const String upNextKey = 'widget_up_next';
   static const String latestKey = 'widget_latest';
+  // Android only.
+  static const String recentKey = 'widget_recent';
+  static const String transcriptKey = 'widget_transcript';
+  static const String daySummaryKey = 'widget_day_summary';
+  static const String muteKey = 'widget_mute';
 
+  /// The one action an Android widget can ask of the app.
+  static const String toggleMuteAction = 'toggle_mute';
+
+  final Future<Object?> Function(String method, Map<String, Object?> arguments) _bridge;
   final Map<String, String?> _published = {};
+  bool _listening = false;
+
+  /// Called with a widget's action (`toggle_mute`) while the app runs.
+  void Function(String action)? onAction;
+
+  static Future<Object?> _platformBridge(String method, Map<String, Object?> arguments) async {
+    if (Platform.isIOS) return _iosChannel.invokeMethod<Object?>(method, arguments);
+    if (Platform.isAndroid) return _androidChannel.invokeMethod<Object?>(method, arguments);
+    return null;
+  }
+
+  static bool get _supported => Platform.isIOS || Platform.isAndroid;
 
   /// Publishes [document] under [key]; null clears it (the widget then asks to open Omi).
   Future<void> publish(String key, Map<String, Object?>? document) async {
-    if (!Platform.isIOS) return;
+    if (!_supported) return;
     final json = document == null ? null : jsonEncode(document);
     if (_published.containsKey(key) && _published[key] == json) return;
     _published[key] = json;
     try {
-      await _channel.invokeMethod('updateWidgetData', {'key': key, 'json': json});
+      await _bridge('updateWidgetData', {'key': key, 'json': json});
     } catch (e) {
       _published.remove(key);
       Logger.debug('HomeWidgetsService.publish($key) failed: $e');
     }
   }
 
-  /// Signing out: no tasks or conversation titles stay on the Home Screen.
+  /// Starts taking the Android widgets' actions, and runs the one left while the app was closed.
+  Future<void> listen() async {
+    if (!Platform.isAndroid) return;
+    if (!_listening) {
+      _listening = true;
+      _androidChannel.setMethodCallHandler((call) async {
+        if (call.method != 'widgetAction') return null;
+        final action = (call.arguments as Map?)?['action'];
+        if (action is String) onAction?.call(action);
+        return null;
+      });
+    }
+    final pending = await consumePendingAction();
+    if (pending != null) onAction?.call(pending);
+  }
+
+  /// The action a widget asked for while no engine was alive, once; null when there is none.
+  Future<String?> consumePendingAction() async {
+    if (!Platform.isAndroid) return null;
+    try {
+      return await _bridge('consumePendingAction', const {}) as String?;
+    } catch (e) {
+      Logger.debug('HomeWidgetsService.consumePendingAction failed: $e');
+      return null;
+    }
+  }
+
+  /// Signing out: no tasks, transcript or conversation titles stay on the Home Screen.
   Future<void> clear() async {
-    await Future.wait([publish(upNextKey, null), publish(latestKey, null), publish(devicesKey, null)]);
+    await Future.wait([
+      for (final key in [upNextKey, latestKey, devicesKey, recentKey, transcriptKey, daySummaryKey, muteKey])
+        publish(key, null),
+    ]);
   }
 }

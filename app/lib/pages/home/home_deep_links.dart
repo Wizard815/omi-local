@@ -21,6 +21,7 @@ import 'package:omi/pages/conversation_detail/page.dart';
 import 'package:omi/pages/home/item_list_sheet.dart';
 import 'package:omi/pages/memories/page.dart';
 import 'package:omi/pages/memories/widgets/memory_edit_sheet.dart';
+import 'package:omi/pages/day_review/day_review_page.dart';
 import 'package:omi/pages/settings/daily_summary_detail_page.dart';
 import 'package:omi/pages/settings/data_privacy_page.dart';
 import 'package:omi/pages/settings/device_settings.dart';
@@ -143,6 +144,7 @@ class HomeDeepLink {
         'search' ||
         'conversations' ||
         'conversation' ||
+        'day-review' ||
         'items' =>
           HomeProvider.homeTab,
         _ => null,
@@ -179,6 +181,11 @@ Future<bool> openHomeDeepLink(
       context.read<HomeProvider>().setIndex(HomeProvider.homeTab);
     case 'action-items':
       context.read<HomeProvider>().setIndex(HomeProvider.tasksTab);
+    case 'day-review':
+      // The Day summary widget: /day-review/<yyyy-mm-dd> opens that day's review.
+      if (id == null) return false;
+      context.read<HomeProvider>().setIndex(HomeProvider.homeTab);
+      unawaited(routeToPage(context, DayReviewPage(date: id)));
     case 'memory':
       if (id == null) return false;
       final provider = context.read<MemoriesProvider>();
