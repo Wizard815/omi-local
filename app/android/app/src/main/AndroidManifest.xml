@@ -43,17 +43,16 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
 
-    <!--    INSTABUG PERMISSIONS    -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <!-- Mute-linked screen brightness (Settings > Mute & screen): the user grants this on the
+         system "Modify system settings" page; the app only asks when the feature is turned on. -->
+    <uses-permission
+        android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
     <!-- Refer https://developer.android.com/about/versions/14/changes/fgs-types-required#connected-device -->
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
 
@@ -203,7 +202,67 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <meta-data android:name="com.posthog.posthog.AUTO_INIT" android:value="false" />
+        <!-- Home Screen widgets (kotlin/com/friend/ios/widgets): drawn from documents Dart publishes. -->
+        <receiver
+            android:name="com.friend.ios.widgets.OmiMuteWidget"
+            android:exported="true"
+            android:label="@string/widget_mute_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.friend.ios.widget.TOGGLE_MUTE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_mute_info" />
+        </receiver>
+
+        <receiver
+            android:name="com.friend.ios.widgets.OmiTranscriptWidget"
+            android:exported="true"
+            android:label="@string/widget_transcript_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_transcript_info" />
+        </receiver>
+
+        <receiver
+            android:name="com.friend.ios.widgets.OmiDaySummaryWidget"
+            android:exported="true"
+            android:label="@string/widget_day_summary_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_day_summary_info" />
+        </receiver>
+
+        <receiver
+            android:name="com.friend.ios.widgets.OmiRecentWidget"
+            android:exported="true"
+            android:label="@string/widget_recent_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_recent_info" />
+        </receiver>
+
+        <receiver
+            android:name="com.friend.ios.widgets.OmiTodoWidget"
+            android:exported="true"
+            android:label="@string/widget_todo_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_todo_info" />
+        </receiver>
 
         <!-- Native BLE Companion Service — receives OS-level device presence events -->
         <service

@@ -15,6 +15,7 @@ import 'package:omi/backend/preferences.dart';
 import 'package:omi/backend/schema/phone_call.dart';
 import 'package:omi/backend/schema/transcript_segment.dart';
 import 'package:omi/models/audio_route.dart';
+import 'package:omi/pages/phone_calls/phone_calls_feature.dart';
 import 'package:omi/services/auth/auth_token_result.dart';
 import 'package:omi/services/phone_call_service.dart';
 import 'package:omi/utils/logger.dart';
@@ -149,6 +150,9 @@ class PhoneCallProvider extends ChangeNotifier {
   bool _disposed = false;
 
   PhoneCallProvider() {
+    // Hidden feature: the self-hosted APK ships without the native Twilio plugin, so there is
+    // no channel to listen on and no verified numbers to fetch at startup.
+    if (!PhoneCallsFeature.visible) return;
     _wireNativeCallbacks();
     _nativeService.startListening();
     _initialLoad = loadVerifiedNumbers();

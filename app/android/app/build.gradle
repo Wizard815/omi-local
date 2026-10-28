@@ -1,8 +1,8 @@
 plugins {
    id "com.android.application"
-    // START: FlutterFire Configuration
-    id 'com.google.gms.google-services'
-    // END: FlutterFire Configuration
+   // No google-services plugin: Firebase is configured from Dart
+   // (lib/firebase_options_*.dart), and the plugin refuses to build without a
+   // google-services.json that a self-hosted checkout never has.
    id "kotlin-android"
    id "dev.flutter.flutter-gradle-plugin"
 }
@@ -62,11 +62,14 @@ android {
             dimension "flavor-type"
             applicationId "com.friend.ios"
             resValue "string", "app_name", "Omi"
+            // The scheme the Home Screen widgets open the app with (see AndroidManifest intent filters).
+            resValue "string", "omi_link_scheme", "omi"
         }
         dev {
             dimension "flavor-type"
             applicationId "com.friend.ios.dev"
             resValue "string", "app_name", "Omi Local"
+            resValue "string", "omi_link_scheme", "omi-dev"
         }
     }
 
@@ -165,5 +168,4 @@ dependencies {
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.0-alpha3'
-    implementation 'com.twilio:voice-android:6.10.2'
 }

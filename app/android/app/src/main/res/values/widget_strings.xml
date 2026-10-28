@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Home Screen widget text. Widgets draw outside the Flutter engine, so these are Android
+     resources rather than lib/l10n ARB strings. -->
+<resources>
+    <string name="widget_mute_label">Mute</string>
+    <string name="widget_mute_description">Mute or unmute Omi with one tap</string>
+    <string name="widget_mute_muted">Muted</string>
+    <string name="widget_mute_listening">Listening</string>
+    <string name="widget_mute_tap_mute">Tap to mute</string>
+    <string name="widget_mute_tap_unmute">Tap to unmute</string>
+    <string name="widget_mute_no_capture">Open Omi to start capture</string>
+
+    <string name="widget_transcript_label">Live transcript</string>
+    <string name="widget_transcript_description">The last lines of what Omi is hearing</string>
+    <string name="widget_transcript_live">Live transcript</string>
+    <string name="widget_transcript_idle">Transcript</string>
+    <string name="widget_transcript_waiting">Listening…</string>
+    <string name="widget_transcript_none">Nothing being captured</string>
+
+    <string name="widget_day_summary_label">Day summary</string>
+    <string name="widget_day_summary_description">The latest day summary</string>
+    <string name="widget_day_summary_none">No day summary yet</string>
+
+    <string name="widget_recent_label">Recent conversations</string>
+    <string name="widget_recent_description">Your newest conversations</string>
+    <string name="widget_recent_title">Recent</string>
+    <string name="widget_recent_none">No conversations yet</string>
+
+    <string name="widget_todo_label">To do</string>
+    <string name="widget_todo_description">Your next open tasks</string>
+    <string name="widget_todo_title">To do</string>
+    <string name="widget_todo_none">All caught up</string>
+    <string name="widget_todo_due">Due %1$s</string>
+</resources>

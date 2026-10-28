@@ -21,4 +21,14 @@
         <item name="android:windowBackground">?android:colorBackground</item>
         <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
     </style>
+    <!-- One transcript line in the Live transcript widget. -->
+    <style name="OmiWidgetLine">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:textColor">#E6E6E6</item>
+        <item name="android:textSize">12sp</item>
+    </style>
 </resources>

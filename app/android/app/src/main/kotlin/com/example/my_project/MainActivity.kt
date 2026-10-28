@@ -9,7 +9,6 @@ import android.os.PowerManager
 import android.os.SystemClock
 import com.friend.ios.ble.BleHostApiImpl
 import com.friend.ios.calendar.DeviceCalendarPlugin
-import com.friend.ios.phonecalls.PhoneCallsPlugin
 import com.friend.ios.ble.OmiBleForegroundService
 import com.friend.ios.ble.OmiBleManager
 import com.friend.ios.ble.OmiCompanionManager
@@ -48,11 +47,11 @@ class MainActivity: FlutterActivity() {
 
 
         com.friend.ios.ondevice.PhoneBatteryChannel.register(this, flutterEngine)
+        // Home Screen widgets and the mute-linked screen brightness (both Android-only features).
+        com.friend.ios.widgets.HomeWidgetsPlugin.register(this, flutterEngine)
+        com.friend.ios.widgets.ScreenBrightnessPlugin.register(this, flutterEngine)
         // On-device live preview for local-preview listen sessions (display only).
         com.friend.ios.livepreview.LivePreviewPlugin.register(this, flutterEngine)
-
-        // Register Phone Calls Plugin
-        PhoneCallsPlugin.registerWith(flutterEngine, this)
 
         // Register Device Calendar Plugin (Android CalendarContract)
         DeviceCalendarPlugin.registerWith(flutterEngine, this)
@@ -170,6 +169,8 @@ class MainActivity: FlutterActivity() {
     }
 
     override fun onDestroy() {
+        // Widgets must not call into an engine that is going away; their actions queue instead.
+        com.friend.ios.widgets.HomeWidgetsPlugin.unregister()
         // The engine dies with the activity whether or not it is finishing, so these flags
         // must clear outside the isFinishing guard — a system-initiated destroy otherwise
         // leaves native deferring audio to an engine that is gone (issue #10847).
