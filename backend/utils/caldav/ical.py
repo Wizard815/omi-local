@@ -15,6 +15,8 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from typing import Dict, List, Optional, Sequence
 
+import pytz
+
 PRODID = '-//omi-local//CalDAV sync//EN'
 TASK_UID_PREFIX = 'omi-task-'
 DAY_UID_PREFIX = 'omi-day-'
@@ -87,15 +89,26 @@ def date_stamp(value: date) -> str:
     return value.strftime('%Y%m%d')
 
 
-def parse_stamp(value: str) -> Optional[datetime]:
-    """DATE-TIME (UTC or floating, read as UTC) or DATE → aware UTC datetime."""
+def parse_stamp(value: str, tzid: str = '') -> Optional[datetime]:
+    """DATE-TIME (UTC, zoned via ``tzid``, or floating, read as UTC) or DATE → aware UTC datetime."""
     value = (value or '').strip()
     for fmt in ('%Y%m%dT%H%M%SZ', '%Y%m%dT%H%M%S', '%Y%m%d'):
         try:
-            return datetime.strptime(value, fmt).replace(tzinfo=timezone.utc)
+            parsed = datetime.strptime(value, fmt)
         except ValueError:
             continue
+        if tzid and fmt == '%Y%m%dT%H%M%S':
+            try:
+                return pytz.timezone(tzid).localize(parsed).astimezone(timezone.utc)
+            except pytz.UnknownTimeZoneError:
+                pass  # a zone this tzdb does not know: read as floating/UTC, like before
+        return parsed.replace(tzinfo=timezone.utc)
     return None
+
+
+def _param_tzid(params: str) -> str:
+    match = re.search(r'TZID="?([^";:]+)"?', params or '', re.IGNORECASE)
+    return match.group(1) if match else ''
 
 
 def _component(name: str, lines: Sequence[str]) -> str:
@@ -234,12 +247,12 @@ def parse_components(text: str) -> List[Component]:
         elif name == 'LOCATION':
             current.location = unescape_text(value)
         elif name == 'DTSTART':
-            current.start = parse_stamp(value)
+            current.start = parse_stamp(value, _param_tzid(params))
             current.all_day = 'VALUE=DATE' in params.upper() and 'DATE-TIME' not in params.upper()
         elif name == 'DTEND':
-            current.end = parse_stamp(value)
+            current.end = parse_stamp(value, _param_tzid(params))
         elif name == 'DUE':
-            current.due = parse_stamp(value)
+            current.due = parse_stamp(value, _param_tzid(params))
         elif name == 'STATUS':
             current.status = value.strip().upper()
         elif name == 'COMPLETED':
@@ -249,3 +262,40 @@ def parse_components(text: str) -> List[Component]:
         elif name == 'CATEGORIES':
             current.categories = [unescape_text(c).strip() for c in re.split(r'(?<!\\),', value) if c.strip()]
     return out
+
+
+def set_todo_completion(
+    text: str, *, completed: bool, completed_at: Optional[datetime] = None, stamp: Optional[datetime] = None
+) -> str:
+    """Rewrite the completion properties of the VTODO in ``text``, leaving every
+    other property and component (alarms, recurrence, a client's X- props) as
+    they are — this is how Omi's flip of an imported task reaches its original
+    object without clobbering what the foreign client stored on it."""
+    now = stamp or datetime.now(timezone.utc)
+    done_lines = (
+        ['STATUS:COMPLETED', 'PERCENT-COMPLETE:100', f'COMPLETED:{utc_stamp(completed_at or now)}']
+        if completed
+        else ['STATUS:NEEDS-ACTION', 'PERCENT-COMPLETE:0']
+    )
+    out: List[str] = []
+    in_todo = False
+    depth = 0
+    for line in unfold(text):
+        upper = line.upper()
+        if upper.startswith('BEGIN:'):
+            if upper[6:].strip() == 'VTODO' and not in_todo:
+                in_todo = True
+            elif in_todo:
+                depth += 1
+        elif upper.startswith('END:'):
+            if in_todo and depth:
+                depth -= 1
+            elif in_todo and upper[4:].strip() == 'VTODO':
+                out += [f'LAST-MODIFIED:{utc_stamp(now)}', *done_lines]
+                in_todo = False
+        elif in_todo and not depth:
+            name = re.split(r'[;:]', upper, maxsplit=1)[0]
+            if name in ('STATUS', 'PERCENT-COMPLETE', 'COMPLETED', 'LAST-MODIFIED'):
+                continue
+        out.append(line)
+    return '\r\n'.join(fold(l) for l in out) + '\r\n'

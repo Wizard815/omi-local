@@ -176,6 +176,9 @@ class CalDavClient:
         self._request('MKCALENDAR', href, body=body, headers={'Content-Type': 'application/xml; charset=utf-8'})
 
     # ---- objects ---------------------------------------------------------------------
+    def get(self, href: str) -> str:
+        return self._request('GET', href).text
+
     def put(self, href: str, ics: str) -> Optional[str]:
         response = self._request('PUT', href, body=ics, headers={'Content-Type': 'text/calendar; charset=utf-8'})
         return response.headers.get('ETag')

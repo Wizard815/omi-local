@@ -9,7 +9,10 @@ Tasks (VTODO, ``tasks_href``)
   pull: a VTODO the phone or desktop client toggled flips the Omi item the
         same way, once per remote change (the remote LAST-MODIFIED is
         remembered). VTODOs created outside Omi are imported once as action
-        items (source "caldav") and then kept in step the same way.
+        items (source "caldav") and then kept in step the same way; they stay
+        the foreign client's objects — Omi's flip of one is patched onto the
+        original object (only the completion properties), never pushed as a
+        second ``omi-task-`` VTODO.
 
 Calendar (VEVENT, ``calendar_href``)
   push: day summaries as all-day events (``omi-day-<date>``), the events the
@@ -106,6 +109,16 @@ def _remote_key(uid: str) -> str:
 
 def _imported_key(uid: str) -> str:
     return f'caldav:imported:{uid}'
+
+
+def _origin_key(uid: str) -> str:
+    """task id → the href of the foreign object an imported task came from."""
+    return f'caldav:origin:{uid}'
+
+
+def _done_key(uid: str) -> str:
+    """task id → '1'/'0', the completion state the server is known to carry (imported tasks)."""
+    return f'caldav:done:{uid}'
 
 
 def _hget(key: str, field_name: str) -> str:
@@ -213,6 +226,32 @@ def render_task(item: Dict[str, Any], *, now: datetime) -> str:
     )
 
 
+def _push_imported_completion(
+    uid: str, client: CalDavClient, item: Dict[str, Any], task_id: str, report: SyncReport, *, now: datetime
+) -> None:
+    """Write Omi's completion flip of an imported task back onto its original
+    object (ical.set_todo_completion): the foreign client's own properties
+    survive, and nothing is duplicated under an ``omi-task-`` uid."""
+    href = _hget(_origin_key(uid), task_id)
+    if not href:
+        return  # origin unknown (memo lost): the next pull relearns it
+    completed = bool(item.get('completed'))
+    if _hget(_done_key(uid), task_id) == ('1' if completed else '0'):
+        return
+    try:
+        patched = ical.set_todo_completion(
+            client.get(href), completed=completed, completed_at=_as_datetime(item.get('completed_at')), stamp=now
+        )
+        client.put(href, patched)
+    except CalDavError as error:
+        report.errors.append(f'task {task_id}: {error}')
+        return
+    _hset(_done_key(uid), task_id, '1' if completed else '0')
+    # The server now carries our LAST-MODIFIED: the pull must not read it back as a remote change.
+    _hset(_remote_key(uid), task_id, ical.utc_stamp(now))
+    report.tasks_pushed += 1
+
+
 def push_tasks(uid: str, client: CalDavClient, tasks_href: str, report: SyncReport, *, now: datetime) -> None:
     since = now - timedelta(days=TASK_WINDOW_DAYS)
     items = action_items_db.get_action_items(uid, limit=MAX_TASKS)
@@ -221,6 +260,9 @@ def push_tasks(uid: str, client: CalDavClient, tasks_href: str, report: SyncRepo
             completed_at = _as_datetime(item.get('completed_at')) or _as_datetime(item.get('updated_at'))
             if completed_at and completed_at < since:
                 continue
+        if str(item.get('source') or '') == 'caldav':
+            _push_imported_completion(uid, client, item, str(item['id']), report, now=now)
+            continue
         text = render_task(item, now=now)
         digest = _digest(text)
         task_id = str(item['id'])
@@ -263,9 +305,15 @@ def pull_tasks(uid: str, client: CalDavClient, tasks_href: str, report: SyncRepo
                         idempotency_key=f'caldav:{component.uid}',
                     )
                     _hset(_imported_key(uid), component.uid, task_id)
+                    _hset(_origin_key(uid), task_id, obj.href)
+                    _hset(_done_key(uid), task_id, '1' if component.is_completed else '0')
                     _hset(_remote_key(uid), task_id, stamp)
                     report.tasks_imported += 1
                     continue
+                # Keep the origin and the server's completion state fresh: the
+                # push writes Omi's flip of this task back onto this object.
+                _hset(_origin_key(uid), task_id, obj.href)
+                _hset(_done_key(uid), task_id, '1' if component.is_completed else '0')
             if _hget(_remote_key(uid), task_id) == stamp:
                 continue  # this remote version was already applied
             _hset(_remote_key(uid), task_id, stamp)

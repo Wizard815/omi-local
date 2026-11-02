@@ -41,6 +41,11 @@ class _FakeClient:
     def make_calendar(self, href, name, components):
         self.made.append((href, name, list(components)))
 
+    def get(self, href):
+        if href not in self.objects:
+            raise CalDavError(f'GET {href}: HTTP 404', 404)
+        return self.objects[href]
+
     def put(self, href, ics):
         if href in self.fail_put:
             raise CalDavError('PUT: HTTP 507', 507)
@@ -225,6 +230,42 @@ def test_remote_completion_flips_the_task_once_and_foreign_todos_are_imported(wo
     report = sync.sync_user('u1', settings, client_factory=_Persisted, now=NOW + timedelta(hours=2))
     assert report.tasks_pulled == 0 and tasks['t1']['completed'] is False
     assert 'STATUS:NEEDS-ACTION' in shared[HOME + 'omi-tasks/omi-task-t1@omi-local.ics']
+    # the imported task stays the phone's object: no duplicate omi-task VTODO, ever
+    assert not any('omi-task-new1' in href for href in shared)
+
+
+def test_an_imported_task_is_patched_in_place_not_duplicated(world):
+    settings, tasks, created, redis, stored = world
+    _run(settings)
+    client = _FakeClient.instances[-1]
+    client.objects[HOME + 'omi-tasks/phone-1.ics'] = (
+        'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//tasks.org//EN\r\n'
+        'BEGIN:VTODO\r\nUID:phone-1\r\nSUMMARY:Buy milk\r\nSTATUS:NEEDS-ACTION\r\n'
+        f'LAST-MODIFIED:{ical.utc_stamp(NOW)}\r\nRRULE:FREQ=WEEKLY\r\nEND:VTODO\r\nEND:VCALENDAR\r\n'
+    )
+    shared = client.objects
+
+    class _Persisted(_FakeClient):
+        def __init__(self, *a):
+            super().__init__(*a)
+            self.objects = shared
+
+    report = sync.sync_user('u1', settings, client_factory=_Persisted, now=NOW + timedelta(hours=1))
+    assert report.tasks_imported == 1 and tasks['new1']['source'] == 'caldav'
+    # steady state: the import is not echoed back as a push, and nothing re-PUTs
+    report = sync.sync_user('u1', settings, client_factory=_Persisted, now=NOW + timedelta(hours=2))
+    assert report.tasks_pushed == 0 and report.tasks_pulled == 0 and report.tasks_imported == 0
+    assert not any('omi-task-new1' in href for href in shared)
+    # Omi completes the imported task: the flip lands on the phone's own object, props intact
+    tasks['new1']['completed'] = True
+    tasks['new1']['completed_at'] = NOW + timedelta(hours=3)
+    report = sync.sync_user('u1', settings, client_factory=_Persisted, now=NOW + timedelta(hours=3))
+    assert report.tasks_pushed == 1 and not any('omi-task-new1' in href for href in shared)
+    patched = shared[HOME + 'omi-tasks/phone-1.ics']
+    assert 'STATUS:COMPLETED' in patched and 'RRULE:FREQ=WEEKLY' in patched and 'UID:phone-1' in patched
+    # our own write is not pulled back as a remote change, and nothing churns after
+    report = sync.sync_user('u1', settings, client_factory=_Persisted, now=NOW + timedelta(hours=4))
+    assert report.tasks_pushed == 0 and report.tasks_pulled == 0 and tasks['new1']['completed'] is True
 
 
 def test_calendar_events_are_pulled_into_the_device_snapshot(world):
