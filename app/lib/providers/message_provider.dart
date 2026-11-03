@@ -1123,7 +1123,8 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
             _logChatFailure(failure, stage: 'stream');
             _markReplyFailed(
               message,
-              _FailedReply(text: text, context: context, fileIds: fileIds, failure: failure, modelShortcut: modelShortcut),
+              _FailedReply(
+                  text: text, context: context, fileIds: fileIds, failure: failure, modelShortcut: modelShortcut),
             );
             completeChat(ProductOutcome.failure, failure: _productFailureFor(failure));
             notifyListeners();
@@ -1140,7 +1141,8 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
         _logChatFailure(failure.kind, stage: 'transport', status: failure.statusCode);
         _markReplyFailed(
           message,
-          _FailedReply(text: text, context: context, fileIds: fileIds, failure: failure.kind, modelShortcut: modelShortcut),
+          _FailedReply(
+              text: text, context: context, fileIds: fileIds, failure: failure.kind, modelShortcut: modelShortcut),
         );
         completeChat(ProductOutcome.failure, failure: _productFailureFor(failure.kind));
         notifyListeners();

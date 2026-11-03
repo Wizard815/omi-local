@@ -57,6 +57,7 @@ class SettingsSearchScope {
     required this.supportLinks,
     required this.android,
     this.rememberedDevice = false,
+    this.upgradeOffered = false,
   });
 
   /// The Device row is shown only while a device is connected.
@@ -71,6 +72,9 @@ class SettingsSearchScope {
 
   /// Background Mode is an Android-only row.
   final bool android;
+
+  /// The Upgrade row is shown only to trial-eligible free readers.
+  final bool upgradeOffered;
 }
 
 /// One searchable Settings row.
@@ -112,6 +116,7 @@ bool _whenDeviceConnected(SettingsSearchScope s) => s.deviceConnected;
 bool _whenDeviceConnectedOrRemembered(SettingsSearchScope s) => s.deviceConnected || s.rememberedDevice;
 bool _whenSupportLinks(SettingsSearchScope s) => s.supportLinks;
 bool _whenAndroid(SettingsSearchScope s) => s.android;
+bool _whenUpgradeOffered(SettingsSearchScope s) => s.upgradeOffered;
 
 /// Every searchable Settings row, in the order Settings shows them: the sheet's rows, each group
 /// page's rows followed by the group's own title (so a search for "Transcription" lists the
@@ -126,7 +131,8 @@ final List<SettingsSearchEntry> settingsSearchEntries = [
   SettingsSearchEntry('signOut', (l) => l.signOut, SettingsDestination.signOut, _account),
   SettingsSearchEntry('deleteAccountTitle', (l) => l.deleteAccountTitle, SettingsDestination.deleteAccount, _account),
 
-  // Plan (on the sheet)
+  // Plan (on the sheet; Upgrade only for trial-eligible free readers)
+  SettingsSearchEntry('upgrade', (l) => l.upgrade, SettingsDestination.upgrade, _drawer, visible: _whenUpgradeOffered),
   SettingsSearchEntry('planAndUsage', (l) => l.planAndUsage, SettingsDestination.planAndUsage, _drawer),
 
   // Device group
@@ -205,7 +211,7 @@ final List<SettingsSearchEntry> settingsSearchEntries = [
   SettingsSearchEntry('taskIntegrations', (l) => l.taskIntegrations, SettingsDestination.taskIntegrations,
       'lib/pages/settings/integrations_page.dart'),
   // omi-local: CalDAV tasks + calendar sync.
-  SettingsSearchEntry('caldav', (l) => l.caldavSettingsTitle, SettingsDestination.caldav, _drawer),
+  SettingsSearchEntry('caldavSettingsTitle', (l) => l.caldavSettingsTitle, SettingsDestination.caldav, _drawer),
 
   // Data & Privacy group
   SettingsSearchEntry('dataProtection', (l) => l.dataProtection, SettingsDestination.dataPrivacy, _groups),

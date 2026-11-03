@@ -374,16 +374,31 @@ arc_write_stamp() {
   mv -f "$temp" "$stamp"
 }
 
+# Ownership is a sibling claim file created by bash itself under noclobber
+# (O_CREAT|O_EXCL), so mutual exclusion does not depend on how the installed
+# mkdir/mv/rm behave (Ubuntu 26.04 ships uutils coreutils). The lock dir is kept
+# for callers that expect it to exist exactly while the lock is held.
 arc_acquire_lock() {
   local lock_dir="$1"
   local timeout_seconds="${2:-600}"
-  local started now owner
+  local claim="${lock_dir%/}.claim"
+  local started now owner self
+  self="${BASHPID:-$$}"
   mkdir -p "$(dirname "$lock_dir")"
   started="$(date +%s)"
-  while ! mkdir "$lock_dir" 2>/dev/null; do
-    owner="$(cat "$lock_dir/pid" 2>/dev/null || true)"
-    if [ -n "$owner" ] && ! kill -0 "$owner" 2>/dev/null; then
+  while :; do
+    if (set -C; printf '%s\n' "$self" >"$claim") 2>/dev/null; then
       rm -rf "$lock_dir"
+      mkdir -p "$lock_dir"
+      printf '%s\n' "$self" >"$lock_dir/pid"
+      return 0
+    fi
+    owner="$(cat "$claim" 2>/dev/null || true)"
+    # Steal only if the same dead pid is still recorded; an empty read is a claim
+    # being written, and a pid read before a release must not evict the next holder.
+    if [ -n "$owner" ] && ! kill -0 "$owner" 2>/dev/null &&
+      [ "$(cat "$claim" 2>/dev/null || true)" = "$owner" ]; then
+      rm -f "$claim"
       continue
     fi
     now="$(date +%s)"
@@ -393,15 +408,15 @@ arc_acquire_lock() {
     fi
     sleep 0.1
   done
-  printf '%s\n' "$$" >"$lock_dir/pid"
 }
 
 arc_release_lock() {
   local lock_dir="$1"
-  [ -d "$lock_dir" ] || return 0
+  local claim="${lock_dir%/}.claim"
   local owner
-  owner="$(cat "$lock_dir/pid" 2>/dev/null || true)"
-  if [ -z "$owner" ] || [ "$owner" = "$$" ]; then
+  owner="$(cat "$claim" 2>/dev/null || true)"
+  if [ -z "$owner" ] || [ "$owner" = "${BASHPID:-$$}" ]; then
     rm -rf "$lock_dir"
+    rm -f "$claim"
   fi
 }
