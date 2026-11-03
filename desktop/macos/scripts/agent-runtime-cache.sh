@@ -393,7 +393,8 @@ arc_acquire_lock() {
     fi
     sleep 0.1
   done
-  printf '%s\n' "$$" >"$lock_dir/pid"
+  # Write then rename so a waiter never reads a partial pid and steals a live lock.
+  printf '%s\n' "${BASHPID:-$$}" >"$lock_dir/pid.tmp" && mv -f "$lock_dir/pid.tmp" "$lock_dir/pid"
 }
 
 arc_release_lock() {
@@ -401,7 +402,7 @@ arc_release_lock() {
   [ -d "$lock_dir" ] || return 0
   local owner
   owner="$(cat "$lock_dir/pid" 2>/dev/null || true)"
-  if [ -z "$owner" ] || [ "$owner" = "$$" ]; then
+  if [ -z "$owner" ] || [ "$owner" = "${BASHPID:-$$}" ]; then
     rm -rf "$lock_dir"
   fi
 }
