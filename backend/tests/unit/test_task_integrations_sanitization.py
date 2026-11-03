@@ -1,12 +1,7 @@
-import sys
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
-
-# Stub jinja2 in case it is absent in the test environment so task_integrations can import cleanly.
-if "jinja2" not in sys.modules:
-    sys.modules["jinja2"] = MagicMock()
 
 from routers.task_integrations import (
     get_asana_projects,

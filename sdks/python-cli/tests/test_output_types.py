@@ -7,7 +7,7 @@ import os
 import subprocess
 import sys
 from datetime import date, datetime, timezone
-from pathlib import Path, PureWindowsPath
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from uuid import UUID
 
 import pytest
@@ -21,7 +21,10 @@ from omi_cli.output import Renderer
     [
         (date(2026, 10, 24), "2026-10-24"),
         (datetime(2026, 10, 24, 12, 30, tzinfo=timezone.utc), "2026-10-24T12:30:00+00:00"),
-        (Path("exports/report.json"), "exports/report.json"),
+        # Paths serialize as str(path): the path's own flavor, so a concrete
+        # Path is OS-native (backslashes on Windows).
+        (Path("exports/report.json"), str(Path("exports/report.json"))),
+        (PurePosixPath("exports/report.json"), "exports/report.json"),
         (PureWindowsPath("C:/exports/report.json"), "C:\\exports\\report.json"),
         (UUID("12345678-1234-5678-1234-567812345678"), "12345678-1234-5678-1234-567812345678"),
     ],
