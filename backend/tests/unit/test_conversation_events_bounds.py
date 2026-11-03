@@ -143,6 +143,7 @@ def router():
         "database._client": client_mod,
         "database.conversations": _pkg("database.conversations"),
         "database.conversation_scan": _pkg("database.conversation_scan"),
+        "database.conversation_tags": _pkg("database.conversation_tags"),
         "database.screen_frames": _pkg("database.screen_frames"),
         "database.action_items": _pkg("database.action_items"),
         "database.memories": _pkg("database.memories"),

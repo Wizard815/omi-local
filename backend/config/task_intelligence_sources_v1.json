@@ -320,6 +320,7 @@
       "owner_paths": [
         "backend/routers/task_integrations.py",
         "backend/utils/task_sync.py",
+        "backend/utils/caldav/sync.py",
         "app/lib/providers/task_integration_provider.dart",
         "desktop/macos/Desktop/Sources/CalendarReaderService.swift",
         "desktop/macos/Desktop/Sources/GmailReaderService.swift",
@@ -330,6 +331,16 @@
         {
           "path": "backend/utils/task_sync.py",
           "symbol": "action_items_db.update_action_item",
+          "discover": true
+        },
+        {
+          "path": "backend/utils/caldav/sync.py",
+          "symbol": "action_items_db.create_action_item",
+          "discover": true
+        },
+        {
+          "path": "backend/utils/caldav/sync.py",
+          "symbol": "action_items_db.mark_action_item_completed",
           "discover": true
         }
       ]
