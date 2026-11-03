@@ -173,6 +173,7 @@ void main() {
       'settings_group_voice',
       'settings_group_notifications',
       'settings_group_integrations',
+      'settings_row_caldav',
       'settings_row_connect_agent',
       'settings_group_privacy',
       'settings_row_memories',
@@ -191,6 +192,7 @@ void main() {
       en.assistantVoiceSettingsTitle,
       en.notificationsAndDisplay,
       en.integrations,
+      en.caldavSettingsTitle,
       en.connectAnAgent,
       en.dataAndPrivacy,
       en.memories,
@@ -242,6 +244,8 @@ void main() {
       SettingsDestination.developer: 'settings_group_developer',
       // Connect an Agent joined the sheet (2026-10-14) so agent setup is not buried in Developer.
       SettingsDestination.connectAgent: 'settings_row_connect_agent',
+      // omi-local: Calendar & tasks (CalDAV) joined the sheet next to Integrations.
+      SettingsDestination.caldav: 'settings_row_caldav',
       SettingsDestination.planAndUsage: 'settings_row_planAndUsage',
       SettingsDestination.feedback: 'settings_row_feedback', // where Intercom is supported (the host test is)
       SettingsDestination.voice: 'settings_group_voice',
