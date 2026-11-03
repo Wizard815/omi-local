@@ -11,6 +11,7 @@ import 'package:omi/backend/schema/gen/action_items_folders_wire.g.dart' as acti
 import 'package:omi/backend/schema/gen/apps_wire.g.dart' as apps_wire;
 import 'package:omi/backend/schema/gen/conversation_wire.g.dart' as wire;
 import 'package:omi/backend/schema/gen/misc_wire.g.dart' as misc_wire;
+import 'package:omi/backend/schema/gen/self_hosted_wire.g.dart' as hosted_wire;
 import 'package:omi/backend/schema/schema.dart';
 import 'package:omi/env/env.dart';
 import 'package:omi/services/capture/calendar_capture_gap_monitor.dart';
@@ -719,12 +720,10 @@ Future<List<String>?> setConversationTags(String conversationId, List<String> ta
     return null;
   }
   // omi-perf-allow: history-json-on-ui -- one conversation envelope, not the user's history
+  // ConversationMutationResponse: {status, conversation}; the conversation is the generated-backed model.
   final body = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-  final conversation = body['conversation'];
-  if (conversation is Map<String, dynamic>) {
-    return List<String>.from((conversation['tags'] as List<dynamic>?) ?? const []);
-  }
-  return tags;
+  final conversation = ServerConversation.fromJson(body['conversation'] as Map<String, dynamic>);
+  return List<String>.from(conversation.tags);
 }
 
 /// Every tag the user's conversations carry, most used first.
@@ -733,10 +732,11 @@ Future<List<({String tag, int count})>> getConversationTagCatalog() async {
       await makeApiCall(url: '${Env.apiBaseUrl}v1/conversations/tags', headers: {}, method: 'GET', body: '');
   if (response == null || response.statusCode != 200) return const [];
   // omi-perf-allow: history-json-on-ui -- the tag catalog is a few hundred bytes
-  final body = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+  final catalog = hosted_wire.GeneratedConversationTagCatalogResponse.fromJson(
+      jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>);
   return [
-    for (final row in (body['tags'] as List<dynamic>? ?? const []))
-      if (row is Map<String, dynamic>) (tag: row['tag'] as String, count: (row['count'] as num?)?.toInt() ?? 0)
+    for (final row in catalog.tags ?? const <hosted_wire.GeneratedConversationTagCount>[])
+      (tag: row.tag, count: row.count)
   ];
 }
 
@@ -752,7 +752,9 @@ Future<List<ServerConversation>> getConversationsByTag(String tag, {int limit = 
   final bodyBytes = response.bodyBytes;
   return offUiIsolate(
     // omi-perf-allow: history-json-on-ui -- decoded inside offUiIsolate once the page passes its threshold
-    () => parseConversationListBody(jsonDecode(utf8.decode(bodyBytes)) as List<dynamic>),
+    () => (jsonDecode(utf8.decode(bodyBytes)) as List<dynamic>)
+        .map((conversation) => ServerConversation.fromJson(conversation as Map<String, dynamic>))
+        .toList(),
     size: bodyBytes.length,
     threshold: conversationListBackgroundParseBytes,
     debugName: 'conversation_tag_list_parse',
