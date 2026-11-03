@@ -719,8 +719,8 @@ Future<List<String>?> setConversationTags(String conversationId, List<String> ta
     Logger.debug('setConversationTags failed: ${response?.statusCode} ${response?.body}');
     return null;
   }
-  // omi-perf-allow: history-json-on-ui -- one conversation envelope, not the user's history
   // ConversationMutationResponse: {status, conversation}; the conversation is the generated-backed model.
+  // omi-perf-allow: history-json-on-ui -- one conversation envelope, not the user's history
   final body = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
   final conversation = ServerConversation.fromJson(body['conversation'] as Map<String, dynamic>);
   return List<String>.from(conversation.tags);
@@ -732,8 +732,8 @@ Future<List<({String tag, int count})>> getConversationTagCatalog() async {
       await makeApiCall(url: '${Env.apiBaseUrl}v1/conversations/tags', headers: {}, method: 'GET', body: '');
   if (response == null || response.statusCode != 200) return const [];
   // omi-perf-allow: history-json-on-ui -- the tag catalog is a few hundred bytes
-  final catalog = hosted_wire.GeneratedConversationTagCatalogResponse.fromJson(
-      jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>);
+  final catalogJson = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+  final catalog = hosted_wire.GeneratedConversationTagCatalogResponse.fromJson(catalogJson);
   return [
     for (final row in catalog.tags ?? const <hosted_wire.GeneratedConversationTagCount>[])
       (tag: row.tag, count: row.count)
