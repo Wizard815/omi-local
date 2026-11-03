@@ -40,7 +40,8 @@ OUT_OF_SCOPE_PREFIXES: tuple = ()
 # so the extracted string is a prefix root, not a callable route. Covering the
 # appended subpaths needs call-site-aware extraction and is a tracked extension
 # of this inventory, not silently in scope.
-BASE_URL_ROOTS = {'/v1/dev', '/v1/mcp'}
+# caldav.dart builds every route from `_base()` (`${Env.apiBaseUrl}v1/caldav`) the same way.
+BASE_URL_ROOTS = {'/v1/caldav', '/v1/dev', '/v1/mcp'}
 
 # Known gaps already tracked with a follow-up owner. Add here ONLY with a note
 # naming the tracking PR/issue, exactly like the desktop inventories.

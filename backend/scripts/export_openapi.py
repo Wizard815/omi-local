@@ -207,6 +207,14 @@ UNDOCUMENTED_PUBLIC_ROUTES: dict[tuple[str, str], str] = {
         '/v1/conversations/{conversation_id}/starred',
     ): 'Firebase-authenticated first-party app route; not part of the Developer API key contract.',
     (
+        'GET',
+        '/v1/conversations/tags',
+    ): 'Firebase-authenticated first-party app route; not part of the Developer API key contract.',
+    (
+        'PUT',
+        '/v1/conversations/{conversation_id}/tags',
+    ): 'Firebase-authenticated first-party app route; not part of the Developer API key contract.',
+    (
         'POST',
         '/v1/conversations/{conversation_id}/mutations',
     ): 'Firebase-authenticated first-party sync route; not part of the Developer API key contract.',
