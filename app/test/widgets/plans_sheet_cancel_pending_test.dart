@@ -175,10 +175,13 @@ Future<_Usage> _pump(
   return usage;
 }
 
-/// 2026-11-03 00:00:00 UTC. Far-east and far-west zones put that instant on different
+/// UTC midnight 30 days from now. Far-east and far-west zones put that instant on different
 /// local calendar days, so the expected label is the local day of the same epoch
 /// the sheet formats.
-final int _periodEndSeconds = DateTime.utc(2026, 11, 3).millisecondsSinceEpoch ~/ 1000;
+// Must stay in the future: a period end in the past hides the "ends" line.
+final DateTime _periodEnd = DateTime.now().toUtc().add(const Duration(days: 30));
+final int _periodEndSeconds =
+    DateTime.utc(_periodEnd.year, _periodEnd.month, _periodEnd.day).millisecondsSinceEpoch ~/ 1000;
 
 String _date(WidgetTester tester) {
   final context = tester.element(find.byType(PlansSheet));
