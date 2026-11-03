@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('./firebase', () => ({ auth: { currentUser: { uid: 'user-123' } } }))
 
-import { trackEvent, trackPaywallOpened, trackUpgradePlanSelected } from './analytics'
+import { trackEvent } from './analytics'
 
 describe('analytics capture contract', () => {
   beforeEach(() => {
@@ -69,7 +69,11 @@ describe('analytics capture contract', () => {
   })
 
   it('collapses plan and interval aliases onto the closed funnel vocabulary', async () => {
+    // Capture is opt-in; enable it so the funnel events reach fetch.
+    vi.stubEnv('VITE_ANALYTICS_ENABLED', '1')
+    vi.resetModules()
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response())
+    const { trackPaywallOpened, trackUpgradePlanSelected } = await import('./analytics')
 
     trackPaywallOpened('Usage Page Plan Sheet', 'pro')
     trackUpgradePlanSelected('free', 'Annual', 'windows_billing')

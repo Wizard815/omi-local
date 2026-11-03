@@ -89,10 +89,10 @@ arc_write_stamp "$STAMP" "$KEY" "$DIGEST"
 arc_cache_status "$STAMP" "$KEY" "$DIGEST" || fail "unchanged stamp reported MISS"
 
 # A hit is decision-only: it must not rewrite or touch prepared outputs.
-before_mtime="$(stat -f %m "$TMP_ROOT/outputs/sentinel.js" 2>/dev/null || stat -c %Y "$TMP_ROOT/outputs/sentinel.js")"
+before_mtime="$(stat -c %Y "$TMP_ROOT/outputs/sentinel.js" 2>/dev/null || stat -f %m "$TMP_ROOT/outputs/sentinel.js")"
 sleep 1
 arc_cache_status "$STAMP" "$KEY" "$(output_digest)" || fail "second unchanged check missed"
-after_mtime="$(stat -f %m "$TMP_ROOT/outputs/sentinel.js" 2>/dev/null || stat -c %Y "$TMP_ROOT/outputs/sentinel.js")"
+after_mtime="$(stat -c %Y "$TMP_ROOT/outputs/sentinel.js" 2>/dev/null || stat -f %m "$TMP_ROOT/outputs/sentinel.js")"
 assert_eq "$after_mtime" "$before_mtime"
 
 # Source/lock, mode, and actual build toolchain metadata all participate.

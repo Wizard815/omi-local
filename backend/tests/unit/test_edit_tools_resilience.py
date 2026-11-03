@@ -16,8 +16,7 @@ import pytest
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(BACKEND_DIR))
 
-# Stub database and external dependencies so test suite runs in pure isolation
-for mod in [
+_STUB_MODULES = [
     'database',
     'database.conversations',
     'database.users',
@@ -32,28 +31,56 @@ for mod in [
     'utils.mcp_server',
     'utils.mcp_server.handlers',
     'utils.mcp_server.handlers.other',
-]:
-    if mod not in sys.modules:
-        sys.modules[mod] = types.ModuleType(mod)
+]
 
-sys.modules['database._client'].get_data_plane_firestore_client = MagicMock()
-sys.modules['database.chat_edits'].envelope = lambda item, label: {'item': item, 'label': label}
-sys.modules['database.chat_edits'].snapshot = MagicMock()
-sys.modules['database.chat_edits'].decode = MagicMock()
-sys.modules['utils.messaging.undo'].record_write = MagicMock()
-sys.modules['utils.mcp_server.handlers.other'].rename_person = MagicMock(return_value={'person': {'name': 'New'}})
-sys.modules['utils.memory.memory_service'].MemoryService = MagicMock()
-sys.modules['utils.memory.memory_system'].MemorySystem = MagicMock()
-sys.modules['utils.memory.canonical_memory_adapter'].read_canonical_memory_item = MagicMock()
+edit_tools = None
+turn_refs = None
 
-# Load edit_tools directly
-edit_tools_path = BACKEND_DIR / 'utils' / 'retrieval' / 'tools' / 'edit_tools.py'
-spec = importlib.util.spec_from_file_location('utils.retrieval.tools.edit_tools', edit_tools_path)
-edit_tools = importlib.util.module_from_spec(spec)
-sys.modules['utils.retrieval.tools.edit_tools'] = edit_tools
-spec.loader.exec_module(edit_tools)
 
-from utils.retrieval import turn_refs
+@pytest.fixture(scope='module', autouse=True)
+def _isolated_edit_tools():
+    """Stub heavy deps and load edit_tools for this module only, then restore sys.modules."""
+    global edit_tools, turn_refs
+    with pytest.MonkeyPatch.context() as mp:
+        for mod in _STUB_MODULES:
+            if mod not in sys.modules:
+                mp.setitem(sys.modules, mod, types.ModuleType(mod))
+        mp.setattr(sys.modules['database._client'], 'get_data_plane_firestore_client', MagicMock(), raising=False)
+        mp.setattr(
+            sys.modules['database.chat_edits'],
+            'envelope',
+            lambda item, label: {'item': item, 'label': label},
+            raising=False,
+        )
+        mp.setattr(sys.modules['database.chat_edits'], 'snapshot', MagicMock(), raising=False)
+        mp.setattr(sys.modules['database.chat_edits'], 'decode', MagicMock(), raising=False)
+        mp.setattr(sys.modules['utils.messaging.undo'], 'record_write', MagicMock(), raising=False)
+        mp.setattr(
+            sys.modules['utils.mcp_server.handlers.other'],
+            'rename_person',
+            MagicMock(return_value={'person': {'name': 'New'}}),
+            raising=False,
+        )
+        mp.setattr(sys.modules['utils.memory.memory_service'], 'MemoryService', MagicMock(), raising=False)
+        mp.setattr(sys.modules['utils.memory.memory_system'], 'MemorySystem', MagicMock(), raising=False)
+        mp.setattr(
+            sys.modules['utils.memory.canonical_memory_adapter'],
+            'read_canonical_memory_item',
+            MagicMock(),
+            raising=False,
+        )
+
+        edit_tools_path = BACKEND_DIR / 'utils' / 'retrieval' / 'tools' / 'edit_tools.py'
+        spec = importlib.util.spec_from_file_location('utils.retrieval.tools.edit_tools', edit_tools_path)
+        module = importlib.util.module_from_spec(spec)
+        mp.setitem(sys.modules, 'utils.retrieval.tools.edit_tools', module)
+        spec.loader.exec_module(module)
+
+        edit_tools = module
+        turn_refs = importlib.import_module('utils.retrieval.turn_refs')
+        yield
+    edit_tools = None
+    turn_refs = None
 
 
 class TestOwnerResilience:
