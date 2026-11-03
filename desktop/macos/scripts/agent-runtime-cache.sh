@@ -377,14 +377,28 @@ arc_write_stamp() {
 arc_acquire_lock() {
   local lock_dir="$1"
   local timeout_seconds="${2:-600}"
-  local started now owner
+  local started now owner self
+  self="${BASHPID:-$$}"
   mkdir -p "$(dirname "$lock_dir")"
   started="$(date +%s)"
-  while ! mkdir "$lock_dir" 2>/dev/null; do
-    owner="$(cat "$lock_dir/pid" 2>/dev/null || true)"
-    if [ -n "$owner" ] && ! kill -0 "$owner" 2>/dev/null; then
-      rm -rf "$lock_dir"
-      continue
+  while :; do
+    if mkdir "$lock_dir" 2>/dev/null; then
+      # Write then rename so a waiter never reads a partial pid. If the dir was
+      # removed under us, or another holder's pid landed, go back to waiting.
+      if printf '%s\n' "$self" >"$lock_dir/pid.tmp" 2>/dev/null &&
+        mv -f "$lock_dir/pid.tmp" "$lock_dir/pid" 2>/dev/null &&
+        [ "$(cat "$lock_dir/pid" 2>/dev/null || true)" = "$self" ]; then
+        return 0
+      fi
+    else
+      owner="$(cat "$lock_dir/pid" 2>/dev/null || true)"
+      # Steal only if the same dead pid is still recorded; a pid read before the
+      # previous holder released must not remove the next holder's lock.
+      if [ -n "$owner" ] && ! kill -0 "$owner" 2>/dev/null &&
+        [ "$(cat "$lock_dir/pid" 2>/dev/null || true)" = "$owner" ]; then
+        rm -rf "$lock_dir"
+        continue
+      fi
     fi
     now="$(date +%s)"
     if [ $((now - started)) -ge "$timeout_seconds" ]; then
@@ -393,8 +407,6 @@ arc_acquire_lock() {
     fi
     sleep 0.1
   done
-  # Write then rename so a waiter never reads a partial pid and steals a live lock.
-  printf '%s\n' "${BASHPID:-$$}" >"$lock_dir/pid.tmp" && mv -f "$lock_dir/pid.tmp" "$lock_dir/pid"
 }
 
 arc_release_lock() {
