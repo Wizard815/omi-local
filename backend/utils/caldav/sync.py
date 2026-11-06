@@ -96,6 +96,44 @@ def effective_settings(uid: str) -> Optional[Dict[str, Any]]:
     return default_settings()
 
 
+# ---- change-triggered sync ------------------------------------------------------------------
+
+DIRTY_KEY = 'caldav:dirty'
+
+
+def mark_dirty(uid: str) -> None:
+    """A task or day summary changed: sync this user at the next short pass (seconds, not the
+    hour). Called from the action-item store and the day bundle; never raises."""
+    try:
+        redis_db.r.sadd(DIRTY_KEY, uid)
+    except Exception:  # noqa: BLE001 — the hourly full sync still covers it
+        pass
+
+
+def take_dirty() -> List[str]:
+    try:
+        raw = redis_db.r.spop(DIRTY_KEY, 200) or []
+    except Exception:  # noqa: BLE001
+        return []
+    return [v.decode() if isinstance(v, bytes) else str(v) for v in raw]
+
+
+def run_dirty() -> Dict[str, Any]:
+    """Sync every user marked dirty since the last pass (users without a CalDAV server are skipped)."""
+    results: Dict[str, Any] = {}
+    for uid in take_dirty():
+        outcome = run_for_user(uid)
+        if outcome is not None:
+            results[uid] = outcome
+    return results
+
+
+async def dirty_tick() -> None:
+    from utils.executors import db_executor, run_blocking
+
+    await run_blocking(db_executor, run_dirty)
+
+
 # ---- state kept between ticks -------------------------------------------------------------
 
 
