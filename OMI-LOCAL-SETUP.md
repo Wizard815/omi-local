@@ -273,6 +273,14 @@ Nextcloud, Baïkal, iCloud or another server instead, enter it on the settings p
 set `CALDAV_DEFAULT_URL` / `CALDAV_USER` / `CALDAV_PASSWORD` for the whole stack. Worked
 examples: `omi-host/examples/caldav/README.md`. Contacts (CardDAV) are not synced.
 
+### ALLGlance (family calendar/tasks gateway)
+
+Omi and [ALLGlance](https://github.com/Wizard815/ALLGlance) connect three ways: tasks
+both ways over CalDAV (point `CALDAV_DEFAULT_URL` at the gateway's `/dav/`), the chat's
+`allglance_*` tools and instant task creation in Vikunja (`ALLGLANCE_URL` +
+`ALLGLANCE_TOKEN`), and Omi's own tools inside the gateway (`OMI_URL` + an Omi MCP key on
+the ALLGlance side). Setup and what does not sync: `omi-host/examples/allglance/README.md`.
+
 ### Folder tree
 Folders can be nested (up to 5 levels). Folders live in **Search** (upstream moved folder
 browsing there): the tiles are top-level folders; opening one shows its path and its subfolders
