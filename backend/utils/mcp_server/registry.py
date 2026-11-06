@@ -1306,6 +1306,43 @@ TOOL_SPECS: Tuple[ToolSpec, ...] = (
         handler=other.get_daily_summaries,
     ),
     ToolSpec(
+        name="get_day_review",
+        title="Get day review",
+        description=(
+            "omi-local's day bundle for one date (default today): the sectioned end-of-day summary with its "
+            "tags, and that day's conversations with how the bundle sorted them (kept separately, rolled "
+            "into the summary, dropped, still held). Use it for 'how did my day go' and to find which "
+            "conversations a summary section came from. Not yet bundled days return bundled=false with "
+            "the conversations only."
+        ),
+        annotations=_read_annotations("Get day review"),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string",
+                    "description": "The day, yyyy-mm-dd, in the user's time zone. Defaults to today.",
+                },
+            },
+        },
+        output_schema=_output_schema(
+            _object_schema(
+                ["date", "bundled", "conversations"],
+                date={"type": "string"},
+                bundled={"type": "boolean"},
+                review={"type": ["object", "null"]},
+                conversations=_ARRAY_OF_OBJECTS,
+                processing_count={"type": "integer"},
+                hold_enabled={"type": "boolean"},
+            )
+        ),
+        scope="conversations.read",
+        operation="day_review_read",
+        write_operation=_READ,
+        rate_bucket=None,
+        handler=other.get_day_review,
+    ),
+    ToolSpec(
         name="process_recent_conversations",
         title="Process recent conversations",
         description="Process your own pending conversations from the last six hours. Returns progress; ready=false is not completion.",

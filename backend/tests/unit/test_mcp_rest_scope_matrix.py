@@ -44,6 +44,7 @@ REST_TO_TOOL = {
     ("POST", "/v1/mcp/people/{person_id}/dismiss"): "dismiss_person",
     ("GET", "/v1/mcp/screen-activity"): "get_screen_activity",
     ("GET", "/v1/mcp/daily-summaries"): "get_daily_summaries",
+    ("GET", "/v1/mcp/day-reviews/{date}"): "get_day_review",
 }
 RESOURCE_ROUTES = list(REST_TO_TOOL)
 WRITE_ROUTES = [route for route in RESOURCE_ROUTES if TOOL_REQUIRED_SCOPE[REST_TO_TOOL[route]].endswith(".write")]
