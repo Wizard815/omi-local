@@ -44,8 +44,8 @@ def test_mark_dirty_then_run_dirty_syncs_each_user_once(redis, monkeypatch):
     sync.mark_dirty('u1')
     sync.mark_dirty('u2')
     out = sync.run_dirty()
-    assert sorted(synced) == ['u1', 'u2'] and set(out) == {'u1', 'u2'}
-    assert sync.run_dirty() == {} and synced == sorted(synced), 'nothing left after the pass'
+    assert sorted(synced) == ['u1', 'u2'] and set(out) == {'u1', 'u2'}  # a set: no order to assert
+    assert sync.run_dirty() == {} and len(synced) == 2, 'nothing left after the pass'
 
 
 def test_a_user_without_a_server_is_skipped_quietly(redis, monkeypatch):
