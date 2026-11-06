@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import 'package:omi/backend/http/api/day_reviews.dart';
 import 'package:omi/backend/schema/day_review.dart';
+import 'package:omi/ui/omi_tokens.dart';
 import 'package:omi/pages/day_review/day_review_page.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 import 'package:omi/utils/other/temp.dart';
@@ -63,9 +64,9 @@ class _DayReviewsListPageState extends State<DayReviewsListPage> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.primary,
+      backgroundColor: OmiColors.surface0,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        backgroundColor: OmiColors.surface0,
         title: Text(l10n.dayReviewsTitle),
         actions: [
           IconButton(tooltip: l10n.dayReviewPickDate, icon: const Icon(Icons.calendar_month), onPressed: _pickDate),

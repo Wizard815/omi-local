@@ -15094,7 +15094,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String dayReviewSectionFavorited(int count) {
-    return 'Kept as $count conversation(s)';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kept as $count conversations',
+      one: 'Kept as its own conversation',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -15217,4 +15223,32 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get caldavSaved => 'CalDAV settings saved';
+
+  @override
+  String dayReviewSectionClips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count conversations',
+      one: '1 conversation',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dayReviewSmallMoments(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count small clips',
+      one: '1 small clip',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayReviewAddParagraphHere => 'Add a paragraph after this section';
+
+  @override
+  String get dayReviewHideClips => 'Hide';
 }

@@ -30,6 +30,10 @@ class JourneyFixtureBackend {
   final Set<JourneyFault> _faults = {};
   final Map<String, List<({int status, String body})>> _httpFaults = {};
 
+  /// Canned JSON for exact `'METHOD /path'` routes the switch below does not model (a scenario's
+  /// own page data, e.g. a day review). Checked before the switch; the value is encoded as the body.
+  final Map<String, Object?> jsonRoutes = {};
+
   /// One-shot HTTP faults shared by typed-result contracts and journeys.
   /// This loopback-only fixture is never compiled into the application.
   void failNext(String method, String path, {required int status, String body = '{}'}) {
@@ -83,6 +87,7 @@ class JourneyFixtureBackend {
   void clearFaults() {
     _faults.clear();
     _httpFaults.clear();
+    jsonRoutes.clear();
   }
 
   int countOf(String method, String path) => requestCounts['$method $path'] ?? 0;
@@ -134,6 +139,13 @@ class JourneyFixtureBackend {
       req.response.statusCode = fault.status;
       req.response.headers.contentType = ContentType.json;
       req.response.write(fault.body);
+      await req.response.close();
+      return;
+    }
+    if (jsonRoutes.containsKey('$method $path')) {
+      req.response.statusCode = 200;
+      req.response.headers.contentType = ContentType.json;
+      req.response.write(jsonEncode(jsonRoutes['$method $path']));
       await req.response.close();
       return;
     }
