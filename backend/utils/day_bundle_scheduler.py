@@ -26,7 +26,7 @@ from utils import day_review_service as service
 logger = logging.getLogger(__name__)
 
 RETRY_AFTER_SECONDS = 6 * 3600
-LOOKBACK_DAYS = 7
+LOOKBACK_DAYS = 7  # past days the scheduler still bundles; today is never bundled, so the window is one day wider
 
 
 def auto_enabled() -> bool:
@@ -61,7 +61,8 @@ def bundle_user(uid: str, *, now: Optional[datetime] = None) -> Dict[str, str]:
     """Bundle every due day of one user. Returns {date: outcome}."""
     tz_name = notification_db.get_user_time_zone(uid)
     now_local = now if now is not None else datetime.now(service.timezone_for(tz_name))
-    pending = service.pending_dates(uid, days=LOOKBACK_DAYS).get('pending_dates') or []
+    # pending_dates counts today as its first day, so LOOKBACK_DAYS past days need one more
+    pending = service.pending_dates(uid, days=LOOKBACK_DAYS + 1).get('pending_dates') or []
     outcomes: Dict[str, str] = {}
     for date_str in due_dates(uid, now_local, pending):
         try:
