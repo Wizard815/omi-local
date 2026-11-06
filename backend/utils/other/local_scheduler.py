@@ -60,8 +60,41 @@ async def run_hourly(
             logger.exception('local_scheduler tick failed')
 
 
+async def run_every(
+    seconds: float,
+    job: Callable[[], Awaitable[None]],
+    *,
+    sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+    max_ticks: Optional[int] = None,
+) -> None:
+    """Run ``job`` every ``seconds`` forever (or ``max_ticks`` times); a failing run never stops the loop."""
+    ticks = 0
+    while max_ticks is None or ticks < max_ticks:
+        await sleep(seconds)
+        ticks += 1
+        try:
+            await job()
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            logger.exception('local_scheduler periodic job %s failed', getattr(job, '__name__', job))
+
+
+def caldav_sync_seconds() -> float:
+    """CALDAV_SYNC_SECONDS: how often every active member is fully synced (default 15 minutes)."""
+    raw = os.getenv('CALDAV_SYNC_SECONDS', '').strip()
+    try:
+        return max(60.0, float(raw)) if raw else 900.0
+    except ValueError:
+        return 900.0
+
+
+CALDAV_DIRTY_SECONDS = 20.0
+
+
 async def run_local_scheduler() -> None:
     from utils.allglance import tick as allglance_tick
+    from utils.caldav.sync import dirty_tick as caldav_dirty_tick
     from utils.caldav.sync import tick as caldav_tick
     from utils.day_bundle_scheduler import tick as day_bundle_tick
     from utils.other.notifications import start_cron_job
@@ -70,7 +103,7 @@ async def run_local_scheduler() -> None:
         # The day bundle (utils/day_bundle_scheduler.py) and the CalDAV sync
         # (utils/caldav/sync.py) run on the same tick, after the recap job; a
         # failure in one never skips the next.
-        for step in (start_cron_job, day_bundle_tick, caldav_tick, allglance_tick):
+        for step in (start_cron_job, day_bundle_tick, allglance_tick):
             try:
                 await step()
             except asyncio.CancelledError:
@@ -78,7 +111,18 @@ async def run_local_scheduler() -> None:
             except Exception:
                 logger.exception('local_scheduler step %s failed', getattr(step, '__name__', step))
 
+    full = caldav_sync_seconds()
     logger.info(
-        'local_scheduler started: recap, day-bundle, caldav and allglance jobs every hour at :%02d', TICK_MINUTE
+        'local_scheduler started: recap, day-bundle and allglance jobs every hour at :%02d; '
+        'caldav full sync every %ds, changed users every %ds',
+        TICK_MINUTE,
+        int(full),
+        int(CALDAV_DIRTY_SECONDS),
     )
-    await run_hourly(job)
+    # CalDAV runs on its own clocks: a full pass for every active member every CALDAV_SYNC_SECONDS,
+    # and a short pass for members whose tasks or day summary just changed.
+    await asyncio.gather(
+        run_hourly(job),
+        run_every(full, caldav_tick),
+        run_every(CALDAV_DIRTY_SECONDS, caldav_dirty_tick),
+    )

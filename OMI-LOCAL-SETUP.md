@@ -263,7 +263,8 @@ API: `PUT /v1/conversations/{id}/tags`, `GET /v1/conversations/tags`,
 ### Calendar & tasks (CalDAV)
 Tasks and the day's events live outside Omi too. `omi-host` runs **Radicale** (`omi-radicale`,
 port `CALDAV_PORT`, default 5232; set `CALDAV_PASSWORD` in `.env` or it refuses to start) and
-the backend syncs with it every hour and on **Sync now** (Settings → **Calendar & tasks**):
+the backend syncs with it by itself (a change lands within about 20 s, a full pass every
+`CALDAV_SYNC_SECONDS`, default 15 minutes) and on **Sync now** (Settings → **Calendar & tasks**):
 open tasks and recently completed ones go out as to-dos, a to-do ticked off on the phone flips
 the Omi task, to-dos made elsewhere become Omi tasks; day summaries land as all-day events and
 the events the pipeline extracted from conversations as timed ones; the calendar's own events
