@@ -755,6 +755,7 @@ class GeneratedCalDavSyncResponse {
   final List<String>? errors;
   final int eventsPulled;
   final int eventsPushed;
+  final List<String>? notes;
   final bool ok;
   final int tasksImported;
   final int tasksPulled;
@@ -765,6 +766,7 @@ class GeneratedCalDavSyncResponse {
     this.errors,
     this.eventsPulled = 0,
     this.eventsPushed = 0,
+    this.notes,
     required this.ok,
     this.tasksImported = 0,
     this.tasksPulled = 0,
@@ -777,6 +779,7 @@ class GeneratedCalDavSyncResponse {
       errors: _readFieldValue<List<String>>(_readField(json, const ["errors"]), "errors", _readStringList, requiredField: false, nullable: true),
       eventsPulled: _required(_readFieldValue<int>(_readField(json, const ["events_pulled"]), "events_pulled", _readInt, requiredField: false, nullable: false, defaultValue: 0), "events_pulled"),
       eventsPushed: _required(_readFieldValue<int>(_readField(json, const ["events_pushed"]), "events_pushed", _readInt, requiredField: false, nullable: false, defaultValue: 0), "events_pushed"),
+      notes: _readFieldValue<List<String>>(_readField(json, const ["notes"]), "notes", _readStringList, requiredField: false, nullable: true),
       ok: _required(_readFieldValue<bool>(_readField(json, const ["ok"]), "ok", _readBool, requiredField: true, nullable: false), "ok"),
       tasksImported: _required(_readFieldValue<int>(_readField(json, const ["tasks_imported"]), "tasks_imported", _readInt, requiredField: false, nullable: false, defaultValue: 0), "tasks_imported"),
       tasksPulled: _required(_readFieldValue<int>(_readField(json, const ["tasks_pulled"]), "tasks_pulled", _readInt, requiredField: false, nullable: false, defaultValue: 0), "tasks_pulled"),
@@ -790,6 +793,7 @@ class GeneratedCalDavSyncResponse {
       'errors': errors,
       'events_pulled': eventsPulled,
       'events_pushed': eventsPushed,
+      'notes': notes,
       'ok': ok,
       'tasks_imported': tasksImported,
       'tasks_pulled': tasksPulled,
