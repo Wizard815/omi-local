@@ -148,9 +148,9 @@ class _CalDavSettingsPageState extends State<CalDavSettingsPage> {
     final l10n = context.l10n;
     final settings = _settings;
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.primary,
+      backgroundColor: OmiColors.surface0,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        backgroundColor: OmiColors.surface0,
         title: Text(l10n.caldavSettingsTitle),
       ),
       body: _loading
