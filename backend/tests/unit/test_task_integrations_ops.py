@@ -204,3 +204,44 @@ async def test_create_task_unexpected_failure_hides_exception_text():
         "error": "Failed to create task due to an internal error",
         "error_code": "in_doubt",
     }
+
+
+@pytest.mark.asyncio
+async def test_create_task_allglance_posts_to_the_gateway_with_its_token(monkeypatch):
+    monkeypatch.setattr(ops.notifications_db, "resolve_user_timezone", lambda uid: "UTC")
+    client = AsyncMock(spec=httpx.AsyncClient)
+    client.post.return_value = _mock_response(201, {"source": "vikunja", "task": {"id": 42, "title": "Buy groceries"}})
+    integration = {"connected": True, "access_token": "gw-token", "base_url": "http://nas:8090/", "source": "vikunja"}
+
+    result = await ops.create_task_internal(
+        uid="uid-1",
+        app_key="allglance",
+        integration=integration,
+        title="Buy groceries",
+        description="Milk and eggs",
+        due_date=datetime(2026, 7, 15, tzinfo=timezone.utc),
+        client=client,
+    )
+
+    assert result == {"success": True, "external_task_id": "vikunja:42"}
+    url, kwargs = client.post.call_args.args[0], client.post.call_args.kwargs
+    assert url == "http://nas:8090/api/allglance/tasks"
+    assert kwargs["headers"]["Authorization"] == "Bearer gw-token"
+    assert kwargs["json"] == {
+        "title": "Buy groceries",
+        "source": "vikunja",
+        "notes": "Milk and eggs",
+        "due_date": "2026-07-15",
+    }
+
+
+@pytest.mark.asyncio
+async def test_create_task_allglance_without_a_url_is_a_clear_failure():
+    result = await ops.create_task_internal(
+        uid="uid-1",
+        app_key="allglance",
+        integration={"connected": True, "access_token": "t"},
+        title="x",
+        client=AsyncMock(),
+    )
+    assert result["success"] is False and result["error_code"] == "no_base_url"

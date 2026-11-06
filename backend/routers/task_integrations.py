@@ -146,6 +146,12 @@ class TaskIntegrationData(BaseModel):
     default_list_id: Optional[str] = None
     default_list_title: Optional[str] = None
 
+    # ALLGlance-specific fields (base_url = the gateway, e.g. http://host:8090; access_token = its GATEWAY_TOKEN)
+    base_url: Optional[str] = None
+    source: Optional[str] = None
+    project: Optional[str] = None
+    owner_id: Optional[str] = None
+
     # ClickUp-specific fields
     user_id: Optional[str] = None
     team_id: Optional[str] = None
