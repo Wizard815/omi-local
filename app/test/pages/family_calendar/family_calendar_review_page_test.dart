@@ -129,13 +129,13 @@ void main() {
   testWidgets('picking a household member binds the added events to them', (tester) async {
     final fake = _Fake();
     await _open(tester, fake);
-    expect(find.text('Adding as: Whole family'), findsOneWidget);
+    expect(find.text('Whole family'), findsOneWidget);
     await tester.tap(find.byKey(const Key('family_calendar_owner')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('family_calendar_owner_u-sam')));
     await tester.pumpAndSettle();
     expect(fake.ownerCalls, ['u-sam']);
-    expect(find.text('Adding as: Sam'), findsOneWidget);
+    expect(find.text('Sam'), findsOneWidget);
     expect(fake.approved, isEmpty, reason: 'choosing a member adds nothing by itself');
   });
 }

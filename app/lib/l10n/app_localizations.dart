@@ -26643,11 +26643,11 @@ abstract class AppLocalizations {
   /// **'Calendar'**
   String get familyCalendarTitle;
 
-  /// Intro on the review page; label is the calendar's name
+  /// Intro on the review page
   ///
   /// In en, this message translates to:
-  /// **'Omi heard these dates. Check each one, fix what it got wrong, then add it to the calendar ({label}) or decline it. Nothing is added until you say so.'**
-  String familyCalendarIntro(String label);
+  /// **'Omi heard these dates. Fix anything it got wrong, then add each one to the calendar or decline it. Nothing is added until you say so.'**
+  String get familyCalendarIntro;
 
   /// Empty state title when the ALLGlance gateway is not set
   ///
@@ -26703,10 +26703,10 @@ abstract class AppLocalizations {
   /// **'{count} min'**
   String familyCalendarMinutes(int count);
 
-  /// Shown under a card the user changed
+  /// Tag on a card the user changed: what is sent is the edited version
   ///
   /// In en, this message translates to:
-  /// **'Edited: this is what will be added'**
+  /// **'Edited'**
   String get familyCalendarEditedNote;
 
   /// Decline button: Omi got it wrong or it is not wanted
@@ -26786,6 +26786,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add a note'**
   String get familyCalendarDescriptionHint;
+
+  /// Section header above the pending cards
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 to check} other{{count} to check}}'**
+  String familyCalendarToCheck(int count);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

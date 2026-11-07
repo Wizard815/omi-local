@@ -4614,14 +4614,9 @@
     "@familyCalendarTitle": {
         "description": "Page title and settings row: review events before they go to the family calendar (dayGLANCE via ALLGlance)"
     },
-    "familyCalendarIntro": "Omi heard these dates. Check each one, fix what it got wrong, then add it to the calendar ({label}) or decline it. Nothing is added until you say so.",
+    "familyCalendarIntro": "Omi heard these dates. Fix anything it got wrong, then add each one to the calendar or decline it. Nothing is added until you say so.",
     "@familyCalendarIntro": {
-        "description": "Intro on the review page; label is the calendar's name",
-        "placeholders": {
-            "label": {
-                "type": "String"
-            }
-        }
+        "description": "Intro on the review page"
     },
     "familyCalendarNotConfiguredTitle": "No calendar yet",
     "@familyCalendarNotConfiguredTitle": {
@@ -4677,9 +4672,9 @@
             }
         }
     },
-    "familyCalendarEditedNote": "Edited: this is what will be added",
+    "familyCalendarEditedNote": "Edited",
     "@familyCalendarEditedNote": {
-        "description": "Shown under a card the user changed"
+        "description": "Tag on a card the user changed: what is sent is the edited version"
     },
     "familyCalendarDecline": "Not this",
     "@familyCalendarDecline": {
@@ -4752,5 +4747,14 @@
     "familyCalendarDescriptionHint": "Add a note",
     "@familyCalendarDescriptionHint": {
         "description": "Hint of the editable description field"
+    },
+    "familyCalendarToCheck": "{count, plural, =1{1 to check} other{{count} to check}}",
+    "@familyCalendarToCheck": {
+        "description": "Section header above the pending cards",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
     }
 }
