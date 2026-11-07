@@ -282,8 +282,9 @@ both ways over CalDAV (point `CALDAV_DEFAULT_URL` at the gateway's `/dav/`), the
 `ALLGLANCE_TOKEN`), and Omi's own tools inside the gateway (`OMI_URL` + an Omi MCP key on
 the ALLGlance side). A fourth path asks first: dates Omi hears wait under **Settings →
 Family calendar** (and an "events to check" card on the conversation list) with the date,
-time and length it heard; fix, add or decline each one, and only "Add" writes it to
-dayGLANCE through the gateway. Setup and what does not sync:
+time, length and note it heard; fix, add or decline each one, and only "Add" writes it to
+dayGLANCE through the gateway, as the household member picked under "Adding as" (or the
+whole family). Setup and what does not sync:
 `omi-host/examples/allglance/README.md`.
 
 ### Folder tree

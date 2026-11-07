@@ -52,3 +52,14 @@ Future<ApiResult<FamilyCalendarOutcome>> declineFamilyCalendarEvent(FamilyCalend
       decode: (body) =>
           FamilyCalendarOutcome.fromGenerated(wire.GeneratedFamilyCalendarEventResponse.fromJson(_json(body))),
     );
+
+/// Which household member Omi adds events as (null = the whole family). Answers the refreshed page.
+Future<ApiResult<FamilyCalendar>> setFamilyCalendarOwner(String? ownerId) => executeApi(
+      request: ApiRequest(
+        url: '${_base()}/owner',
+        method: 'PUT',
+        headers: const {'Content-Type': 'application/json'},
+        body: jsonEncode({'owner_id': ownerId}),
+      ),
+      decode: (body) => FamilyCalendar.fromGenerated(wire.GeneratedFamilyCalendarResponse.fromJson(_json(body))),
+    );
