@@ -36,7 +36,10 @@ milestones. Omi connects to it three ways, and each one is a setting on one side
   binds Omi to one household member (the task integration's `owner_id`, sent as the
   gateway's `owner_id` = dayGLANCE's `assignee_id`, and used for Vikunja tasks too). That is the only writer: no
   scheduler, no hook in conversation processing, so an event never appears on the family
-  calendar unseen. App: `app/lib/pages/family_calendar/`.
+  calendar unseen. App: `app/lib/pages/family_calendar/`. The self-hosting dashboard
+  (`backend/routers/dashboard.py`) probes the gateway's `/health` and the CalDAV URL as
+  components and shows an ALLGlance & Calendar card with each member's binding, waiting events
+  and last CalDAV sync.
 - `backend/utils/mcp_server/handlers/other.py`: the `get_day_review` MCP tool (also
   `GET /v1/mcp/day-reviews/{date}`), what the gateway's `omi_get_day_review` and
   `allglance_get_day` read.
