@@ -280,7 +280,11 @@ Omi and [ALLGlance](https://github.com/Wizard815/ALLGlance) connect three ways: 
 both ways over CalDAV (point `CALDAV_DEFAULT_URL` at the gateway's `/dav/`), the chat's
 `allglance_*` tools and instant task creation in Vikunja (`ALLGLANCE_URL` +
 `ALLGLANCE_TOKEN`), and Omi's own tools inside the gateway (`OMI_URL` + an Omi MCP key on
-the ALLGlance side). Setup and what does not sync: `omi-host/examples/allglance/README.md`.
+the ALLGlance side). A fourth path asks first: dates Omi hears wait under **Settings →
+Family calendar** (and an "events to check" card on the conversation list) with the date,
+time and length it heard; fix, add or decline each one, and only "Add" writes it to
+dayGLANCE through the gateway. Setup and what does not sync:
+`omi-host/examples/allglance/README.md`.
 
 ### Folder tree
 Folders can be nested (up to 5 levels). Folders live in **Search** (upstream moved folder

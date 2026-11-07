@@ -566,6 +566,15 @@ export interface AppleHealthSyncResponse {
   synced_at: string;
 }
 
+export interface ApproveFamilyCalendarEventRequest {
+  conversation_id: string;
+  description?: string | null;
+  duration?: number | null;
+  event_idx: number;
+  start?: string | null;
+  title?: string | null;
+}
+
 export interface ArtifactDescriptor {
   artifact_id: string;
   content_hash: string;
@@ -2225,6 +2234,11 @@ export interface DecisionRecord {
   subject_kind: RecommendationSubjectKind;
 }
 
+export interface DeclineFamilyCalendarEventRequest {
+  conversation_id: string;
+  event_idx: number;
+}
+
 export interface DefaultTaskIntegrationRequest {
   app_key: string;
 }
@@ -2692,9 +2706,12 @@ export interface EvaluationRequest {
 }
 
 export interface Event {
+  calendar?: string | null;
   created?: boolean;
+  declined?: boolean;
   description?: string;
   duration?: number;
+  external_id?: string | null;
   start: string;
   title: string;
 }
@@ -2829,6 +2846,34 @@ export interface FairUseUsagePctResponse {
   daily: number;
   three_day: number;
   weekly: number;
+}
+
+export interface FamilyCalendarEvent {
+  calendar?: string | null;
+  conversation_id: string;
+  conversation_title?: string;
+  created?: boolean;
+  declined?: boolean;
+  description?: string;
+  duration?: number;
+  event_idx: number;
+  external_id?: string | null;
+  heard_at?: string | null;
+  start: string;
+  title: string;
+}
+
+export interface FamilyCalendarEventResponse {
+  error?: string;
+  event?: FamilyCalendarEvent | null;
+  ok: boolean;
+}
+
+export interface FamilyCalendarResponse {
+  configured: boolean;
+  label?: string;
+  pending?: Array<FamilyCalendarEvent>;
+  recent?: Array<FamilyCalendarEvent>;
 }
 
 export interface FavoriteDayReviewSectionRequest {
@@ -6594,6 +6639,7 @@ export interface OmiApiSchemas {
   "AppThumbnailUploadResponse": AppThumbnailUploadResponse;
   "AppleHealthSyncData": AppleHealthSyncData;
   "AppleHealthSyncResponse": AppleHealthSyncResponse;
+  "ApproveFamilyCalendarEventRequest": ApproveFamilyCalendarEventRequest;
   "ArtifactDescriptor": ArtifactDescriptor;
   "ArtifactDescriptorCreate": ArtifactDescriptorCreate;
   "ArtifactStatus": ArtifactStatus;
@@ -6811,6 +6857,7 @@ export interface OmiApiSchemas {
   "DayReviewsListResponse": DayReviewsListResponse;
   "DecisionDebugProjection": DecisionDebugProjection;
   "DecisionRecord": DecisionRecord;
+  "DeclineFamilyCalendarEventRequest": DeclineFamilyCalendarEventRequest;
   "DefaultTaskIntegrationRequest": DefaultTaskIntegrationRequest;
   "DefaultTaskIntegrationResponse": DefaultTaskIntegrationResponse;
   "DeferralCreateRequest": DeferralCreateRequest;
@@ -6888,6 +6935,9 @@ export interface OmiApiSchemas {
   "FairUseLimitsResponse": FairUseLimitsResponse;
   "FairUseStatusResponse": FairUseStatusResponse;
   "FairUseUsagePctResponse": FairUseUsagePctResponse;
+  "FamilyCalendarEvent": FamilyCalendarEvent;
+  "FamilyCalendarEventResponse": FamilyCalendarEventResponse;
+  "FamilyCalendarResponse": FamilyCalendarResponse;
   "FavoriteDayReviewSectionRequest": FavoriteDayReviewSectionRequest;
   "FcmTokenResponse": FcmTokenResponse;
   "FeedbackCreate": FeedbackCreate;
@@ -9496,6 +9546,36 @@ export interface OmiApiPaths {
       operationId: "get_my_fair_use_status_v1_fair_use_status_get";
       responses: {
         "200": FairUseStatusResponse;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/family-calendar": {
+    get: {
+      operationId: "get_family_calendar_v1_family_calendar_get";
+      responses: {
+        "200": FamilyCalendarResponse;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/family-calendar/events": {
+    post: {
+      operationId: "approve_family_calendar_event_v1_family_calendar_events_post";
+      responses: {
+        "200": FamilyCalendarEventResponse;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/family-calendar/events/decline": {
+    post: {
+      operationId: "decline_family_calendar_event_v1_family_calendar_events_decline_post";
+      responses: {
+        "200": FamilyCalendarEventResponse;
         "401": void;
         "422": HTTPValidationError;
       };
@@ -17042,6 +17122,67 @@ export async function get_my_fair_use_status_v1_fair_use_status_get(header: { au
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
+export async function get_family_calendar_v1_family_calendar_get(header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<FamilyCalendarResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/family-calendar`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "GET",
+    headers: {
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function approve_family_calendar_event_v1_family_calendar_events_post(header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, body: ApproveFamilyCalendarEventRequest, init?: OmiApiClientInit): Promise<FamilyCalendarEventResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/family-calendar/events`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "POST",
+    headers: {
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function decline_family_calendar_event_v1_family_calendar_events_decline_post(header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, body: DeclineFamilyCalendarEventRequest, init?: OmiApiClientInit): Promise<FamilyCalendarEventResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/family-calendar/events/decline`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "POST",
+    headers: {
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
 export async function get_folders_v1_folders_get(header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<Array<Folder>> {
   const _base = init?.baseURL ?? "";
   const _path = `/v1/folders`;
@@ -23898,4 +24039,4 @@ export async function get_speech_profile_v4_speech_profile_get(header: { authori
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
-// Total: 551 client methods generated.
+// Total: 554 client methods generated.

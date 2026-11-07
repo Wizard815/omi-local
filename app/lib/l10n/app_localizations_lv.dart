@@ -15166,4 +15166,85 @@ class AppLocalizationsLv extends AppLocalizations {
 
   @override
   String get dayReviewHideClips => 'Hide';
+
+  @override
+  String get familyCalendarTitle => 'Family calendar';
+
+  @override
+  String familyCalendarIntro(String label) {
+    return 'Omi heard these dates. Check each one, fix what it got wrong, then add it to $label or decline it. Nothing is added until you say so.';
+  }
+
+  @override
+  String get familyCalendarNotConfiguredTitle => 'No family calendar yet';
+
+  @override
+  String get familyCalendarNotConfiguredBody =>
+      'Point Omi at your ALLGlance gateway (ALLGLANCE_URL and ALLGLANCE_TOKEN in omi-host) and events you talk about can go to dayGLANCE after you confirm them.';
+
+  @override
+  String get familyCalendarNothingPending => 'Nothing to check';
+
+  @override
+  String get familyCalendarNothingPendingBody => 'When Omi hears a plan with a date, it shows up here first.';
+
+  @override
+  String get familyCalendarRecentTitle => 'Reviewed lately';
+
+  @override
+  String familyCalendarHeardIn(String title) {
+    return 'Heard in “$title”';
+  }
+
+  @override
+  String familyCalendarHeardInAt(String title, String when) {
+    return 'Heard in “$title”, $when';
+  }
+
+  @override
+  String get familyCalendarTitleHint => 'Event title';
+
+  @override
+  String familyCalendarMinutes(int count) {
+    return '$count min';
+  }
+
+  @override
+  String get familyCalendarEditedNote => 'Edited: this is what will be added';
+
+  @override
+  String get familyCalendarDecline => 'Not this';
+
+  @override
+  String get familyCalendarApprove => 'Add to calendar';
+
+  @override
+  String familyCalendarAdded(String title) {
+    return '“$title” is on the family calendar';
+  }
+
+  @override
+  String familyCalendarFailed(String error) {
+    return 'Family calendar: $error';
+  }
+
+  @override
+  String get familyCalendarOnCalendar => 'on the family calendar';
+
+  @override
+  String get familyCalendarDeclined => 'declined';
+
+  @override
+  String familyCalendarBannerTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count events to check',
+      one: '1 event to check',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get familyCalendarBannerBody => 'Confirm the dates Omi heard before they go on the family calendar.';
 }

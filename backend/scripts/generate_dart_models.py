@@ -51,6 +51,12 @@ SCHEMA_GROUPS = {
             'CalDavCalendar',
             'CalDavTestResponse',
             'CalDavSyncResponse',
+            # Family calendar (dayGLANCE through ALLGlance): review heard events first.
+            'FamilyCalendarEvent',
+            'FamilyCalendarResponse',
+            'ApproveFamilyCalendarEventRequest',
+            'DeclineFamilyCalendarEventRequest',
+            'FamilyCalendarEventResponse',
         ),
     },
     **additional_schema_groups(DEFAULT_OUTPUT_DIR),
