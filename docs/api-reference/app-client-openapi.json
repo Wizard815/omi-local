@@ -3918,6 +3918,77 @@
         "title": "AppleHealthSyncResponse",
         "type": "object"
       },
+      "ApproveFamilyCalendarEventRequest": {
+        "properties": {
+          "conversation_id": {
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "duration": {
+            "anyOf": [
+              {
+                "maximum": 1440.0,
+                "minimum": 5.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Edited length in minutes",
+            "title": "Duration"
+          },
+          "event_idx": {
+            "minimum": 0.0,
+            "title": "Event Idx",
+            "type": "integer"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Edited start (with offset); omitted keeps Omi's",
+            "title": "Start"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Edited title; omitted keeps Omi's",
+            "title": "Title"
+          }
+        },
+        "required": [
+          "conversation_id",
+          "event_idx"
+        ],
+        "title": "ApproveFamilyCalendarEventRequest",
+        "type": "object"
+      },
       "ArtifactDescriptor": {
         "additionalProperties": false,
         "properties": {
@@ -14232,6 +14303,25 @@
         "title": "DecisionRecord",
         "type": "object"
       },
+      "DeclineFamilyCalendarEventRequest": {
+        "properties": {
+          "conversation_id": {
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "event_idx": {
+            "minimum": 0.0,
+            "title": "Event Idx",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "conversation_id",
+          "event_idx"
+        ],
+        "title": "DeclineFamilyCalendarEventRequest",
+        "type": "object"
+      },
       "DefaultTaskIntegrationRequest": {
         "description": "Request to set default task integration",
         "properties": {
@@ -16835,9 +16925,27 @@
       },
       "Event": {
         "properties": {
+          "calendar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Calendar the event was added to, once approved",
+            "title": "Calendar"
+          },
           "created": {
             "default": false,
             "title": "Created",
+            "type": "boolean"
+          },
+          "declined": {
+            "default": false,
+            "description": "Reviewed and not added anywhere",
+            "title": "Declined",
             "type": "boolean"
           },
           "description": {
@@ -16851,6 +16959,18 @@
             "description": "The duration of the event in minutes",
             "title": "Duration",
             "type": "integer"
+          },
+          "external_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Id in that calendar (e.g. \"dayglance:12\")",
+            "title": "External Id"
           },
           "start": {
             "description": "The start date and time of the event",
@@ -17644,6 +17764,162 @@
           "weekly"
         ],
         "title": "FairUseUsagePctResponse",
+        "type": "object"
+      },
+      "FamilyCalendarEvent": {
+        "properties": {
+          "calendar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calendar"
+          },
+          "conversation_id": {
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "conversation_title": {
+            "default": "",
+            "title": "Conversation Title",
+            "type": "string"
+          },
+          "created": {
+            "default": false,
+            "title": "Created",
+            "type": "boolean"
+          },
+          "declined": {
+            "default": false,
+            "title": "Declined",
+            "type": "boolean"
+          },
+          "description": {
+            "default": "",
+            "title": "Description",
+            "type": "string"
+          },
+          "duration": {
+            "default": 30,
+            "description": "Minutes",
+            "title": "Duration",
+            "type": "integer"
+          },
+          "event_idx": {
+            "description": "Index in the conversation's structured events",
+            "title": "Event Idx",
+            "type": "integer"
+          },
+          "external_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Id"
+          },
+          "heard_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When the conversation happened",
+            "title": "Heard At"
+          },
+          "start": {
+            "description": "UTC; the app shows it in the user's time zone",
+            "format": "date-time",
+            "title": "Start",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "conversation_id",
+          "event_idx",
+          "title",
+          "start"
+        ],
+        "title": "FamilyCalendarEvent",
+        "type": "object"
+      },
+      "FamilyCalendarEventResponse": {
+        "properties": {
+          "error": {
+            "default": "",
+            "title": "Error",
+            "type": "string"
+          },
+          "event": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FamilyCalendarEvent"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "FamilyCalendarEventResponse",
+        "type": "object"
+      },
+      "FamilyCalendarResponse": {
+        "properties": {
+          "configured": {
+            "description": "A family calendar is reachable (the ALLGlance gateway with dayGLANCE)",
+            "title": "Configured",
+            "type": "boolean"
+          },
+          "label": {
+            "default": "",
+            "description": "What to call it in the app",
+            "title": "Label",
+            "type": "string"
+          },
+          "pending": {
+            "description": "Heard, not yet reviewed",
+            "items": {
+              "$ref": "#/components/schemas/FamilyCalendarEvent"
+            },
+            "title": "Pending",
+            "type": "array"
+          },
+          "recent": {
+            "description": "Reviewed lately (added or declined)",
+            "items": {
+              "$ref": "#/components/schemas/FamilyCalendarEvent"
+            },
+            "title": "Recent",
+            "type": "array"
+          }
+        },
+        "required": [
+          "configured"
+        ],
+        "title": "FamilyCalendarResponse",
         "type": "object"
       },
       "FavoriteDayReviewSectionRequest": {
@@ -58599,6 +58875,259 @@
         "summary": "Get My Fair Use Status",
         "tags": [
           "fair_use"
+        ]
+      }
+    },
+    "/v1/family-calendar": {
+      "get": {
+        "description": "Whether a family calendar is set, the events waiting for review, and the ones reviewed lately.",
+        "operationId": "get_family_calendar_v1_family_calendar_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FamilyCalendarResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Get Family Calendar",
+        "tags": [
+          "family-calendar"
+        ]
+      }
+    },
+    "/v1/family-calendar/events": {
+      "post": {
+        "description": "Put one reviewed event on the family calendar, with the user's edits. The only path that writes one.",
+        "operationId": "approve_family_calendar_event_v1_family_calendar_events_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveFamilyCalendarEventRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FamilyCalendarEventResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Approve Family Calendar Event",
+        "tags": [
+          "family-calendar"
+        ]
+      }
+    },
+    "/v1/family-calendar/events/decline": {
+      "post": {
+        "operationId": "decline_family_calendar_event_v1_family_calendar_events_decline_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeclineFamilyCalendarEventRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FamilyCalendarEventResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Decline Family Calendar Event",
+        "tags": [
+          "family-calendar"
         ]
       }
     },
