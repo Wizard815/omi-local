@@ -177,18 +177,19 @@ class _FamilyCalendarReviewPageState extends State<FamilyCalendarReviewPage> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(OmiSpacing.md, OmiSpacing.xs, OmiSpacing.md, OmiSpacing.xxl),
           children: [
-            Text(l10n.familyCalendarIntro(calendar.label),
+            Text(l10n.familyCalendarIntro,
                 style: OmiType.footnote.copyWith(color: OmiColors.textSecondary, height: 1.4)),
             const SizedBox(height: OmiSpacing.sm),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: _chip(
-                key: const Key('family_calendar_owner'),
-                icon: Icons.person_outline,
-                label: l10n.familyCalendarAddingAs(
-                    calendar.ownerId == null ? l10n.familyCalendarWholeFamily : calendar.ownerName),
-                onTap: () => _pickOwner(calendar),
-              ),
+            OmiSettingsGroup(
+              children: [
+                OmiSettingsRow(
+                  key: const Key('family_calendar_owner'),
+                  leading: const Icon(Icons.person_outline),
+                  title: l10n.familyCalendarAddingAsTitle,
+                  value: calendar.ownerId == null ? l10n.familyCalendarWholeFamily : calendar.ownerName,
+                  onTap: () => _pickOwner(calendar),
+                ),
+              ],
             ),
             const SizedBox(height: OmiSpacing.md),
             if (calendar.pending.isEmpty)
@@ -199,7 +200,9 @@ class _FamilyCalendarReviewPageState extends State<FamilyCalendarReviewPage> {
                   title: l10n.familyCalendarNothingPending,
                   message: l10n.familyCalendarNothingPendingBody,
                 ),
-              ),
+              )
+            else
+              OmiSectionHeader(l10n.familyCalendarToCheck(calendar.pending.length)),
             for (final event in calendar.pending) _pendingCard(event),
             if (calendar.recent.isNotEmpty) ...[
               const SizedBox(height: OmiSpacing.md),
@@ -249,9 +252,17 @@ class _FamilyCalendarReviewPageState extends State<FamilyCalendarReviewPage> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              if (edited)
+                Container(
+                  margin: const EdgeInsets.only(left: OmiSpacing.xs),
+                  padding: const EdgeInsets.symmetric(horizontal: OmiSpacing.xs, vertical: 2),
+                  decoration: BoxDecoration(color: OmiColors.surface3, borderRadius: OmiRadius.pillAll),
+                  child: Text(l10n.familyCalendarEditedNote,
+                      style: OmiType.caption.copyWith(color: OmiColors.textSecondary, fontWeight: FontWeight.w600)),
+                ),
             ],
           ),
-          const SizedBox(height: OmiSpacing.sm),
+          const SizedBox(height: OmiSpacing.xs),
           TextField(
             key: Key('family_calendar_title_${event.key}'),
             controller: draft.title,
@@ -282,6 +293,8 @@ class _FamilyCalendarReviewPageState extends State<FamilyCalendarReviewPage> {
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: OmiSpacing.sm),
+          Divider(color: OmiColors.border, height: 1),
+          const SizedBox(height: OmiSpacing.sm),
           Wrap(
             spacing: OmiSpacing.xs,
             runSpacing: OmiSpacing.xs,
@@ -306,30 +319,23 @@ class _FamilyCalendarReviewPageState extends State<FamilyCalendarReviewPage> {
               ),
             ],
           ),
-          if (edited) ...[
-            const SizedBox(height: OmiSpacing.xs),
-            Text(l10n.familyCalendarEditedNote, style: OmiType.caption.copyWith(color: OmiColors.warning)),
-          ],
           const SizedBox(height: OmiSpacing.sm),
           Row(
             children: [
-              Expanded(
-                child: OmiButton.secondary(
-                  key: Key('family_calendar_decline_${event.key}'),
-                  label: l10n.familyCalendarDecline,
-                  size: OmiButtonSize.compact,
-                  onPressed: busy ? null : () => _decline(event),
-                ),
+              OmiButton.tertiary(
+                key: Key('family_calendar_decline_${event.key}'),
+                label: l10n.familyCalendarDecline,
+                size: OmiButtonSize.compact,
+                onPressed: busy ? null : () => _decline(event),
               ),
-              const SizedBox(width: OmiSpacing.sm),
-              Expanded(
-                child: OmiButton(
-                  key: Key('family_calendar_approve_${event.key}'),
-                  label: l10n.familyCalendarApprove,
-                  size: OmiButtonSize.compact,
-                  isLoading: busy,
-                  onPressed: busy || draft.title.text.trim().isEmpty ? null : () => _approve(event),
-                ),
+              const Spacer(),
+              OmiButton(
+                key: Key('family_calendar_approve_${event.key}'),
+                label: l10n.familyCalendarApprove,
+                size: OmiButtonSize.compact,
+                icon: Icons.event_available_outlined,
+                isLoading: busy,
+                onPressed: busy || draft.title.text.trim().isEmpty ? null : () => _approve(event),
               ),
             ],
           ),

@@ -77,7 +77,7 @@ final familyCalendarScenarios = <AuditScenario>[
       await a.shot('Tap "Adding as": the household picker', step: 'members');
       await a.tap(find.byKey(const Key('family_calendar_owner_u-sam')));
       await a.shot('Sam picked: events will be added as Sam', step: 'owner');
-      expect(find.text('Adding as: Sam'), findsOneWidget);
+      expect(find.text('Sam'), findsOneWidget);
       await a.tap(find.byKey(const Key('family_calendar_duration_c10:0')));
       await a.shot('Tap the length chip: 60 min becomes 90 min and the card says it was edited', step: 'edited');
       expect(find.text('90 min'), findsOneWidget);

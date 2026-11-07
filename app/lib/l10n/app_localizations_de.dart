@@ -15248,9 +15248,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get familyCalendarTitle => 'Calendar';
 
   @override
-  String familyCalendarIntro(String label) {
-    return 'Omi heard these dates. Check each one, fix what it got wrong, then add it to the calendar ($label) or decline it. Nothing is added until you say so.';
-  }
+  String get familyCalendarIntro =>
+      'Omi heard these dates. Fix anything it got wrong, then add each one to the calendar or decline it. Nothing is added until you say so.';
 
   @override
   String get familyCalendarNotConfiguredTitle => 'No calendar yet';
@@ -15287,7 +15286,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get familyCalendarEditedNote => 'Edited: this is what will be added';
+  String get familyCalendarEditedNote => 'Edited';
 
   @override
   String get familyCalendarDecline => 'Not this';
@@ -15342,4 +15341,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get familyCalendarDescriptionHint => 'Add a note';
+
+  @override
+  String familyCalendarToCheck(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count to check',
+      one: '1 to check',
+    );
+    return '$_temp0';
+  }
 }
