@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "images": [
+    {
+      "file": "001-mobile-android-family-calendar-member-picker.png",
+      "platform": "mobile-android",
+      "description": "The \"Add events as\" picker: whole family or a household member from the gateway roster; cards now have an editable note",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "002-mobile-android-family-calendar-adding-as-sam.png",
+      "platform": "mobile-android",
+      "description": "Sam picked: the chip reads Adding as: Sam",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    }
+  ]
+}

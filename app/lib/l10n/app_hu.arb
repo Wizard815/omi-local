@@ -4671,11 +4671,11 @@
     "dayReviewSmallMoments": "{count, plural, =1{1 small clip} other{{count} small clips}}",
     "dayReviewAddParagraphHere": "Add a paragraph after this section",
     "dayReviewHideClips": "Hide",
-    "familyCalendarTitle": "Family calendar",
+    "familyCalendarTitle": "Calendar",
     "@familyCalendarTitle": {
         "description": "Page title and settings row: review events before they go to the family calendar (dayGLANCE via ALLGlance)"
     },
-    "familyCalendarIntro": "Omi heard these dates. Check each one, fix what it got wrong, then add it to {label} or decline it. Nothing is added until you say so.",
+    "familyCalendarIntro": "Omi heard these dates. Check each one, fix what it got wrong, then add it to the calendar ({label}) or decline it. Nothing is added until you say so.",
     "@familyCalendarIntro": {
         "description": "Intro on the review page; label is the calendar's name",
         "placeholders": {
@@ -4684,7 +4684,7 @@
             }
         }
     },
-    "familyCalendarNotConfiguredTitle": "No family calendar yet",
+    "familyCalendarNotConfiguredTitle": "No calendar yet",
     "@familyCalendarNotConfiguredTitle": {
         "description": "Empty state title when the ALLGlance gateway is not set"
     },
@@ -4750,7 +4750,7 @@
     "@familyCalendarApprove": {
         "description": "Approve button"
     },
-    "familyCalendarAdded": "“{title}” is on the family calendar",
+    "familyCalendarAdded": "“{title}” is on the calendar",
     "@familyCalendarAdded": {
         "description": "Toast after approving",
         "placeholders": {
@@ -4759,7 +4759,7 @@
             }
         }
     },
-    "familyCalendarFailed": "Family calendar: {error}",
+    "familyCalendarFailed": "Calendar: {error}",
     "@familyCalendarFailed": {
         "description": "Error toast; error is the server's text or a problem kind",
         "placeholders": {
@@ -4768,7 +4768,7 @@
             }
         }
     },
-    "familyCalendarOnCalendar": "on the family calendar",
+    "familyCalendarOnCalendar": "on the calendar",
     "@familyCalendarOnCalendar": {
         "description": "Status of a reviewed event that was added"
     },
@@ -4785,8 +4785,33 @@
             }
         }
     },
-    "familyCalendarBannerBody": "Confirm the dates Omi heard before they go on the family calendar.",
+    "familyCalendarBannerBody": "Confirm the dates Omi heard before they go on the calendar.",
     "@familyCalendarBannerBody": {
         "description": "Banner body"
+    },
+    "familyCalendarAddingAs": "Adding as: {name}",
+    "@familyCalendarAddingAs": {
+        "description": "Chip above the list: which household member the added events belong to",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "familyCalendarAddingAsTitle": "Add events as",
+    "@familyCalendarAddingAsTitle": {
+        "description": "Sheet title for picking the member"
+    },
+    "familyCalendarWholeFamily": "Whole family",
+    "@familyCalendarWholeFamily": {
+        "description": "Picker option: no member, the event is the family's"
+    },
+    "familyCalendarNoMembers": "The gateway lists no household members yet. Set up dayGLANCE's family (and its sync) in ALLGlance first.",
+    "@familyCalendarNoMembers": {
+        "description": "Picker body when the roster is empty"
+    },
+    "familyCalendarDescriptionHint": "Add a note",
+    "@familyCalendarDescriptionHint": {
+        "description": "Hint of the editable description field"
     }
 }
