@@ -119,6 +119,12 @@ class Event(BaseModel):
     start: datetime = Field(description="The start date and time of the event")
     duration: int = Field(description="The duration of the event in minutes", default=30)
     created: bool = False
+    # omi-local: where the user put it after reviewing it ("allglance" = the family calendar,
+    # dayGLANCE through the ALLGlance gateway) and the id there; declined = reviewed, not wanted.
+    # Nothing writes an event to a calendar without that review.
+    calendar: Optional[str] = Field(default=None, description="Calendar the event was added to, once approved")
+    external_id: Optional[str] = Field(default=None, description='Id in that calendar (e.g. "dayglance:12")')
+    declined: bool = Field(default=False, description="Reviewed and not added anywhere")
 
     def as_dict_cleaned_dates(self):
         event_dict = self.dict()
