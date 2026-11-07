@@ -26640,19 +26640,19 @@ abstract class AppLocalizations {
   /// Page title and settings row: review events before they go to the family calendar (dayGLANCE via ALLGlance)
   ///
   /// In en, this message translates to:
-  /// **'Family calendar'**
+  /// **'Calendar'**
   String get familyCalendarTitle;
 
-  /// Intro on the review page; label is the calendar's name
+  /// Intro on the review page
   ///
   /// In en, this message translates to:
-  /// **'Omi heard these dates. Check each one, fix what it got wrong, then add it to {label} or decline it. Nothing is added until you say so.'**
-  String familyCalendarIntro(String label);
+  /// **'Omi heard these dates. Fix anything it got wrong, then add each one to the calendar or decline it. Nothing is added until you say so.'**
+  String get familyCalendarIntro;
 
   /// Empty state title when the ALLGlance gateway is not set
   ///
   /// In en, this message translates to:
-  /// **'No family calendar yet'**
+  /// **'No calendar yet'**
   String get familyCalendarNotConfiguredTitle;
 
   /// Empty state body
@@ -26703,10 +26703,10 @@ abstract class AppLocalizations {
   /// **'{count} min'**
   String familyCalendarMinutes(int count);
 
-  /// Shown under a card the user changed
+  /// Tag on a card the user changed: what is sent is the edited version
   ///
   /// In en, this message translates to:
-  /// **'Edited: this is what will be added'**
+  /// **'Edited'**
   String get familyCalendarEditedNote;
 
   /// Decline button: Omi got it wrong or it is not wanted
@@ -26724,19 +26724,19 @@ abstract class AppLocalizations {
   /// Toast after approving
   ///
   /// In en, this message translates to:
-  /// **'“{title}” is on the family calendar'**
+  /// **'“{title}” is on the calendar'**
   String familyCalendarAdded(String title);
 
   /// Error toast; error is the server's text or a problem kind
   ///
   /// In en, this message translates to:
-  /// **'Family calendar: {error}'**
+  /// **'Calendar: {error}'**
   String familyCalendarFailed(String error);
 
   /// Status of a reviewed event that was added
   ///
   /// In en, this message translates to:
-  /// **'on the family calendar'**
+  /// **'on the calendar'**
   String get familyCalendarOnCalendar;
 
   /// Status of a reviewed event that was declined
@@ -26754,8 +26754,56 @@ abstract class AppLocalizations {
   /// Banner body
   ///
   /// In en, this message translates to:
-  /// **'Confirm the dates Omi heard before they go on the family calendar.'**
+  /// **'Confirm the dates Omi heard before they go on the calendar.'**
   String get familyCalendarBannerBody;
+
+  /// Chip above the list: which household member the added events belong to
+  ///
+  /// In en, this message translates to:
+  /// **'Adding as: {name}'**
+  String familyCalendarAddingAs(String name);
+
+  /// Sheet title for picking the member
+  ///
+  /// In en, this message translates to:
+  /// **'Add events as'**
+  String get familyCalendarAddingAsTitle;
+
+  /// Picker option: no member, the event is the family's
+  ///
+  /// In en, this message translates to:
+  /// **'Whole family'**
+  String get familyCalendarWholeFamily;
+
+  /// Picker body when the roster is empty
+  ///
+  /// In en, this message translates to:
+  /// **'The gateway lists no household members yet. Set up dayGLANCE\'s family (and its sync) in ALLGlance first.'**
+  String get familyCalendarNoMembers;
+
+  /// Hint of the editable description field
+  ///
+  /// In en, this message translates to:
+  /// **'Add a note'**
+  String get familyCalendarDescriptionHint;
+
+  /// Section header above the pending cards
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 to check} other{{count} to check}}'**
+  String familyCalendarToCheck(int count);
+
+  /// Label of the editable title field
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get familyCalendarTitleLabel;
+
+  /// Label of the editable note field
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get familyCalendarNoteLabel;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

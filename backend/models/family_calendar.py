@@ -25,9 +25,19 @@ class FamilyCalendarEvent(BaseModel):
     declined: bool = False
 
 
+class FamilyCalendarMember(BaseModel):
+    id: str
+    name: str
+
+
 class FamilyCalendarResponse(BaseModel):
     configured: bool = Field(description='A family calendar is reachable (the ALLGlance gateway with dayGLANCE)')
     label: str = Field(default='', description='What to call it in the app')
+    members: List[FamilyCalendarMember] = Field(
+        default_factory=list, description='The household (the gateway\'s roster); empty when it could not be read'
+    )
+    owner_id: Optional[str] = Field(default=None, description='The member Omi adds events as; None = the whole family')
+    owner_name: str = ''
     pending: List[FamilyCalendarEvent] = Field(default_factory=list, description='Heard, not yet reviewed')
     recent: List[FamilyCalendarEvent] = Field(default_factory=list, description='Reviewed lately (added or declined)')
 
@@ -39,6 +49,12 @@ class ApproveFamilyCalendarEventRequest(BaseModel):
     description: Optional[str] = Field(default=None, max_length=2000)
     start: Optional[datetime] = Field(default=None, description='Edited start (with offset); omitted keeps Omi\'s')
     duration: Optional[int] = Field(default=None, ge=5, le=24 * 60, description='Edited length in minutes')
+
+
+class SetFamilyCalendarOwnerRequest(BaseModel):
+    owner_id: Optional[str] = Field(
+        default=None, max_length=128, description='A member id from the roster; null = whole family'
+    )
 
 
 class DeclineFamilyCalendarEventRequest(BaseModel):

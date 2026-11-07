@@ -87,6 +87,85 @@ async def _check_http(url: str, timeout: float = 5.0) -> tuple[bool, int | None,
         return False, None, str(e)
 
 
+async def _gateway_health(gateway_url: str, timeout: float = 3.0) -> Optional[dict]:
+    """The ALLGlance gateway's /health body, or None when it does not answer."""
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            resp = await client.get(f"{gateway_url.rstrip('/')}/health")
+            return resp.json() if resp.status_code == 200 else None
+    except Exception:
+        return None
+
+
+async def _calendar_overview() -> dict:
+    """What the ALLGlance / calendar wiring looks like for this stack and each member.
+
+    Reads only: the gateway's health and roster, each active member's binding
+    ("adds events as"), how many heard events wait for their check, and the last
+    CalDAV sync. Nothing here writes."""
+    gateway_url = os.getenv("ALLGLANCE_URL", "").strip().rstrip("/")
+    out: dict = {
+        "gateway_url": gateway_url,
+        "token_set": bool(os.getenv("ALLGLANCE_TOKEN", "").strip()),
+        "caldav_url": os.getenv("CALDAV_DEFAULT_URL", "").strip(),
+        "caldav_sync_seconds": os.getenv("CALDAV_SYNC_SECONDS", "900"),
+        "day_bundle_auto": os.getenv("OMI_DAY_BUNDLE_AUTO", "") or "(follows the hold)",
+        "dayglance": None,
+        "vikunja": None,
+        "members": [],
+    }
+    if not gateway_url:
+        return out
+    health = await _gateway_health(gateway_url)
+    if health is not None:
+        adapters = health.get("adapters") or {}
+        out["dayglance"] = bool((adapters.get("dayglance") or {}).get("ok"))
+        out["vikunja"] = bool((adapters.get("vikunja") or {}).get("ok"))
+
+    import database.caldav_settings as caldav_settings_db
+    import database.day_bundle_users as active_users_db
+    import database.users as users_db
+    from utils import family_calendar
+
+    def _members() -> list:
+        rows = []
+        for uid in active_users_db.active_users():
+            profile = users_db.get_user_profile(uid) or {}
+            target = family_calendar.integration(uid)
+            waiting = family_calendar.pending(uid)[0] if target else []
+            caldav = caldav_settings_db.get_settings(uid) or {}
+            rows.append(
+                {
+                    "uid": uid,
+                    "name": profile.get("display_name") or profile.get("email") or uid,
+                    "configured": target is not None,
+                    "owner_id": (target or {}).get("owner_id"),
+                    "pending": len(waiting),
+                    "last_sync_at": caldav.get("last_sync_at"),
+                    "last_error": caldav.get("last_error") or "",
+                }
+            )
+        return rows
+
+    try:
+        out["members"] = await run_blocking(db_executor, _members)
+    except Exception as e:
+        out["members_error"] = str(e)
+    if out["members"]:
+        roster: dict = {}
+        try:
+            first = next((m for m in out["members"] if m["configured"]), None)
+            if first is not None:
+                target = await run_blocking(db_executor, family_calendar.integration, first["uid"])
+                if target:
+                    roster = {m["id"]: m["name"] for m in await family_calendar.members(target)}
+        except Exception:
+            roster = {}
+        for row in out["members"]:
+            row["owner_name"] = roster.get(row["owner_id"], row["owner_id"]) if row["owner_id"] else "Whole family"
+    return out
+
+
 def _get_component_status() -> dict:
     results = {}
 
@@ -158,6 +237,31 @@ async def _get_async_components() -> dict:
         "detail": f"Local FS ({storage_path})" if storage_backend == "local" else f"GCS ({storage_backend})",
     }
 
+    # ALLGlance gateway (family calendar / tasks): /health says which adapters are up.
+    gateway_url = os.getenv("ALLGLANCE_URL", "").strip().rstrip("/")
+    if gateway_url:
+        health = await _gateway_health(gateway_url)
+        if health is None:
+            results["allglance_gateway"] = {"status": "down", "detail": f"{gateway_url}/health unreachable"}
+        else:
+            adapters = health.get("adapters") or {}
+            up = [name for name, info in adapters.items() if isinstance(info, dict) and info.get("ok")]
+            down = [name for name, info in adapters.items() if isinstance(info, dict) and not info.get("ok")]
+            detail = f"{gateway_url} · up: {', '.join(sorted(up)) or '-'}"
+            if down:
+                detail += f" · down: {', '.join(sorted(down))}"
+            results["allglance_gateway"] = {"status": "up", "detail": detail}
+    else:
+        results["allglance_gateway"] = {"status": "not_configured", "detail": "ALLGLANCE_URL not set"}
+
+    # CalDAV server (tasks + calendar sync). Any HTTP answer counts: it asks for a login.
+    caldav_url = os.getenv("CALDAV_DEFAULT_URL", "").strip()
+    if caldav_url:
+        ok, code, err = await _check_http(caldav_url, timeout=3.0)
+        results["caldav_server"] = {"status": "up" if ok else "down", "detail": f"{caldav_url} ({code})" if ok else err}
+    else:
+        results["caldav_server"] = {"status": "not_configured", "detail": "CALDAV_DEFAULT_URL not set"}
+
     # SearXNG
     searxng_url = os.getenv("SEARXNG_URL", "")
     if searxng_url:
@@ -180,6 +284,61 @@ async def _get_async_components() -> dict:
         results["web_search"] = {"status": "not_configured", "detail": "SEARXNG_URL not set (use Perplexity cloud)"}
 
     return results
+
+
+def _render_calendar_card(calendar: dict) -> str:
+    """The ALLGlance & Calendar card: gateway wiring, then one row per member."""
+    yes_no = lambda v: "-" if v is None else ("✅ on" if v else "❌ off")  # noqa: E731
+    if not calendar["gateway_url"]:
+        wiring = (
+            '<p style="font-size: 13px; color: #AAA; line-height: 1.6;">Not wired: set <code>ALLGLANCE_URL</code> and '
+            '<code>ALLGLANCE_TOKEN</code> in omi-host\'s .env (see omi-host/examples/allglance/README.md). '
+            'Events Omi hears then wait under the app\'s <b>Calendar</b> page until a member confirms them.</p>'
+        )
+    else:
+        wiring = f"""
+    <table class="env-table">
+      <tr><td>Gateway</td><td>{calendar['gateway_url']} · token {'set' if calendar['token_set'] else '<b>missing</b>'}</td></tr>
+      <tr><td>dayGLANCE (events)</td><td>{yes_no(calendar['dayglance'])}</td></tr>
+      <tr><td>Vikunja (tasks)</td><td>{yes_no(calendar['vikunja'])}</td></tr>
+      <tr><td>CalDAV</td><td>{calendar['caldav_url'] or '-'} · full sync every {calendar['caldav_sync_seconds']} s, changes within ~20 s</td></tr>
+      <tr><td>Day bundle</td><td>{calendar['day_bundle_auto']}</td></tr>
+    </table>"""
+    rows = ""
+    for m in calendar.get("members", []):
+        sync = m["last_sync_at"].strftime("%Y-%m-%d %H:%M") if hasattr(m["last_sync_at"], "strftime") else "-"
+        err = f' <span class="status-down">({m["last_error"][:60]})</span>' if m["last_error"] else ""
+        rows += f"""
+        <tr>
+          <td>{m['name']}</td>
+          <td>{m.get('owner_name', '-') if m['configured'] else '<span class="status-muted">not wired</span>'}</td>
+          <td>{m['pending']}</td>
+          <td>{sync}{err}</td>
+        </tr>"""
+    members = (
+        f"""
+    <table class="status-table" style="margin-top: 12px;">
+      <thead><tr><th>Member</th><th>Adds events as</th><th>Events to check</th><th>CalDAV last sync</th></tr></thead>
+      <tbody>{rows}</tbody>
+    </table>"""
+        if rows
+        else '<p style="font-size: 13px; color: #AAA; margin-top: 8px;">No active members yet (a member becomes active on their first conversation).</p>'
+    )
+    error = (
+        f'<p class="status-down" style="font-size: 12px; margin-top: 8px;">Member lookup failed: {calendar["members_error"]}</p>'
+        if calendar.get("members_error")
+        else ""
+    )
+    return f"""
+  <div class="card">
+    <h2>🏠 ALLGlance &amp; Calendar</h2>
+    <p style="font-size: 13px; color: #AAA; line-height: 1.6; margin-bottom: 12px;">
+      Dates Omi hears go to the family calendar (dayGLANCE, through the ALLGlance gateway) only after a
+      member checks them in the app; tasks sync both ways over CalDAV. Each member picks which household
+      member Omi adds events as (app: Settings → Calendar → Add events as).
+    </p>
+    {wiring}{members}{error}
+  </div>"""
 
 
 # ── HTML dashboard ────────────────────────────────────────────────────
@@ -211,6 +370,9 @@ async def dashboard(request: Request):
     primary_model = get_local_primary_model() or "-"
     chat_agent_model = get_local_chat_agent_model() or "(same as primary)"
     embedding_model = get_local_embedding_model() or "-"
+
+    calendar = await _calendar_overview()
+    calendar_card = _render_calendar_card(calendar)
 
     component_rows = ""
     for name, info in sorted(components.items()):
@@ -429,8 +591,13 @@ async def dashboard(request: Request):
       <tr><td>REDIS_DB_HOST</td><td>{os.getenv('REDIS_DB_HOST', '-')}:{os.getenv('REDIS_DB_PORT', '6380')}</td></tr>
       <tr><td>FIRESTORE_EMULATOR_HOST</td><td>{os.getenv('FIRESTORE_EMULATOR_HOST', '-')}</td></tr>
       <tr><td>FIREBASE_AUTH_PROJECT_ID</td><td>{os.getenv('FIREBASE_AUTH_PROJECT_ID', '-')}</td></tr>
+      <tr><td>ALLGLANCE_URL</td><td>{os.getenv('ALLGLANCE_URL', '-')}</td></tr>
+      <tr><td>CALDAV_DEFAULT_URL</td><td>{os.getenv('CALDAV_DEFAULT_URL', '-')}</td></tr>
+      <tr><td>CALDAV_SYNC_SECONDS</td><td>{os.getenv('CALDAV_SYNC_SECONDS', '900')}</td></tr>
+      <tr><td>OMI_DAY_BUNDLE_AUTO</td><td>{os.getenv('OMI_DAY_BUNDLE_AUTO', '-')}</td></tr>
     </table>
   </div>
+{calendar_card}
 
   <div class="card">
     <h2>🔁 Conversations Needing Retry</h2>

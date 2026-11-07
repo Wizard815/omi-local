@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "images": [
+    {
+      "file": "001-mobile-android-family-calendar-member-picker.png",
+      "platform": "mobile-android",
+      "description": "The \"Add events as\" picker: whole family or a household member from the gateway roster; cards now have an editable note",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "002-mobile-android-family-calendar-adding-as-sam.png",
+      "platform": "mobile-android",
+      "description": "Adding as Sam; an edited card with labelled Title and Note inputs, date, time and length chips",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "003-web-dashboard-calendar-card.png",
+      "platform": "web",
+      "description": "Self-hosting dashboard: the ALLGlance & Calendar card (gateway, dayGLANCE, Vikunja, CalDAV, per-member binding and waiting events)",
+      "captured_by": "agent",
+      "source": "playwright-e2e"
+    }
+  ]
+}

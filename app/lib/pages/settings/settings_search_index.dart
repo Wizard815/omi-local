@@ -58,7 +58,11 @@ class SettingsSearchScope {
     required this.supportLinks,
     required this.android,
     this.rememberedDevice = false,
+    this.upgradeOffered = false,
   });
+
+  /// The Upgrade row is shown only to trial-eligible free readers.
+  final bool upgradeOffered;
 
   /// The Device row is shown only while a device is connected.
   final bool deviceConnected;
@@ -112,6 +116,7 @@ const _developer = 'lib/pages/settings/developer.dart';
 bool _whenDeviceConnected(SettingsSearchScope s) => s.deviceConnected;
 bool _whenDeviceConnectedOrRemembered(SettingsSearchScope s) => s.deviceConnected || s.rememberedDevice;
 bool _whenSupportLinks(SettingsSearchScope s) => s.supportLinks;
+bool _whenUpgradeOffered(SettingsSearchScope s) => s.upgradeOffered;
 bool _whenAndroid(SettingsSearchScope s) => s.android;
 
 /// Every searchable Settings row, in the order Settings shows them: the sheet's rows, each group
@@ -202,13 +207,15 @@ final List<SettingsSearchEntry> settingsSearchEntries = [
   ),
 
   // Integrations (opens the Integrations page directly)
+  // Plan: the Upgrade row, only while the trial offer is shown.
+  SettingsSearchEntry('upgrade', (l) => l.upgrade, SettingsDestination.upgrade, _drawer, visible: _whenUpgradeOffered),
   SettingsSearchEntry('integrations', (l) => l.integrations, SettingsDestination.integrations, _drawer),
   SettingsSearchEntry('taskIntegrations', (l) => l.taskIntegrations, SettingsDestination.taskIntegrations,
       'lib/pages/settings/integrations_page.dart'),
   // omi-local: CalDAV tasks + calendar sync.
-  SettingsSearchEntry('caldav', (l) => l.caldavSettingsTitle, SettingsDestination.caldav, _drawer),
+  SettingsSearchEntry('caldavSettingsTitle', (l) => l.caldavSettingsTitle, SettingsDestination.caldav, _drawer),
   // omi-local: confirm heard events before they go to the family calendar (dayGLANCE via ALLGlance).
-  SettingsSearchEntry('familyCalendar', (l) => l.familyCalendarTitle, SettingsDestination.familyCalendar, _drawer),
+  SettingsSearchEntry('familyCalendarTitle', (l) => l.familyCalendarTitle, SettingsDestination.familyCalendar, _drawer),
 
   // Data & Privacy group
   SettingsSearchEntry('dataProtection', (l) => l.dataProtection, SettingsDestination.dataPrivacy, _groups),

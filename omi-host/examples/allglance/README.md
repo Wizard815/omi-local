@@ -9,7 +9,7 @@ milestones. Omi connects to it three ways, and each one is a setting on one side
 | Omi → Vikunja, CalDAV | every open action item as a VTODO, both ways: tick it in Vikunja and Omi completes it; add one in Vikunja and Omi gets it | `CALDAV_DEFAULT_URL=http://<host>:8090/dav/` with `CALDAV_USER` / `CALDAV_PASSWORD` set to a Vikunja login (or a Vikunja CalDAV token) |
 | Omi → gateway, MCP + REST | the chat assistant gets `allglance_get_day`, `allglance_list_tasks`, `allglance_list_chores`, `allglance_list_milestones`, `allglance_create_task`, …; a new Omi action item is created in Vikunja at once | `ALLGLANCE_URL=http://<host>:8090`, `ALLGLANCE_TOKEN=<the gateway's GATEWAY_TOKEN>` |
 | gateway → Omi, MCP | Claude (or anything on the gateway) gets `omi_get_day_review`, `omi_get_conversations`, `omi_search_memories`, …, and `allglance_get_day` carries Omi's day summary | in ALLGlance's `.env.allglance`: `OMI_URL=http://<host>:8000`, `OMI_MCP_TOKEN=<an Omi MCP key>` |
-| Omi → dayGLANCE, **after asking** | a date Omi hears ("the inspection is Friday at eleven") goes on the family calendar as a dayGLANCE block, but only once you have checked it in the app: *Settings → Family calendar* (or the "events to check" card on the conversation list) shows each heard event with its date, time and length to fix, add or decline | the same `ALLGLANCE_URL` / `ALLGLANCE_TOKEN`; the gateway needs dayGLANCE on (`ENABLE_DAYGLANCE=true`, `DAYGLANCE_MCP_HOST/PORT/TOKEN` in `.env.allglance`) |
+| Omi → dayGLANCE, **after asking** | a date Omi hears ("the inspection is Friday at eleven") goes on the family calendar as a dayGLANCE block, but only once you have checked it in the app: *Settings → Family calendar* (or the "events to check" card on the conversation list) shows each heard event with its title, note, date, time and length to fix, add or decline; *Adding as* picks which household member (from the gateway's roster) the events belong to | the same `ALLGLANCE_URL` / `ALLGLANCE_TOKEN`; the gateway needs dayGLANCE on (`ENABLE_DAYGLANCE=true`, `DAYGLANCE_MCP_HOST/PORT/TOKEN` in `.env.allglance`) |
 
 **Where.**
 
@@ -32,9 +32,14 @@ milestones. Omi connects to it three ways, and each one is a setting on one side
   corrections, as `POST /api/allglance/tasks` `{source: "dayglance", start: "YYYY-MM-DD HH:MM",
   duration_minutes}` in the member's time zone, and stores `calendar: "allglance"` and
   `external_id: "dayglance:<id>"` on the conversation's event; `POST
-  /v1/family-calendar/events/decline` stores `declined`. That is the only writer: no
+  /v1/family-calendar/events/decline` stores `declined`; `PUT /v1/family-calendar/owner`
+  binds Omi to one household member (the task integration's `owner_id`, sent as the
+  gateway's `owner_id` = dayGLANCE's `assignee_id`, and used for Vikunja tasks too). That is the only writer: no
   scheduler, no hook in conversation processing, so an event never appears on the family
-  calendar unseen. App: `app/lib/pages/family_calendar/`.
+  calendar unseen. App: `app/lib/pages/family_calendar/`. The self-hosting dashboard
+  (`backend/routers/dashboard.py`) probes the gateway's `/health` and the CalDAV URL as
+  components and shows an ALLGlance & Calendar card with each member's binding, waiting events
+  and last CalDAV sync.
 - `backend/utils/mcp_server/handlers/other.py`: the `get_day_review` MCP tool (also
   `GET /v1/mcp/day-reviews/{date}`), what the gateway's `omi_get_day_review` and
   `allglance_get_day` read.
