@@ -79,6 +79,7 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
         supportLinks: PlatformService.isIntercomSupported,
         android: PlatformService.isAndroid,
         rememberedDevice: context.read<DeviceProvider>().hasRememberedDevice,
+        upgradeOffered: _showUpgradeRow(context.read<UsageProvider>()),
       );
 
   // ---------------------------------------------------------------------------------------------
