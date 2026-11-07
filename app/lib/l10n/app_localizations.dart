@@ -26636,6 +26636,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hide'**
   String get dayReviewHideClips;
+
+  /// Page title and settings row: review events before they go to the family calendar (dayGLANCE via ALLGlance)
+  ///
+  /// In en, this message translates to:
+  /// **'Family calendar'**
+  String get familyCalendarTitle;
+
+  /// Intro on the review page; label is the calendar's name
+  ///
+  /// In en, this message translates to:
+  /// **'Omi heard these dates. Check each one, fix what it got wrong, then add it to {label} or decline it. Nothing is added until you say so.'**
+  String familyCalendarIntro(String label);
+
+  /// Empty state title when the ALLGlance gateway is not set
+  ///
+  /// In en, this message translates to:
+  /// **'No family calendar yet'**
+  String get familyCalendarNotConfiguredTitle;
+
+  /// Empty state body
+  ///
+  /// In en, this message translates to:
+  /// **'Point Omi at your ALLGlance gateway (ALLGLANCE_URL and ALLGLANCE_TOKEN in omi-host) and events you talk about can go to dayGLANCE after you confirm them.'**
+  String get familyCalendarNotConfiguredBody;
+
+  /// Empty state title when no heard event waits
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to check'**
+  String get familyCalendarNothingPending;
+
+  /// Empty state body
+  ///
+  /// In en, this message translates to:
+  /// **'When Omi hears a plan with a date, it shows up here first.'**
+  String get familyCalendarNothingPendingBody;
+
+  /// Section header above events already added or declined
+  ///
+  /// In en, this message translates to:
+  /// **'Reviewed lately'**
+  String get familyCalendarRecentTitle;
+
+  /// Which conversation the event came from
+  ///
+  /// In en, this message translates to:
+  /// **'Heard in “{title}”'**
+  String familyCalendarHeardIn(String title);
+
+  /// Which conversation the event came from and when
+  ///
+  /// In en, this message translates to:
+  /// **'Heard in “{title}”, {when}'**
+  String familyCalendarHeardInAt(String title, String when);
+
+  /// Hint of the editable title field
+  ///
+  /// In en, this message translates to:
+  /// **'Event title'**
+  String get familyCalendarTitleHint;
+
+  /// Length chip; tap cycles through common lengths
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min'**
+  String familyCalendarMinutes(int count);
+
+  /// Shown under a card the user changed
+  ///
+  /// In en, this message translates to:
+  /// **'Edited: this is what will be added'**
+  String get familyCalendarEditedNote;
+
+  /// Decline button: Omi got it wrong or it is not wanted
+  ///
+  /// In en, this message translates to:
+  /// **'Not this'**
+  String get familyCalendarDecline;
+
+  /// Approve button
+  ///
+  /// In en, this message translates to:
+  /// **'Add to calendar'**
+  String get familyCalendarApprove;
+
+  /// Toast after approving
+  ///
+  /// In en, this message translates to:
+  /// **'“{title}” is on the family calendar'**
+  String familyCalendarAdded(String title);
+
+  /// Error toast; error is the server's text or a problem kind
+  ///
+  /// In en, this message translates to:
+  /// **'Family calendar: {error}'**
+  String familyCalendarFailed(String error);
+
+  /// Status of a reviewed event that was added
+  ///
+  /// In en, this message translates to:
+  /// **'on the family calendar'**
+  String get familyCalendarOnCalendar;
+
+  /// Status of a reviewed event that was declined
+  ///
+  /// In en, this message translates to:
+  /// **'declined'**
+  String get familyCalendarDeclined;
+
+  /// Banner title on the conversation list
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 event to check} other{{count} events to check}}'**
+  String familyCalendarBannerTitle(int count);
+
+  /// Banner body
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm the dates Omi heard before they go on the family calendar.'**
+  String get familyCalendarBannerBody;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
