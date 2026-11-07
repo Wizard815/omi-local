@@ -53,7 +53,9 @@ SCHEMA_GROUPS = {
             'CalDavSyncResponse',
             # Family calendar (dayGLANCE through ALLGlance): review heard events first.
             'FamilyCalendarEvent',
+            'FamilyCalendarMember',
             'FamilyCalendarResponse',
+            'SetFamilyCalendarOwnerRequest',
             'ApproveFamilyCalendarEventRequest',
             'DeclineFamilyCalendarEventRequest',
             'FamilyCalendarEventResponse',

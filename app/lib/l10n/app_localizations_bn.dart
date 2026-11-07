@@ -15130,15 +15130,14 @@ class AppLocalizationsBn extends AppLocalizations {
   String get dayReviewHideClips => 'Hide';
 
   @override
-  String get familyCalendarTitle => 'Family calendar';
+  String get familyCalendarTitle => 'Calendar';
 
   @override
-  String familyCalendarIntro(String label) {
-    return 'Omi heard these dates. Check each one, fix what it got wrong, then add it to $label or decline it. Nothing is added until you say so.';
-  }
+  String get familyCalendarIntro =>
+      'Omi heard these dates. Fix anything it got wrong, then add each one to the calendar or decline it. Nothing is added until you say so.';
 
   @override
-  String get familyCalendarNotConfiguredTitle => 'No family calendar yet';
+  String get familyCalendarNotConfiguredTitle => 'No calendar yet';
 
   @override
   String get familyCalendarNotConfiguredBody =>
@@ -15172,7 +15171,7 @@ class AppLocalizationsBn extends AppLocalizations {
   }
 
   @override
-  String get familyCalendarEditedNote => 'Edited: this is what will be added';
+  String get familyCalendarEditedNote => 'Edited';
 
   @override
   String get familyCalendarDecline => 'Not this';
@@ -15182,16 +15181,16 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String familyCalendarAdded(String title) {
-    return '“$title” is on the family calendar';
+    return '“$title” is on the calendar';
   }
 
   @override
   String familyCalendarFailed(String error) {
-    return 'Family calendar: $error';
+    return 'Calendar: $error';
   }
 
   @override
-  String get familyCalendarOnCalendar => 'on the family calendar';
+  String get familyCalendarOnCalendar => 'on the calendar';
 
   @override
   String get familyCalendarDeclined => 'declined';
@@ -15208,5 +15207,40 @@ class AppLocalizationsBn extends AppLocalizations {
   }
 
   @override
-  String get familyCalendarBannerBody => 'Confirm the dates Omi heard before they go on the family calendar.';
+  String get familyCalendarBannerBody => 'Confirm the dates Omi heard before they go on the calendar.';
+
+  @override
+  String familyCalendarAddingAs(String name) {
+    return 'Adding as: $name';
+  }
+
+  @override
+  String get familyCalendarAddingAsTitle => 'Add events as';
+
+  @override
+  String get familyCalendarWholeFamily => 'Whole family';
+
+  @override
+  String get familyCalendarNoMembers =>
+      'The gateway lists no household members yet. Set up dayGLANCE\'s family (and its sync) in ALLGlance first.';
+
+  @override
+  String get familyCalendarDescriptionHint => 'Add a note';
+
+  @override
+  String familyCalendarToCheck(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count to check',
+      one: '1 to check',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get familyCalendarTitleLabel => 'Title';
+
+  @override
+  String get familyCalendarNoteLabel => 'Note';
 }

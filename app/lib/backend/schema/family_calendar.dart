@@ -55,17 +55,46 @@ class FamilyCalendarEvent {
       );
 }
 
+/// A household member from the gateway's roster.
+class FamilyCalendarMember {
+  final String id;
+  final String name;
+
+  const FamilyCalendarMember({required this.id, required this.name});
+
+  factory FamilyCalendarMember.fromGenerated(wire.GeneratedFamilyCalendarMember g) =>
+      FamilyCalendarMember(id: g.id, name: g.name);
+}
+
 class FamilyCalendar {
   final bool configured;
   final String label;
+
+  /// The household; empty when the gateway could not be read.
+  final List<FamilyCalendarMember> members;
+
+  /// The member Omi adds events as; null = the whole family.
+  final String? ownerId;
+  final String ownerName;
   final List<FamilyCalendarEvent> pending;
   final List<FamilyCalendarEvent> recent;
 
-  const FamilyCalendar({required this.configured, required this.label, required this.pending, required this.recent});
+  const FamilyCalendar({
+    required this.configured,
+    required this.label,
+    this.members = const [],
+    this.ownerId,
+    this.ownerName = '',
+    required this.pending,
+    required this.recent,
+  });
 
   factory FamilyCalendar.fromGenerated(wire.GeneratedFamilyCalendarResponse g) => FamilyCalendar(
         configured: g.configured,
         label: g.label,
+        members: (g.members ?? const []).map(FamilyCalendarMember.fromGenerated).toList(),
+        ownerId: g.ownerId,
+        ownerName: g.ownerName,
         pending: (g.pending ?? const []).map(FamilyCalendarEvent.fromGenerated).toList(),
         recent: (g.recent ?? const []).map(FamilyCalendarEvent.fromGenerated).toList(),
       );

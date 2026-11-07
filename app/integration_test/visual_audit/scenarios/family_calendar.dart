@@ -31,9 +31,17 @@ Map<String, Object?> _event(String cid, int idx, String convo, String title, Dat
       'declined': declined,
     };
 
-Map<String, Object?> _calendar({bool configured = true, bool empty = false}) => {
+Map<String, Object?> _calendar({bool configured = true, bool empty = false, String? owner}) => {
       'configured': configured,
       'label': configured ? 'Family calendar (ALLGlance)' : '',
+      'members': configured
+          ? [
+              {'id': 'u-sam', 'name': 'Sam'},
+              {'id': 'u-dana', 'name': 'Dana'},
+            ]
+          : <Object?>[],
+      'owner_id': owner,
+      'owner_name': owner == 'u-sam' ? 'Sam' : (owner == 'u-dana' ? 'Dana' : ''),
       'pending': empty
           ? <Object?>[]
           : [
@@ -53,9 +61,11 @@ final familyCalendarScenarios = <AuditScenario>[
     id: 'family-calendar-review',
     title: 'Family calendar: three heard events to check, two reviewed lately',
     page: _page,
-    state: 'Three pending cards with editable title, date, time and length; one event already added, one declined',
+    state:
+        'Three pending cards with editable title, note, date, time and length; "Adding as" member chip; one event already added, one declined',
     run: (a) async {
       a.server.jsonRoutes['GET /v1/family-calendar'] = _calendar();
+      a.server.jsonRoutes['PUT /v1/family-calendar/owner'] = _calendar(owner: 'u-sam');
       a.server.jsonRoutes['POST /v1/family-calendar/events/decline'] = {
         'ok': true,
         'event': _event('c2', 0, 'Standup with Dana and Luis', 'Release planning', _day(1, 14, 30), declined: true),
@@ -63,6 +73,11 @@ final familyCalendarScenarios = <AuditScenario>[
       await a.pump(const FamilyCalendarReviewPage());
       await a.settle();
       await a.shot('Open the review', step: 'top');
+      await a.tap(find.byKey(const Key('family_calendar_owner')));
+      await a.shot('Tap "Adding as": the household picker', step: 'members');
+      await a.tap(find.byKey(const Key('family_calendar_owner_u-sam')));
+      await a.shot('Sam picked: events will be added as Sam', step: 'owner');
+      expect(find.text('Sam'), findsOneWidget);
       await a.tap(find.byKey(const Key('family_calendar_duration_c10:0')));
       await a.shot('Tap the length chip: 60 min becomes 90 min and the card says it was edited', step: 'edited');
       expect(find.text('90 min'), findsOneWidget);

@@ -27,16 +27,37 @@ class _Fake {
   final declined = <String>[];
   bool refuse = false;
   int loads = 0;
+  String? ownerId;
+  final ownerCalls = <String?>[];
+  static const members = [
+    FamilyCalendarMember(id: 'u-sam', name: 'Sam'),
+    FamilyCalendarMember(id: 'u-dana', name: 'Dana'),
+  ];
+
+  FamilyCalendar _calendar() => FamilyCalendar(
+        configured: true,
+        label: 'Family calendar (ALLGlance)',
+        members: members,
+        ownerId: ownerId,
+        ownerName: ownerId == null ? '' : members.firstWhere((m) => m.id == ownerId).name,
+        pending: pending,
+        recent: const [],
+      );
 
   Future<ApiResult<FamilyCalendar>> load() async {
     loads++;
-    return ApiSuccess(
-        FamilyCalendar(configured: true, label: 'Family calendar (ALLGlance)', pending: pending, recent: const []));
+    return ApiSuccess(_calendar());
+  }
+
+  Future<ApiResult<FamilyCalendar>> setOwner(String? id) async {
+    ownerCalls.add(id);
+    ownerId = id;
+    return ApiSuccess(_calendar());
   }
 
   Future<ApiResult<FamilyCalendarOutcome>> approve(FamilyCalendarEvent event,
       {String? title, String? description, DateTime? start, int? duration}) async {
-    approved.add({'key': event.key, 'title': title, 'start': start, 'duration': duration});
+    approved.add({'key': event.key, 'title': title, 'description': description, 'start': start, 'duration': duration});
     if (refuse) return const ApiSuccess(FamilyCalendarOutcome(ok: false, error: 'dayGLANCE is off'));
     pending = [];
     return const ApiSuccess(FamilyCalendarOutcome(ok: true));
@@ -53,7 +74,8 @@ Future<void> _open(WidgetTester tester, _Fake fake) async {
   await tester.pumpWidget(MaterialApp(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
-    home: FamilyCalendarReviewPage(load: fake.load, approve: fake.approve, decline: fake.decline),
+    home: FamilyCalendarReviewPage(
+        load: fake.load, approve: fake.approve, decline: fake.decline, setOwner: fake.setOwner),
   ));
   await tester.pumpAndSettle();
 }
@@ -67,6 +89,7 @@ void main() {
     expect(fake.declined, isEmpty);
 
     await tester.enterText(find.byKey(const Key('family_calendar_title_c10:0')), 'Inspection');
+    await tester.enterText(find.byKey(const Key('family_calendar_description_c10:0')), 'Landlord, bring the keys');
     await tester.tap(find.byKey(const Key('family_calendar_duration_c10:0'))); // 60 -> 90
     await tester.pumpAndSettle();
     expect(find.text('90 min'), findsOneWidget);
@@ -76,6 +99,7 @@ void main() {
 
     expect(fake.approved.single['key'], 'c10:0');
     expect(fake.approved.single['title'], 'Inspection');
+    expect(fake.approved.single['description'], 'Landlord, bring the keys');
     expect(fake.approved.single['duration'], 90);
     expect(fake.approved.single['start'], _start, reason: 'untouched date and time are sent as heard');
     expect(find.byKey(const Key('family_calendar_event_c10:0')), findsNothing, reason: 'reloaded after the add');
@@ -100,5 +124,18 @@ void main() {
     expect(fake.declined, ['c10:0']);
     expect(fake.approved, isEmpty);
     expect(find.byKey(const Key('family_calendar_event_c10:0')), findsNothing);
+  });
+
+  testWidgets('picking a household member binds the added events to them', (tester) async {
+    final fake = _Fake();
+    await _open(tester, fake);
+    expect(find.text('Whole family'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('family_calendar_owner')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('family_calendar_owner_u-sam')));
+    await tester.pumpAndSettle();
+    expect(fake.ownerCalls, ['u-sam']);
+    expect(find.text('Sam'), findsOneWidget);
+    expect(fake.approved, isEmpty, reason: 'choosing a member adds nothing by itself');
   });
 }

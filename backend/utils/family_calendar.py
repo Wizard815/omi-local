@@ -31,19 +31,48 @@ from models.structured import Event
 logger = logging.getLogger(__name__)
 
 CALENDAR = 'allglance'
-LABEL = 'Family calendar (ALLGlance)'
+LABEL = 'ALLGlance, dayGLANCE'
 LOOKBACK_DAYS = 7  # conversations this old can still have events waiting for review
 PAST_GRACE = timedelta(hours=12)  # an event that started this long ago is still worth confirming
 RECENT_LIMIT = 20
 
 
 def integration(uid: str) -> Optional[Dict[str, Any]]:
-    """The user's ALLGlance gateway (url + token), or None when there is none."""
+    """The user's ALLGlance gateway (url + token, and the member Omi acts as), or None when there is none."""
     record = users_db.get_task_integration(uid, CALENDAR) or {}
     base_url = str(record.get('base_url') or '').rstrip('/')
     if not base_url or not record.get('access_token'):
         return None
-    return {'base_url': base_url, 'access_token': record['access_token']}
+    owner = record.get('owner_id')
+    return {'base_url': base_url, 'access_token': record['access_token'], 'owner_id': str(owner) if owner else None}
+
+
+def set_owner(uid: str, owner_id: Optional[str]) -> None:
+    """Bind the events Omi adds (and the tasks it creates) to one household member; None = the whole family.
+    Stored on the allglance task integration, which the hourly seed leaves alone for this field."""
+    users_db.set_task_integration(uid, CALENDAR, {'owner_id': owner_id or None})
+
+
+async def members(target: Dict[str, Any], *, client: Optional[httpx.AsyncClient] = None) -> List[Dict[str, str]]:
+    """The household from the gateway's roster (dayGLANCE's users and Vikunja's). Empty when it cannot be read."""
+    http = client or httpx.AsyncClient(timeout=10.0)
+    try:
+        response = await http.get(
+            f"{target['base_url']}/api/allglance/users", headers={'Authorization': f"Bearer {target['access_token']}"}
+        )
+        if response.status_code != 200:
+            return []
+        users = (response.json() or {}).get('users') or []
+    except Exception:  # noqa: BLE001 — the gateway may be down; the page just has no picker then
+        return []
+    finally:
+        if client is None:
+            await http.aclose()
+    return [
+        {'id': str(u.get('id')), 'name': str(u.get('name') or u.get('id'))}
+        for u in users
+        if isinstance(u, dict) and u.get('id') is not None
+    ]
 
 
 def _zone(uid: str):
@@ -192,6 +221,8 @@ def _prepare(
     }
     if event.description:
         body['notes'] = event.description
+    if target.get('owner_id'):
+        body['owner_id'] = target['owner_id']
     return {
         'target': target,
         'conversation': conversation,
