@@ -1937,6 +1937,10 @@ class McpServerRequest(PydanticBaseModel):
     name: str
     mcp_server_url: str
     description: Optional[str] = None
+    # A fixed bearer token for servers that are not OAuth (a self-hosted gateway such as
+    # ALLGlance with its GATEWAY_TOKEN). Sent as `Authorization: Bearer <token>`; stored
+    # with the app, never returned.
+    access_token: Optional[str] = None
 
 
 def _serialize_chat_tools_for_firestore(tools) -> list:
@@ -1980,8 +1984,9 @@ async def add_mcp_server(data: McpServerRequest, uid: str = Depends(auth.get_cur
     app_id = str(ULID())
     user = await run_blocking(db_executor, get_user_from_uid, uid)
 
-    # Check for OAuth metadata
-    oauth_meta = await discover_oauth_metadata(server_url)
+    static_token = (data.access_token or '').strip() or None
+    # A fixed token skips OAuth discovery: the caller already holds the credential.
+    oauth_meta = None if static_token else await discover_oauth_metadata(server_url)
 
     if oauth_meta and oauth_meta.get('authorization_endpoint'):
         # OAuth required — register client and return auth URL
@@ -2068,7 +2073,7 @@ async def add_mcp_server(data: McpServerRequest, uid: str = Depends(auth.get_cur
     else:
         # No OAuth — discover tools directly
         try:
-            tools = await discover_mcp_tools(server_url)
+            tools = await discover_mcp_tools(server_url, static_token)
         except HTTPException:
             raise
         except Exception as e:
@@ -2097,6 +2102,9 @@ async def add_mcp_server(data: McpServerRequest, uid: str = Depends(auth.get_cur
             'created_at': datetime.now(timezone.utc),
             'external_integration': {
                 'mcp_server_url': resolved_url,
+                **(
+                    {'mcp_oauth_tokens': {'access_token': static_token, 'token_type': 'static'}} if static_token else {}
+                ),
             },
             'chat_tools': _serialize_chat_tools_for_firestore(tools),
         }

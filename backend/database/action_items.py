@@ -1713,3 +1713,34 @@ def _record_followup_completion(uid: str, task_id: str) -> None:
         record_task_completion(uid, task_id, firestore_client=db)
     except Exception:
         logger.info('commitment_followup outcome_unavailable')
+
+
+# ---- CalDAV: a change here reaches the user's calendar within seconds -------------------------
+
+
+def _caldav_dirty(uid: str) -> None:
+    try:
+        from utils.caldav.sync import mark_dirty
+
+        mark_dirty(uid)
+    except Exception:  # noqa: BLE001 — never let the sync hook fail a write
+        pass
+
+
+def _marking(fn):
+    def wrapped(uid, *args, **kwargs):
+        result = fn(uid, *args, **kwargs)
+        _caldav_dirty(uid)
+        return result
+
+    wrapped.__name__ = fn.__name__
+    wrapped.__doc__ = fn.__doc__
+    wrapped.__wrapped__ = fn  # type: ignore[attr-defined]
+    return wrapped
+
+
+create_action_item = _marking(create_action_item)
+create_action_items_batch = _marking(create_action_items_batch)
+update_action_item = _marking(update_action_item)
+delete_action_item = _marking(delete_action_item)
+delete_action_items_batch = _marking(delete_action_items_batch)

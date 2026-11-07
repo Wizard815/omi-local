@@ -263,7 +263,8 @@ API: `PUT /v1/conversations/{id}/tags`, `GET /v1/conversations/tags`,
 ### Calendar & tasks (CalDAV)
 Tasks and the day's events live outside Omi too. `omi-host` runs **Radicale** (`omi-radicale`,
 port `CALDAV_PORT`, default 5232; set `CALDAV_PASSWORD` in `.env` or it refuses to start) and
-the backend syncs with it every hour and on **Sync now** (Settings → **Calendar & tasks**):
+the backend syncs with it by itself (a change lands within about 20 s, a full pass every
+`CALDAV_SYNC_SECONDS`, default 15 minutes) and on **Sync now** (Settings → **Calendar & tasks**):
 open tasks and recently completed ones go out as to-dos, a to-do ticked off on the phone flips
 the Omi task, to-dos made elsewhere become Omi tasks; day summaries land as all-day events and
 the events the pipeline extracted from conversations as timed ones; the calendar's own events
@@ -272,6 +273,14 @@ client at `http://<host>:5232/` with the same user and password to see the same 
 Nextcloud, Baïkal, iCloud or another server instead, enter it on the settings page (per user) or
 set `CALDAV_DEFAULT_URL` / `CALDAV_USER` / `CALDAV_PASSWORD` for the whole stack. Worked
 examples: `omi-host/examples/caldav/README.md`. Contacts (CardDAV) are not synced.
+
+### ALLGlance (family calendar/tasks gateway)
+
+Omi and [ALLGlance](https://github.com/Wizard815/ALLGlance) connect three ways: tasks
+both ways over CalDAV (point `CALDAV_DEFAULT_URL` at the gateway's `/dav/`), the chat's
+`allglance_*` tools and instant task creation in Vikunja (`ALLGLANCE_URL` +
+`ALLGLANCE_TOKEN`), and Omi's own tools inside the gateway (`OMI_URL` + an Omi MCP key on
+the ALLGlance side). Setup and what does not sync: `omi-host/examples/allglance/README.md`.
 
 ### Folder tree
 Folders can be nested (up to 5 levels). Folders live in **Search** (upstream moved folder

@@ -1,7 +1,9 @@
 # CalDAV: tasks and calendar on your own stack
 
-**What.** The backend syncs with a CalDAV server every hour (and on "Sync now" in
-the app, Settings → Calendar & tasks):
+**What.** The backend syncs with a CalDAV server by itself: a task or day summary that
+changes reaches the server within about 20 seconds, every member is fully synced every
+15 minutes (`CALDAV_SYNC_SECONDS`), and "Sync now" in the app (Settings → Calendar &
+tasks) runs it at once:
 
 | Direction | What | Where |
 |---|---|---|

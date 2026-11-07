@@ -4631,7 +4631,7 @@
     "dayReviewBundleWriting": "Bundling the day…",
     "dayReviewFavoriteSection": "Favorite",
     "dayReviewUnfavoriteSection": "Unfavorite",
-    "dayReviewSectionFavorited": "Kept as {count} conversation(s)",
+    "dayReviewSectionFavorited": "{count, plural, =1{Kept as its own conversation} other{Kept as {count} conversations}}",
     "dayReviewTagsTitle": "Tags of the day",
     "conversationTags": "Tags",
     "conversationTagsAdd": "Add a tag",
@@ -4666,5 +4666,9 @@
     "caldavSyncResult": "Pushed {tasks} tasks and {events} events, pulled {pulled} changes",
     "caldavCalendarsFound": "{count} calendar(s) found",
     "caldavFailed": "CalDAV: {error}",
-    "caldavSaved": "CalDAV settings saved"
+    "caldavSaved": "CalDAV settings saved",
+    "dayReviewSectionClips": "{count, plural, =1{1 conversation} other{{count} conversations}}",
+    "dayReviewSmallMoments": "{count, plural, =1{1 small clip} other{{count} small clips}}",
+    "dayReviewAddParagraphHere": "Add a paragraph after this section",
+    "dayReviewHideClips": "Hide"
 }

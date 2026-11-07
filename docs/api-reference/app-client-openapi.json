@@ -5935,6 +5935,14 @@
             "title": "Events Pushed",
             "type": "integer"
           },
+          "notes": {
+            "description": "What the sync left out on purpose (tasks-only server)",
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
           "ok": {
             "title": "Ok",
             "type": "boolean"
@@ -22088,6 +22096,17 @@
       },
       "McpServerRequest": {
         "properties": {
+          "access_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Access Token"
+          },
           "description": {
             "anyOf": [
               {
@@ -35634,6 +35653,17 @@
             ],
             "title": "Access Token"
           },
+          "base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
+          },
           "connected": {
             "default": true,
             "title": "Connected",
@@ -35683,6 +35713,28 @@
             ],
             "title": "List Name"
           },
+          "owner_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
+          },
+          "project": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project"
+          },
           "project_gid": {
             "anyOf": [
               {
@@ -35715,6 +35767,17 @@
               }
             ],
             "title": "Refresh Token"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
           },
           "space_id": {
             "anyOf": [
@@ -65218,6 +65281,61 @@
           }
         ],
         "summary": "Get Daily Summaries",
+        "tags": [
+          "mcp"
+        ]
+      }
+    },
+    "/v1/mcp/day-reviews/{date}": {
+      "get": {
+        "operationId": "get_day_review_v1_mcp_day_reviews__date__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "title": "Date",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Day Review V1 Mcp Day Reviews  Date  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Get Day Review",
         "tags": [
           "mcp"
         ]

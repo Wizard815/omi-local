@@ -61,4 +61,5 @@ class CalDavSyncResponse(BaseModel):
     events_pushed: int = 0
     events_pulled: int = 0
     errors: List[str] = Field(default_factory=list)
+    notes: List[str] = Field(default_factory=list, description='What the sync left out on purpose (tasks-only server)')
     error: str = ''

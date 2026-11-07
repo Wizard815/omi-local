@@ -123,6 +123,15 @@ services:
       CALDAV_DEFAULT_URL: ${CALDAV_DEFAULT_URL:-http://omi-radicale:5232/}
       CALDAV_DEFAULT_USERNAME: ${CALDAV_USER:-omi}
       CALDAV_DEFAULT_PASSWORD: ${CALDAV_PASSWORD:-}
+      # The sync is automatic: a task or day-summary change reaches the server within
+      # about 20 s, and every active member is fully synced this often (seconds).
+      CALDAV_SYNC_SECONDS: ${CALDAV_SYNC_SECONDS:-900}
+      # ALLGlance (Wizard815/ALLGlance): the family calendar/tasks gateway. With these
+      # set, every member's chat gets the gateway's tools and new action items land in
+      # Vikunja at once; set CALDAV_DEFAULT_URL to the gateway's /dav/ for the hourly
+      # two-way task sync. Worked example: examples/allglance/README.md.
+      ALLGLANCE_URL: ${ALLGLANCE_URL:-}
+      ALLGLANCE_TOKEN: ${ALLGLANCE_TOKEN:-}
       # Hourly daily-recap job, run in-process (no Cloud Scheduler here). The
       # recap is generated at each user's chosen local hour (default 22:00) —
       # set 0 to disable.

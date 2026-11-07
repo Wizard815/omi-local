@@ -285,3 +285,51 @@ def test_default_settings_come_from_the_bundled_server_env(monkeypatch):
     monkeypatch.setenv('CALDAV_DEFAULT_PASSWORD', 'pw')
     default = sync.default_settings()
     assert default and default['bundled'] and default['url'] == 'http://omi-radicale:5232/' and default['push_tasks']
+
+
+class _TasksOnlyClient(_FakeClient):
+    """Vikunja behind ALLGlance: task lists only, and MKCALENDAR answers 404."""
+
+    def list_calendars(self, home=None):
+        return [Calendar(href=HOME + 'projects/1/', name='Inbox', components=['VTODO'])]
+
+    def make_calendar(self, href, name, components):
+        self.made.append((href, name, list(components)))
+        raise CalDavError('MKCALENDAR: HTTP 404', 404)
+
+
+def test_tasks_only_server_syncs_tasks_and_says_what_it_left_out(world):
+    settings, tasks, created, redis, stored = world
+    report = sync.sync_user('u1', settings, client_factory=_TasksOnlyClient, now=NOW)
+    client = _TasksOnlyClient.instances[-1]
+    assert report.tasks_pushed == 2 and report.events_pushed == 0 and report.events_pulled == 0
+    assert report.errors == [] and report.notes == [sync.TASKS_ONLY_NOTE]
+    assert HOME + 'projects/1/omi-task-t1@omi-local.ics' in client.puts
+    # the events calendar was asked for once (and refused); the task list was never recreated
+    assert client.made == [(HOME + 'omi/', 'Omi', ['VEVENT'])]
+    assert 'notes' in report.as_dict()
+
+
+def test_with_every_event_direction_off_no_events_calendar_is_looked_for(world):
+    settings, tasks, created, redis, stored = world
+    quiet = {**settings, 'push_day_summaries': False, 'push_conversation_events': False, 'pull_events': False}
+    report = sync.sync_user('u1', quiet, client_factory=_TasksOnlyClient, now=NOW)
+    client = _TasksOnlyClient.instances[-1]
+    assert client.made == [] and report.notes == [] and report.tasks_pushed == 2
+
+
+def test_no_task_list_and_no_mkcalendar_is_a_clear_error(world):
+    settings, tasks, created, redis, stored = world
+
+    class _Empty(_TasksOnlyClient):
+        def list_calendars(self, home=None):
+            return []
+
+    with pytest.raises(CalDavError) as caught:
+        sync.sync_user(
+            'u1',
+            {**settings, 'pull_events': False, 'push_day_summaries': False, 'push_conversation_events': False},
+            client_factory=_Empty,
+            now=NOW,
+        )
+    assert 'create a list in the app' in str(caught.value)

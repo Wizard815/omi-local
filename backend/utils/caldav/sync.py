@@ -60,6 +60,8 @@ class SyncReport:
     events_pushed: int = 0
     events_pulled: int = 0
     errors: List[str] = field(default_factory=list)
+    # What the sync left out on purpose (a tasks-only server has nowhere for events).
+    notes: List[str] = field(default_factory=list)
 
     def as_dict(self) -> Dict[str, Any]:
         return {
@@ -69,6 +71,7 @@ class SyncReport:
             'events_pushed': self.events_pushed,
             'events_pulled': self.events_pulled,
             'errors': list(self.errors),
+            'notes': list(self.notes),
         }
 
 
@@ -91,6 +94,44 @@ def effective_settings(uid: str) -> Optional[Dict[str, Any]]:
     if stored and stored.get('url'):
         return {**stored, 'password': settings_db.get_password(uid, stored)}
     return default_settings()
+
+
+# ---- change-triggered sync ------------------------------------------------------------------
+
+DIRTY_KEY = 'caldav:dirty'
+
+
+def mark_dirty(uid: str) -> None:
+    """A task or day summary changed: sync this user at the next short pass (seconds, not the
+    hour). Called from the action-item store and the day bundle; never raises."""
+    try:
+        redis_db.r.sadd(DIRTY_KEY, uid)
+    except Exception:  # noqa: BLE001 — the hourly full sync still covers it
+        pass
+
+
+def take_dirty() -> List[str]:
+    try:
+        raw = redis_db.r.spop(DIRTY_KEY, 200) or []
+    except Exception:  # noqa: BLE001
+        return []
+    return [v.decode() if isinstance(v, bytes) else str(v) for v in raw]
+
+
+def run_dirty() -> Dict[str, Any]:
+    """Sync every user marked dirty since the last pass (users without a CalDAV server are skipped)."""
+    results: Dict[str, Any] = {}
+    for uid in take_dirty():
+        outcome = run_for_user(uid)
+        if outcome is not None:
+            results[uid] = outcome
+    return results
+
+
+async def dirty_tick() -> None:
+    from utils.executors import db_executor, run_blocking
+
+    await run_blocking(db_executor, run_dirty)
 
 
 # ---- state kept between ticks -------------------------------------------------------------
@@ -141,29 +182,65 @@ def _digest(text: str) -> str:
 # ---- calendars ----------------------------------------------------------------------------
 
 
-def ensure_calendars(client: CalDavClient, settings: Dict[str, Any]) -> Dict[str, str]:
-    """Resolve (creating on the bundled server) the event and task calendars to use."""
+# A server that answers MKCALENDAR with one of these has no room for a second calendar
+# (Vikunja behind ALLGlance: task lists only, created in the app, 404 on MKCALENDAR).
+_NO_MKCALENDAR = {403, 404, 405, 501}
+
+TASKS_ONLY_NOTE = (
+    'This server only has task lists (no events calendar): tasks sync both ways, '
+    'but day summaries and events are not pushed or pulled. Point Omi at a CalDAV '
+    'server with calendars for those.'
+)
+
+
+def events_wanted(settings: Dict[str, Any]) -> bool:
+    """Whether any direction needs an events (VEVENT) calendar at all."""
+    return any(
+        bool(settings.get(key))
+        for key in ('push_day_summaries', 'push_conversation_events', 'push_conversations', 'pull_events')
+    )
+
+
+def ensure_calendars(client: CalDavClient, settings: Dict[str, Any], *, need_events: bool = True) -> Dict[str, str]:
+    """Resolve (creating on the bundled server) the task calendar and, when an event
+    direction is on, the events calendar. ``calendar_href`` comes back empty on a
+    tasks-only server (Vikunja, ALLGlance): the caller skips the event directions."""
     calendar_href = str(settings.get('calendar_href') or '')
     tasks_href = str(settings.get('tasks_href') or '')
-    if calendar_href and tasks_href:
+    if tasks_href and (calendar_href or not need_events):
         return {'calendar_href': calendar_href, 'tasks_href': tasks_href}
     home = client.calendar_home()
     calendars = client.list_calendars(home)
     by_name = {c.name.strip().lower(): c for c in calendars if c.name}
-    if not calendar_href:
+    if need_events and not calendar_href:
         found = by_name.get(DEFAULT_CALENDAR_NAME.lower()) or next((c for c in calendars if c.supports('VEVENT')), None)
         if found is None:
             href = home + ('' if home.endswith('/') else '/') + 'omi/'
-            client.make_calendar(href, DEFAULT_CALENDAR_NAME, ['VEVENT'])
-            found = Calendar(href=href, name=DEFAULT_CALENDAR_NAME, components=['VEVENT'])
-        calendar_href = found.href
+            try:
+                client.make_calendar(href, DEFAULT_CALENDAR_NAME, ['VEVENT'])
+            except CalDavError as error:
+                if error.status not in _NO_MKCALENDAR:
+                    raise
+                found = None
+            else:
+                found = Calendar(href=href, name=DEFAULT_CALENDAR_NAME, components=['VEVENT'])
+        calendar_href = found.href if found is not None else ''
     if not tasks_href:
         found = by_name.get(DEFAULT_TASKS_NAME.lower()) or next(
             (c for c in calendars if c.supports('VTODO') and c.href != calendar_href), None
         )
         if found is None:
             href = home + ('' if home.endswith('/') else '/') + 'omi-tasks/'
-            client.make_calendar(href, DEFAULT_TASKS_NAME, ['VTODO'])
+            try:
+                client.make_calendar(href, DEFAULT_TASKS_NAME, ['VTODO'])
+            except CalDavError as error:
+                if error.status not in _NO_MKCALENDAR:
+                    raise
+                raise CalDavError(
+                    'No task list found and the server does not let Omi create one; '
+                    'create a list in the app and pick it as the tasks calendar.',
+                    error.status,
+                ) from error
             found = Calendar(href=href, name=DEFAULT_TASKS_NAME, components=['VTODO'])
         tasks_href = found.href
     return {'calendar_href': calendar_href, 'tasks_href': tasks_href}
@@ -453,11 +530,15 @@ def sync_user(
     with client_factory(
         str(settings['url']), str(settings.get('username') or ''), str(settings.get('password') or '')
     ) as client:
-        hrefs = ensure_calendars(client, settings)
+        want_events = events_wanted(settings)
+        hrefs = ensure_calendars(client, settings, need_events=want_events)
         if settings.get('push_tasks'):
             push_tasks(uid, client, hrefs['tasks_href'], report, now=now)
         if settings.get('pull_tasks'):
             pull_tasks(uid, client, hrefs['tasks_href'], report, now=now)
+        if want_events and not hrefs['calendar_href']:
+            report.notes.append(TASKS_ONLY_NOTE)
+            return report
         if settings.get('push_day_summaries'):
             push_day_summaries(uid, client, hrefs['calendar_href'], report, now=now)
         if settings.get('push_conversation_events') or settings.get('push_conversations'):

@@ -41,6 +41,9 @@ class _DayReviewPageState extends State<DayReviewPage> {
   /// Clips ticked for the next merge group.
   final Set<String> _selected = {};
 
+  /// Sections whose conversation list is unfolded in the review.
+  final Set<String> _openSections = {};
+
   @override
   void initState() {
     super.initState();
@@ -246,7 +249,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
             if (quote != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: Text('“$quote”', style: TextStyle(color: Colors.grey.shade400, fontStyle: FontStyle.italic)),
+                child: Text('“$quote”', style: TextStyle(color: OmiColors.textSecondary, fontStyle: FontStyle.italic)),
               ),
             TextField(
               controller: controller,
@@ -318,9 +321,9 @@ class _DayReviewPageState extends State<DayReviewPage> {
     final l10n = context.l10n;
     final review = _day?.review;
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.primary,
+      backgroundColor: OmiColors.surface0,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        backgroundColor: OmiColors.surface0,
         title: Text(l10n.dayReviewTitle),
         actions: [
           if (review != null && review.finalText.isNotEmpty)
@@ -350,7 +353,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
+                    Text(_error!, textAlign: TextAlign.center, style: TextStyle(color: OmiColors.textSecondary)),
                     const SizedBox(height: 12),
                     TextButton(onPressed: _load, child: Text(l10n.retry)),
                   ],
@@ -374,8 +377,8 @@ class _DayReviewPageState extends State<DayReviewPage> {
                     const SizedBox(height: 16),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 32),
-                      child:
-                          Text(_busyMessage!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white)),
+                      child: Text(_busyMessage!,
+                          textAlign: TextAlign.center, style: TextStyle(color: OmiColors.textPrimary)),
                     ),
                   ],
                 ),
@@ -392,11 +395,11 @@ class _DayReviewPageState extends State<DayReviewPage> {
     return c.finishedAt == null ? f.format(c.startedAt!) : '${f.format(c.startedAt!)} – ${f.format(c.finishedAt!)}';
   }
 
-  Widget _conversationTile(DayReviewConversation c, {Widget? trailing}) {
+  Widget _conversationTile(DayReviewConversation c, {Widget? trailing, Color? color}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: const Color(0xFF1F1F25), borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(color: color ?? OmiColors.surface1, borderRadius: BorderRadius.circular(14)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -407,16 +410,16 @@ class _DayReviewPageState extends State<DayReviewPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(c.title.isEmpty ? context.l10n.dayReviewUntitled : c.title,
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                    style: TextStyle(color: OmiColors.textPrimary, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 2),
-                Text(_timeRange(c), style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                Text(_timeRange(c), style: TextStyle(color: OmiColors.textSecondary, fontSize: 12)),
                 if (c.overview.isNotEmpty || c.transcriptSnippet.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(c.overview.isNotEmpty ? c.overview : c.transcriptSnippet,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: OmiType.footnote.copyWith(
-                          color: Colors.grey.shade400,
+                          color: OmiColors.textSecondary,
                           fontStyle: c.overview.isEmpty ? FontStyle.italic : FontStyle.normal)),
                 ],
               ],
@@ -443,20 +446,20 @@ class _DayReviewPageState extends State<DayReviewPage> {
               value: _selected.contains(c.id),
               onChanged: dropped ? null : (_) => _toggleSelected(c.id),
               visualDensity: VisualDensity.compact,
-              side: BorderSide(color: Colors.grey.shade600),
+              side: BorderSide(color: OmiColors.textSecondary),
             ),
             IconButton(
               tooltip: l10n.dayReviewKeepTooltip,
               visualDensity: VisualDensity.compact,
               icon: Icon(kept ? Icons.star_rounded : Icons.star_outline_rounded,
-                  color: kept ? Colors.amber : Colors.grey.shade500),
+                  color: kept ? OmiColors.warning : OmiColors.textSecondary),
               onPressed: () => _toggleKeep(c.id),
             ),
             IconButton(
               tooltip: dropped ? l10n.dayReviewRestoreTooltip : l10n.dayReviewDropTooltip,
               visualDensity: VisualDensity.compact,
               icon: Icon(dropped ? Icons.restore_from_trash_outlined : Icons.delete_outline_rounded,
-                  color: dropped ? Colors.white : Colors.grey.shade500),
+                  color: dropped ? OmiColors.textPrimary : OmiColors.textSecondary),
               onPressed: () => _toggleDrop(c.id),
             ),
           ],
@@ -471,18 +474,18 @@ class _DayReviewPageState extends State<DayReviewPage> {
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(OmiRadius.lg),
-        border: Border.all(color: Colors.white38),
+        border: Border.all(color: OmiColors.surface3),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.call_merge_rounded, size: 18, color: Colors.white70),
+              Icon(Icons.call_merge_rounded, size: 18, color: OmiColors.textSecondary),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(context.l10n.dayReviewMergeGroupLabel,
-                    style: OmiType.footnote.copyWith(color: Colors.white70)),
+                    style: OmiType.footnote.copyWith(color: OmiColors.textSecondary)),
               ),
               TextButton(onPressed: () => _ungroup(group), child: Text(context.l10n.dayReviewUngroup)),
             ],
@@ -496,7 +499,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
 
   Widget _sectionTitle(String text) => Padding(
         padding: const EdgeInsets.only(top: 12, bottom: 8),
-        child: Text(text, style: OmiType.headline.copyWith(color: Colors.white)),
+        child: Text(text, style: OmiType.headline.copyWith(color: OmiColors.textPrimary)),
       );
 
   Widget _buildSortView(DayReviewDay day) {
@@ -513,9 +516,10 @@ class _DayReviewPageState extends State<DayReviewPage> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             children: [
-              Text(_prettyDate, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600)),
+              Text(_prettyDate,
+                  style: TextStyle(color: OmiColors.textPrimary, fontSize: 20, fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
-              Text(l10n.dayReviewBundleHint, style: TextStyle(color: Colors.grey.shade400, height: 1.4)),
+              Text(l10n.dayReviewBundleHint, style: TextStyle(color: OmiColors.textSecondary, height: 1.4)),
               if (day.conversations.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 SizedBox(
@@ -523,7 +527,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
                   child: ElevatedButton.icon(
                     key: const Key('day_review_bundle'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
+                      backgroundColor: OmiColors.textPrimary,
                       foregroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(OmiRadius.lg)),
@@ -535,27 +539,27 @@ class _DayReviewPageState extends State<DayReviewPage> {
                 ),
                 const SizedBox(height: 16),
                 Text(l10n.dayReviewOrSortManually,
-                    style: OmiType.footnote.copyWith(color: Colors.grey.shade500, fontWeight: FontWeight.w600)),
+                    style: OmiType.footnote.copyWith(color: OmiColors.textSecondary, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
                 Text(day.holdEnabled ? l10n.dayReviewSortHintHold : l10n.dayReviewSortHint,
-                    style: OmiType.footnote.copyWith(color: Colors.grey.shade500, height: 1.4)),
+                    style: OmiType.footnote.copyWith(color: OmiColors.textSecondary, height: 1.4)),
               ],
               if (day.processingCount > 0) ...[
                 const SizedBox(height: 8),
                 Text(l10n.dayReviewProcessing(day.processingCount),
-                    style: TextStyle(color: Colors.grey.shade500, fontSize: 12.5)),
+                    style: TextStyle(color: OmiColors.textSecondary, fontSize: 12.5)),
               ],
               if (day.droppedAutoCount > 0) ...[
                 const SizedBox(height: 4),
                 Text(l10n.dayReviewAutoDropped(day.droppedAutoCount),
-                    style: OmiType.footnote.copyWith(color: Colors.grey.shade500)),
+                    style: OmiType.footnote.copyWith(color: OmiColors.textSecondary)),
               ],
               const SizedBox(height: 16),
               if (day.conversations.isEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 40),
                   child: Text(l10n.dayReviewEmpty,
-                      textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
+                      textAlign: TextAlign.center, style: TextStyle(color: OmiColors.textSecondary)),
                 ),
               for (final g in _groups) _groupBlock(g, byId),
               for (final c in clear) _sortTile(c),
@@ -573,8 +577,8 @@ class _DayReviewPageState extends State<DayReviewPage> {
               width: double.infinity,
               child: OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.white54),
+                  foregroundColor: OmiColors.textPrimary,
+                  side: BorderSide(color: OmiColors.textSecondary),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(OmiRadius.md)),
                 ),
                 onPressed: _selected.length < 2 ? null : _mergeSelected,
@@ -592,7 +596,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
+                    backgroundColor: OmiColors.textPrimary,
                     foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -616,12 +620,12 @@ class _DayReviewPageState extends State<DayReviewPage> {
           // Same characters (offsets stay exact), drawn as a bar.
           return TextSpan(
             text: s.text,
-            style: const TextStyle(color: Colors.transparent, backgroundColor: Color(0xFF4A4A52)),
+            style: TextStyle(color: Colors.transparent, backgroundColor: OmiColors.surface3),
           );
         case SummarySegmentKind.highlight:
           return TextSpan(
             text: s.text,
-            style: TextStyle(backgroundColor: Colors.amber.withValues(alpha: 0.35), color: Colors.white),
+            style: TextStyle(backgroundColor: OmiColors.warning.withValues(alpha: 0.35), color: OmiColors.textPrimary),
           );
         case SummarySegmentKind.plain:
           return TextSpan(text: s.text);
@@ -629,7 +633,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
     }).toList();
 
     return SelectableText.rich(
-      TextSpan(children: spans, style: const TextStyle(color: Colors.white, fontSize: 16, height: 1.55)),
+      TextSpan(children: spans, style: TextStyle(color: OmiColors.textPrimary, fontSize: 16, height: 1.55)),
       contextMenuBuilder: (context, editable) {
         final selection = editable.textEditingValue.selection;
         final items = <ContextMenuButtonItem>[...editable.contextMenuButtonItems];
@@ -672,9 +676,9 @@ class _DayReviewPageState extends State<DayReviewPage> {
       margin: const EdgeInsets.only(top: 10),
       padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF1F1F25),
+        color: OmiColors.surface1,
         borderRadius: BorderRadius.circular(12),
-        border: const Border(left: BorderSide(color: Colors.white54, width: 3)),
+        border: Border(left: BorderSide(color: OmiColors.textSecondary, width: 3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -684,14 +688,14 @@ class _DayReviewPageState extends State<DayReviewPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(context.l10n.dayReviewYourParagraph,
-                    style: TextStyle(color: Colors.grey.shade500, fontSize: 11.5)),
+                    style: TextStyle(color: OmiColors.textSecondary, fontSize: 11.5)),
                 const SizedBox(height: 4),
-                Text(c.text ?? '', style: const TextStyle(color: Colors.white, fontSize: 15.5, height: 1.5)),
+                Text(c.text ?? '', style: TextStyle(color: OmiColors.textPrimary, fontSize: 15.5, height: 1.5)),
               ],
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.close, size: 18, color: Colors.white54),
+            icon: Icon(Icons.close, size: 18, color: OmiColors.textSecondary),
             onPressed: () => _deleteCorrection(c),
           ),
         ],
@@ -703,7 +707,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
     return Align(
       alignment: Alignment.centerLeft,
       child: TextButton.icon(
-        style: TextButton.styleFrom(foregroundColor: Colors.grey.shade500, padding: EdgeInsets.zero),
+        style: TextButton.styleFrom(foregroundColor: OmiColors.textSecondary, padding: EdgeInsets.zero),
         onPressed: () => _addParagraph(after),
         icon: const Icon(Icons.add, size: 16),
         label: Text(context.l10n.dayReviewAddParagraph, style: const TextStyle(fontSize: 12.5)),
@@ -732,14 +736,14 @@ class _DayReviewPageState extends State<DayReviewPage> {
         c.type == DayReviewCorrectionType.redaction
             ? Icons.block
             : (c.type == DayReviewCorrectionType.highlight ? Icons.edit_note : Icons.notes),
-        color: Colors.white70,
+        color: OmiColors.textSecondary,
         size: 20,
       ),
-      title: Text(label, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white)),
+      title: Text(label, maxLines: 3, overflow: TextOverflow.ellipsis, style: TextStyle(color: OmiColors.textPrimary)),
       subtitle: Text(c.isApplied ? l10n.dayReviewCorrectionApplied : l10n.dayReviewCorrectionPending,
-          style: TextStyle(color: Colors.grey.shade500, fontSize: 11.5)),
+          style: TextStyle(color: OmiColors.textSecondary, fontSize: 11.5)),
       trailing: IconButton(
-        icon: const Icon(Icons.delete_outline, color: Colors.white54, size: 20),
+        icon: Icon(Icons.delete_outline, color: OmiColors.textSecondary, size: 20),
         onPressed: () => _deleteCorrection(c),
       ),
     );
@@ -751,47 +755,147 @@ class _DayReviewPageState extends State<DayReviewPage> {
         child: Text('#$tag', style: OmiType.footnote.copyWith(color: OmiColors.textSecondary)),
       );
 
-  Widget _sectionHeader(DayReviewDay day, DayReviewSection section) {
+  /// The conversations a section covers, in the order the day had them.
+  List<DayReviewConversation> _sectionClips(DayReviewSection section, Map<String, DayReviewConversation> byId) => [
+        for (final id in section.conversationIds)
+          if (byId[id] != null) byId[id]!
+      ];
+
+  /// "7:48 AM – 9:16 AM" across a section's conversations, or '' when none have times.
+  String _spanLabel(List<DayReviewConversation> clips) {
+    DateTime? first;
+    DateTime? last;
+    for (final c in clips) {
+      final start = c.startedAt;
+      final end = c.finishedAt ?? c.startedAt;
+      if (start != null && (first == null || start.isBefore(first))) first = start;
+      if (end != null && (last == null || end.isAfter(last))) last = end;
+    }
+    if (first == null || last == null) return '';
+    final fmt = DateFormat.jm();
+    return '${fmt.format(first.toLocal())} – ${fmt.format(last.toLocal())}';
+  }
+
+  Widget _sectionCard(
+    DayReview review,
+    DayReviewSection? section,
+    List<SummaryParagraph> paragraphs,
+    Map<String, DayReviewConversation> byId,
+    List<DayReviewCorrection> Function(int? index) anchoredAt,
+  ) {
     final l10n = context.l10n;
-    final count = section.conversationIds.length;
-    return Padding(
-      key: Key('day_review_section_${section.id}'),
-      padding: const EdgeInsets.only(top: 14, bottom: 6),
-      child: Row(
+    final clips = section == null ? const <DayReviewConversation>[] : _sectionClips(section, byId);
+    final open = section != null && _openSections.contains(section.id);
+    final favorited = section?.favorited ?? false;
+    final span = _spanLabel(clips);
+    return Container(
+      key: section == null ? null : Key('day_review_section_${section.id}'),
+      margin: const EdgeInsets.only(bottom: OmiSpacing.sm),
+      padding: const EdgeInsets.fromLTRB(OmiSpacing.md, OmiSpacing.sm, OmiSpacing.xs, OmiSpacing.xs),
+      decoration: BoxDecoration(
+        color: OmiColors.surface1,
+        borderRadius: OmiRadius.lgAll,
+        border: favorited ? Border.all(color: OmiColors.warning.withValues(alpha: 0.6)) : null,
+      ),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (section.title.isNotEmpty) Text(section.title, style: OmiType.headline),
-                if (section.favorited)
-                  Text(l10n.dayReviewSectionFavorited(count),
-                      style: OmiType.footnote.copyWith(color: OmiColors.warning)),
-                if (section.tags.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Wrap(spacing: 6, runSpacing: 4, children: [for (final t in section.tags) _tagChip(t)]),
-                  ),
-              ],
-            ),
-          ),
-          if (count > 0)
-            TextButton.icon(
-              key: Key('day_review_section_favorite_${section.id}'),
-              style: TextButton.styleFrom(
-                foregroundColor: section.favorited ? OmiColors.warning : OmiColors.textSecondary,
-                padding: const EdgeInsets.symmetric(horizontal: OmiSpacing.xs),
-                visualDensity: VisualDensity.compact,
+          if (span.isNotEmpty || clips.length > 1)
+            Padding(
+              padding: const EdgeInsets.only(right: OmiSpacing.xs),
+              child: Row(
+                children: [
+                  if (span.isNotEmpty) Text(span, style: OmiType.caption.copyWith(color: OmiColors.textSecondary)),
+                  const Spacer(),
+                  if (clips.length > 1)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: OmiSpacing.xs, vertical: 2),
+                      decoration: BoxDecoration(color: OmiColors.chipSurface, borderRadius: OmiRadius.mdAll),
+                      child: Text(l10n.dayReviewSmallMoments(clips.length),
+                          style: OmiType.caption.copyWith(color: OmiColors.textSecondary)),
+                    ),
+                ],
               ),
-              onPressed: () => _favoriteSection(section, !section.favorited),
-              icon: Icon(section.favorited ? Icons.star_rounded : Icons.star_outline_rounded, size: 18),
-              label: Text(section.favorited ? l10n.dayReviewUnfavoriteSection : l10n.dayReviewFavoriteSection),
             ),
+          if (section != null && section.title.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: OmiSpacing.xxs, bottom: OmiSpacing.xs, right: OmiSpacing.xs),
+              child: Text(section.title, style: OmiType.headline.copyWith(color: OmiColors.textPrimary)),
+            ),
+          for (final p in paragraphs) ...[
+            Padding(padding: const EdgeInsets.only(right: OmiSpacing.xs), child: _paragraphBlock(review, p)),
+            for (final c in anchoredAt(p.index)) _userParagraph(c),
+            const SizedBox(height: OmiSpacing.xs),
+          ],
+          if (section != null && section.tags.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: OmiSpacing.xxs),
+              child: Wrap(spacing: 6, runSpacing: 4, children: [for (final t in section.tags) _tagChip(t)]),
+            ),
+          if (favorited)
+            Text(l10n.dayReviewSectionFavorited(clips.length),
+                style: OmiType.footnote.copyWith(color: OmiColors.warning)),
+          Row(
+            children: [
+              if (clips.isNotEmpty)
+                TextButton.icon(
+                  key: section == null ? null : Key('day_review_section_clips_${section.id}'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: OmiColors.textSecondary,
+                    padding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  onPressed: () {
+                    final id = section?.id;
+                    if (id == null) return;
+                    setState(() => open ? _openSections.remove(id) : _openSections.add(id));
+                  },
+                  icon: Icon(open ? Icons.expand_less_rounded : Icons.expand_more_rounded, size: 18),
+                  label: Text(open ? l10n.dayReviewHideClips : l10n.dayReviewSectionClips(clips.length),
+                      style: OmiType.footnote),
+                ),
+              const Spacer(),
+              IconButton(
+                tooltip: l10n.dayReviewAddParagraphHere,
+                visualDensity: VisualDensity.compact,
+                icon: Icon(Icons.add_rounded, size: 20, color: OmiColors.textSecondary),
+                onPressed: () => _addParagraph(paragraphs.isEmpty ? null : paragraphs.last.index),
+              ),
+              if (section != null && clips.isNotEmpty)
+                IconButton(
+                  key: Key('day_review_section_favorite_${section.id}'),
+                  tooltip: favorited ? l10n.dayReviewUnfavoriteSection : l10n.dayReviewFavoriteSection,
+                  visualDensity: VisualDensity.compact,
+                  icon: Icon(favorited ? Icons.star_rounded : Icons.star_outline_rounded,
+                      size: 22, color: favorited ? OmiColors.warning : OmiColors.textSecondary),
+                  onPressed: () => _favoriteSection(section, !favorited),
+                ),
+            ],
+          ),
+          if (open) ...[
+            const SizedBox(height: OmiSpacing.xxs),
+            for (final c in clips)
+              Padding(
+                padding: const EdgeInsets.only(right: OmiSpacing.xs),
+                child: _conversationTile(c, color: OmiColors.surface2),
+              ),
+          ],
         ],
       ),
     );
   }
+
+  Widget _group(String title, List<Widget> children, {bool initiallyExpanded = false}) => Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          initiallyExpanded: initiallyExpanded,
+          iconColor: OmiColors.textSecondary,
+          collapsedIconColor: OmiColors.textSecondary,
+          title: Text(title, style: OmiType.subhead.copyWith(color: OmiColors.textPrimary)),
+          children: children,
+        ),
+      );
 
   Widget _buildReviewView(DayReviewDay day, DayReview review) {
     final l10n = context.l10n;
@@ -803,85 +907,84 @@ class _DayReviewPageState extends State<DayReviewPage> {
             ? (c.afterParagraph == null || c.afterParagraph! >= paragraphs.length)
             : c.afterParagraph == index)
         .toList();
+    final byId = {for (final c in day.conversations) c.id: c};
     final kept = day.conversations.where((c) => review.keptConversationIds.contains(c.id)).toList();
     final rolled = day.conversations.where((c) => review.rolledUpConversationIds.contains(c.id)).toList();
     final dropped = day.conversations.where((c) => review.droppedConversationIds.contains(c.id)).toList();
     final merged = review.mergedGroups.length;
 
+    // One card per section: the paragraphs from where a section starts up to the next one.
+    // Text before any section (a review written before sections existed) is a card without a title.
+    final cards = <(DayReviewSection?, List<SummaryParagraph>)>[];
+    for (final p in paragraphs) {
+      final starting = sectionsStartingAt(review.sections, p.start);
+      if (starting.isNotEmpty || cards.isEmpty) cards.add((starting.isEmpty ? null : starting.last, []));
+      cards.last.$2.add(p);
+    }
+    final placed = {
+      for (final c in cards)
+        if (c.$1 != null) c.$1!.id
+    };
+    for (final s in review.sections) {
+      if (!placed.contains(s.id) && s.conversationIds.isNotEmpty) cards.add((s, []));
+    }
+
     return Column(
       children: [
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            padding: const EdgeInsets.fromLTRB(OmiSpacing.md, OmiSpacing.xs, OmiSpacing.md, OmiSpacing.xl),
             children: [
-              Text(_prettyDate, style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
-              const SizedBox(height: 4),
-              Text(review.title,
-                  style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 6),
+              Text(_prettyDate, style: OmiType.footnote.copyWith(color: OmiColors.textSecondary)),
+              const SizedBox(height: OmiSpacing.xxs),
+              Text(review.title, style: OmiType.title2.copyWith(color: OmiColors.textPrimary)),
+              const SizedBox(height: OmiSpacing.xxs),
               Text(
                   merged == 0 && dropped.isEmpty
                       ? l10n.dayReviewCounts(rolled.length, kept.length)
                       : l10n.dayReviewCountsFull(rolled.length, kept.length, merged, dropped.length),
-                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12.5)),
+                  style: OmiType.footnote.copyWith(color: OmiColors.textSecondary)),
               if (paragraphs.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(l10n.dayReviewEditHint, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                const SizedBox(height: OmiSpacing.xxs),
+                Text(l10n.dayReviewEditHint, style: OmiType.caption.copyWith(color: OmiColors.textSecondary)),
               ],
-              if (review.tags.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Wrap(spacing: 6, runSpacing: 6, children: [for (final t in review.tags) _tagChip(t)]),
+              const SizedBox(height: OmiSpacing.md),
+              if (kept.isNotEmpty) ...[
+                _group(l10n.dayReviewKeptTitle(kept.length), [for (final c in kept) _conversationTile(c)],
+                    initiallyExpanded: kept.length <= 3),
+                const SizedBox(height: OmiSpacing.xs),
               ],
-              const SizedBox(height: 16),
-              for (final p in paragraphs) ...[
-                for (final s in sectionsStartingAt(review.sections, p.start)) _sectionHeader(day, s),
-                _paragraphBlock(review, p),
-                for (final c in anchoredAt(p.index)) _userParagraph(c),
-                _addParagraphButton(p.index),
-                const SizedBox(height: 4),
-              ],
+              for (final card in cards) _sectionCard(review, card.$1, card.$2, byId, anchoredAt),
               for (final c in anchoredAt(null)) _userParagraph(c),
               if (paragraphs.isEmpty) _addParagraphButton(null),
+              if (review.tags.isNotEmpty) ...[
+                const SizedBox(height: OmiSpacing.md),
+                Text(l10n.dayReviewTagsTitle, style: OmiType.subhead.copyWith(color: OmiColors.textPrimary)),
+                const SizedBox(height: OmiSpacing.xs),
+                Wrap(spacing: 6, runSpacing: 6, children: [for (final t in review.tags) _tagChip(t)]),
+              ],
               if (review.corrections.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Text(l10n.dayReviewCorrectionsTitle,
-                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                const SizedBox(height: OmiSpacing.md),
+                Text(l10n.dayReviewCorrectionsTitle, style: OmiType.subhead.copyWith(color: OmiColors.textPrimary)),
                 for (final c in review.corrections) _correctionRow(c),
               ],
-              const SizedBox(height: 16),
-              if (kept.isNotEmpty)
-                ExpansionTile(
-                  tilePadding: EdgeInsets.zero,
-                  title: Text(l10n.dayReviewKeptTitle(kept.length), style: const TextStyle(color: Colors.white)),
-                  children: [for (final c in kept) _conversationTile(c)],
-                ),
+              const SizedBox(height: OmiSpacing.md),
               if (rolled.isNotEmpty)
-                ExpansionTile(
-                  tilePadding: EdgeInsets.zero,
-                  title: Text(l10n.dayReviewRolledTitle(rolled.length), style: const TextStyle(color: Colors.white)),
-                  children: [for (final c in rolled) _conversationTile(c)],
-                ),
+                _group(l10n.dayReviewRolledTitle(rolled.length), [for (final c in rolled) _conversationTile(c)]),
               if (merged > 0)
-                ExpansionTile(
-                  tilePadding: EdgeInsets.zero,
-                  title: Text(l10n.dayReviewMergedTitle(merged), style: const TextStyle(color: Colors.white)),
+                _group(l10n.dayReviewMergedTitle(merged), [
                   // The sources were merged away; only their count and ids remain.
-                  children: [
-                    for (final g in review.mergedGroups)
-                      ListTile(
-                        dense: true,
-                        leading: const Icon(Icons.call_merge_rounded, color: Colors.white70),
-                        title: Text(l10n.dayReviewMergeGroupLabel, style: const TextStyle(color: Colors.white70)),
-                        subtitle: Text('${g.length}', style: TextStyle(color: Colors.grey.shade500)),
-                      ),
-                  ],
-                ),
+                  for (final g in review.mergedGroups)
+                    ListTile(
+                      dense: true,
+                      leading: Icon(Icons.call_merge_rounded, color: OmiColors.textSecondary),
+                      title: Text(l10n.dayReviewMergeGroupLabel,
+                          style: OmiType.subhead.copyWith(color: OmiColors.textPrimary)),
+                      subtitle: Text('${g.length}', style: OmiType.footnote.copyWith(color: OmiColors.textSecondary)),
+                    ),
+                ]),
               if (dropped.isNotEmpty)
-                ExpansionTile(
-                  tilePadding: EdgeInsets.zero,
-                  title: Text(l10n.dayReviewDroppedTitle(dropped.length), style: const TextStyle(color: Colors.white)),
-                  children: [for (final c in dropped) _conversationTile(c)],
-                ),
+                _group(l10n.dayReviewDroppedTitle(dropped.length), [for (final c in dropped) _conversationTile(c)]),
             ],
           ),
         ),
@@ -889,15 +992,15 @@ class _DayReviewPageState extends State<DayReviewPage> {
           SafeArea(
             top: false,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              padding: const EdgeInsets.fromLTRB(OmiSpacing.md, OmiSpacing.xxs, OmiSpacing.md, OmiSpacing.sm),
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
+                    backgroundColor: OmiColors.accent,
+                    foregroundColor: OmiColors.surface0,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: const RoundedRectangleBorder(borderRadius: OmiRadius.lgAll),
                   ),
                   onPressed: _regenerate,
                   child: Text(l10n.dayReviewApplyButton(review.pendingCorrectionCount)),

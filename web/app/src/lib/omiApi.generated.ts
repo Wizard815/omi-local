@@ -954,6 +954,7 @@ export interface CalDavSyncResponse {
   errors?: Array<string>;
   events_pulled?: number;
   events_pushed?: number;
+  notes?: Array<string>;
   ok: boolean;
   tasks_imported?: number;
   tasks_pulled?: number;
@@ -3545,6 +3546,7 @@ export interface McpScreenActivitySummaryResponse {
 }
 
 export interface McpServerRequest {
+  access_token?: string | null;
   description?: string | null;
   mcp_server_url: string;
   name: string;
@@ -5813,14 +5815,18 @@ export interface TaskGoalLinkImportRequest {
 
 export interface TaskIntegrationData {
   access_token?: string | null;
+  base_url?: string | null;
   connected?: boolean;
   default_list_id?: string | null;
   default_list_title?: string | null;
   list_id?: string | null;
   list_name?: string | null;
+  owner_id?: string | null;
+  project?: string | null;
   project_gid?: string | null;
   project_name?: string | null;
   refresh_token?: string | null;
+  source?: string | null;
   space_id?: string | null;
   space_name?: string | null;
   team_id?: string | null;
@@ -10212,6 +10218,17 @@ export interface OmiApiPaths {
       responses: {
         "200": Array<Record<string, unknown>>;
         "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/mcp/day-reviews/{date}": {
+    get: {
+      operationId: "get_day_review_v1_mcp_day_reviews__date__get";
+      responses: {
+        "200": Record<string, unknown>;
+        "401": void;
+        "404": void;
         "422": HTTPValidationError;
       };
     };
@@ -18486,6 +18503,21 @@ export async function get_daily_summaries_v1_mcp_daily_summaries_get(query: { li
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
+export async function get_day_review_v1_mcp_day_reviews__date__get(path: { date: string }, init?: OmiApiClientInit): Promise<Record<string, unknown>> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/mcp/day-reviews/${path.date}`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "GET",
+    headers: {
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+    },
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
 export async function get_goals_v1_mcp_goals_get(query: { include_inactive?: boolean }, init?: OmiApiClientInit): Promise<Array<Record<string, unknown>>> {
   const _base = init?.baseURL ?? "";
   const _path = `/v1/mcp/goals`;
@@ -23866,4 +23898,4 @@ export async function get_speech_profile_v4_speech_profile_get(header: { authori
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
-// Total: 550 client methods generated.
+// Total: 551 client methods generated.

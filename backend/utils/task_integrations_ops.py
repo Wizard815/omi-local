@@ -25,6 +25,9 @@ OAUTH_CONFIGS = {
     'asana': {'name': 'Asana'},
     'google_tasks': {'name': 'Google Tasks'},
     'clickup': {'name': 'ClickUp'},
+    # Not OAuth: the ALLGlance gateway's fixed bearer token (utils/allglance.py seeds it
+    # from the stack's env; the app can also save it with PUT /v1/task-integrations/allglance).
+    'allglance': {'name': 'ALLGlance'},
 }
 
 http_client: Optional[httpx.AsyncClient] = None
@@ -417,6 +420,43 @@ async def create_task_internal(
                     "error_code": "api_error",
                     "status_code": response.status_code,
                 }
+
+        elif app_key == 'allglance':
+            base_url = str(integration.get('base_url') or '').rstrip('/')
+            if not base_url:
+                return {"success": False, "error": "No ALLGlance URL configured", "error_code": "no_base_url"}
+            # The gateway's REST mirror of allglance_create_task: Vikunja unless a source is chosen.
+            body: dict[str, Any] = {'title': title, 'source': integration.get('source') or 'vikunja'}
+            if description:
+                body['notes'] = description
+            if due_date:
+                body['due_date'] = due_date.strftime('%Y-%m-%d')
+            if integration.get('project'):
+                body['project'] = integration['project']
+            if integration.get('owner_id'):
+                body['owner_id'] = integration['owner_id']
+
+            request_sent = True
+            response = await client.post(
+                f'{base_url}/api/allglance/tasks',
+                headers={'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'},
+                json=body,
+            )
+            if response.status_code in [200, 201]:
+                payload = response.json() or {}
+                task = payload.get('task') or {}
+                external_id = task.get('id')
+                source = payload.get('source') or body['source']
+                return {
+                    "success": True,
+                    "external_task_id": f'{source}:{external_id}' if external_id is not None else None,
+                }
+            return {
+                "success": False,
+                "error": f"ALLGlance gateway error: {response.status_code}",
+                "error_code": "api_error",
+                "status_code": response.status_code,
+            }
 
         else:
             return {"success": False, "error": f"Unsupported integration: {app_key}", "error_code": "unsupported"}
