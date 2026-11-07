@@ -559,3 +559,70 @@ def process_recent_conversations(uid, arguments, auth_context=None):
         return process_recent(uid, hours=arguments.get('hours', 6), limit=arguments.get('limit', 20))
     except (ValueError, PermissionError) as error:
         raise ToolExecutionError(str(error), code=-32602) from error
+
+
+def get_day_review(
+    uid: str,
+    arguments: Dict[str, Any],
+    auth_context: Optional[ProductAuthorizationContext] = None,
+) -> Dict[str, Any]:
+    """The day bundle (omi-local): one date's sectioned summary with its tags, and the
+    conversations of that day with how the bundle sorted them. Compact: no transcripts."""
+    import database.notifications as notification_db
+    from utils import day_review_service
+
+    date = str(arguments.get('date') or '').strip()
+    if not date:
+        date = day_review_service.local_today(notification_db.get_user_time_zone(uid)).isoformat()
+    try:
+        day = day_review_service.get_day(uid, date)
+    except day_review_service.DayReviewError as error:
+        raise ToolExecutionError(error.message, code=-32602)
+    except ValueError as error:
+        raise ToolExecutionError(f'Invalid date: {error}', code=-32602)
+    review = day.get('review')
+    compact_review = None
+    if review:
+        compact_review = {
+            'title': review.get('title') or '',
+            'text': review.get('final_text') or '',
+            'tags': list(review.get('tags') or []),
+            'sections': [
+                {
+                    'id': s.get('id'),
+                    'title': s.get('title') or '',
+                    'text': s.get('text') or '',
+                    'tags': list(s.get('tags') or []),
+                    'conversation_ids': list(s.get('conversation_ids') or []),
+                    'favorited': bool(s.get('favorited')),
+                }
+                for s in review.get('sections') or []
+            ],
+            'kept_conversation_ids': list(review.get('kept_conversation_ids') or []),
+            'rolled_up_conversation_ids': list(review.get('rolled_up_conversation_ids') or []),
+            'generated_at': review.get('generated_at'),
+            'generation_count': review.get('generation_count', 0),
+        }
+    conversations = [
+        {
+            'id': c.get('id'),
+            'title': c.get('title') or '',
+            'overview': c.get('overview') or '',
+            'started_at': c.get('started_at'),
+            'finished_at': c.get('finished_at'),
+            'starred': bool(c.get('starred')),
+            'tags': list(c.get('tags') or []),
+            'in_bundle': bool(c.get('rolled_up')),
+            'dropped': bool(c.get('dropped')),
+            'held': bool(c.get('held')),
+        }
+        for c in day.get('conversations') or []
+    ]
+    return {
+        'date': date,
+        'bundled': compact_review is not None,
+        'review': compact_review,
+        'conversations': conversations,
+        'processing_count': day.get('processing_count', 0),
+        'hold_enabled': bool(day.get('hold_enabled')),
+    }

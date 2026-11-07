@@ -76,6 +76,7 @@ EXPECTED_TOOL_ORDER = [
     "dismiss_person",
     "get_screen_activity",
     "get_daily_summaries",
+    "get_day_review",
     "process_recent_conversations",
 ]
 
@@ -116,6 +117,14 @@ FAKE_SUCCESS = {
     "dismiss_person": {"success": True, "person_id": "p1", "dismissed": True},
     "get_screen_activity": {"screen_activity": []},
     "get_daily_summaries": {"daily_summaries": []},
+    "get_day_review": {
+        "date": "2026-10-27",
+        "bundled": False,
+        "review": None,
+        "conversations": [],
+        "processing_count": 0,
+        "hold_enabled": True,
+    },
 }
 
 
@@ -808,6 +817,7 @@ class TestUnknownsAndScope:
             "get_conversations_by_ids",
             "search_conversations",
             "get_daily_summaries",
+            "get_day_review",
         }
 
 

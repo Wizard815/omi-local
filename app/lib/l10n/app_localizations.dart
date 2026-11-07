@@ -26400,7 +26400,7 @@ abstract class AppLocalizations {
   /// Badge on a favorited section
   ///
   /// In en, this message translates to:
-  /// **'Kept as {count} conversation(s)'**
+  /// **'{count, plural, =1{Kept as its own conversation} other{Kept as {count} conversations}}'**
   String dayReviewSectionFavorited(int count);
 
   /// Heading above the day summary tag chips
@@ -26612,6 +26612,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'CalDAV settings saved'**
   String get caldavSaved;
+
+  /// Footer of a day summary section: how many conversations it covers; tap shows them
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 conversation} other{{count} conversations}}'**
+  String dayReviewSectionClips(int count);
+
+  /// Badge on a section that folded several short clips together
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 small clip} other{{count} small clips}}'**
+  String dayReviewSmallMoments(int count);
+
+  /// Tooltip of the small + button in a section footer
+  ///
+  /// In en, this message translates to:
+  /// **'Add a paragraph after this section'**
+  String get dayReviewAddParagraphHere;
+
+  /// Collapses a section's conversation list
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get dayReviewHideClips;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

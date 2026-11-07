@@ -80,3 +80,22 @@ def test_run_once_bundles_due_days_for_every_active_user_and_backs_off_failures(
 def test_run_once_is_a_no_op_when_auto_is_off(stack, monkeypatch):
     monkeypatch.setenv('OMI_DAY_BUNDLE_AUTO', 'off')
     assert scheduler.run_once(users=lambda: ['u1']) == {}
+
+
+def test_bundle_user_looks_back_lookback_days_past_days_not_counting_today(monkeypatch):
+    """A day held LOOKBACK_DAYS ago is still bundled: pending_dates counts today as its first day."""
+    asked = {}
+
+    def pending_dates(uid, days=7):
+        asked['days'] = days
+        return {'today': '2026-11-06', 'pending_dates': ['2026-10-30']}
+
+    bundled = []
+    monkeypatch.setattr(service, 'pending_dates', pending_dates)
+    monkeypatch.setattr(service, 'bundle', lambda uid, date_str: bundled.append(date_str))
+    monkeypatch.setattr(scheduler.notification_db, 'get_user_time_zone', lambda uid: None)
+    monkeypatch.setattr(scheduler.redis_db, 'r', _Redis())
+    monkeypatch.setenv('OMI_DAY_BUNDLE_HOUR', '3')
+    out = scheduler.bundle_user('u1', now=datetime(2026, 11, 6, 9, 0))
+    assert asked['days'] == scheduler.LOOKBACK_DAYS + 1
+    assert out == {'2026-10-30': 'bundled'} and bundled == ['2026-10-30']

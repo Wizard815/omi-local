@@ -1102,6 +1102,15 @@ def get_screen_activity(
 
 
 # ---------------------------------------------------------------------------
+# Day review (omi-local) — the day bundle: a date's sectioned summary and its conversations
+
+
+@router.get("/v1/mcp/day-reviews/{date}", tags=["mcp"], response_model=Dict[str, Any])
+def get_day_review(date: str, uid: str = Depends(get_uid_with_mcp_conversations_read)):
+    logger.info(f"get_day_review {uid} date={date}")
+    return _call_tool_handler("get_day_review", uid, {"date": date})
+
+
 # Daily summaries — Omi's per-day digest of the user's life
 # ---------------------------------------------------------------------------
 

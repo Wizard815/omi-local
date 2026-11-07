@@ -20,6 +20,7 @@ The model's per-section tags land on those conversations (utils/conversations/ta
 
 from __future__ import annotations
 
+from utils.caldav import sync as caldav_sync
 import os
 import uuid
 from dataclasses import dataclass
@@ -437,6 +438,7 @@ def finalize(
         conversations_db.update_conversation(uid, conversation.id, {DAY_REVIEW_DATE_FIELD: date_str})
         lifecycle.discard(uid, conversation.id)
     _apply_section_tags(uid, rolled, sections)
+    caldav_sync.mark_dirty(uid)
     return present({**review, 'date': date_str})
 
 
@@ -486,6 +488,7 @@ def favorite_section(uid: str, date_str: str, section_id: str, favorited: bool) 
         }
     )
     day_reviews_db.set_day_review(uid, date_str, review)
+    caldav_sync.mark_dirty(uid)
     return present(review)
 
 

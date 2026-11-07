@@ -208,3 +208,29 @@ async def test_refresh_mcp_tools_does_not_leak_exception():
         assert exc_info.value.status_code == 502
         assert exc_info.value.detail == "Failed to discover tools"
         assert SENSITIVE_TRACE not in str(exc_info.value.detail)
+
+
+@pytest.mark.asyncio
+async def test_add_mcp_server_with_a_fixed_token_skips_oauth_and_stores_the_token():
+    """A self-hosted gateway (ALLGlance) is bearer-token protected and has no OAuth: the
+    token is sent at discovery and kept with the app for every later tool call."""
+    request = McpServerRequest(name="ALLGlance", mcp_server_url="http://nas:8090/mcp", access_token="gw-token")
+    saved = {}
+    with patch("routers.apps.discover_oauth_metadata", new_callable=AsyncMock) as mock_oauth, patch(
+        "routers.apps.discover_mcp_tools", new_callable=AsyncMock
+    ) as mock_disc, patch("routers.apps.fetch_brandfetch_logo", new_callable=AsyncMock, return_value=""), patch(
+        "routers.apps.get_user_from_uid", return_value={"display_name": "Sam", "email": "s@x"}
+    ), patch(
+        "routers.apps.add_app_to_db", side_effect=lambda d: saved.update(d)
+    ):
+        from models.app import ChatTool
+
+        mock_disc.return_value = [
+            ChatTool(name="allglance_get_day", description="d", endpoint="http://nas:8090/mcp", is_mcp=True)
+        ]
+        out = await add_mcp_server(data=request, uid="test-user-123")
+
+    mock_oauth.assert_not_called()
+    mock_disc.assert_awaited_once_with("http://nas:8090/mcp", "gw-token")
+    assert out["requires_oauth"] is False and out["tool_names"] == ["allglance_get_day"]
+    assert saved["external_integration"]["mcp_oauth_tokens"] == {"access_token": "gw-token", "token_type": "static"}

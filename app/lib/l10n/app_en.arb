@@ -18391,7 +18391,7 @@
     "@dayReviewUnfavoriteSection": {
         "description": "Button on a favorited section: fold its conversations back into the summary"
     },
-    "dayReviewSectionFavorited": "Kept as {count} conversation(s)",
+    "dayReviewSectionFavorited": "{count, plural, =1{Kept as its own conversation} other{Kept as {count} conversations}}",
     "@dayReviewSectionFavorited": {
         "description": "Badge on a favorited section",
         "placeholders": {
@@ -18580,5 +18580,31 @@
     "caldavSaved": "CalDAV settings saved",
     "@caldavSaved": {
         "description": "Toast"
+    },
+    "dayReviewSectionClips": "{count, plural, =1{1 conversation} other{{count} conversations}}",
+    "@dayReviewSectionClips": {
+        "description": "Footer of a day summary section: how many conversations it covers; tap shows them",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewSmallMoments": "{count, plural, =1{1 small clip} other{{count} small clips}}",
+    "@dayReviewSmallMoments": {
+        "description": "Badge on a section that folded several short clips together",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "dayReviewAddParagraphHere": "Add a paragraph after this section",
+    "@dayReviewAddParagraphHere": {
+        "description": "Tooltip of the small + button in a section footer"
+    },
+    "dayReviewHideClips": "Hide",
+    "@dayReviewHideClips": {
+        "description": "Collapses a section's conversation list"
     }
 }
