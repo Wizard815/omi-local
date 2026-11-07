@@ -39,11 +39,11 @@ def world(monkeypatch):
             store[cid]['structured'].__setitem__('events', events),
         ),
     )
+    integration = {'base_url': 'http://nas:8090/', 'access_token': 'gw-token'}
     monkeypatch.setattr(
-        fc.users_db,
-        'get_task_integration',
-        lambda uid, key: {'base_url': 'http://nas:8090/', 'access_token': 'gw-token'} if key == 'allglance' else None,
+        fc.users_db, 'get_task_integration', lambda uid, key: integration if key == 'allglance' else None
     )
+    monkeypatch.setattr(fc.users_db, 'set_task_integration', lambda uid, key, data: integration.update(data))
     return store, saved
 
 
@@ -146,3 +146,37 @@ def test_decline_marks_the_event_and_drops_it_from_the_queue(world):
     assert waiting == [] and recent[0].declined
     with pytest.raises(LookupError):
         fc.decline('u1', 'c1', 5)
+
+
+def test_bound_to_a_member_the_event_is_created_as_that_member(world):
+    store, _ = world
+    store['c1'] = _conversation('c1', [{'title': 'Inspection', 'start': NOW + timedelta(days=1), 'duration': 30}])
+    fc.set_owner('u1', 'u-sam')
+    assert fc.integration('u1')['owner_id'] == 'u-sam'
+    sent = []
+
+    def handler(request: httpx.Request):
+        import json
+
+        sent.append(json.loads(request.read()))
+        return httpx.Response(201, json={'source': 'dayglance', 'task': {'id': 'b1'}})
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    asyncio.run(fc.approve('u1', 'c1', 0, client=client))
+    assert sent[0]['owner_id'] == 'u-sam'
+    fc.set_owner('u1', None)
+    assert fc.integration('u1')['owner_id'] is None
+
+
+def test_members_come_from_the_gateway_roster_and_an_unreachable_gateway_means_none(world):
+    ok = httpx.AsyncClient(
+        transport=httpx.MockTransport(
+            lambda r: httpx.Response(
+                200, json={'users': [{'id': 'u-sam', 'name': 'Sam', 'source': 'dayglance'}, {'id': 7, 'name': ''}]}
+            )
+        )
+    )
+    target = fc.integration('u1')
+    assert asyncio.run(fc.members(target, client=ok)) == [{'id': 'u-sam', 'name': 'Sam'}, {'id': '7', 'name': '7'}]
+    down = httpx.AsyncClient(transport=httpx.MockTransport(lambda r: (_ for _ in ()).throw(httpx.ConnectError('down'))))
+    assert asyncio.run(fc.members(target, client=down)) == []
