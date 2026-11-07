@@ -38,6 +38,7 @@ from routers import (
     dashboard,
     caldav,
     day_reviews,
+    family_calendar,
     device_calendar,
     dream_cohort,
     dream_report,
@@ -262,6 +263,7 @@ ROUTER_MOUNTS: tuple[Mount, ...] = (
     Mount(folders),
     Mount(day_reviews),  # omi-local
     Mount(caldav),  # omi-local
+    Mount(family_calendar),  # omi-local
     Mount(search),
     Mount(knowledge_graph),
     Mount(goals),

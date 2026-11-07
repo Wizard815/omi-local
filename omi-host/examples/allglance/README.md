@@ -9,6 +9,7 @@ milestones. Omi connects to it three ways, and each one is a setting on one side
 | Omi → Vikunja, CalDAV | every open action item as a VTODO, both ways: tick it in Vikunja and Omi completes it; add one in Vikunja and Omi gets it | `CALDAV_DEFAULT_URL=http://<host>:8090/dav/` with `CALDAV_USER` / `CALDAV_PASSWORD` set to a Vikunja login (or a Vikunja CalDAV token) |
 | Omi → gateway, MCP + REST | the chat assistant gets `allglance_get_day`, `allglance_list_tasks`, `allglance_list_chores`, `allglance_list_milestones`, `allglance_create_task`, …; a new Omi action item is created in Vikunja at once | `ALLGLANCE_URL=http://<host>:8090`, `ALLGLANCE_TOKEN=<the gateway's GATEWAY_TOKEN>` |
 | gateway → Omi, MCP | Claude (or anything on the gateway) gets `omi_get_day_review`, `omi_get_conversations`, `omi_search_memories`, …, and `allglance_get_day` carries Omi's day summary | in ALLGlance's `.env.allglance`: `OMI_URL=http://<host>:8000`, `OMI_MCP_TOKEN=<an Omi MCP key>` |
+| Omi → dayGLANCE, **after asking** | a date Omi hears ("the inspection is Friday at eleven") goes on the family calendar as a dayGLANCE block, but only once you have checked it in the app: *Settings → Family calendar* (or the "events to check" card on the conversation list) shows each heard event with its date, time and length to fix, add or decline | the same `ALLGLANCE_URL` / `ALLGLANCE_TOKEN`; the gateway needs dayGLANCE on (`ENABLE_DAYGLANCE=true`, `DAYGLANCE_MCP_HOST/PORT/TOKEN` in `.env.allglance`) |
 
 **Where.**
 
@@ -25,6 +26,15 @@ milestones. Omi connects to it three ways, and each one is a setting on one side
 - `backend/utils/caldav/sync.py`: the sync looks for an events calendar only when an
   event direction is on, and when the server has none (Vikunja: task lists only) it syncs
   the tasks and says so in the sync report instead of failing.
+- `backend/utils/family_calendar.py` + `routers/family_calendar.py`: `GET /v1/family-calendar`
+  lists the events heard in the last week that nobody has reviewed (and the ones reviewed
+  lately); `POST /v1/family-calendar/events` writes **one** approved event, with the user's
+  corrections, as `POST /api/allglance/tasks` `{source: "dayglance", start: "YYYY-MM-DD HH:MM",
+  duration_minutes}` in the member's time zone, and stores `calendar: "allglance"` and
+  `external_id: "dayglance:<id>"` on the conversation's event; `POST
+  /v1/family-calendar/events/decline` stores `declined`. That is the only writer: no
+  scheduler, no hook in conversation processing, so an event never appears on the family
+  calendar unseen. App: `app/lib/pages/family_calendar/`.
 - `backend/utils/mcp_server/handlers/other.py`: the `get_day_review` MCP tool (also
   `GET /v1/mcp/day-reviews/{date}`), what the gateway's `omi_get_day_review` and
   `allglance_get_day` read.
@@ -33,7 +43,9 @@ milestones. Omi connects to it three ways, and each one is a setting on one side
 the tasks are: the gateway already fronts both calendars and agents, so Omi plugs into
 it instead of growing a second task list. CalDAV carries the tasks because it is the one
 protocol every task app speaks; MCP carries the rest because the gateway and Omi both
-already serve it.
+already serve it. Events ask first because the extractor is wrong about dates often enough
+(a weekday said on a Sunday, "at three" that was 3 pm, a guessed length) that an unreviewed
+family calendar would stop being trusted; one look per event costs seconds.
 
 ## Set-up (ten minutes)
 
@@ -62,8 +74,8 @@ day go" from Omi.
 
 ## What is not synced, and why
 
-- Day summaries and conversation events do not go to Vikunja over CalDAV: Vikunja has
-  task lists only. They reach ALLGlance through MCP (`omi_get_day_review`). To have them
+- Heard events go to dayGLANCE only through the review above, never on their own; events
+  (and day summaries) do not go to Vikunja over CalDAV: Vikunja has task lists only. They reach ALLGlance through MCP (`omi_get_day_review`). To have them
   on a calendar too, keep Omi's bundled Radicale as the CalDAV server instead; Omi talks
   to one CalDAV server per member.
 - Omi's action items are not a task source inside the gateway: they are already in

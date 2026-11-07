@@ -231,25 +231,34 @@ class GeneratedPluginResult {
 }
 
 class GeneratedEvent {
+  final String? calendar;
   final bool created;
+  final bool declined;
   final String description;
   final int duration;
+  final String? externalId;
   final DateTime start;
   final String title;
 
   const GeneratedEvent({
+    this.calendar,
     this.created = false,
+    this.declined = false,
     this.description = "",
     this.duration = 30,
+    this.externalId,
     required this.start,
     required this.title,
   });
 
   factory GeneratedEvent.fromJson(Map<String, dynamic> json) {
     return GeneratedEvent(
+      calendar: _readFieldValue<String>(_readField(json, const ["calendar"]), "calendar", _readString, requiredField: false, nullable: true),
       created: _required(_readFieldValue<bool>(_readField(json, const ["created"]), "created", _readBool, requiredField: false, nullable: false, defaultValue: false), "created"),
+      declined: _required(_readFieldValue<bool>(_readField(json, const ["declined"]), "declined", _readBool, requiredField: false, nullable: false, defaultValue: false), "declined"),
       description: _required(_readFieldValue<String>(_readField(json, const ["description"]), "description", _readString, requiredField: false, nullable: false, defaultValue: ""), "description"),
       duration: _required(_readFieldValue<int>(_readField(json, const ["duration"]), "duration", _readInt, requiredField: false, nullable: false, defaultValue: 30), "duration"),
+      externalId: _readFieldValue<String>(_readField(json, const ["external_id"]), "external_id", _readString, requiredField: false, nullable: true),
       start: _required(_readFieldValue<DateTime>(_readField(json, const ["start", "startsAt"]), "start", _readDateTime, requiredField: true, nullable: false), "start"),
       title: _required(_readFieldValue<String>(_readField(json, const ["title"]), "title", _readString, requiredField: true, nullable: false), "title"),
     );
@@ -257,9 +266,12 @@ class GeneratedEvent {
 
   Map<String, dynamic> toJson() {
     return {
+      'calendar': calendar,
       'created': created,
+      'declined': declined,
       'description': description,
       'duration': duration,
+      'external_id': externalId,
       'start': start.toUtc().toIso8601String(),
       'title': title,
     };

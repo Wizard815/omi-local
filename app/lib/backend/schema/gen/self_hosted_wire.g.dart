@@ -802,6 +802,194 @@ class GeneratedCalDavSyncResponse {
   }
 }
 
+class GeneratedFamilyCalendarEvent {
+  final String? calendar;
+  final String conversationId;
+  final String conversationTitle;
+  final bool created;
+  final bool declined;
+  final String description;
+  final int duration;
+  final int eventIdx;
+  final String? externalId;
+  final DateTime? heardAt;
+  final DateTime start;
+  final String title;
+
+  const GeneratedFamilyCalendarEvent({
+    this.calendar,
+    required this.conversationId,
+    this.conversationTitle = "",
+    this.created = false,
+    this.declined = false,
+    this.description = "",
+    this.duration = 30,
+    required this.eventIdx,
+    this.externalId,
+    this.heardAt,
+    required this.start,
+    required this.title,
+  });
+
+  factory GeneratedFamilyCalendarEvent.fromJson(Map<String, dynamic> json) {
+    return GeneratedFamilyCalendarEvent(
+      calendar: _readFieldValue<String>(_readField(json, const ["calendar"]), "calendar", _readString, requiredField: false, nullable: true),
+      conversationId: _required(_readFieldValue<String>(_readField(json, const ["conversation_id"]), "conversation_id", _readString, requiredField: true, nullable: false), "conversation_id"),
+      conversationTitle: _required(_readFieldValue<String>(_readField(json, const ["conversation_title"]), "conversation_title", _readString, requiredField: false, nullable: false, defaultValue: ""), "conversation_title"),
+      created: _required(_readFieldValue<bool>(_readField(json, const ["created"]), "created", _readBool, requiredField: false, nullable: false, defaultValue: false), "created"),
+      declined: _required(_readFieldValue<bool>(_readField(json, const ["declined"]), "declined", _readBool, requiredField: false, nullable: false, defaultValue: false), "declined"),
+      description: _required(_readFieldValue<String>(_readField(json, const ["description"]), "description", _readString, requiredField: false, nullable: false, defaultValue: ""), "description"),
+      duration: _required(_readFieldValue<int>(_readField(json, const ["duration"]), "duration", _readInt, requiredField: false, nullable: false, defaultValue: 30), "duration"),
+      eventIdx: _required(_readFieldValue<int>(_readField(json, const ["event_idx"]), "event_idx", _readInt, requiredField: true, nullable: false), "event_idx"),
+      externalId: _readFieldValue<String>(_readField(json, const ["external_id"]), "external_id", _readString, requiredField: false, nullable: true),
+      heardAt: _readFieldValue<DateTime>(_readField(json, const ["heard_at"]), "heard_at", _readDateTime, requiredField: false, nullable: true),
+      start: _required(_readFieldValue<DateTime>(_readField(json, const ["start"]), "start", _readDateTime, requiredField: true, nullable: false), "start"),
+      title: _required(_readFieldValue<String>(_readField(json, const ["title"]), "title", _readString, requiredField: true, nullable: false), "title"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'calendar': calendar,
+      'conversation_id': conversationId,
+      'conversation_title': conversationTitle,
+      'created': created,
+      'declined': declined,
+      'description': description,
+      'duration': duration,
+      'event_idx': eventIdx,
+      'external_id': externalId,
+      'heard_at': heardAt?.toUtc().toIso8601String(),
+      'start': start.toUtc().toIso8601String(),
+      'title': title,
+    };
+  }
+}
+
+class GeneratedFamilyCalendarResponse {
+  final bool configured;
+  final String label;
+  final List<GeneratedFamilyCalendarEvent>? pending;
+  final List<GeneratedFamilyCalendarEvent>? recent;
+
+  const GeneratedFamilyCalendarResponse({
+    required this.configured,
+    this.label = "",
+    this.pending,
+    this.recent,
+  });
+
+  factory GeneratedFamilyCalendarResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedFamilyCalendarResponse(
+      configured: _required(_readFieldValue<bool>(_readField(json, const ["configured"]), "configured", _readBool, requiredField: true, nullable: false), "configured"),
+      label: _required(_readFieldValue<String>(_readField(json, const ["label"]), "label", _readString, requiredField: false, nullable: false, defaultValue: ""), "label"),
+      pending: _readFieldValue<List<GeneratedFamilyCalendarEvent>>(_readField(json, const ["pending"]), "pending", (value) => _readObjectList(value, GeneratedFamilyCalendarEvent.fromJson), requiredField: false, nullable: true),
+      recent: _readFieldValue<List<GeneratedFamilyCalendarEvent>>(_readField(json, const ["recent"]), "recent", (value) => _readObjectList(value, GeneratedFamilyCalendarEvent.fromJson), requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'configured': configured,
+      'label': label,
+      'pending': pending?.map((value) => value.toJson()).toList(),
+      'recent': recent?.map((value) => value.toJson()).toList(),
+    };
+  }
+}
+
+class GeneratedApproveFamilyCalendarEventRequest {
+  final String conversationId;
+  final String? description;
+  final int? duration;
+  final int eventIdx;
+  final DateTime? start;
+  final String? title;
+
+  const GeneratedApproveFamilyCalendarEventRequest({
+    required this.conversationId,
+    this.description,
+    this.duration,
+    required this.eventIdx,
+    this.start,
+    this.title,
+  });
+
+  factory GeneratedApproveFamilyCalendarEventRequest.fromJson(Map<String, dynamic> json) {
+    return GeneratedApproveFamilyCalendarEventRequest(
+      conversationId: _required(_readFieldValue<String>(_readField(json, const ["conversation_id"]), "conversation_id", _readString, requiredField: true, nullable: false), "conversation_id"),
+      description: _readFieldValue<String>(_readField(json, const ["description"]), "description", _readString, requiredField: false, nullable: true),
+      duration: _readFieldValue<int>(_readField(json, const ["duration"]), "duration", _readInt, requiredField: false, nullable: true),
+      eventIdx: _required(_readFieldValue<int>(_readField(json, const ["event_idx"]), "event_idx", _readInt, requiredField: true, nullable: false), "event_idx"),
+      start: _readFieldValue<DateTime>(_readField(json, const ["start"]), "start", _readDateTime, requiredField: false, nullable: true),
+      title: _readFieldValue<String>(_readField(json, const ["title"]), "title", _readString, requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'conversation_id': conversationId,
+      'description': description,
+      'duration': duration,
+      'event_idx': eventIdx,
+      'start': start?.toUtc().toIso8601String(),
+      'title': title,
+    };
+  }
+}
+
+class GeneratedDeclineFamilyCalendarEventRequest {
+  final String conversationId;
+  final int eventIdx;
+
+  const GeneratedDeclineFamilyCalendarEventRequest({
+    required this.conversationId,
+    required this.eventIdx,
+  });
+
+  factory GeneratedDeclineFamilyCalendarEventRequest.fromJson(Map<String, dynamic> json) {
+    return GeneratedDeclineFamilyCalendarEventRequest(
+      conversationId: _required(_readFieldValue<String>(_readField(json, const ["conversation_id"]), "conversation_id", _readString, requiredField: true, nullable: false), "conversation_id"),
+      eventIdx: _required(_readFieldValue<int>(_readField(json, const ["event_idx"]), "event_idx", _readInt, requiredField: true, nullable: false), "event_idx"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'conversation_id': conversationId,
+      'event_idx': eventIdx,
+    };
+  }
+}
+
+class GeneratedFamilyCalendarEventResponse {
+  final String error;
+  final GeneratedFamilyCalendarEvent? event;
+  final bool ok;
+
+  const GeneratedFamilyCalendarEventResponse({
+    this.error = "",
+    this.event,
+    required this.ok,
+  });
+
+  factory GeneratedFamilyCalendarEventResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedFamilyCalendarEventResponse(
+      error: _required(_readFieldValue<String>(_readField(json, const ["error"]), "error", _readString, requiredField: false, nullable: false, defaultValue: ""), "error"),
+      event: _readFieldValue<GeneratedFamilyCalendarEvent>(_readField(json, const ["event"]), "event", (value) => _readObject(value, GeneratedFamilyCalendarEvent.fromJson), requiredField: false, nullable: true),
+      ok: _required(_readFieldValue<bool>(_readField(json, const ["ok"]), "ok", _readBool, requiredField: true, nullable: false), "ok"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'error': error,
+      'event': event?.toJson(),
+      'ok': ok,
+    };
+  }
+}
+
 class _WireField {
   final bool present;
   final dynamic value;
