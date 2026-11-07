@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "images": [
+    {
+      "file": "001-mobile-android-family-calendar-heard-events.png",
+      "platform": "mobile-android",
+      "description": "Three heard events waiting for a check, each with editable title, date, time and length",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "002-mobile-android-family-calendar-edited-length.png",
+      "platform": "mobile-android",
+      "description": "The length chip changed to 90 min; the card says what will be added",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "003-mobile-android-family-calendar-reviewed-lately.png",
+      "platform": "mobile-android",
+      "description": "Nothing left to check; one event on the family calendar, one declined",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "004-mobile-android-family-calendar-not-set.png",
+      "platform": "mobile-android",
+      "description": "No ALLGlance gateway set: how to wire it",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    }
+  ]
+}

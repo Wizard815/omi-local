@@ -10,6 +10,7 @@ import 'package:visibility_detector/visibility_detector.dart';
 import 'package:omi/backend/schema/conversation.dart';
 import 'package:omi/pages/capture/widgets/widgets.dart';
 import 'package:omi/pages/day_review/day_review_banner.dart';
+import 'package:omi/pages/family_calendar/family_calendar_banner.dart';
 import 'package:omi/pages/held_audio/held_audio_views.dart';
 import 'package:omi/pages/on_device/on_device_queue_banner.dart';
 import 'package:omi/pages/conversations/widgets/processing_capture.dart';
@@ -670,6 +671,8 @@ class _ConversationsPageState extends State<ConversationsPage> with AutomaticKee
               ),
               // End-of-day review nudge: sort an unsorted day into kept conversations + one summary.
               if (convoProvider.previousQuery.isEmpty) const SliverToBoxAdapter(child: DayReviewBanner()),
+              // Dates Omi heard wait for a check before they go to the family calendar.
+              if (convoProvider.previousQuery.isEmpty) const SliverToBoxAdapter(child: FamilyCalendarBanner()),
               // Phone-local recordings stay with their conversations. Device catch-up lives on Device.
               const SliverToBoxAdapter(child: OnDeviceQueueBanner()),
               const SliverToBoxAdapter(child: HeldAudioHomeSection()),

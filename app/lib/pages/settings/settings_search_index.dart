@@ -24,6 +24,7 @@ enum SettingsDestination {
   integrations,
   taskIntegrations,
   caldav,
+  familyCalendar,
   permissions,
   memories,
   goals,
@@ -206,6 +207,8 @@ final List<SettingsSearchEntry> settingsSearchEntries = [
       'lib/pages/settings/integrations_page.dart'),
   // omi-local: CalDAV tasks + calendar sync.
   SettingsSearchEntry('caldav', (l) => l.caldavSettingsTitle, SettingsDestination.caldav, _drawer),
+  // omi-local: confirm heard events before they go to the family calendar (dayGLANCE via ALLGlance).
+  SettingsSearchEntry('familyCalendar', (l) => l.familyCalendarTitle, SettingsDestination.familyCalendar, _drawer),
 
   // Data & Privacy group
   SettingsSearchEntry('dataProtection', (l) => l.dataProtection, SettingsDestination.dataPrivacy, _groups),
