@@ -866,15 +866,45 @@ class GeneratedFamilyCalendarEvent {
   }
 }
 
+class GeneratedFamilyCalendarMember {
+  final String id;
+  final String name;
+
+  const GeneratedFamilyCalendarMember({
+    required this.id,
+    required this.name,
+  });
+
+  factory GeneratedFamilyCalendarMember.fromJson(Map<String, dynamic> json) {
+    return GeneratedFamilyCalendarMember(
+      id: _required(_readFieldValue<String>(_readField(json, const ["id"]), "id", _readString, requiredField: true, nullable: false), "id"),
+      name: _required(_readFieldValue<String>(_readField(json, const ["name"]), "name", _readString, requiredField: true, nullable: false), "name"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+    };
+  }
+}
+
 class GeneratedFamilyCalendarResponse {
   final bool configured;
   final String label;
+  final List<GeneratedFamilyCalendarMember>? members;
+  final String? ownerId;
+  final String ownerName;
   final List<GeneratedFamilyCalendarEvent>? pending;
   final List<GeneratedFamilyCalendarEvent>? recent;
 
   const GeneratedFamilyCalendarResponse({
     required this.configured,
     this.label = "",
+    this.members,
+    this.ownerId,
+    this.ownerName = "",
     this.pending,
     this.recent,
   });
@@ -883,6 +913,9 @@ class GeneratedFamilyCalendarResponse {
     return GeneratedFamilyCalendarResponse(
       configured: _required(_readFieldValue<bool>(_readField(json, const ["configured"]), "configured", _readBool, requiredField: true, nullable: false), "configured"),
       label: _required(_readFieldValue<String>(_readField(json, const ["label"]), "label", _readString, requiredField: false, nullable: false, defaultValue: ""), "label"),
+      members: _readFieldValue<List<GeneratedFamilyCalendarMember>>(_readField(json, const ["members"]), "members", (value) => _readObjectList(value, GeneratedFamilyCalendarMember.fromJson), requiredField: false, nullable: true),
+      ownerId: _readFieldValue<String>(_readField(json, const ["owner_id"]), "owner_id", _readString, requiredField: false, nullable: true),
+      ownerName: _required(_readFieldValue<String>(_readField(json, const ["owner_name"]), "owner_name", _readString, requiredField: false, nullable: false, defaultValue: ""), "owner_name"),
       pending: _readFieldValue<List<GeneratedFamilyCalendarEvent>>(_readField(json, const ["pending"]), "pending", (value) => _readObjectList(value, GeneratedFamilyCalendarEvent.fromJson), requiredField: false, nullable: true),
       recent: _readFieldValue<List<GeneratedFamilyCalendarEvent>>(_readField(json, const ["recent"]), "recent", (value) => _readObjectList(value, GeneratedFamilyCalendarEvent.fromJson), requiredField: false, nullable: true),
     );
@@ -892,8 +925,31 @@ class GeneratedFamilyCalendarResponse {
     return {
       'configured': configured,
       'label': label,
+      'members': members?.map((value) => value.toJson()).toList(),
+      'owner_id': ownerId,
+      'owner_name': ownerName,
       'pending': pending?.map((value) => value.toJson()).toList(),
       'recent': recent?.map((value) => value.toJson()).toList(),
+    };
+  }
+}
+
+class GeneratedSetFamilyCalendarOwnerRequest {
+  final String? ownerId;
+
+  const GeneratedSetFamilyCalendarOwnerRequest({
+    this.ownerId,
+  });
+
+  factory GeneratedSetFamilyCalendarOwnerRequest.fromJson(Map<String, dynamic> json) {
+    return GeneratedSetFamilyCalendarOwnerRequest(
+      ownerId: _readFieldValue<String>(_readField(json, const ["owner_id"]), "owner_id", _readString, requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'owner_id': ownerId,
     };
   }
 }

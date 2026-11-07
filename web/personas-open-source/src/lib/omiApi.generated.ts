@@ -2869,9 +2869,17 @@ export interface FamilyCalendarEventResponse {
   ok: boolean;
 }
 
+export interface FamilyCalendarMember {
+  id: string;
+  name: string;
+}
+
 export interface FamilyCalendarResponse {
   configured: boolean;
   label?: string;
+  members?: Array<FamilyCalendarMember>;
+  owner_id?: string | null;
+  owner_name?: string;
   pending?: Array<FamilyCalendarEvent>;
   recent?: Array<FamilyCalendarEvent>;
 }
@@ -5079,6 +5087,10 @@ export interface SetDefaultPaymentMethodRequest {
   method: string;
 }
 
+export interface SetFamilyCalendarOwnerRequest {
+  owner_id?: string | null;
+}
+
 export interface SetUserLanguageRequest {
   language: string;
 }
@@ -6937,6 +6949,7 @@ export interface OmiApiSchemas {
   "FairUseUsagePctResponse": FairUseUsagePctResponse;
   "FamilyCalendarEvent": FamilyCalendarEvent;
   "FamilyCalendarEventResponse": FamilyCalendarEventResponse;
+  "FamilyCalendarMember": FamilyCalendarMember;
   "FamilyCalendarResponse": FamilyCalendarResponse;
   "FavoriteDayReviewSectionRequest": FavoriteDayReviewSectionRequest;
   "FcmTokenResponse": FcmTokenResponse;
@@ -7236,6 +7249,7 @@ export interface OmiApiSchemas {
   "SetConversationTagsRequest": SetConversationTagsRequest;
   "SetConversationTitleOperation": SetConversationTitleOperation;
   "SetDefaultPaymentMethodRequest": SetDefaultPaymentMethodRequest;
+  "SetFamilyCalendarOwnerRequest": SetFamilyCalendarOwnerRequest;
   "SetUserLanguageRequest": SetUserLanguageRequest;
   "SetUserWebhookUrlRequest": SetUserWebhookUrlRequest;
   "ShareActionItemsResponse": ShareActionItemsResponse;
@@ -9576,6 +9590,16 @@ export interface OmiApiPaths {
       operationId: "decline_family_calendar_event_v1_family_calendar_events_decline_post";
       responses: {
         "200": FamilyCalendarEventResponse;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/family-calendar/owner": {
+    put: {
+      operationId: "set_family_calendar_owner_v1_family_calendar_owner_put";
+      responses: {
+        "200": FamilyCalendarResponse;
         "401": void;
         "422": HTTPValidationError;
       };
@@ -17183,6 +17207,27 @@ export async function decline_family_calendar_event_v1_family_calendar_events_de
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
+export async function set_family_calendar_owner_v1_family_calendar_owner_put(header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, body: SetFamilyCalendarOwnerRequest, init?: OmiApiClientInit): Promise<FamilyCalendarResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/family-calendar/owner`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "PUT",
+    headers: {
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
 export async function get_folders_v1_folders_get(header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<Array<Folder>> {
   const _base = init?.baseURL ?? "";
   const _path = `/v1/folders`;
@@ -24039,4 +24084,4 @@ export async function get_speech_profile_v4_speech_profile_get(header: { authori
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
-// Total: 554 client methods generated.
+// Total: 555 client methods generated.

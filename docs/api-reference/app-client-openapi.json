@@ -17886,6 +17886,24 @@
         "title": "FamilyCalendarEventResponse",
         "type": "object"
       },
+      "FamilyCalendarMember": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "FamilyCalendarMember",
+        "type": "object"
+      },
       "FamilyCalendarResponse": {
         "properties": {
           "configured": {
@@ -17897,6 +17915,31 @@
             "default": "",
             "description": "What to call it in the app",
             "title": "Label",
+            "type": "string"
+          },
+          "members": {
+            "description": "The household (the gateway's roster); empty when it could not be read",
+            "items": {
+              "$ref": "#/components/schemas/FamilyCalendarMember"
+            },
+            "title": "Members",
+            "type": "array"
+          },
+          "owner_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The member Omi adds events as; None = the whole family",
+            "title": "Owner Id"
+          },
+          "owner_name": {
+            "default": "",
+            "title": "Owner Name",
             "type": "string"
           },
           "pending": {
@@ -31221,6 +31264,25 @@
           "method"
         ],
         "title": "SetDefaultPaymentMethodRequest",
+        "type": "object"
+      },
+      "SetFamilyCalendarOwnerRequest": {
+        "properties": {
+          "owner_id": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A member id from the roster; null = whole family",
+            "title": "Owner Id"
+          }
+        },
+        "title": "SetFamilyCalendarOwnerRequest",
         "type": "object"
       },
       "SetUserLanguageRequest": {
@@ -58880,7 +58942,7 @@
     },
     "/v1/family-calendar": {
       "get": {
-        "description": "Whether a family calendar is set, the events waiting for review, and the ones reviewed lately.",
+        "description": "Whether a family calendar is set, the household and the member Omi acts as, the events waiting\nfor review, and the ones reviewed lately.",
         "operationId": "get_family_calendar_v1_family_calendar_get",
         "parameters": [
           {
@@ -59126,6 +59188,94 @@
           }
         ],
         "summary": "Decline Family Calendar Event",
+        "tags": [
+          "family-calendar"
+        ]
+      }
+    },
+    "/v1/family-calendar/owner": {
+      "put": {
+        "description": "Which household member Omi adds events as (null = the whole family).",
+        "operationId": "set_family_calendar_owner_v1_family_calendar_owner_put",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetFamilyCalendarOwnerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FamilyCalendarResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Set Family Calendar Owner",
         "tags": [
           "family-calendar"
         ]
