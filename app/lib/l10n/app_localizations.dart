@@ -26792,6 +26792,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 to check} other{{count} to check}}'**
   String familyCalendarToCheck(int count);
+
+  /// Label of the editable title field
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get familyCalendarTitleLabel;
+
+  /// Label of the editable note field
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get familyCalendarNoteLabel;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

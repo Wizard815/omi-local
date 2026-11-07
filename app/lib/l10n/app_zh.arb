@@ -4721,5 +4721,13 @@
                 "type": "int"
             }
         }
+    },
+    "familyCalendarTitleLabel": "Title",
+    "@familyCalendarTitleLabel": {
+        "description": "Label of the editable title field"
+    },
+    "familyCalendarNoteLabel": "Note",
+    "@familyCalendarNoteLabel": {
+        "description": "Label of the editable note field"
     }
 }

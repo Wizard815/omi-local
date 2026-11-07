@@ -268,32 +268,20 @@ class _FamilyCalendarReviewPageState extends State<FamilyCalendarReviewPage> {
             controller: draft.title,
             enabled: !busy,
             style: OmiType.headline,
-            decoration: InputDecoration(
-              isDense: true,
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.zero,
-              hintText: l10n.familyCalendarTitleHint,
-            ),
+            decoration: _field(l10n.familyCalendarTitleLabel, l10n.familyCalendarTitleHint),
             onChanged: (_) => setState(() {}),
           ),
+          const SizedBox(height: OmiSpacing.xs),
           TextField(
             key: Key('family_calendar_description_${event.key}'),
             controller: draft.description,
             enabled: !busy,
             minLines: 1,
             maxLines: 4,
-            style: OmiType.footnote.copyWith(color: OmiColors.textSecondary),
-            decoration: InputDecoration(
-              isDense: true,
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.zero,
-              hintText: l10n.familyCalendarDescriptionHint,
-              hintStyle: OmiType.footnote.copyWith(color: OmiColors.textTertiary),
-            ),
+            style: OmiType.subhead,
+            decoration: _field(l10n.familyCalendarNoteLabel, l10n.familyCalendarDescriptionHint),
             onChanged: (_) => setState(() {}),
           ),
-          const SizedBox(height: OmiSpacing.sm),
-          Divider(color: OmiColors.border, height: 1),
           const SizedBox(height: OmiSpacing.sm),
           Wrap(
             spacing: OmiSpacing.xs,
@@ -370,6 +358,21 @@ class _FamilyCalendarReviewPageState extends State<FamilyCalendarReviewPage> {
       ),
     );
   }
+
+  /// An input that looks like one: filled, rounded, labelled, with a pencil at the end.
+  InputDecoration _field(String label, String hint) => InputDecoration(
+        isDense: true,
+        filled: true,
+        fillColor: OmiColors.surface2,
+        labelText: label,
+        labelStyle: OmiType.caption.copyWith(color: OmiColors.textTertiary),
+        floatingLabelBehavior: FloatingLabelBehavior.always,
+        hintText: hint,
+        hintStyle: OmiType.subhead.copyWith(color: OmiColors.textTertiary),
+        suffixIcon: Icon(Icons.edit_outlined, size: 16, color: OmiColors.textTertiary),
+        contentPadding: const EdgeInsets.symmetric(horizontal: OmiSpacing.sm, vertical: OmiSpacing.xs),
+        border: const OutlineInputBorder(borderRadius: OmiRadius.mdAll, borderSide: BorderSide.none),
+      );
 
   Widget _chip({required Key key, required IconData icon, required String label, VoidCallback? onTap}) {
     return Material(
