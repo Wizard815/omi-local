@@ -37,6 +37,7 @@ import routers.users as users_router
 import utils.apps as apps_utils
 import utils.conversations.meeting_context_pack as meeting_context_pack
 import utils.day_review_service as day_review_service
+import utils.family_calendar as family_calendar
 import utils.imports.limitless as limitless
 import utils.llm.fair_use_classifier as fair_use_classifier
 import utils.llm.goals as llm_goals
@@ -335,6 +336,11 @@ def _run_day_review_load(monkeypatch: pytest.MonkeyPatch, capture: HelperCapture
 def _run_day_review_pending(monkeypatch: pytest.MonkeyPatch, capture: HelperCapture) -> None:
     _stub(monkeypatch, day_review_service.notification_db, 'get_user_time_zone', lambda uid: 'UTC')
     trial(capture, day_review_service.pending_dates, 'u1')
+
+
+def _run_family_calendar_pending(monkeypatch: pytest.MonkeyPatch, capture: HelperCapture) -> None:
+    _stub(monkeypatch, family_calendar.notifications_db, 'resolve_user_timezone', lambda uid: 'UTC')
+    trial(capture, family_calendar.pending, 'u1')
 
 
 def _run_daily_summary_regenerate(monkeypatch: pytest.MonkeyPatch, capture: HelperCapture) -> None:
@@ -657,6 +663,14 @@ WITNESSES: dict[str, CallerWitness] = {
             ('day-review-pending',),
             1,
             _run_day_review_pending,
+        ),
+        CallerWitness(
+            'utils/family_calendar.py:_recent_conversations:database.conversations.get_conversations',
+            'database.conversations.get_conversations',
+            'database.conversations.get_conversations',
+            ('day-review-pending',),
+            1,
+            _run_family_calendar_pending,
         ),
         CallerWitness(
             'routers/users.py:regenerate_daily_summary:database.conversations.get_conversations',
