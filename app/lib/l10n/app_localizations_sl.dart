@@ -15272,4 +15272,10 @@ class AppLocalizationsSl extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get familyCalendarTitleLabel => 'Title';
+
+  @override
+  String get familyCalendarNoteLabel => 'Note';
 }
