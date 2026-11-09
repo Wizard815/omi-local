@@ -1,3 +1,6 @@
+// Sync upload refusals: decodes the server's refusal body into a closed reason code
+// and reads the recording-scoped wait (code and retry pacing) from a 5xx.
+
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;

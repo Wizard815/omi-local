@@ -1,3 +1,6 @@
+// Sync health watchdog: watches the paired pendant's sync pipeline and flags a stall
+// before recordings go unsynced for days.
+
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';

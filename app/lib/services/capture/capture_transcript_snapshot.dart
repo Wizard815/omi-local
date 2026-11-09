@@ -1,3 +1,6 @@
+// Capture: server transcript reads and their ordered projection for the capture
+// controller, separate from the on-device preview text.
+
 part of 'capture_controller.dart';
 
 /// Server transcript reads and ordered projection, separate from preview text.

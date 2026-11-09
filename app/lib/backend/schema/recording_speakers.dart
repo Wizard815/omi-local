@@ -1,3 +1,6 @@
+// Recording speakers schema: a recording's transcript as lines with their speaker,
+// as the recording speakers API returns it.
+
 import 'dart:convert';
 
 import 'package:omi/backend/schema/transcript_segment.dart';

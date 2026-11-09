@@ -1,3 +1,6 @@
+// Capture: assigns speakers during a live capture with immediate labels and serial
+// persistence; the capture controller owns the stream.
+
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:omi/backend/http/api/recording_speakers.dart';

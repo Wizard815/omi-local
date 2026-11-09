@@ -1,3 +1,6 @@
+// Conversation provider: reconciles pending Home rows through the provider's existing
+// page and detail owners as processing finishes.
+
 part of 'conversation_provider.dart';
 
 /// Reconcile pending Home rows through the provider's existing page/detail owner.

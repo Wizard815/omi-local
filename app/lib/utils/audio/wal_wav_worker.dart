@@ -1,3 +1,6 @@
+// WAL audio: decodes a recording's Opus frames to WAV on a worker isolate; only plain
+// data crosses the isolate boundary.
+
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:typed_data';

@@ -1,3 +1,6 @@
+// Account deletion at sign-in: reads the deletion status so offline startup keeps the
+// existing owner without overriding a confirmed deletion.
+
 import 'package:omi/backend/http/api/account_deletion.dart';
 import 'package:omi/backend/http/api_fallback.dart';
 import 'package:omi/backend/http/api_result.dart';

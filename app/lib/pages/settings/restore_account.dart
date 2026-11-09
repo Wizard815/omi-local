@@ -1,3 +1,6 @@
+// Settings: restore an account scheduled for deletion while its grace window is open,
+// shown only once the deletion status is known.
+
 import 'package:flutter/material.dart';
 
 import 'package:omi/backend/http/api/account_deletion.dart';

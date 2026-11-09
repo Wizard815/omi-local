@@ -1,3 +1,6 @@
+// Conversation detail: loads a recording's transcript and the speaker identities it
+// shows, separate from save and summary scheduling.
+
 import 'package:collection/collection.dart';
 import 'package:omi/backend/http/api_result.dart';
 import 'package:flutter/foundation.dart';

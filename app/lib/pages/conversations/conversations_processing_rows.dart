@@ -1,3 +1,6 @@
+// Conversation list: rows for conversations still processing, shown under Today's
+// live row until each becomes its own finished row.
+
 part of 'conversations_page.dart';
 
 List<_ConversationListRow> _withTodayRow(List<_ConversationListRow> rows, DateTime now, _ConversationListRowKind kind) {
