@@ -71,26 +71,33 @@ ApiResult<SyncUploadRefusalBody> decodeSyncUploadRefusal(http.Response response)
 /// for that conversation's registered record before it can prove coverage.
 bool isRecordingScopedSyncWaitReasonCode(String? reasonCode) => reasonCode == 'record_capture_pending';
 
-/// The closed recording-scoped wait code from a 5xx upload body, else null.
-String? syncUploadServerWaitReasonCode(http.Response response) {
+/// The body of a refusal as a JSON object; a malformed or non-object body is an
+/// explicit decode failure.
+ApiResult<Map<String, dynamic>> _refusalObject(http.Response response) {
+  final failure = ApiFailure<Map<String, dynamic>>(ApiProblem(ApiProblemKind.decode, statusCode: response.statusCode));
   try {
     final decoded = jsonDecode(response.body);
-    if (decoded is Map<String, dynamic>) {
-      final code = decoded['code'];
-      if (code is String && isRecordingScopedSyncWaitReasonCode(code)) return code;
-    }
-  } catch (_) {}
-  return null;
+    return decoded is Map<String, dynamic> ? ApiSuccess(decoded) : failure;
+  } on FormatException {
+    return failure;
+  }
+}
+
+Map<String, dynamic> _refusalFields(http.Response response) => switch (_refusalObject(response)) {
+      ApiSuccess(:final data) => data,
+      ApiFailure() => const <String, dynamic>{},
+    };
+
+/// The closed recording-scoped wait code from a 5xx upload body, else null.
+String? syncUploadServerWaitReasonCode(http.Response response) {
+  final code = _refusalFields(response)['code'];
+  return code is String && isRecordingScopedSyncWaitReasonCode(code) ? code : null;
 }
 
 /// The server's per-recording pacing for a recording-scoped 5xx wait, else null.
 int? syncUploadServerWaitSeconds(http.Response response) {
-  try {
-    final decoded = jsonDecode(response.body);
-    if (decoded is Map<String, dynamic> && isRecordingScopedSyncWaitReasonCode(decoded['code'] as String?)) {
-      final seconds = decoded['retry_after_seconds'];
-      if (seconds is int && seconds > 0) return seconds;
-    }
-  } catch (_) {}
-  return null;
+  final fields = _refusalFields(response);
+  final code = fields['code'];
+  final seconds = fields['retry_after_seconds'];
+  return code is String && isRecordingScopedSyncWaitReasonCode(code) && seconds is int && seconds > 0 ? seconds : null;
 }
