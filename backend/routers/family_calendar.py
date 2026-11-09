@@ -1,7 +1,9 @@
 """Family calendar (omi-local): review the events Omi heard before they go to dayGLANCE
 through the ALLGlance gateway. See utils/family_calendar.py for the why and the where."""
 
-from fastapi import APIRouter, Depends
+from typing import Optional
+
+from fastapi import APIRouter, Depends, Query
 
 from models.family_calendar import (
     ApproveFamilyCalendarEventRequest,
@@ -18,10 +20,10 @@ from utils.other import endpoints as auth
 router = APIRouter()
 
 
-async def _present(uid: str) -> FamilyCalendarResponse:
+async def _present(uid: str, conversation_id: Optional[str] = None) -> FamilyCalendarResponse:
     def _read():
         target = family_calendar.integration(uid)
-        waiting, recent = family_calendar.pending(uid)
+        waiting, recent = family_calendar.pending(uid, conversation_id=conversation_id)
         return target, waiting, recent
 
     target, waiting, recent = await run_blocking(db_executor, _read)
@@ -42,10 +44,15 @@ async def _present(uid: str) -> FamilyCalendarResponse:
 
 
 @router.get('/v1/family-calendar', tags=['family-calendar'], response_model=FamilyCalendarResponse)
-async def get_family_calendar(uid: str = Depends(auth.get_current_user_uid)):
+async def get_family_calendar(
+    conversation_id: Optional[str] = Query(
+        default=None, max_length=128, description='Only the events heard in this conversation, whatever their age'
+    ),
+    uid: str = Depends(auth.get_current_user_uid),
+):
     """Whether a family calendar is set, the household and the member Omi acts as, the events waiting
-    for review, and the ones reviewed lately."""
-    return await _present(uid)
+    for review, and the ones reviewed lately. With ``conversation_id``, the events of that conversation."""
+    return await _present(uid, conversation_id)
 
 
 @router.put('/v1/family-calendar/owner', tags=['family-calendar'], response_model=FamilyCalendarResponse)
