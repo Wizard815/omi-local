@@ -1,9 +1,8 @@
 """Non-paid terminal disposition CAS; immutable paid intents are never reset."""
 
 from copy import deepcopy
-from dataclasses import asdict
 from uuid import uuid4
-from config.batch_language_recovery import language_guarded
+from config.batch_language_recovery import guarded_exhausted, language_guarded
 
 from database.batch_pipeline_policy import load_stage_policy, stage_in_transaction, record_policy_observations
 from database.batch_pipeline_projection_protocol import ProjectionBlocked
@@ -96,7 +95,13 @@ class TerminalEmptyStore:
                 raise ProjectionBlocked('terminal disposition disabled')
             existing = tx.get('results', sid)
             marker = job.get('terminal_disposition') or {}
-            if language_guarded(job) and marker.get('state') != 'completed':
+            if (
+                language_guarded(job)
+                and marker.get('state') != 'completed'
+                and not (outcome == 'no_recoverable_speech' and guarded_exhausted(job))
+            ):
+                # A guarded unit settles no-speech only with every recognizer's
+                # validated empty receipt; without them it stays held.
                 raise ProjectionBlocked('independent recovery required')
             if (
                 binding.owner_id != uid
@@ -165,13 +170,13 @@ class TerminalEmptyStore:
             ):
                 return False, 0, None
             outcome = marker['outcome']
-            result = asdict(WorkResult(sid, uri, outcome))
+            result = WorkResult(sid, uri, outcome).to_dict()
             if marker.get('state') == 'completed':
                 return job.get('result') == result, 0, outcome
             if marker.get('state') != 'prepared' or not idle(job, existing, now):
                 return False, 0, None
             census = held_vad_census(job, measured_held_vad_speech_seconds)
-            if language_guarded(job):
+            if language_guarded(job) and not (outcome == 'no_recoverable_speech' and guarded_exhausted(job)):
                 if job.get('measured_held_vad_speech_seconds') != census:
                     job['measured_held_vad_speech_seconds'] = census
                     tx.put('jobs', sid, job)

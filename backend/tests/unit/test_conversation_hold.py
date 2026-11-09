@@ -51,6 +51,10 @@ def self_hosted(monkeypatch, pc):
     monkeypatch.delenv('OMI_CONVERSATION_HOLD', raising=False)
     monkeypatch.setattr(pc.funded_processing, 'enabled', lambda uid, lane=None: False)
     monkeypatch.setattr(pc, '_calendar_overlap_retains_conversation', lambda *a, **k: False)
+    # Upstream's occasion retention reads Firestore; no recorded occasion here.
+    import utils.conversations.relevance_io as relevance_io
+
+    monkeypatch.setattr(relevance_io, 'occasion_retention', lambda *a, **k: None)
 
 
 def _filler_create() -> CreateConversation:

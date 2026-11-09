@@ -79,16 +79,37 @@ _DEMAND_LISTEN_ONLY = frozenset(
         'STT_LIVE_DEMAND_MIN_DWELL_SECONDS',
     }
 )
+# Only the listen receive loop promotes unexpected local-preview audio.
+_PREVIEW_CUSTODY_LISTEN_ONLY = frozenset({'LISTEN_PREVIEW_BATCH_CUSTODY_ENABLED'})
 # Only listen WebSocket reconnects run the stale-page scanner. Pusher consumes
 # admitted jobs; this kill switch must not disable their finalization/retries.
 _RECONNECT_RECOVERY_LISTEN_ONLY = frozenset({'STALE_IN_PROGRESS_RECOVERY_ENABLED'})
+# main.py owns the singleton replay pass. Pusher consumes finalizations but
+# never schedules that pass; copying this binding there would imply ownership
+# it does not have. Live admission's dispatch mode remains unchanged.
+_FINALIZATION_REPLAY_LISTEN_ONLY = frozenset(
+    {
+        'LISTEN_FINALIZATION_REPLAY_ENABLED',
+        'LISTEN_FINALIZATION_TASKS_QUEUE',
+        'LISTEN_FINALIZATION_TASKS_HANDLER_URL',
+        'LISTEN_FINALIZATION_TASKS_INVOKER_SA',
+        'LISTEN_FINALIZATION_TASKS_MAX_ATTEMPTS',
+    }
+)
 # main.py owns sync intake, recovery RPC and serving startup. pusher.main mounts
 # none of those surfaces and never starts the dedicated GPU process.
 _BATCH_PIPELINE_LISTEN_ONLY = frozenset(
     {
+        # Held expiry/requeue is owned by main.py maintenance/RPC and GPU workers;
+        # pusher does not run the held maintenance loop or worker failure writer.
+        'BATCH_HELD_DEAD_LETTER_ENABLED',
+        'BATCH_CONTROL_CANDIDATE_FANOUT',
+        'BATCH_ADMISSION_PARALLEL_CALLS',
+        'BATCH_PIPELINE_IDLE_POLL_MAX_SECONDS',
+        # Listen admits/suppresses managed live STT; pusher only retains audio.
+        'SERVER_BATCH_UNSUPPORTED_LANGUAGES',
         'BATCH_PIPELINE_ENABLED',
         'BATCH_PIPELINE_UID_ALLOWLIST',
-        'BATCH_PIPELINE_PERCENT',
         'BATCH_PIPELINE_SERVING_ENABLED',
         'BATCH_PIPELINE_API_URL',
         'BATCH_PIPELINE_WORKER_ENABLED',
@@ -211,6 +232,7 @@ LISTEN_ONLY_ALLOWED: dict[str, frozenset[str]] = {
     | _TRANSLATION_LISTEN_ONLY
     | _REVIEW_SURFACE_LISTEN_ONLY
     | _DEMAND_LISTEN_ONLY
+    | _PREVIEW_CUSTODY_LISTEN_ONLY
     | _RECONNECT_RECOVERY_LISTEN_ONLY
     | _BATCH_PIPELINE_LISTEN_ONLY,
     "prod": frozenset(
@@ -220,6 +242,16 @@ LISTEN_ONLY_ALLOWED: dict[str, frozenset[str]] = {
             "MOBILE_STANDARD_BATCH_ENABLED",
             "MOBILE_STANDARD_BATCH_PERCENT",
             "MOBILE_STANDARD_BATCH_UIDS",
+            # Only listen reads the mobile/web server-batch-only cohorts: server_batch.selected via
+            # request_eligible and via eligible <- create_in_progress_conversation, both called only
+            # from routers/listen. Pusher's finalizer uses owned/has_audio and never admits capture.
+            "SERVER_BATCH_ONLY_MOBILE_PERCENT",
+            # Same listen-only admission path for learned auto-language mobile/web captures.
+            "SERVER_BATCH_ONLY_AUTO_LANGUAGE_PERCENT",
+            "SERVER_BATCH_ONLY_WEB_PERCENT",
+            # Only listen opens visibility-gated Modulate previews; pusher
+            # retains raw custody/finalization and never evaluates this cohort.
+            "SERVER_BATCH_ONLY_VISIBLE_RESTORE_PERCENT",
             # Managed listen-only STT rollout; pusher is not a live audio receiver.
             "PARAKEET_BATCH_PRESSURE_MIN_REPLICAS",
             "PARAKEET_BATCH_PRESSURE_POOL_HOST",
@@ -231,9 +263,16 @@ LISTEN_ONLY_ALLOWED: dict[str, frozenset[str]] = {
             "PARAKEET_WINDOW_MAX_SESSIONS",
             "PARAKEET_WINDOW_FIRST_TEXT_DEADLINE_SECONDS",
             "PARAKEET_WINDOW_MAX_EMPTY_STREAK",
+            # Listen-only live-window kill switch (routerbench 2026-10-30).
+            "PARAKEET_WINDOW_REPLICA_RECOVERY_ENABLED",
             "PARAKEET_WINDOW_MAX_CONTEXT_SECONDS",
             "PARAKEET_WINDOW_PACE_SECONDS",
             "PARAKEET_WINDOW_POST_TIMEOUT_SECONDS",
+            # Listen-only Soniox idle-close treatment cohort; pusher opens no Soniox stream.
+            "SONIOX_IDLE_COHORT_PERCENT",
+            "SONIOX_IDLE_COHORT_CLOSE_SECONDS",
+            "SONIOX_IDLE_COHORT_REARM_SECONDS",
+            "SONIOX_IDLE_COHORT_MAX_CLOSES_PER_HOUR",
             "SONIOX_CIRCUIT_COOLDOWN_SECONDS",
             "SONIOX_CIRCUIT_FAILURE_THRESHOLD",
             "STT_ACCOUNT_CIRCUIT_COOLDOWN_SECONDS",
@@ -282,7 +321,6 @@ LISTEN_ONLY_ALLOWED: dict[str, frozenset[str]] = {
             "GCP_LOCATION",
             "GEMINI_API_KEY",
             "HOSTED_PUSHER_API_URL",
-            "HOSTED_TRANSLATION_API_URL",
             "HOSTED_VAD_API_URL",
             "LISTEN_FINALIZATION_BYOK_ABANDONMENT_ENABLED",
             "LISTEN_FINALIZATION_ORPHAN_STALE_SECONDS",
@@ -320,8 +358,10 @@ LISTEN_ONLY_ALLOWED: dict[str, frozenset[str]] = {
     | _TRANSLATION_LISTEN_ONLY
     | _REVIEW_SURFACE_LISTEN_ONLY
     | _DEMAND_LISTEN_ONLY
+    | _PREVIEW_CUSTODY_LISTEN_ONLY
     | _RECONNECT_RECOVERY_LISTEN_ONLY
-    | (_BATCH_PIPELINE_LISTEN_ONLY - {'BATCH_PIPELINE_UID_ALLOWLIST'}),
+    | (_BATCH_PIPELINE_LISTEN_ONLY - {'BATCH_PIPELINE_UID_ALLOWLIST'})
+    | _FINALIZATION_REPLAY_LISTEN_ONLY,
 }
 
 # Pusher owns the process-local shadow worker; sync/backfill also runs the
@@ -340,12 +380,19 @@ PROD_FINAL_PASS_SHADOW_VALUES = {
 }
 
 PUSHER_ONLY_ALLOWED: dict[str, frozenset[str]] = {
-    "dev": frozenset({"GOOGLE_CLIENT_ID", "REDIS_DB_HOST", "TYPESENSE_HOST"}),
+    "dev": frozenset({"GOOGLE_CLIENT_ID", "REDIS_DB_HOST", "TYPESENSE_HOST", "PUSHER_STORAGE_PCM_BUDGET_MB"}),
     # Pusher retains its cloud/BYOK credential; listen has no managed cloud key.
     "prod": frozenset(
         {
+            # Only pusher owns closed recording workers and their eviction proof.
+            "PUSHER_MAX_CLOSED_RECORD_DRAINS",
+            "PUSHER_ABANDON_EVICTED_TOKENS",
+            "PUSHER_MAX_ABANDON_RECORD_DRAINS",
+            "PUSHER_STORAGE_PCM_BUDGET_MB",
             # Late identity retries are scheduled only by prod pusher audio drain.
             "OWNER_IDENTITY_RETRY_COALESCE_ENABLED",
+            # Pusher alone writes PCM chunk batches (upload_audio_chunks_batch).
+            "AUDIO_ARCHIVE_REGIONAL_CHUNKS_PERCENT",
             "REDIS_DB_HOST",
             "TYPESENSE_HOST",
             # Process-local final-pass shadow is admitted only on the prod pusher.

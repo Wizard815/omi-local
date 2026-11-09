@@ -12,6 +12,8 @@ import sys
 from pathlib import Path
 from types import ModuleType
 
+from scripts.git_test_env import clean_git_env
+
 import pytest
 
 HARNESS_ROOT = Path(__file__).resolve().parents[1]
@@ -48,7 +50,7 @@ def _make_command() -> str:
 
 
 def _shell_env() -> dict[str, str]:
-    env = os.environ.copy()
+    env = clean_git_env()
     if os.name == "nt":
         bash = Path(_bash_command())
         path_entries = [str(bash.parent)]
@@ -85,12 +87,7 @@ def _git_init(repo: Path) -> None:
     linked-worktree parent and breaks every later `git rev-parse --show-toplevel`
     in the same push.
     """
-    env = os.environ.copy()
-    local_vars = subprocess.run(
-        ["git", "rev-parse", "--local-env-vars"], text=True, stdout=subprocess.PIPE, check=True
-    ).stdout.split()
-    for var in local_vars:
-        env.pop(var, None)
+    env = clean_git_env()
     subprocess.run(["git", "init", "-q", str(repo)], env=env, check=True)
 
 
@@ -136,6 +133,26 @@ def _resolve_python(repo: Path, monkeypatch: pytest.MonkeyPatch, path: str | Non
     )
     assert result.returncode == 0, result.stderr
     return result.stdout.strip()
+
+
+def _host_bin_without_311(tmp_path: Path) -> str:
+    """/usr/bin and /bin as one directory, minus any python3.11.
+
+    The fixtures below mean "no 3.11 on this host". A Linux host whose system
+    Python includes /usr/bin/python3.11 would otherwise answer discovery and
+    rescue the fixture, the PATH counterpart of the Homebrew prefix isolation.
+    """
+    out = tmp_path / "host-bin-without-311"
+    out.mkdir(exist_ok=True)
+    for directory in ("/usr/bin", "/bin"):
+        if not os.path.isdir(directory):
+            continue
+        for entry in os.scandir(directory):
+            target = out / entry.name
+            if entry.name.startswith("python3.11") or target.exists() or target.is_symlink():
+                continue
+            target.symlink_to(entry.path)
+    return str(out)
 
 
 def _write_stub_python(directory: Path, name: str, *, meets_floor: bool) -> Path:
@@ -556,7 +573,7 @@ def test_make_uses_git_bash_when_bare_bash_resolves_to_wsl(tmp_path: Path) -> No
 
     make = Path(_make_command()).resolve()
     system32 = Path(os.environ["SystemRoot"]) / "System32"
-    env = os.environ.copy()
+    env = clean_git_env()
     inherited_paths = [
         entry
         for entry in env.get("PATH", "").split(os.pathsep)
@@ -984,7 +1001,7 @@ def test_backend_pinned_python_falls_back_to_uv_managed_311(
         repo,
         monkeypatch,
         "dev_harness_backend_pinned_python",
-        path=os.pathsep.join((str(stub_bin), "/usr/bin", "/bin")),
+        path=os.pathsep.join((str(stub_bin), _host_bin_without_311(tmp_path))),
         # A host with a real keg-only Homebrew 3.11 would otherwise satisfy
         # discovery before the fixture's uv is consulted (Codex P2): point the
         # prefix list at nothing.
@@ -1084,7 +1101,7 @@ def test_backend_pinned_python_rejects_below_pin_python_override(
         repo,
         monkeypatch,
         "dev_harness_backend_pinned_python",
-        path=os.pathsep.join(("/usr/bin", "/bin")),
+        path=os.pathsep.join((_host_bin_without_311(tmp_path))),
         extra_env={"PYTHON": str(below)},
         # Host isolation: a real keg-only Homebrew 3.11 would legitimately
         # answer after the override is rejected (Codex P2).

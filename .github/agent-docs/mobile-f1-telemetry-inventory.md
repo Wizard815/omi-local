@@ -24,7 +24,8 @@ is the pending wrapper, not a C7 schema defect.
 
 ## PostHog client constraints (code only)
 
-- Adapter: `app/lib/utils/analytics/adapters/posthog_adapter.dart`. Host
+- Adapter: none in omi-local (the PostHog adapter and SDK are removed; only an
+  adapter a test installs is used). Upstream's adapter used host
   `https://us.i.posthog.com`. `captureApplicationLifecycleEvents` is false.
   `track` is `Posthog().capture`. Do not call this host from an agent session.
 - No API key / no adapter → `AnalyticsManager.track` is a no-op

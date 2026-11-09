@@ -15,6 +15,7 @@ fullnameOverride: "prod-omi-cloud-run-sync-metrics-exporter"
 #   omi_journey_*, omi_client_journey_* journey SLO alerts, Core Features
 #   omi_owner_recognition_conversations owner-recognition alerts (surface="sync")
 #   omi_conversation_duration_seconds,
+#   omi_conversation_relevance_decision_total Core Features hourly discard share by service/trigger
 #   omi_conversation_summary_vector_upserts  Core Features
 #   omi_firestore_documents_per_operation    Firestore read-amplification alert
 #   omi_capture_finalization_*          resilience alert, Core Features
@@ -31,6 +32,20 @@ stackdriver:
     - "based-hardware"
   metrics:
     prefixes:
+      - 'prometheus.googleapis.com/omi_finalization_pair_'
+      - 'prometheus.googleapis.com/omi_enrichment_summary_repair_'
+      # WP-C lifecycle dwell and observer health (closed labels).
+      - 'prometheus.googleapis.com/omi_batch_record_pending_'
+      # Retained held dead-letter stock/rate alert; serving maintenance emits these.
+      - 'prometheus.googleapis.com/omi_batch_held_expired_total/'
+      - 'prometheus.googleapis.com/omi_batch_held_expired_units/'
+      - 'prometheus.googleapis.com/omi_batch_held_expired_observed_at_seconds/'
+      - 'prometheus.googleapis.com/omi_batch_record_dead_letter_total/'
+      - 'prometheus.googleapis.com/omi_batch_record_dead_letter_units/'
+      - 'prometheus.googleapis.com/omi_batch_record_dead_letter_observed_at_seconds/'
+      - 'prometheus.googleapis.com/omi_record_seal_nojob_'
+      - 'prometheus.googleapis.com/omi_enrichment_obligation_'
+      - 'prometheus.googleapis.com/omi_finalization_byok_'
       # omi_sync_phase_* is deliberately absent: no in-cluster alert, dashboard
       # or adapter rule reads it (checked 2026-10-21), the rightsizing runbook
       # queries it from GMP, and both import paths (this sidecar copy per
@@ -45,6 +60,7 @@ stackdriver:
       - 'prometheus.googleapis.com/omi_client_journey_'
       - 'prometheus.googleapis.com/omi_owner_recognition_conversations_total/'
       - 'prometheus.googleapis.com/omi_conversation_duration_seconds/'
+      - 'prometheus.googleapis.com/omi_conversation_relevance_decision_total/'
       - 'prometheus.googleapis.com/omi_conversation_summary_vector_upserts_total/'
       - 'prometheus.googleapis.com/omi_firestore_documents_per_operation/'
       - 'prometheus.googleapis.com/omi_capture_finalization_'
@@ -55,6 +71,10 @@ stackdriver:
       - 'prometheus.googleapis.com/omi_:resource.labels.cluster="__run__" AND resource.labels.namespace=one_of("backend-sync","backend-sync-backfill","backend-integration")'
     interval: '10m'
     offset: '1m'
+
+# Descriptor discovery is stable; sample collection remains inline on every scrape.
+extraArgs:
+  monitoring.descriptor-cache-ttl: 1h
 
 serviceAccount:
   create: false
