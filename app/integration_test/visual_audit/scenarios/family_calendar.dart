@@ -4,7 +4,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:provider/provider.dart';
+
+import 'package:omi/backend/schema/schema.dart';
+import 'package:omi/pages/conversation_detail/conversation_detail_provider.dart';
+import 'package:omi/pages/conversation_detail/page.dart';
 import 'package:omi/pages/family_calendar/family_calendar_review_page.dart';
+import 'package:omi/providers/conversation_provider.dart';
+import 'package:omi/widgets/conversation_bottom_bar.dart' show ConversationTab;
 
 import '../harness.dart';
 
@@ -96,6 +103,60 @@ final familyCalendarScenarios = <AuditScenario>[
       await a.pump(const FamilyCalendarReviewPage());
       await a.settle();
       await a.shot('No family calendar set', step: 'top');
+    },
+  ),
+  AuditScenario(
+    id: 'family-calendar-in-conversation',
+    title: 'Calendar on a conversation: the events heard there, checked from the summary',
+    page: 'lib/pages/family_calendar/conversation_calendar_row.dart (ConversationCalendarRow)',
+    state: 'A conversation with two heard events shows a Calendar row; tapping it opens the check for just those',
+    run: (a) async {
+      final started = _day(0, 9, 15);
+      final conversation = ServerConversation(
+        id: 'c10',
+        createdAt: started,
+        startedAt: started,
+        finishedAt: started.add(const Duration(minutes: 12)),
+        status: ConversationStatus.completed,
+        structured: Structured(
+          'Call with the landlord',
+          '## Inspection\n- Moved from ten to eleven on the 13th.\n\n## Movers\n- Booked for Saturday morning.',
+          emoji: '\u{1F3E0}',
+        ),
+      );
+      conversation.structured.events.addAll([
+        Event('Inspection', _day(2, 11, 0), 60),
+        Event('Movers', _day(4, 9, 0), 120),
+      ]);
+      a.server.jsonRoutes['GET /v1/family-calendar'] = {
+        ..._calendar(),
+        'pending': [
+          _event('c10', 0, 'Call with the landlord', 'Inspection', _day(2, 11, 0),
+              duration: 60, description: 'Moved from ten to eleven to clear the dry run.'),
+          _event('c10', 1, 'Call with the landlord', 'Movers', _day(4, 9, 0), duration: 120),
+        ],
+        'recent': <Object?>[],
+      };
+      await a.pump(
+        ConversationDetailPage(conversation: conversation, initialTab: ConversationTab.summary),
+        providers: [
+          ChangeNotifierProvider<ConversationProvider>.value(
+            value: ConversationProvider(isSignedIn: () => true)..conversations = [conversation],
+          ),
+          ChangeNotifierProvider(
+            create: (_) => ConversationDetailProvider()..selectedDate = conversationLocalDayKey(conversation.createdAt),
+          ),
+        ],
+      );
+      await a.settle();
+      final row = find.byKey(const Key('conversation_calendar_c10'));
+      await a.tester.scrollUntilVisible(row, 200, scrollable: find.byType(Scrollable).first);
+      await a.settle();
+      await a.shot('The summary: a Calendar row with the two events heard here', step: 'row');
+      await a.tap(row);
+      await a.settle();
+      await a.shot('Tap it: the check for just this conversation, under its title', step: 'check');
+      expect(find.byKey(const Key('family_calendar_event_c10:1')), findsOneWidget);
     },
   ),
 ];

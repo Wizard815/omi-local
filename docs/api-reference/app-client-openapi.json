@@ -58942,9 +58942,28 @@
     },
     "/v1/family-calendar": {
       "get": {
-        "description": "Whether a family calendar is set, the household and the member Omi acts as, the events waiting\nfor review, and the ones reviewed lately.",
+        "description": "Whether a family calendar is set, the household and the member Omi acts as, the events waiting\nfor review, and the ones reviewed lately. With ``conversation_id``, the events of that conversation.",
         "operationId": "get_family_calendar_v1_family_calendar_get",
         "parameters": [
+          {
+            "description": "Only the events heard in this conversation, whatever their age",
+            "in": "query",
+            "name": "conversation_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only the events heard in this conversation, whatever their age",
+              "title": "Conversation Id"
+            }
+          },
           {
             "in": "header",
             "name": "authorization",

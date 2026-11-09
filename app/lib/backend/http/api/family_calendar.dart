@@ -9,9 +9,14 @@ String _base() => '${Env.apiBaseUrl}v1/family-calendar';
 
 Map<String, dynamic> _json(String body) => jsonDecode(body) as Map<String, dynamic>;
 
-/// Whether a family calendar is set, and the events waiting for the user's check.
-Future<ApiResult<FamilyCalendar>> getFamilyCalendar() => executeApi(
-      request: ApiRequest(url: _base(), method: 'GET'),
+/// Whether a family calendar is set, and the events waiting for the user's check. With
+/// [conversationId], every event heard in that one conversation (the conversation page).
+Future<ApiResult<FamilyCalendar>> getFamilyCalendar({String? conversationId}) => executeApi(
+      request: ApiRequest(
+        url:
+            conversationId == null ? _base() : '${_base()}?conversation_id=${Uri.encodeQueryComponent(conversationId)}',
+        method: 'GET',
+      ),
       decode: (body) => FamilyCalendar.fromGenerated(wire.GeneratedFamilyCalendarResponse.fromJson(_json(body))),
     );
 

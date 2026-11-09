@@ -134,27 +134,38 @@ def _recent_conversations(uid: str) -> List[Dict[str, Any]]:
     )
 
 
-def pending(uid: str, *, now: Optional[datetime] = None) -> Tuple[List[FamilyCalendarEvent], List[FamilyCalendarEvent]]:
+def pending(
+    uid: str, *, now: Optional[datetime] = None, conversation_id: Optional[str] = None
+) -> Tuple[List[FamilyCalendarEvent], List[FamilyCalendarEvent]]:
     """(waiting for review, reviewed lately): events of the last LOOKBACK_DAYS of conversations.
 
     Waiting = not created, not declined, and not long past (an event that started more than
-    PAST_GRACE ago was missed, so asking about it would only add noise)."""
+    PAST_GRACE ago was missed, so asking about it would only add noise).
+
+    With ``conversation_id``: every event heard in that one conversation, whatever its age, as
+    the conversation page shows them. The user opened that conversation on purpose, so an event
+    that is already past is still offered rather than hidden."""
     zone = _zone(uid)
     now = now or datetime.now(timezone.utc)
+    if conversation_id is None:
+        conversations = _recent_conversations(uid)
+    else:
+        one = conversations_db.get_conversation(uid, conversation_id)
+        conversations = [one] if one else []
     waiting: List[FamilyCalendarEvent] = []
     recent: List[FamilyCalendarEvent] = []
-    for conversation in _recent_conversations(uid):
+    for conversation in conversations:
         if conversation.get('deleted') or conversation.get('discarded'):
             continue
         for idx, event in enumerate(_events_of(conversation)):
             shown = _present(conversation, idx, event, zone)
             if shown.created or shown.declined:
                 recent.append(shown)
-            elif shown.start >= now - PAST_GRACE:
+            elif conversation_id is not None or shown.start >= now - PAST_GRACE:
                 waiting.append(shown)
     waiting.sort(key=lambda e: e.start)
     recent.sort(key=lambda e: e.start, reverse=True)
-    return waiting, recent[:RECENT_LIMIT]
+    return waiting, recent if conversation_id is not None else recent[:RECENT_LIMIT]
 
 
 def _load(uid: str, conversation_id: str, event_idx: int) -> Tuple[Dict[str, Any], List[Event]]:
