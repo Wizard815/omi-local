@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "images": [
+    {
+      "file": "001-mobile-android-conversation-calendar-row.png",
+      "platform": "mobile-android",
+      "description": "A conversation's summary with a Calendar row counting the events Omi heard in it",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "002-mobile-android-conversation-calendar-check.png",
+      "platform": "mobile-android",
+      "description": "Tapping the row opens the Calendar check for just that conversation, titled with it, each event editable before Add or Not this",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    }
+  ]
+}
