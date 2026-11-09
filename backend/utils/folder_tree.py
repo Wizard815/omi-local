@@ -8,25 +8,33 @@ just read and tests need no database.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Union
 
 # Deep enough for "Work / Clients / Acme / Q4" with room to spare; shallow
 # enough that a path still fits on one line in the app's folder picker.
 MAX_FOLDER_DEPTH = 5
 
-FolderRecord = Mapping[str, Any]
+# A stored folder: the database port's FolderEntity, or a plain mapping (tests, raw docs).
+FolderRecord = Union[Mapping[str, Any], Any]
 
 
 class FolderTreeError(ValueError):
     """A create/move that would break the tree. The message is user-facing."""
 
 
+def field(folder: FolderRecord, name: str) -> Any:
+    """One field of a folder, whether it is a mapping or a model with attributes."""
+    if isinstance(folder, Mapping):
+        return folder.get(name)
+    return getattr(folder, name, None)
+
+
 def _by_id(folders: Iterable[FolderRecord]) -> Dict[str, FolderRecord]:
-    return {str(f.get('id')): f for f in folders if f.get('id')}
+    return {str(field(f, 'id')): f for f in folders if field(f, 'id')}
 
 
 def parent_of(folder: FolderRecord) -> Optional[str]:
-    parent = folder.get('parent_id')
+    parent = field(folder, 'parent_id')
     return str(parent) if parent else None
 
 
@@ -73,7 +81,7 @@ def descendant_ids(folders: Sequence[FolderRecord], folder_id: str) -> List[str]
         next_frontier: List[str] = []
         for fid in frontier:
             for child in children(folders, fid):
-                cid = str(child.get('id'))
+                cid = str(field(child, 'id'))
                 if cid in seen:
                     continue
                 seen.add(cid)
@@ -88,7 +96,7 @@ def subtree_height(folders: Sequence[FolderRecord], folder_id: str) -> int:
     below = children(folders, folder_id)
     if not below:
         return 1
-    return 1 + max(subtree_height(folders, str(c.get('id'))) for c in below)
+    return 1 + max(subtree_height(folders, str(field(c, 'id'))) for c in below)
 
 
 def validate_parent(
@@ -123,7 +131,7 @@ def path_names(folders: Sequence[FolderRecord]) -> Dict[str, str]:
     index = _by_id(folders)
     out: Dict[str, str] = {}
     for fid, folder in index.items():
-        names = [str(index[a].get('name') or '') for a in reversed(ancestors(folders, fid))]
-        names.append(str(folder.get('name') or ''))
+        names = [str(field(index[a], 'name') or '') for a in reversed(ancestors(folders, fid))]
+        names.append(str(field(folder, 'name') or ''))
         out[fid] = ' / '.join(names)
     return out

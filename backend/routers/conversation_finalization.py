@@ -4,15 +4,16 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 
+from config.listen_finalization import durable_attempt_cap_enabled as _durable_attempt_cap_enabled
 from config.summary_guarantee import enabled as summary_deadline_enabled
 
 from database import conversation_finalization_jobs as jobs_db
+from database.account_deletion_marker import account_deletion_blocks_user_work
 from database.sync_jobs import release_job_run_lock, try_acquire_job_run_lock
 from services.conversation_finalization import (
     final_attempt_failed,
@@ -45,15 +46,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-def _durable_attempt_cap_enabled() -> bool:
-    return os.getenv('LISTEN_FINALIZATION_DURABLE_ATTEMPT_CAP_ENABLED', 'true').strip().lower() in {
-        '1',
-        'true',
-        'yes',
-        'on',
-    }
-
-
 def _parse_task_payload(payload: Any) -> tuple[str, int] | None:
     """Accept exactly the opaque durable task schema, never credential fields."""
     if not isinstance(payload, dict) or set(payload) != {'job_id', 'dispatch_generation'}:
@@ -74,25 +66,29 @@ async def _retry_or_dead_letter(
     task_retry_count: int,
     failed_attempts: int,
     reason: str,
-) -> bool:
-    """Record a task failure; return whether this was the terminal delivery."""
+) -> str:
+    """Record a task failure; return the durable disposition of this delivery.
+
+    ``'dead_letter'`` (terminal), ``'requeued'`` (the one delayed budget
+    requeue was granted; the exhausted task must still be ACKed or Cloud Tasks
+    would redeliver it into the parked row), or ``'conflict'``/``'retryable'``
+    (this delivery stays retryable).
+    """
     max_attempts = get_listen_finalization_tasks_max_attempts_for_worker()
     # Cloud Tasks resets its retry header when reconciliation issues a new
     # dispatch generation. The job's failed-processing count survives that
     # handoff and is the authoritative budget (as on the pusher path).
     this_attempt = max(task_retry_count, failed_attempts) + 1
     if this_attempt >= max_attempts:
-        marked_dead_letter = await run_blocking(
+        return await run_blocking(
             db_executor,
             final_attempt_failed,
             job_id,
             dispatch_generation,
             lease_epoch,
             this_attempt,
+            failure_code=reason,
         )
-        if not marked_dead_letter:
-            return False
-        return True
 
     await run_blocking(
         db_executor,
@@ -103,7 +99,7 @@ async def _retry_or_dead_letter(
         reason,
     )
     LISTEN_FINALIZATION_RETRIES_TOTAL.inc()
-    return False
+    return 'retryable'
 
 
 @router.post('/v1/conversation-finalization-jobs/run', include_in_schema=False)
@@ -155,10 +151,20 @@ async def run_listen_finalization_job(
     job_id, dispatch_generation = parsed
     if job_id.startswith('merge-'):
         status = await lifecycle_service.merge_jobs.run(job_id, dispatch_generation)
+        if status == 'account_pending_deletion':
+            return retry_response(RetryReason.PERSISTENCE_FENCED)
         return JSONResponse(status_code=200, content={'status': status})
     if job_id.startswith('quiet-'):
         status = await run_blocking(db_executor, quiet_finalization.run, job_id, dispatch_generation)
+        if status == 'account_pending_deletion':
+            return retry_response(RetryReason.PERSISTENCE_FENCED)
         return JSONResponse(status_code=200, content={'status': status})
+    # Read the owner and marker before admitting a lease. The transaction in
+    # claim_finalization_job repeats this fence to close the race with deletion.
+    pending_job = await run_blocking(db_executor, jobs_db.get_finalization_job, job_id)
+    if pending_job and isinstance(pending_job.get('uid'), str):
+        if await run_blocking(db_executor, account_deletion_blocks_user_work, pending_job['uid']):
+            return retry_response(RetryReason.PERSISTENCE_FENCED)
     from utils.conversations.demand_processing import admit
 
     if not await run_blocking(db_executor, admit, job_id, token=dispatch_generation):
@@ -185,6 +191,8 @@ async def run_listen_finalization_job(
             return JSONResponse(status_code=200, content={'status': 'acked', 'job_status': 'completed'})
         if claim_status == 'leased':
             return JSONResponse(status_code=409, content={'status': claim_status})
+        if claim_status == 'account_pending_deletion':
+            return retry_response(RetryReason.PERSISTENCE_FENCED)
         if claim_status == 'stale_generation':
             # The reconciler has already enqueued the newer generation. An old
             # named task is no longer actionable and must be acknowledged so
@@ -205,15 +213,17 @@ async def run_listen_finalization_job(
 
         job = await run_blocking(db_executor, jobs_db.get_finalization_job, job_id)
         if not job or not isinstance(job.get('uid'), str) or not isinstance(job.get('conversation_id'), str):
-            terminal = await _retry_or_dead_letter(
+            disposition = await _retry_or_dead_letter(
                 job_id, dispatch_generation, claimed_lease_epoch, task_retry_count, failed_attempts, 'invalid_job'
             )
-            if terminal:
+            if disposition == 'dead_letter':
                 logger.error(
                     'listen finalization final attempt failed job_hash=%s error=invalid_job',
                     finalization_diagnostic_id(job_id),
                 )
                 return JSONResponse(status_code=200, content={'status': 'dead_letter'})
+            if disposition == 'requeued':
+                return JSONResponse(status_code=200, content={'status': 'delayed_requeue'})
             return JSONResponse(status_code=500, content={'status': 'retry'})
 
         if await run_blocking(db_executor, should_skip_background_account_mutation, job['uid']):
@@ -250,16 +260,20 @@ async def run_listen_finalization_job(
                     'listen finalization completed committed fanout job_hash=%s', finalization_diagnostic_id(job_id)
                 )
                 return JSONResponse(status_code=200, content={'status': 'done'})
-            terminal = await run_blocking(
+            disposition = await run_blocking(
                 db_executor, final_attempt_failed, job_id, dispatch_generation, claimed_lease_epoch, failed_attempts
             )
-            if terminal:
+            if disposition == 'dead_letter':
                 logger.error(
                     'listen finalization attempt budget exhausted job_hash=%s failed_attempts=%s',
                     finalization_diagnostic_id(job_id),
                     failed_attempts,
                 )
                 return JSONResponse(status_code=200, content={'status': 'dead_letter'})
+            if disposition == 'requeued':
+                # ACK the exhausted delivery so Cloud Tasks stops redelivering
+                # it into the parked row; the delay bounds system retries only.
+                return JSONResponse(status_code=200, content={'status': 'delayed_requeue'})
             return JSONResponse(status_code=409, content={'status': 'completion_conflict'})
 
         try:
@@ -289,7 +303,7 @@ async def run_listen_finalization_job(
                     if not completed:
                         return JSONResponse(status_code=409, content={'status': 'completion_conflict'})
                     return JSONResponse(status_code=200, content={'status': 'done'})
-                terminal = await run_blocking(
+                disposition = await run_blocking(
                     db_executor,
                     final_attempt_failed,
                     job_id,
@@ -298,18 +312,20 @@ async def run_listen_finalization_job(
                     max(task_retry_count, failed_attempts) + 1,
                     failure_code='recovery_structure_unavailable',
                 )
-                if not terminal:
-                    return JSONResponse(status_code=409, content={'status': 'completion_conflict'})
-                logger.error(
-                    'listen finalization recovery minimum terminal job_hash=%s dispatch_generation=%s',
-                    finalization_diagnostic_id(job_id),
-                    dispatch_generation,
-                )
-                return JSONResponse(status_code=200, content={'status': 'dead_letter'})
-            terminal = await _retry_or_dead_letter(
-                job_id, dispatch_generation, claimed_lease_epoch, task_retry_count, failed_attempts, 'processing_failed'
+                if disposition == 'dead_letter':
+                    logger.error(
+                        'listen finalization recovery minimum terminal job_hash=%s dispatch_generation=%s',
+                        finalization_diagnostic_id(job_id),
+                        dispatch_generation,
+                    )
+                    return JSONResponse(status_code=200, content={'status': 'dead_letter'})
+                if disposition == 'requeued':
+                    return JSONResponse(status_code=200, content={'status': 'delayed_requeue'})
+                return JSONResponse(status_code=409, content={'status': 'completion_conflict'})
+            disposition = await _retry_or_dead_letter(
+                job_id, dispatch_generation, claimed_lease_epoch, task_retry_count, failed_attempts, error.code
             )
-            if terminal:
+            if disposition == 'dead_letter':
                 # A BYOK provider failure is the user's own account state even at
                 # dead-letter terminality; keep it out of severity>=ERROR counts.
                 byok_class = byok_failure_class_of(error)
@@ -322,6 +338,8 @@ async def run_listen_finalization_job(
                     byok_class or 'none',
                 )
                 return JSONResponse(status_code=200, content={'status': 'dead_letter'})
+            if disposition == 'requeued':
+                return JSONResponse(status_code=200, content={'status': 'delayed_requeue'})
             return JSONResponse(status_code=500, content={'status': 'retry'})
 
         if disposition == ConversationFinalizationDisposition.deferred:
@@ -337,6 +355,7 @@ async def run_listen_finalization_job(
                 claimed_lease_epoch,
             )
         else:
+            # Discarded is terminal success, just like completed; do not defer or retry it.
             completed = await run_blocking(
                 db_executor,
                 jobs_db.mark_finalization_completed,
@@ -368,7 +387,7 @@ async def run_listen_finalization_job(
         )
         if claimed_lease_epoch is not None:
             try:
-                terminal = await _retry_or_dead_letter(
+                disposition = await _retry_or_dead_letter(
                     job_id,
                     dispatch_generation,
                     claimed_lease_epoch,
@@ -379,12 +398,14 @@ async def run_listen_finalization_job(
             except Exception:
                 logger.error('listen finalization recovery update failed job=%s failure=worker_failed', job_id)
             else:
-                if terminal:
+                if disposition == 'dead_letter':
                     logger.error(
                         'listen finalization final attempt failed job_hash=%s failure=worker_failed',
                         finalization_diagnostic_id(job_id),
                     )
                     return JSONResponse(status_code=200, content={'status': 'dead_letter'})
+                if disposition == 'requeued':
+                    return JSONResponse(status_code=200, content={'status': 'delayed_requeue'})
                 return JSONResponse(status_code=500, content={'status': 'retry'})
         logger.error('listen finalization handler failed job=%s failure=worker_failed', job_id)
         return JSONResponse(status_code=500, content={'status': 'retry'})

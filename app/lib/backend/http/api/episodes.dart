@@ -57,3 +57,22 @@ Future<ApiResult<Episode>> dismissEpisodeItem(String episodeId, String itemId) =
       ),
       decode: (body) => Episode.fromGenerated(wire.GeneratedEpisode.fromJson(_object(body))),
     );
+
+Future<ApiResult<EpisodePageRead>> getEpisodes(DateTime from, DateTime to, {String? cursor}) => executeApi(
+      request: ApiRequest(
+          url: Uri.parse('${Env.apiBaseUrl}v1/episodes').replace(queryParameters: {
+            'from': from.toUtc().toIso8601String(),
+            'to': to.toUtc().toIso8601String(),
+            // The server's page cap: Home reads every page before it paints, so fewer round trips.
+            'limit': '100',
+            if (cursor != null) 'cursor': cursor,
+          }).toString(),
+          method: 'GET'),
+      decode: (body) {
+        final page = wire.GeneratedEpisodeListResponse.fromJson(_object(body));
+        return EpisodePageRead(
+            enabled: page.enabled,
+            episodes: [for (final e in page.episodes ?? const <wire.GeneratedEpisode>[]) Episode.fromGenerated(e)],
+            nextCursor: page.nextCursor);
+      },
+    );

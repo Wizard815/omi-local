@@ -1,3 +1,10 @@
+// The chat message provider: history load, send, SSE stream consumption, and
+// message state shared by every chat surface in the app.
+//
+// Pendant voice turns address the server-current main conversation because the
+// voice endpoint carries no conversation id -- this provider resolves which
+// conversation is current instead of each caller, keeping voice and typed chat
+// on one timeline.
 import 'package:omi/models/voice_question_result.dart';
 import 'package:omi/models/plan_storefront.dart';
 import 'dart:async';
@@ -1123,7 +1130,8 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
             _logChatFailure(failure, stage: 'stream');
             _markReplyFailed(
               message,
-              _FailedReply(text: text, context: context, fileIds: fileIds, failure: failure, modelShortcut: modelShortcut),
+              _FailedReply(
+                  text: text, context: context, fileIds: fileIds, failure: failure, modelShortcut: modelShortcut),
             );
             completeChat(ProductOutcome.failure, failure: _productFailureFor(failure));
             notifyListeners();
@@ -1140,7 +1148,8 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
         _logChatFailure(failure.kind, stage: 'transport', status: failure.statusCode);
         _markReplyFailed(
           message,
-          _FailedReply(text: text, context: context, fileIds: fileIds, failure: failure.kind, modelShortcut: modelShortcut),
+          _FailedReply(
+              text: text, context: context, fileIds: fileIds, failure: failure.kind, modelShortcut: modelShortcut),
         );
         completeChat(ProductOutcome.failure, failure: _productFailureFor(failure.kind));
         notifyListeners();

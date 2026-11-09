@@ -7,6 +7,8 @@ truth, stages that exact source surface in a temporary directory, and walks impo
 from each declared entrypoint.  It catches a first-party package omitted from a
 whitelist Dockerfile without building an image.
 
+``check-third-party`` (runtime_image_dependencies.py) is its offline half.
+
 ``smoke`` is intentionally separate: it checks every reachable third-party module
 is installed in an already-built image with no network, then imports isolated
 entrypoints where that is side-effect safe. GPU images use the dependency-presence
@@ -33,6 +35,11 @@ from typing import Iterable
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 REGISTRY_PATH = REPOSITORY_ROOT / "backend" / "runtime_images.json"
 IGNORED_SOURCE_DIRECTORIES = {".git", ".pytest_cache", ".venv", ".openapi-venv", "__pycache__"}
+# Untracked scratch directories that tests and local runs create at the top of backend/. A clean CI
+# checkout never has them, and a test may write or delete them while the closure is copied, so
+# copying them races with that writer. Only the top level is skipped: a nested directory with the
+# same name is real source (utils/_segments is a package).
+IGNORED_TOP_LEVEL_SCRATCH_DIRECTORIES = {"_temp", "_samples", "_speech_profiles", "_segments"}
 # First-party modules that raise at import time unless an environment variable is set.
 # An import smoke reaching one of these without the variable fails the deploy, so the
 # registry must declare a non-production placeholder in ``smoke_environment``.
@@ -364,10 +371,18 @@ def final_stage_layer_errors(contract: ImageContract) -> list[str]:
     return errors
 
 
-def _ignore_source_directory(_: str, names: list[str]) -> set[str]:
-    skipped = {name for name in names if name in IGNORED_SOURCE_DIRECTORIES}
-    names[:] = [name for name in names if name not in skipped]
-    return skipped
+def _source_directory_ignorer(source_root: Path):
+    def ignore(directory: str, names: list[str]) -> set[str]:
+        at_root = Path(directory).resolve() == source_root.resolve()
+        skipped = {
+            name
+            for name in names
+            if name in IGNORED_SOURCE_DIRECTORIES or (at_root and name in IGNORED_TOP_LEVEL_SCRATCH_DIRECTORIES)
+        }
+        names[:] = [name for name in names if name not in skipped]
+        return skipped
+
+    return ignore
 
 
 def _runtime_destination(destination: str, workdir: PurePosixPath) -> Path:
@@ -382,7 +397,7 @@ def _runtime_destination(destination: str, workdir: PurePosixPath) -> Path:
 
 def _copy_source(source: Path, destination: Path) -> None:
     if source.is_dir():
-        shutil.copytree(source, destination, dirs_exist_ok=True, ignore=_ignore_source_directory)
+        shutil.copytree(source, destination, dirs_exist_ok=True, ignore=_source_directory_ignorer(source))
         return
     destination.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(source, destination)
@@ -472,7 +487,9 @@ def _imported_modules(
     return imported
 
 
-def source_closure_errors(contract: ImageContract) -> list[str]:
+def source_closure_errors(contract: ImageContract, *, _import_trees: dict[str, ast.Module] | None = None) -> list[str]:
+    if _import_trees is None:
+        _import_trees = {}
     errors: list[str] = []
     with tempfile.TemporaryDirectory(prefix=f"omi-runtime-image-{contract.name}-") as temp_dir:
         runtime_root = Path(temp_dir)
@@ -496,7 +513,17 @@ def source_closure_errors(contract: ImageContract) -> list[str]:
                 )
                 return
             try:
-                tree = ast.parse(runtime_path.read_text(encoding="utf-8"), filename=str(runtime_path))
+                source_text = runtime_path.read_text(encoding="utf-8")
+                if source_text not in _import_trees:
+                    parsed = ast.parse(source_text, filename=str(runtime_path))
+                    # All images still stage and resolve their own COPY surface.
+                    # Identical sources need parsing/walking only once per check;
+                    # retain imports at every nesting depth, including lazy ones.
+                    _import_trees[source_text] = ast.Module(
+                        body=[node for node in ast.walk(parsed) if isinstance(node, (ast.Import, ast.ImportFrom))],
+                        type_ignores=[],
+                    )
+                tree = _import_trees[source_text]
             except SyntaxError as exc:
                 errors.append(f"{contract.name}: staged module {module!r} has invalid syntax: {exc}")
                 return
@@ -562,9 +589,10 @@ def import_smoke_environment_errors(contracts: Iterable[ImageContract]) -> list[
 
 def check_source_closures(contracts: Iterable[ImageContract]) -> list[str]:
     errors: list[str] = []
+    import_trees: dict[str, ast.Module] = {}
     for contract in contracts:
         errors.extend(final_stage_layer_errors(contract))
-        errors.extend(source_closure_errors(contract))
+        errors.extend(source_closure_errors(contract, _import_trees=import_trees))
     return errors
 
 
@@ -609,7 +637,9 @@ def workflow_contract_errors(contracts: Iterable[ImageContract]) -> list[str]:
     return errors
 
 
-def third_party_dependency_modules(contract: ImageContract) -> tuple[str, ...]:
+def third_party_dependency_modules(
+    contract: ImageContract, *, _trees: dict[Path, ast.Module] | None = None
+) -> tuple[str, ...]:
     """Find reachable third-party import targets without executing application code.
 
     ``from google.cloud import tasks_v2`` records both ``google.cloud`` and
@@ -630,7 +660,11 @@ def third_party_dependency_modules(contract: ImageContract) -> tuple[str, ...]:
         if source is None:
             return
         source_path, _ = source
-        tree = ast.parse(source_path.read_text(encoding="utf-8"), filename=str(source_path))
+        tree = _trees.get(source_path) if _trees is not None else None
+        if tree is None:
+            tree = ast.parse(source_path.read_text(encoding="utf-8"), filename=str(source_path))
+            if _trees is not None:
+                _trees[source_path] = tree
         for imported in _imported_modules(
             tree,
             module,
@@ -1046,6 +1080,10 @@ def parse_args() -> argparse.Namespace:
     subparsers.add_parser("check-source", help="check each entrypoint's first-party Docker source closure")
     subparsers.add_parser("check-workflows", help="check registered deployment workflows smoke their image")
     subparsers.add_parser("check-roles", help="check the role -> image -> service map and role-image build stamps")
+    subparsers.add_parser(
+        "check-third-party",
+        help="check each image's reachable third-party imports against the distributions its Dockerfile installs",
+    )
     smoke = subparsers.add_parser("smoke", help="import an already-built image's registered entrypoint")
     smoke.add_argument("--dockerfile", type=Path, required=True)
     smoke.add_argument("--image", required=True)
@@ -1068,8 +1106,9 @@ def main() -> int:
         else:
             dockerfile = None
             contracts = load_contracts(args.registry)
-        if args.command in {"check", "check-source", "check-workflows", "check-roles"}:
+        if args.command in {"check", "check-source", "check-workflows", "check-roles", "check-third-party"}:
             errors = []
+            notes: list[str] = []
             if args.command in {"check", "check-source"}:
                 errors.extend(check_source_closures(contracts))
                 errors.extend(import_smoke_environment_errors(contracts))
@@ -1077,6 +1116,13 @@ def main() -> int:
                 errors.extend(workflow_contract_errors(contracts))
             if args.command in {"check", "check-roles"}:
                 errors.extend(role_map_errors(contracts, args.registry))
+            if args.command == "check-third-party":
+                from runtime_image_dependencies import check_third_party_closures
+
+                third_party_errors, notes = check_third_party_closures(contracts)
+                errors.extend(third_party_errors)
+            for note in notes:
+                print(f"note: {note}")
             if errors:
                 print("FAIL: runtime-image contract is incomplete:", file=sys.stderr)
                 for error in errors:
@@ -1097,4 +1143,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    sys.modules.setdefault("runtime_image_contracts", sys.modules[__name__])  # one ContractError for helpers
     raise SystemExit(main())

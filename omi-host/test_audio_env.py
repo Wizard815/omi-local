@@ -30,6 +30,7 @@ COMPOSE_EMPTY = {
     for name in (
         "OMI_AUDIO_URL", "HOSTED_PARAKEET_API_URL", "HOSTED_SPEAKER_EMBEDDING_API_URL", "TTS_LOCAL_BASE_URL",
         "STT_SERVICE_MODELS", "STT_PRERECORDED_MODEL", "MODULATE_API_KEY", "SONIOX_API_KEY", "DEEPGRAM_API_KEY",
+        "STT_STREAMING_PARAKEET_SLOT_ENABLED",
     )
 }
 SURFACES = ("HOSTED_PARAKEET_API_URL", "HOSTED_SPEAKER_EMBEDDING_API_URL", "TTS_LOCAL_BASE_URL")
@@ -54,6 +55,16 @@ def test_default_is_the_bundled_omi_audio():
     assert {k: env[k] for k in SURFACES} == dict.fromkeys(SURFACES, "http://omi-audio:8790"), env
     assert env["STT_SERVICE_MODELS"] == "parakeet"
     assert env["STT_PRERECORDED_MODEL"] == "", "sync uploads keep the backend's default (local first)"
+
+
+def test_a_chain_with_parakeet_turns_on_upstreams_live_parakeet_slot():
+    code, env, _ = run()
+    assert code == 0
+    assert env["STT_STREAMING_PARAKEET_SLOT_ENABLED"] == "true"
+    code, env, _ = run(STT_STREAMING_PARAKEET_SLOT_ENABLED="false")
+    assert env["STT_STREAMING_PARAKEET_SLOT_ENABLED"] == "false", "an explicit value wins"
+    code, env, _ = run(OMI_AUDIO_URL="off", DEEPGRAM_API_KEY="dg")
+    assert env.get("STT_STREAMING_PARAKEET_SLOT_ENABLED", "") == "", "no parakeet in the chain, slot untouched"
 
 
 def test_audio_url_moves_every_surface():
@@ -113,6 +124,7 @@ def test_off_without_any_cloud_key_refuses_to_start():
 def main() -> None:
     tests = [
         test_default_is_the_bundled_omi_audio,
+        test_a_chain_with_parakeet_turns_on_upstreams_live_parakeet_slot,
         test_audio_url_moves_every_surface,
         test_an_explicit_surface_url_still_wins,
         test_cloud_keys_go_ahead_of_the_local_engine_in_upstream_order,
