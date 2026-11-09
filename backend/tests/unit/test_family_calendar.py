@@ -74,6 +74,24 @@ def test_pending_lists_unreviewed_future_events_and_keeps_reviewed_ones_apart(wo
     assert all(not e.created for e in waiting)
 
 
+def test_one_conversation_shows_all_its_events_even_past_ones_and_nothing_else(world):
+    """The conversation page: every event heard there, the missed one included, none from elsewhere."""
+    store, _ = world
+    store['c1'] = _conversation(
+        'c1',
+        [
+            {'title': 'Inspection', 'start': NOW + timedelta(days=1), 'duration': 60},
+            {'title': 'Yesterday lunch', 'start': NOW - timedelta(days=1), 'duration': 30},
+            {'title': 'Dentist', 'start': NOW + timedelta(days=2), 'created': True},
+        ],
+    )
+    store['c2'] = _conversation('c2', [{'title': 'Movers', 'start': NOW + timedelta(days=1)}])
+    waiting, recent = fc.pending('u1', now=NOW, conversation_id='c1')
+    assert [e.title for e in waiting] == ['Yesterday lunch', 'Inspection']
+    assert [e.title for e in recent] == ['Dentist']
+    assert fc.pending('u1', now=NOW, conversation_id='gone') == ([], [])
+
+
 def test_nothing_is_written_without_approve(world):
     """The ask-first contract: listing never touches the calendar or the stored events."""
     store, saved = world
