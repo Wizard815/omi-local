@@ -17146,10 +17146,13 @@ export async function get_my_fair_use_status_v1_fair_use_status_get(header: { au
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
-export async function get_family_calendar_v1_family_calendar_get(header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<FamilyCalendarResponse> {
+export async function get_family_calendar_v1_family_calendar_get(query: { conversation_id?: string | null }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<FamilyCalendarResponse> {
   const _base = init?.baseURL ?? "";
   const _path = `/v1/family-calendar`;
-  const _search = "";
+  const _params = query ? Object.entries(query)
+    .filter(([, v]) => v !== undefined && v !== null)
+    .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`).join('&') : '';
+  const _search = _params ? `?${_params}` : "";
   const _res = await fetch(`${_base}${_path}${_search}`, {
     method: "GET",
     headers: {
