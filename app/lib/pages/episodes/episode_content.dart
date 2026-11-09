@@ -1,3 +1,6 @@
+// Episodes: the building blocks of an episode's content (section titles, content
+// cards, bullet lists).
+
 import 'package:flutter/material.dart';
 import 'package:omi/backend/schema/episode.dart';
 import 'package:omi/pages/episodes/episode_presentation.dart';

@@ -1,3 +1,6 @@
+// Home conversation list API client: one typed read that carries the storage cursor
+// and the acknowledged fallback snapshots together.
+
 part of 'conversations.dart';
 
 /// Typed Home list: the storage cursor and acknowledged fallback snapshots travel together.

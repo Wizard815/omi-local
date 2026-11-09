@@ -1,3 +1,6 @@
+// Value-moment paywall: offers the paid plan at a moment the owner just used what it
+// keeps; never when the server is self-hosted.
+
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';

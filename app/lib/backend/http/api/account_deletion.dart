@@ -1,3 +1,6 @@
+// Account deletion API client: reads the owner's deletion status (pending, grace
+// window, restorable) and requests or cancels deletion.
+
 import 'dart:convert';
 
 import 'package:omi/backend/http/api_result.dart';

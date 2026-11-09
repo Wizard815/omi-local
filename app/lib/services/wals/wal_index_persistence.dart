@@ -1,3 +1,6 @@
+// WAL sync: saves and loads the local index of recordings for the WAL sync
+// implementation.
+
 part of 'local_wal_sync.dart';
 
 extension _WalIndexPersistence on LocalWalSyncImpl {

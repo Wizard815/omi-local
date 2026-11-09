@@ -1,3 +1,6 @@
+// Conversation provider: reconciles a conversation's visibility across the canonical,
+// search and grouped projections.
+
 part of 'conversation_provider.dart';
 
 /// Visibility is reconciled across canonical, search and grouped projections.

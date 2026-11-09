@@ -1,3 +1,6 @@
+// Recording speakers API client: reads a recording's transcript lines and assigns
+// speakers, with typed errors for stale, over-limit and partial assignments.
+
 import 'dart:convert';
 
 import 'package:omi/backend/http/api_result.dart';

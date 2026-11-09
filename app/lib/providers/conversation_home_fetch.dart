@@ -1,3 +1,6 @@
+// Conversation provider: Home fetch projection, keeping held replacements and the
+// storage cursor inside one boundary.
+
 part of 'conversation_provider.dart';
 
 /// Home fetch projection keeps its held replacements and storage cursor in one boundary.

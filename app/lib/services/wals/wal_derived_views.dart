@@ -1,3 +1,6 @@
+// WAL views: pure selections over the recording write-ahead log (on device, moving,
+// synced) shared by provider views and fixtures.
+
 import 'dart:math';
 import 'dart:collection';
 

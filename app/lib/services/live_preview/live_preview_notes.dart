@@ -1,3 +1,6 @@
+// Live preview notes: the throttled, bounded policy for drafting on-device notes
+// during a capture, and the telemetry outcome of each attempt.
+
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';

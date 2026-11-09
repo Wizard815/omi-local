@@ -1,3 +1,6 @@
+// Conversation detail: restores speaker assignments on a conversation (undo and
+// recovery of earlier labels) for the detail provider.
+
 part of 'conversation_detail_provider.dart';
 
 extension _ConversationSpeakerRestore on ConversationDetailProvider {

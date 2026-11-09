@@ -1,3 +1,6 @@
+// Lag work registry: code-owned labels for background work (sync, upload, index)
+// so lag telemetry can say what was running, never user content.
+
 import 'dart:developer' show Timeline;
 
 /// Code-owned labels only; never put recording IDs, paths or user content here.
