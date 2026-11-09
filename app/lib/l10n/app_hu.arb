@@ -4809,6 +4809,15 @@
     "@familyCalendarDescriptionHint": {
         "description": "Hint of the editable description field"
     },
+    "familyCalendarHeardHere": "{count, plural, =1{1 event heard here} other{{count} events heard here}}",
+    "@familyCalendarHeardHere": {
+        "description": "Conversation summary: the row that opens this conversation's heard events for checking",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "familyCalendarToCheck": "{count, plural, =1{1 to check} other{{count} to check}}",
     "@familyCalendarToCheck": {
         "description": "Section header above the pending cards",

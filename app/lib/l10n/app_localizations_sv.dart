@@ -15240,6 +15240,17 @@ class AppLocalizationsSv extends AppLocalizations {
   String get familyCalendarDescriptionHint => 'Add a note';
 
   @override
+  String familyCalendarHeardHere(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count events heard here',
+      one: '1 event heard here',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String familyCalendarToCheck(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
