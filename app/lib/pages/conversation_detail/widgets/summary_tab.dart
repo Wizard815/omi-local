@@ -7,6 +7,7 @@ import 'package:omi/backend/http/api/conversations.dart';
 import 'package:omi/backend/schema/conversation.dart';
 import 'package:omi/pages/conversation_detail/page.dart';
 import 'package:omi/pages/episodes/episode_moments_section.dart';
+import 'package:omi/pages/family_calendar/conversation_calendar_row.dart';
 import 'package:omi/providers/conversation_provider.dart';
 import 'package:omi/utils/other/temp.dart';
 import 'package:omi/backend/http/api/users.dart';
@@ -170,6 +171,8 @@ class _SummaryTabState extends State<SummaryTab> with AutomaticKeepAliveClientMi
                           currentResultIndex: widget.currentResultIndex,
                           searchResultOffset: widget.summarySearchResultOffset,
                         ),
+                      if (conversation != null && !_isEditing && !summarySelection.isApp)
+                        SliverToBoxAdapter(child: ConversationCalendarRow(conversation: conversation)),
                     ]),
                   ),
                   // Where the Mac puts its strip: after the note's own sections. Only a completed

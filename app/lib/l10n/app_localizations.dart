@@ -28005,6 +28005,12 @@ abstract class AppLocalizations {
   /// **'Add a note'**
   String get familyCalendarDescriptionHint;
 
+  /// Conversation summary: the row that opens this conversation's heard events for checking
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 event heard here} other{{count} events heard here}}'**
+  String familyCalendarHeardHere(int count);
+
   /// Section header above the pending cards
   ///
   /// In en, this message translates to:
