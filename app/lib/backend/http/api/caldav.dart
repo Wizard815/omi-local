@@ -5,13 +5,11 @@ import 'package:omi/backend/schema/caldav.dart';
 import 'package:omi/backend/schema/gen/self_hosted_wire.g.dart' as wire;
 import 'package:omi/env/env.dart';
 
-String _base() => '${Env.apiBaseUrl}v1/caldav';
-
 CalDavSettings _settings(String body) => CalDavSettings.fromGenerated(
     wire.GeneratedCalDavSettingsResponse.fromJson(jsonDecode(body) as Map<String, dynamic>));
 
 Future<ApiResult<CalDavSettings>> getCalDavSettings() =>
-    executeApi(request: ApiRequest(url: '${_base()}/settings', method: 'GET'), decode: _settings);
+    executeApi(request: ApiRequest(url: '${Env.apiBaseUrl}v1/caldav/settings', method: 'GET'), decode: _settings);
 
 /// Fields left null are kept as stored; an empty [password] clears it, null keeps it.
 Future<ApiResult<CalDavSettings>> updateCalDavSettings({
@@ -44,7 +42,7 @@ Future<ApiResult<CalDavSettings>> updateCalDavSettings({
   };
   return executeApi(
     request: ApiRequest(
-      url: '${_base()}/settings',
+      url: '${Env.apiBaseUrl}v1/caldav/settings',
       method: 'PUT',
       headers: const {'Content-Type': 'application/json'},
       body: jsonEncode(payload),
@@ -54,11 +52,11 @@ Future<ApiResult<CalDavSettings>> updateCalDavSettings({
 }
 
 Future<ApiResult<CalDavSettings>> deleteCalDavSettings() =>
-    executeApi(request: ApiRequest(url: '${_base()}/settings', method: 'DELETE'), decode: _settings);
+    executeApi(request: ApiRequest(url: '${Env.apiBaseUrl}v1/caldav/settings', method: 'DELETE'), decode: _settings);
 
 /// A connection test: the calendars found, or (ok false) the server's error text.
 Future<ApiResult<({bool ok, int calendars, String error})>> testCalDavConnection() => executeApi(
-      request: ApiRequest(url: '${_base()}/test', method: 'POST'),
+      request: ApiRequest(url: '${Env.apiBaseUrl}v1/caldav/test', method: 'POST'),
       decode: (body) {
         final g = wire.GeneratedCalDavTestResponse.fromJson(jsonDecode(body) as Map<String, dynamic>);
         return (ok: g.ok, calendars: g.calendars?.length ?? 0, error: g.error);
@@ -66,7 +64,7 @@ Future<ApiResult<({bool ok, int calendars, String error})>> testCalDavConnection
     );
 
 Future<ApiResult<CalDavSyncOutcome>> syncCalDavNow() => executeApi(
-      request: ApiRequest(url: '${_base()}/sync', method: 'POST'),
+      request: ApiRequest(url: '${Env.apiBaseUrl}v1/caldav/sync', method: 'POST'),
       decode: (body) => CalDavSyncOutcome.fromGenerated(
           wire.GeneratedCalDavSyncResponse.fromJson(jsonDecode(body) as Map<String, dynamic>)),
     );

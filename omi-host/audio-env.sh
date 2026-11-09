@@ -41,6 +41,15 @@ if [ -z "${STT_SERVICE_MODELS:-}" ]; then
   export STT_SERVICE_MODELS
 fi
 
+# Upstream keeps the plain live Parakeet slot off unless STT_STREAMING_PARAKEET_SLOT_ENABLED
+# is on (config/live_stt_gpu_fleet.py). The local audio service is that slot here, so turn
+# it on whenever the live chain lists parakeet; an explicit value still wins.
+case ",${STT_SERVICE_MODELS}," in
+  *,parakeet,*)
+    export STT_STREAMING_PARAKEET_SLOT_ENABLED="${STT_STREAMING_PARAKEET_SLOT_ENABLED:-true}"
+    ;;
+esac
+
 # Recordings transcribed after the fact (sync uploads) try the local service first,
 # then Modulate. Without a local service only Modulate can serve them.
 if [ -z "${STT_PRERECORDED_MODEL:-}" ] && [ -z "${HOSTED_PARAKEET_API_URL:-}" ]; then

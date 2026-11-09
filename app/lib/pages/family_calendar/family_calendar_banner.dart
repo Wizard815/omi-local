@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'package:omi/backend/http/api/family_calendar.dart';
 import 'package:omi/backend/http/api_result.dart';
+import 'package:omi/backend/schema/family_calendar.dart';
 import 'package:omi/pages/family_calendar/family_calendar_review_page.dart';
 import 'package:omi/ui/ui.dart';
 import 'package:omi/utils/l10n_extensions.dart';
+import 'package:omi/utils/logger.dart';
 import 'package:omi/utils/other/temp.dart';
 
 /// "N events to check" card at the top of the conversation list: Omi heard dates it wants
@@ -29,7 +31,13 @@ class _FamilyCalendarBannerState extends State<FamilyCalendarBanner> {
 
   Future<void> _load() async {
     // An optional nudge: a failure shows nothing rather than reaching the list.
-    final result = await getFamilyCalendar();
+    final ApiResult<FamilyCalendar> result;
+    try {
+      result = await getFamilyCalendar();
+    } catch (e) {
+      Logger.debug('Family calendar banner lookup failed: ${e.runtimeType}');
+      return;
+    }
     if (!mounted) return;
     if (result case ApiSuccess(:final data) when data.configured) {
       setState(() => _pending = data.pending.length);

@@ -6,12 +6,14 @@ import 'package:omi/backend/preferences.dart';
 import 'package:omi/models/sync_state.dart';
 import 'package:omi/pages/conversations/local_storage_page.dart';
 import 'package:omi/pages/conversations/sync_cooldown_copy.dart';
+import 'package:omi/pages/conversations/sync_pending_work.dart' show walAttentionLabel;
 import 'package:omi/pages/conversations/private_cloud_sync_page.dart';
 import 'package:omi/pages/conversations/recording_blocks.dart';
 import 'package:omi/pages/conversations/widgets/device_download_meter.dart';
 import 'package:omi/pages/conversations/widgets/device_storage_card.dart';
 import 'package:omi/pages/conversations/widgets/sync_details_sheet.dart';
 import 'package:omi/pages/conversations/widgets/sync_step_bar.dart';
+import 'package:omi/pages/on_device/on_device_queue_banner.dart';
 import 'package:omi/providers/device_provider.dart';
 import 'package:omi/providers/sync_provider.dart';
 import 'package:omi/providers/user_provider.dart';
@@ -126,6 +128,7 @@ class _AutoSyncPageState extends State<AutoSyncPage> {
                   delegate: SliverChildListDelegate.fixed([
                     const SizedBox(height: 8),
                     _buildOverallStatusCard(syncProvider, syncState),
+                    const OnDeviceChargerWaitLine(),
                     if (syncState.hasError) ...[const SizedBox(height: 16), _buildErrorCard(syncState, syncProvider)],
                     if (WalSyncs.isRingBufferFirmware(deviceProvider.currentFirmwareVersion) &&
                         deviceProvider.ringStatus != null) ...[
@@ -172,7 +175,9 @@ class _AutoSyncPageState extends State<AutoSyncPage> {
         .toList();
 
     final isActive = s.isSyncing || s.isFetchingConversations;
-    final bool showSpinner = (isActive || uploaded > 0) && !p.isRateLimited;
+    // An edge throttle clears by itself and needs nothing from the user, so it is not shown (David, 11-02).
+    final paused = p.isRateLimited && p.rateLimitReason != RateLimitReason.edgeThrottle;
+    final bool showSpinner = (isActive || uploaded > 0) && !paused;
 
     String title;
     String? subtitle;
@@ -205,7 +210,7 @@ class _AutoSyncPageState extends State<AutoSyncPage> {
       // Live-capture uploads run before the device drain: the bar stays on the device step, unfilled.
       if (barStep != step.step) barFraction = 0;
       action = statusActionPill(l.cancel, Colors.redAccent, () => _confirmCancel(context, p));
-    } else if (p.isRateLimited) {
+    } else if (paused) {
       title = syncCooldownTitle(p.rateLimitReason, l);
       titleColor = Colors.orangeAccent;
     } else if (isActive || uploaded > 0) {
@@ -315,12 +320,7 @@ class _AutoSyncPageState extends State<AutoSyncPage> {
     );
   }
 
-  static bool _needsAttention(WalSyncDisplayState s) =>
-      s == WalSyncDisplayState.failed ||
-      s == WalSyncDisplayState.corrupted ||
-      s == WalSyncDisplayState.outsideRecoveryWindow ||
-      s == WalSyncDisplayState.unsupportedAudio ||
-      s == WalSyncDisplayState.uploadRejected;
+  static bool _needsAttention(WalSyncDisplayState s) => isAttentionSyncState(s);
 
   // ─────────────────────────────────────────
   //  Error card
@@ -633,24 +633,19 @@ class _AutoSyncPageState extends State<AutoSyncPage> {
   /// go, Delete removes a recording nothing can move forward. Mixed or healthy blocks open.
   Widget _blockTrailing(RecordingBlock block, WalSyncDisplayState state) {
     if (state == WalSyncDisplayState.syncing) return const OmiSpinner(size: OmiSpinnerSize.small);
-    if (block.wals.any((w) =>
-        !w.onDeviceOnly &&
-        (isRetryableSyncState(w.syncDisplayState) || w.syncDisplayState == WalSyncDisplayState.retrying))) {
+    if (block.wals.any(walRetryCanHelpOrRetrying)) {
       return OmiButton.secondary(
         label: context.l10n.tryAgain,
         size: OmiButtonSize.compact,
         onPressed: () async {
           final sync = context.read<SyncProvider>();
-          for (final wal in block.wals) {
-            final s = wal.syncDisplayState;
-            if (!wal.onDeviceOnly && (isRetryableSyncState(s) || s == WalSyncDisplayState.retrying)) {
-              await sync.syncWal(wal);
-            }
+          for (final wal in block.wals.where(walRetryCanHelpOrRetrying)) {
+            await sync.syncWal(wal);
           }
         },
       );
     }
-    if (block.wals.every((w) => _isUnsyncableState(w.syncDisplayState))) {
+    if (block.wals.every((w) => _isUnsyncableState(w))) {
       return OmiButton.destructive(
         label: context.l10n.delete,
         size: OmiButtonSize.compact,
@@ -813,7 +808,7 @@ class _AutoSyncPageState extends State<AutoSyncPage> {
 
   (Color, String) _rowLabel(Wal wal) {
     final state = wal.syncDisplayState;
-    var (color, _, label) = _rowVisual(state);
+    var (color, _, label) = _rowVisual(state, rejectionReason: wal.uploadRejectionReason);
     // On-device WALs surface their transfer state instead of "Waiting to sync".
     final onDevice = wal.storage == WalStorage.sdcard || wal.storage == WalStorage.flashPage;
     if (state == WalSyncDisplayState.waiting && onDevice) {
@@ -829,7 +824,7 @@ class _AutoSyncPageState extends State<AutoSyncPage> {
     if (state == WalSyncDisplayState.syncing) {
       return const OmiSpinner(size: OmiSpinnerSize.small);
     }
-    if (!wal.onDeviceOnly && (isRetryableSyncState(state) || state == WalSyncDisplayState.retrying)) {
+    if (walRetryCanHelpOrRetrying(wal)) {
       return OmiButton.secondary(
         label: context.l10n.tryAgain,
         size: OmiButtonSize.compact,
@@ -839,7 +834,7 @@ class _AutoSyncPageState extends State<AutoSyncPage> {
     // Nothing can move these forward, so the only honest action is removal.
     // Swipe-to-delete already works, but it is invisible: without a labelled
     // control the needs-attention banner reads as permanent chores.
-    if (_isUnsyncableState(state)) {
+    if (_isUnsyncableState(wal)) {
       return OmiButton.destructive(
         label: context.l10n.delete,
         size: OmiButtonSize.compact,
@@ -849,12 +844,25 @@ class _AutoSyncPageState extends State<AutoSyncPage> {
     return FaIcon(FontAwesomeIcons.chevronRight, color: Colors.grey.shade600, size: 12);
   }
 
-  /// Confirmed audio/window verdicts no upload can resolve. Spent budgets and
-  /// request refusals deliberately remain outside this set: they keep Retry.
-  static bool _isUnsyncableState(WalSyncDisplayState state) =>
-      state == WalSyncDisplayState.corrupted ||
-      state == WalSyncDisplayState.outsideRecoveryWindow ||
-      state == WalSyncDisplayState.unsupportedAudio;
+  /// A member a deliberate Retry may still move: a retryable state (spent
+  /// budget or a request refusal a server-side fix can unblock) that is not
+  /// the deterministic too-large refusal — the same bytes are the same size —
+  /// and not a local-only recording.
+  static bool walRetryCanHelpOrRetrying(Wal wal) =>
+      !wal.onDeviceOnly &&
+      wal.uploadRejectionReason != WalUploadRejection.tooLarge &&
+      (isRetryableSyncState(wal.syncDisplayState) || wal.syncDisplayState == WalSyncDisplayState.retrying);
+
+  /// Confirmed audio/window verdicts no upload can resolve, plus the
+  /// deterministic too-large refusal. Spent budgets and other request
+  /// refusals deliberately remain outside this set: they keep Retry.
+  static bool _isUnsyncableState(Wal wal) {
+    final state = wal.syncDisplayState;
+    return state == WalSyncDisplayState.corrupted ||
+        state == WalSyncDisplayState.outsideRecoveryWindow ||
+        state == WalSyncDisplayState.unsupportedAudio ||
+        (state == WalSyncDisplayState.uploadRejected);
+  }
 
   Future<void> _confirmDeleteWals(List<Wal> wals) async {
     final syncProvider = context.read<SyncProvider>();
@@ -886,7 +894,7 @@ class _AutoSyncPageState extends State<AutoSyncPage> {
   /// Row subtitle (color, icon, label). Colors stay restrained: grey for
   /// neutral/active, amber for auto-retry, red for failed/corrupted. Purple
   /// is reserved for actions and the spinner — not body text.
-  (Color, FaIconData, String) _rowVisual(WalSyncDisplayState state) {
+  (Color, FaIconData, String) _rowVisual(WalSyncDisplayState state, {String? rejectionReason}) {
     switch (state) {
       case WalSyncDisplayState.synced:
         return (Colors.grey.shade500, FontAwesomeIcons.cloudArrowUp, context.l10n.statusProcessed);
@@ -907,7 +915,12 @@ class _AutoSyncPageState extends State<AutoSyncPage> {
       case WalSyncDisplayState.unsupportedAudio:
         return (Colors.redAccent, FontAwesomeIcons.fileCircleExclamation, context.l10n.syncStatusUnsupportedAudio);
       case WalSyncDisplayState.uploadRejected:
-        return (Colors.redAccent, FontAwesomeIcons.circleExclamation, context.l10n.failedStatus);
+        // Which refusal it was, in On the Way's words.
+        return (
+          Colors.redAccent,
+          FontAwesomeIcons.circleExclamation,
+          walAttentionLabel(state, context.l10n, rejectionReason: rejectionReason)
+        );
     }
   }
 

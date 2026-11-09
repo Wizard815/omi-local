@@ -157,3 +157,48 @@ class ReopenDayReviewResponse(BaseModel):
     status: str = 'ok'
     restored_count: int = 0
     merged_count: int = Field(default=0, description='Merged conversations stay merged; their sources are gone')
+
+
+# ---- MCP: the compact day bundle GET /v1/mcp/day-reviews/{date} returns (no transcripts) ----
+
+
+class McpDayReviewSection(BaseModel):
+    id: Optional[str] = None
+    title: str = ''
+    text: str = ''
+    tags: List[str] = Field(default_factory=list)
+    conversation_ids: List[str] = Field(default_factory=list)
+    favorited: bool = False
+
+
+class McpDayReview(BaseModel):
+    title: str = ''
+    text: str = ''
+    tags: List[str] = Field(default_factory=list)
+    sections: List[McpDayReviewSection] = Field(default_factory=list)
+    kept_conversation_ids: List[str] = Field(default_factory=list)
+    rolled_up_conversation_ids: List[str] = Field(default_factory=list)
+    generated_at: Optional[datetime] = None
+    generation_count: int = 0
+
+
+class McpDayReviewConversation(BaseModel):
+    id: Optional[str] = None
+    title: str = ''
+    overview: str = ''
+    started_at: Optional[datetime] = None
+    finished_at: Optional[datetime] = None
+    starred: bool = False
+    tags: List[str] = Field(default_factory=list)
+    in_bundle: bool = False
+    dropped: bool = False
+    held: bool = False
+
+
+class McpDayReviewResponse(BaseModel):
+    date: str
+    bundled: bool = False
+    review: Optional[McpDayReview] = None
+    conversations: List[McpDayReviewConversation] = Field(default_factory=list)
+    processing_count: int = 0
+    hold_enabled: bool = False
