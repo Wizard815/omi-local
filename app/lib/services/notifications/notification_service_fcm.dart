@@ -3,17 +3,17 @@ import 'package:omi/env/physical_qualification.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
 import 'package:awesome_notifications/awesome_notifications.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 
 import 'package:omi/backend/http/api/notifications.dart';
 import 'package:omi/backend/schema/message.dart';
+import 'package:omi/services/auth_service.dart';
+import 'package:omi/services/notifications/fcm_token_registration.dart';
 import 'package:omi/services/notifications.dart' show NotificationUtil;
 import 'package:omi/services/notifications/action_item_notification_handler.dart';
 import 'package:omi/services/notifications/chat_answer_notification_handler.dart';
@@ -27,7 +27,7 @@ import 'package:omi/utils/notification_channel_strings.dart';
 
 /// Firebase Cloud Messaging enabled notification service
 /// Supports iOS, Android, macOS, web, and Linux with full FCM functionality
-class _FCMNotificationService implements NotificationInterface {
+class _FCMNotificationService with WidgetsBindingObserver implements NotificationInterface {
   _FCMNotificationService._();
 
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
@@ -36,6 +36,27 @@ class _FCMNotificationService implements NotificationInterface {
   late final NotificationChannel channel;
 
   final AwesomeNotifications _awesomeNotifications = AwesomeNotifications();
+  bool _registrationReady = false;
+  bool _registrationListenersInstalled = false;
+  bool _messageListenersInstalled = false;
+  late final FcmTokenRegistration _registration = FcmTokenRegistration(
+    capture: () {
+      final owner = AuthService.instance.captureSessionSnapshot();
+      // Capturing may synchronously report an account change and revoke the
+      // admission flag. A refresh event must not admit that replacement user.
+      return _registrationReady ? owner : null;
+    },
+    isCurrent: (owner) => AuthService.instance.isSessionSnapshotCurrent(owner),
+    readApns: _firebaseMessaging.getAPNSToken,
+    readToken: _firebaseMessaging.getToken,
+    readTimeZone: getTimeZone,
+    requiresApns: Platform.isIOS,
+    persist: (token, zone, owner) async {
+      bool current() => AuthService.instance.isSessionSnapshotCurrent(owner);
+      final accepted = await saveFcmTokenServer(token: token, timeZone: zone, canSend: current);
+      return accepted && current();
+    },
+  );
 
   @override
   Future<void> initialize() async {
@@ -50,9 +71,15 @@ class _FCMNotificationService implements NotificationInterface {
     );
     await _initializeAwesomeNotifications();
     if (PhysicalQualification.enabled) return;
-    // Calling it here because the APNS token can sometimes arrive early or it might take some time (like a few seconds)
-    // Reference: https://github.com/firebase/flutterfire/issues/12244#issuecomment-1969286794
-    await _firebaseMessaging.getAPNSToken();
+    if (!_registrationListenersInstalled) {
+      _registrationListenersInstalled = true;
+      WidgetsBinding.instance.addObserver(this);
+      // Self-hosted: no FCM token round trip (see [register]), so no token-refresh listener either.
+      AuthService.instance.sessionGenerationEvents.listen((_) {
+        _registrationReady = false;
+        _registration.invalidateSession();
+      });
+    }
     listenForMessages();
   }
 
@@ -117,16 +144,55 @@ class _FCMNotificationService implements NotificationInterface {
 
   @override
   Future<bool> requestNotificationPermissions() async {
+    final owner = AuthService.instance.captureSessionSnapshot();
     bool isAllowed = await _awesomeNotifications.isNotificationAllowed();
     if (!isAllowed) {
       isAllowed = await _awesomeNotifications.requestPermissionToSendNotifications();
-      register();
+    }
+    if (isAllowed && owner != null && AuthService.instance.isSessionSnapshotCurrent(owner)) {
+      unawaited(register());
     }
     return isAllowed;
   }
 
   @override
-  Future<void> register() async {}
+  Future<void> register() async {
+    if (PhysicalQualification.enabled) return;
+    // Existing sign-in/restored-shell/permission entry points admit the owner.
+    // Settle a newly observed auth generation before enabling token callbacks.
+    final owner = AuthService.instance.captureSessionSnapshot();
+    if (owner == null) {
+      _registrationReady = false;
+      _registration.invalidateSession();
+      return;
+    }
+    _registrationReady = true;
+    // No FCM token: this app is self-hosted with no Google push infrastructure on
+    // either end (no FCM server key on this backend, nothing to deliver a push
+    // to this token anyway), so registering one with Google is pure telemetry
+    // with no product benefit. Local notifications (awesome_notifications,
+    // used for in-app reminders/alerts) are unaffected — this only stops the
+    // FCM device-token round trip to Google.
+    //
+    // The token registration was also the only call that told the backend the
+    // device's time zone, so send that on its own: daily recaps, day reviews and
+    // the chat's idea of "today" otherwise run in UTC.
+    // Fire and forget: callers (sign-in, resume, permission grants) never wait on it.
+    unawaited(() async {
+      try {
+        final timeZone = await getTimeZone();
+        if (!AuthService.instance.isSessionSnapshotCurrent(owner)) return;
+        await syncUserTimeZoneServer(timeZone: timeZone);
+      } catch (e) {
+        Logger.debug('syncUserTimeZoneServer failed: $e');
+      }
+    }());
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _registrationReady) unawaited(register());
+  }
 
   @override
   Future<String> getTimeZone() async {
@@ -136,33 +202,14 @@ class _FCMNotificationService implements NotificationInterface {
 
   @override
   Future<void> saveFcmToken(String? token) async {
-    if (token == null) return;
-    String timeZone = await getTimeZone();
-    if (FirebaseAuth.instance.currentUser != null && token.isNotEmpty) {
-      await saveFcmTokenServer(token: token, timeZone: timeZone);
-    }
+    if (PhysicalQualification.enabled || !_registrationReady || token == null || token.isEmpty) return;
+    await _registration.refresh(token: token);
   }
 
-  // No FCM token: this app is self-hosted with no Google push infrastructure on
-  // either end (no FCM server key on this backend, nothing to deliver a push
-  // to this token anyway), so registering one with Google is pure telemetry
-  // with no product benefit. Local notifications (awesome_notifications,
-  // used for in-app reminders/alerts) are unaffected — this only stops the
-  // FCM device-token round trip to Google.
-  //
-  // The token registration was also the only call that told the backend the
-  // device's time zone, so send that on its own: daily recaps, day reviews and
-  // the chat's idea of "today" otherwise run in UTC.
+  // Self-hosted: register() only reports the time zone (no FCM token).
   @override
-  void saveNotificationToken() {
-    if (PhysicalQualification.enabled) return;
-    () async {
-      try {
-        await syncUserTimeZoneServer(timeZone: await getTimeZone());
-      } catch (e) {
-        Logger.debug('syncUserTimeZoneServer failed: $e');
-      }
-    }();
+  void saveNotificationToken() async {
+    await register();
   }
 
   @override
@@ -195,6 +242,8 @@ class _FCMNotificationService implements NotificationInterface {
   @override
   Future<void> listenForMessages() async {
     if (PhysicalQualification.enabled) return;
+    if (_messageListenersInstalled) return;
+    _messageListenersInstalled = true;
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final data = message.data;
       final noti = message.notification;

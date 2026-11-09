@@ -285,7 +285,7 @@ void main() {
         jsonDecode(File('test/fixtures/storefront_v2/plus_monthly_yearly_toggle.json').readAsStringSync()));
     await renders.pumpSheet(tester, data: data);
     final price = _plan(data, 'plus').priceFor('year')!;
-    expect(price.ctaLabel, r'Switch to yearly · save $39.98');
+    expect(price.ctaLabel, r'Switch to yearly · save US$39.98');
     expect(price.id, 'price_plus_year');
     usage.debugSetSubscription(UserSubscriptionResponse(
       subscription:
@@ -326,7 +326,7 @@ void main() {
                 supportedLocales: AppLocalizations.supportedLocales,
                 home: Scaffold(body: _Host(data))))));
     await tester.pumpAndSettle();
-    final button = find.text(r'Switch to yearly · save $39.98');
+    final button = find.text(r'Switch to yearly · save US$39.98');
     await tester.ensureVisible(button);
     await tester.tap(button.hitTestable());
     await tester.pump();
@@ -579,7 +579,7 @@ void main() {
         jsonDecode(File('test/fixtures/storefront_v2/plus_monthly_yearly_toggle.json').readAsStringSync()));
     usage.debugSetSubscription(UserSubscriptionResponse(
       subscription: Subscription(
-          plan: PlanType.unlimitedV2, status: SubscriptionStatus.active, stripeSubscriptionId: 'sub_fixture'),
+          plan: PlanType.unlimited, status: SubscriptionStatus.active, stripeSubscriptionId: 'sub_fixture'),
       transcriptionSecondsUsed: 0,
       transcriptionSecondsLimit: 0,
       wordsTranscribedUsed: 0,
@@ -596,7 +596,7 @@ void main() {
       'plans': [
         {
           'id': 'fixture_unlimited_month',
-          'plan_id': 'unlimited_v2',
+          'plan_id': 'unlimited',
           'interval': 'month',
           'unit_amount': 1999,
           'title': 'Unlimited',

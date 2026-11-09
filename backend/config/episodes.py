@@ -41,16 +41,27 @@ from __future__ import annotations
 
 import os
 
+from config.refactor_modes import default_on as modes_default_on
 from config.refactor_switches import default_on as rollout_default_on
 
-from config.jev_decisions import percentage, uid_bucket
+from config.app_channel import APP_CHANNELS, app_channel
+from config.jev_decisions import JEV_CLIENT_TIMEOUT_SECONDS, percentage, uid_bucket
 
 EPISODES_ENABLED_ENV = 'EPISODES_ENABLED'
 EPISODES_PERCENT_ENV = 'EPISODES_PERCENT'
 EPISODES_UID_ALLOWLIST_ENV = 'EPISODES_UID_ALLOWLIST'
 EPISODES_CLIENT_CHANNELS_ENV = 'EPISODES_CLIENT_CHANNELS'
-APP_CHANNEL_HEADER = 'X-Omi-App-Channel'
-APP_CHANNELS = frozenset({'beta', 'store'})
+EPISODE_OUTPUT_LANGUAGE_PIN_ENV = 'EPISODE_OUTPUT_LANGUAGE_PIN'
+EPISODE_HARD_CAP_ACROSS_CONVERSATIONS_ENV = 'EPISODE_HARD_CAP_ACROSS_CONVERSATIONS'
+HOME_HIDE_BELOW_FLOOR_ROWS_ENV = 'HOME_HIDE_BELOW_FLOOR_ROWS'
+HOME_HIDE_EPISODE_MEMBERS_ENV = 'HOME_HIDE_EPISODE_MEMBERS'
+HOME_NEUTRAL_MINIMUM_TITLES_ENV = 'HOME_NEUTRAL_MINIMUM_TITLES'
+HOME_TRANSCRIPTION_PRESENTATION_GATE_ENV = 'HOME_TRANSCRIPTION_PRESENTATION_GATE'
+HOME_STEP_PROJECTION_ENV = 'HOME_STEP_PROJECTION'
+EPISODE_CARRY_ON_SESSION_END_ENV = 'EPISODE_CARRY_ON_SESSION_END'
+EPISODE_MOMENT_OUTPUT_VALIDATOR_ENV = 'EPISODE_MOMENT_OUTPUT_VALIDATOR'
+EPISODE_COMPOSER_ENV = 'EPISODE_COMPOSER'
+EPISODE_COMPOSE_SETTLE_ENABLED_ENV = 'EPISODE_COMPOSE_SETTLE_ENABLED'
 _DEFAULT_CLIENT_CHANNELS = frozenset({'beta'})
 _COHORT_SALT = 'episodes-v1'
 _ON = frozenset({'true', 'on', '1', 'yes'})
@@ -75,18 +86,85 @@ def episodes_enabled_for(uid: str) -> bool:
     return uid_bucket(uid, _COHORT_SALT) < percentage(EPISODES_PERCENT_ENV, default=100.0)
 
 
-def app_channel(raw: str | None) -> str:
-    """The request's ``X-Omi-App-Channel`` as a bounded label: ``beta``, ``store`` or ``unknown``."""
-    value = (raw or '').strip().lower()
-    return value if value in APP_CHANNELS else 'unknown'
-
-
 def episodes_client_channels() -> frozenset[str]:
     """Admitted client channels. Unset or blank is ``beta``; unrecognised entries are ignored."""
     raw = os.getenv(EPISODES_CLIENT_CHANNELS_ENV, '')
     if not raw.strip():
         return _DEFAULT_CLIENT_CHANNELS
     return frozenset(item.strip().lower() for item in raw.split(',')) & APP_CHANNELS
+
+
+def episode_output_language_pinned() -> bool:
+    """Whether the shared output-language prompt pin is enabled.
+
+    The kill switch also covers provisional conversation topics, daily recaps, and
+    proactive notification prompts so one setting rolls the prompt changes back.
+    Unknown values stay on. Off restores each surface's legacy prompt wording and
+    the former cohort-gated episode language behavior.
+    """
+    return modes_default_on(EPISODE_OUTPUT_LANGUAGE_PIN_ENV)
+
+
+def episode_hard_cap_across_conversations_enabled() -> bool:
+    """Whether the strict episode-wide hard cap runs on attachment and moment boundaries."""
+    return modes_default_on(EPISODE_HARD_CAP_ACROSS_CONVERSATIONS_ENV)
+
+
+def home_hide_episode_members_enabled() -> bool:
+    """Hide only members covered by a client-held, extant episode projection."""
+    return modes_default_on(HOME_HIDE_EPISODE_MEMBERS_ENV)
+
+
+def home_neutral_minimum_titles_enabled() -> bool:
+    """Replace provisional transcript-echo Home titles without changing storage."""
+    return modes_default_on(HOME_NEUTRAL_MINIMUM_TITLES_ENV)
+
+
+def home_step_projection_enabled() -> bool:
+    """Default-on Home row contract field on list reads; off omits ``home_step``."""
+    return modes_default_on(HOME_STEP_PROJECTION_ENV)
+
+
+def home_transcription_presentation_gate_enabled() -> bool:
+    """Default-on batch transcription presentation; off restores stored status/title."""
+    return modes_default_on(HOME_TRANSCRIPTION_PRESENTATION_GATE_ENV)
+
+
+def home_transcription_deadline_seconds() -> int:
+    """New captures get 2h (batch timeliness SLA); invalid or nonpositive values use 2h."""
+    try:
+        seconds = int(os.getenv('HOME_TRANSCRIPTION_DEADLINE_SECONDS', '7200'))
+    except ValueError:
+        return 7200
+    return seconds if seconds > 0 else 7200
+
+
+def home_hide_below_floor_rows_enabled() -> bool:
+    """Whether Home leaves out short captures under the notes floor."""
+    return modes_default_on(HOME_HIDE_BELOW_FLOOR_ROWS_ENV)
+
+
+def episode_carry_on_session_end_enabled() -> bool:
+    """Whether a session-end buffer flushes after the bounded reconnect window."""
+    return modes_default_on(EPISODE_CARRY_ON_SESSION_END_ENV)
+
+
+def episode_moment_output_validator_enabled() -> bool:
+    """Whether live moment output validation and its one bounded repair call are enabled."""
+    return modes_default_on(EPISODE_MOMENT_OUTPUT_VALIDATOR_ENV)
+
+
+def episode_composer_enabled() -> bool:
+    """Whether closed episodes get one whole-episode summary (``utils/episodes/composer.py``).
+
+    Off keeps the live incremental notes as the final episode notes, as before.
+    """
+    return modes_default_on(EPISODE_COMPOSER_ENV)
+
+
+def episode_compose_settle_enabled() -> bool:
+    """Default-on cost control; off restores the original trigger and retry behavior."""
+    return modes_default_on(EPISODE_COMPOSE_SETTLE_ENABLED_ENV)
 
 
 def client_channel_admitted(raw: str | None) -> bool:
@@ -113,9 +191,11 @@ LAST_CLOSED_CACHE_SECONDS = 30
 
 # --------------------------------------------------------------------------- moments
 
-# A moment ends when the live stream pauses for this long, or when it grows past
-# MOMENT_MAX_WORDS (a rollover), or after MOMENT_MAX_SECONDS of steady speech (an
-# interval), or when its conversation finalizes or its live session ends.
+# A moment ends when the live stream pauses for this long, when it grows past
+# MOMENT_MAX_WORDS (a rollover), after MOMENT_MAX_SECONDS of steady speech (an
+# interval), or when finalize/wrap-up consumes the remaining buffer. A session
+# end preserves speech for one reconnect window before flushing the tail; a
+# conversation change carries speech into the next same-episode moment.
 MOMENT_PAUSE_SECONDS = 45
 MOMENT_MAX_WORDS = 600
 # Continuous talk never pauses for 45 s and rarely reaches 600 words quickly; without a
@@ -131,19 +211,26 @@ MOMENT_MIN_WORDS = 25
 MOMENT_TEXT_MAX_CHARS = 6_000
 # One live update per episode at most this often; a burst folds into the next.
 MOMENT_MIN_INTERVAL_SECONDS = 60
+# Recovered audio refreshes draft notes at most this often: the composer rewrites them at close.
+RECOVERY_NOTES_MIN_INTERVAL_SECONDS = MOMENT_MAX_SECONDS
 
 # --------------------------------------------------------------------------- close detection
 
 # Below this gap a new conversation simply continues the episode (it is the
 # live split itself, ``models/conversation_continuity.DEFAULT_GAP_SECONDS``).
-CONTINUE_GAP_SECONDS = 120
+from config.recorded_time_tolerances import (
+    CONTINUE_GAP_SECONDS as CONTINUE_GAP_SECONDS,
+    CLOSE_GAP_SECONDS as CLOSE_GAP_SECONDS,
+    MAX_EPISODE_SECONDS as MAX_EPISODE_SECONDS,
+    FALLBACK_CLOSE_GAP_SECONDS as FALLBACK_CLOSE_GAP_SECONDS,
+)
+
 # At or above this gap the episode is over without asking: the next speech opens
 # a new episode (reason ``gap``), and a read that finds an episode this idle
 # closes it (reason ``idle``). In between, Jev decides whether the user moved on.
-CLOSE_GAP_SECONDS = 30 * 60
-# Hard cap on one episode's wall-clock span (smart merge's conservative cap).
-MAX_EPISODE_SECONDS = 3 * 60 * 60
+# Hard cap on one episode's recorded span (David, 2026-10-29).
 MAX_MOMENTS = 48
+COMPOSER_MIN_SECTION_SECONDS = 60
 
 # Jev answers P(same occasion); below this the user moved on. Deliberately low:
 # the question is uncalibrated, so only a confident "moved on" closes, and no
@@ -151,8 +238,40 @@ MAX_MOMENTS = 48
 MOVED_ON_THRESHOLD = 0.2
 JEV_LANE = 'episode_boundary'
 JEV_TIMEOUT_SECONDS = 2.5
+
+# --------------------------------------------------------------------------- episode join variant F
+
+# Variant F settles an uncertain recorded-time join (a live owner 2 to 30 minutes after its last speech)
+# with Jev over the previous member's transcript and the new speech, no summary or time features.
+# The cohort is the Omi flag store rule ``episode_f_join`` (``utils/episodes/f_join.py``): ramp and
+# kill it at runtime with ``scripts/omi_flags.py``. Without a rule the env ``EPISODE_F_JOIN_PERCENT``
+# (default 0) buckets uids. ``EPISODE_F_JOIN_ENABLED`` (unset is on; off/false/0/no) overrides both.
+EPISODE_F_JOIN_ENABLED_ENV = 'EPISODE_F_JOIN_ENABLED'
+EPISODE_F_JOIN_PERCENT_ENV = 'EPISODE_F_JOIN_PERCENT'
+F_JOIN_FLAG_KEY = 'episode_f_join'
+F_JOIN_VARIANT = 'f'
+F_JOIN_JEV_LANE = 'episode_boundary_f'
+F_JOIN_PREVIOUS_CHARS = 12_000
+F_JOIN_NEW_CHARS = 8_000
+F_JOIN_PEOPLE_READ_LIMIT = 8
+# The gateway's own provider deadline (JEV_GATEWAY_REQUEST_MS, 2.5 s) is authoritative; the client
+# waits just past it so a slow provider surfaces as a gateway timeout. One attempt, as today.
+F_JOIN_TIMEOUT_SECONDS = JEV_CLIENT_TIMEOUT_SECONDS
+F_JOIN_SALT = 'episode-f-join-v1'
+
+
+def f_join_enabled() -> bool:
+    """Unset is on; an explicit on-value stays on; anything else (including a typo) turns F off."""
+    raw = os.getenv(EPISODE_F_JOIN_ENABLED_ENV, '').strip().lower()
+    return not raw or raw in _ON
+
+
+def f_join_env_admitted(uid: str) -> bool:
+    """The env fallback cohort: a stable salted uid bucket below the percent; invalid admits nobody."""
+    return bool(uid) and uid_bucket(uid, F_JOIN_SALT) < percentage(EPISODE_F_JOIN_PERCENT_ENV, default=0.0)
+
+
 # Without a Jev answer, a source change or a gap this long still closes.
-FALLBACK_CLOSE_GAP_SECONDS = 15 * 60
 
 # --------------------------------------------------------------------------- compact state budget
 
@@ -181,3 +300,37 @@ INCREMENTAL_MAX_OUTPUT_TOKENS = 700
 # openai.gpt-5-nano.2026-07-17. The gateway attempt ledger stays authoritative.
 EST_INPUT_USD_PER_MTOK = 0.05
 EST_OUTPUT_USD_PER_MTOK = 0.40
+
+# Closed-episode composer: one strong call over member summaries plus the full transcript.
+COMPOSER_FEATURE = 'episode_composer'
+COMPOSER_VERSION = 'episode_composer_v2'
+COMPOSER_TIMEOUT_SECONDS = 90.0
+# About 60k tokens. With the 4h episode cap almost every episode fits whole; beyond it the
+# densest 10-minute windows are kept in time order.
+COMPOSER_MAX_TRANSCRIPT_CHARS = 240_000
+COMPOSER_MAX_CHAPTERS = 8
+# Read-side safety net: at most this many closed, uncomposed episodes queued per list read.
+COMPOSER_MAX_SCHEDULED_PER_READ = 2
+# A read-side caller re-queues the same episode at most this often per process.
+COMPOSER_READ_THROTTLE_SECONDS = 600
+# The per-conversation lookup runs once per Home row: cap the distinct episodes it queues per user
+# per throttle window, per process.
+COMPOSER_LOOKUP_SCHEDULES_PER_WINDOW = 4
+# One paid call per evidence across replicas: the claim outlives the model call (90 s x 2 attempts).
+COMPOSER_LEASE_SECONDS = 240
+COMPOSER_SETTLE_SECONDS = 10 * 60
+COMPOSER_MAX_SETTLE_SECONDS = 25 * 60
+# After a failed paid attempt the read-side net backs off 10, 20, 40 min, then stops until
+# the evidence changes (a member finalize still composes).
+COMPOSER_RETRY_MINUTES = 10
+COMPOSER_MAX_FAILURES = 4
+# Wire budget per composed paragraph (to_wire serves bullets up to this length).
+COMPOSER_MAX_PARAGRAPH_CHARS = 1200
+# A composed moment's points (each with a few supporting details) are the episode page's sections.
+COMPOSER_MAX_POINTS = 6
+COMPOSER_MAX_DETAILS = 4
+COMPOSER_MAX_POINT_CHARS = 400
+
+# Extra reads caused by Home projection, independent of page/member counts.
+HOME_MEMBERSHIP_EPISODE_READ_LIMIT = 5
+HOME_IDLE_CLOSES_PER_READ = 2
