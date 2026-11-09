@@ -135,6 +135,26 @@ def _resolve_python(repo: Path, monkeypatch: pytest.MonkeyPatch, path: str | Non
     return result.stdout.strip()
 
 
+def _host_bin_without_311(tmp_path: Path) -> str:
+    """/usr/bin and /bin as one directory, minus any python3.11.
+
+    The fixtures below mean "no 3.11 on this host". A Linux host whose system
+    Python includes /usr/bin/python3.11 would otherwise answer discovery and
+    rescue the fixture, the PATH counterpart of the Homebrew prefix isolation.
+    """
+    out = tmp_path / "host-bin-without-311"
+    out.mkdir(exist_ok=True)
+    for directory in ("/usr/bin", "/bin"):
+        if not os.path.isdir(directory):
+            continue
+        for entry in os.scandir(directory):
+            target = out / entry.name
+            if entry.name.startswith("python3.11") or target.exists() or target.is_symlink():
+                continue
+            target.symlink_to(entry.path)
+    return str(out)
+
+
 def _write_stub_python(directory: Path, name: str, *, meets_floor: bool) -> Path:
     """Stub a PATH interpreter whose floor probe result is scripted.
 
@@ -981,7 +1001,7 @@ def test_backend_pinned_python_falls_back_to_uv_managed_311(
         repo,
         monkeypatch,
         "dev_harness_backend_pinned_python",
-        path=os.pathsep.join((str(stub_bin), "/usr/bin", "/bin")),
+        path=os.pathsep.join((str(stub_bin), _host_bin_without_311(tmp_path))),
         # A host with a real keg-only Homebrew 3.11 would otherwise satisfy
         # discovery before the fixture's uv is consulted (Codex P2): point the
         # prefix list at nothing.
@@ -1081,7 +1101,7 @@ def test_backend_pinned_python_rejects_below_pin_python_override(
         repo,
         monkeypatch,
         "dev_harness_backend_pinned_python",
-        path=os.pathsep.join(("/usr/bin", "/bin")),
+        path=os.pathsep.join((_host_bin_without_311(tmp_path))),
         extra_env={"PYTHON": str(below)},
         # Host isolation: a real keg-only Homebrew 3.11 would legitimately
         # answer after the override is rejected (Codex P2).

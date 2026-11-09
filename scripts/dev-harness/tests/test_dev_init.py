@@ -30,6 +30,26 @@ def _clean_env() -> dict[str, str]:
     return env
 
 
+def _host_bin_without_311(tmp_path: Path) -> str:
+    """/usr/bin and /bin as one directory, minus any python3.11.
+
+    The fixtures below mean "no 3.11 on this host". A Linux host whose system
+    Python includes /usr/bin/python3.11 would otherwise answer discovery and
+    rescue the fixture, the PATH counterpart of the Homebrew prefix isolation.
+    """
+    out = tmp_path / "host-bin-without-311"
+    out.mkdir(exist_ok=True)
+    for directory in ("/usr/bin", "/bin"):
+        if not os.path.isdir(directory):
+            continue
+        for entry in os.scandir(directory):
+            target = out / entry.name
+            if entry.name.startswith("python3.11") or target.exists() or target.is_symlink():
+                continue
+            target.symlink_to(entry.path)
+    return str(out)
+
+
 def _git(*args: str) -> None:
     subprocess.run(["git", *args], env=_clean_env(), check=True, stdout=subprocess.DEVNULL)
 
@@ -271,7 +291,7 @@ def test_dev_init_refuses_to_bootstrap_without_a_pinned_311(tmp_path: Path) -> N
     _write_logging_bootstrap_stub(stub_bin, "python3", log, pinned_ok=False)
 
     env = _clean_env()
-    env["PATH"] = os.pathsep.join((str(stub_bin), "/usr/bin", "/bin"))
+    env["PATH"] = os.pathsep.join((str(stub_bin), _host_bin_without_311(tmp_path)))
     result = subprocess.run(
         [_bash(), "scripts/dev-harness/dev-init.sh"],
         cwd=repo,
@@ -329,7 +349,7 @@ def test_dev_installs_311_via_uv_when_not_on_path(tmp_path: Path) -> None:
     uv.chmod(uv.stat().st_mode | stat.S_IXUSR)
 
     env = _clean_env()
-    env["PATH"] = os.pathsep.join((str(stub_bin), "/usr/bin", "/bin"))
+    env["PATH"] = os.pathsep.join((str(stub_bin), _host_bin_without_311(tmp_path)))
     result = subprocess.run(
         [_bash(), "scripts/dev-harness/dev-init.sh"],
         cwd=repo,
