@@ -87,6 +87,14 @@ def test_a_bundled_day_is_compact_and_a_missing_date_means_today(monkeypatch):
     assert out['conversations'][0]['in_bundle'] is True and out['conversations'][1]['starred'] is True
 
 
+def test_an_unknown_argument_is_refused_not_read_as_today(monkeypatch):
+    monkeypatch.setattr(day_review_service, 'get_day', lambda uid, date: pytest.fail('must not read a day'))
+    with pytest.raises(ToolExecutionError) as caught:
+        other.get_day_review('u1', {'day': '2026-11-10'})
+    assert caught.value.code == -32602 and 'date' in str(caught.value)
+    assert spec_for_tool('get_day_review').input_schema['additionalProperties'] is False
+
+
 def test_errors_become_tool_errors(monkeypatch):
     def boom(uid, date):
         raise day_review_service.DayReviewError(422, 'Date cannot be in the future')

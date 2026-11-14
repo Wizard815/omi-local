@@ -574,6 +574,9 @@ def get_day_review(
     import database.notifications as notification_db
     from utils import day_review_service
 
+    # A misspelled key (say "day") would otherwise fall back to today and answer the wrong day.
+    if set(arguments) - {'date'}:
+        raise ToolExecutionError('Only date (yyyy-mm-dd) is accepted', code=-32602)
     date = str(arguments.get('date') or '').strip()
     if not date:
         date = day_review_service.local_today(notification_db.get_user_time_zone(uid)).isoformat()
