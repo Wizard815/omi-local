@@ -1339,6 +1339,7 @@ TOOL_SPECS: Tuple[ToolSpec, ...] = (
         annotations=_read_annotations("Get day review"),
         input_schema={
             "type": "object",
+            "additionalProperties": False,
             "properties": {
                 "date": {
                     "type": "string",
