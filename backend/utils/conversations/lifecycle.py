@@ -11,6 +11,7 @@ from __future__ import annotations
 from utils.observability.sync_phases import sync_phase
 from config.batch_pipeline import live_record_enabled_for, record_capture_eligible
 from config import server_batch
+from config.episodes import home_transcription_deadline_seconds
 from config.policy import resolve_batch_policy
 from database.batch_ramp import ramp_admission_policy
 
@@ -29,6 +30,10 @@ from database import conversation_finalization_jobs as jobs_db
 from utils.conversations import merge_conversations_job
 
 from database import conversations as conversations_db
+from database import no_speech_terminal as no_speech_terminal_db
+from database import pipeline_ledger
+from database._client import get_firestore_client
+from utils.conversations.no_speech_restore import restore_no_speech_capture as restore_no_speech_capture
 from database import oversized_conversation_terminal as oversized_terminal_db
 from database import recording_sessions as recording_sessions_db
 from database import sync_cap_recovery
@@ -361,6 +366,45 @@ def complete_server_batch_capture(
         lease_epoch,
         firestore_client=firestore_client,
     )
+
+
+def complete_orphan_batch_capture(
+    transaction: Any,
+    conversation_ref: Any,
+    current: Mapping[str, Any],
+    retained_patch: dict[str, Any],
+    *,
+    now: datetime,
+) -> None:
+    """Join a proven orphan's terminal capture to canonical batch registration.
+
+    The operator owns the surrounding transaction's closed-custody, privacy,
+    snapshot and job-absence reads. This owner supplies the same relevance and
+    Home-pending terminal metadata as normal server-batch finalization, without
+    finalization fanout or a second job. Exit: the canonical batch pipeline.
+    """
+    terminal = {**current, **retained_patch, 'status': 'completed'}
+    if (
+        current.get('status') != 'in_progress'
+        or not server_batch.owned(current)
+        or current.get('record_audio_closed') is not True
+        or current.get('server_batch_audio_closed') is not True
+        or current.get('server_batch_audio_received') is not True
+        or current.get('record_upload_sessions')
+        or current.get('record_upload_failed')
+        or any(current.get(key) for key in ('deleted', 'discarded', 'is_locked', 'finalization_job_id'))
+        or not server_batch.has_audio(terminal)
+    ):
+        raise LifecycleTransitionError('orphan capture completion fenced')
+    stamp_terminal_decision(terminal, path='lifecycle_terminal')
+    updates = {
+        **retained_patch,
+        'status': 'completed',
+        'relevance_decision': terminal['relevance_decision'],
+        'home_transcription_pending_at': now,
+        'home_transcription_deadline_at': now + timedelta(seconds=home_transcription_deadline_seconds()),
+    }
+    transaction.update(conversation_ref, updates)
 
 
 def complete(uid: str, conversation_id: str) -> bool:
@@ -884,6 +928,7 @@ def delete_empty_recording_conversation(
     require_expired_recording_lease: bool = False,
     firestore_client: Any = None,
     allow_empty_server_batch: bool = False,
+    transaction_guard: Any = None,
 ) -> bool:
     """Delete only a still-empty listen generation and tombstone it atomically."""
     deleted_conversation: dict[str, Any] = {}
@@ -892,6 +937,8 @@ def delete_empty_recording_conversation(
         recovery_guards = dict(recovery_cutoff=recovery_cutoff, require_expired_recording_lease=True)
     if firestore_client is not None:
         recovery_guards['firestore_client'] = firestore_client
+    if transaction_guard is not None:
+        recovery_guards['transaction_guard'] = transaction_guard
     if allow_empty_server_batch:
         recovery_guards['allow_empty_server_batch'] = True
     deleted = recording_sessions_db.tombstone_and_delete_empty_conversation(
@@ -1169,6 +1216,7 @@ def request_finalization(
     # The outbox transaction is the authoritative acceptance boundary. Count
     # only newly-created jobs so an idempotent re-dispatch cannot inflate traffic.
     if intent.get('created'):
+        _record_ledger_end(uid, conversation_id, trigger, firestore_client)
         record_journey_accepted('capture_finalization')
         record_client_journey_accepted(
             'conversation_finalization',
@@ -1263,6 +1311,51 @@ def get_finalization_status(uid: str, conversation_id: str) -> dict[str, Any] | 
     }
 
 
+# The end that fired, typed for the ledger. A bare capture end (a socket
+# closing) is not user intent and stays unknown; only an explicit client
+# finalize is the user's, and server recovery is the silence backstop.
+_TRIGGER_END_TYPES = {
+    ProcessingTrigger.CLIENT_FINALIZE: 'user_initiated',
+    ProcessingTrigger.SERVER_RECOVERY: 'silence_backstop',
+    ProcessingTrigger.CAPTURE_END: 'unknown',
+}
+
+
+def _record_ledger_end(uid: str, conversation_id: str, trigger: Any, firestore_client: Any) -> None:
+    """Stamp the ledger with the server-known end at the instant its intent is accepted."""
+    end_type = _TRIGGER_END_TYPES.get(trigger)
+    if end_type is None:
+        return  # Reprocess, merge and backfill triggers are not ends of a recording.
+    now = datetime.now(timezone.utc).timestamp()
+    pipeline_ledger.record_end(
+        uid, conversation_id, end_type=end_type, end_at=now, end_observed_at=now, firestore_client=firestore_client
+    )
+
+
+def _ledger_terminal(
+    uid: str, conversation_id: str, stage: str, *, firestore_client: Any = None, **fields: Any
+) -> None:
+    """Record a reversible hide as the capture's ledger terminal, after the real close commits.
+
+    Fenced like every ledger write: nothing is written for a conversation
+    deleted since the close, or for an account being wiped. A later restore
+    needs no ledger undo: the restored capture's next real transition re-opens
+    the row with its own higher source revision.
+    """
+    client = firestore_client or get_firestore_client()
+    user_ref = client.collection('users').document(uid)
+    pipeline_ledger.advance(
+        uid,
+        conversation_id,
+        stage,
+        reason=stage,
+        source_ref=user_ref.collection('conversations').document(conversation_id),
+        owner_ref=user_ref,
+        firestore_client=client,
+        **fields,
+    )
+
+
 def close_stuck_backfill_noise(
     uid: str,
     conversation_id: str,
@@ -1274,7 +1367,7 @@ def close_stuck_backfill_noise(
     firestore_client: Any = None,
 ) -> str:
     """Lifecycle owner for the operator's approved metadata-only close."""
-    return stuck_backfill_db.close_noise(
+    committed = stuck_backfill_db.close_noise(
         uid,
         conversation_id,
         expected_revision=expected_revision,
@@ -1283,6 +1376,8 @@ def close_stuck_backfill_noise(
         run_id=run_id,
         firestore_client=firestore_client,
     )
+    _ledger_terminal(uid, conversation_id, pipeline_ledger.NOISE, firestore_client=firestore_client)
+    return committed
 
 
 def restore_stuck_backfill_noise(
@@ -1301,3 +1396,42 @@ def restore_stuck_backfill_noise(
         run_id=run_id,
         firestore_client=firestore_client,
     )
+
+
+def close_no_speech_capture(
+    uid: str,
+    conversation_id: str,
+    *,
+    expected_revision: str,
+    run_id: str,
+    speech_seconds: float,
+    audio_seconds: float,
+    firestore_client: Any = None,
+    expected_privacy_generation: int | None = None,
+) -> str:
+    """Lifecycle owner for the reversible no-speech terminal.
+
+    The caller has already proven strict-VAD speech below ten seconds on the
+    retained audio. Audio and content are untouched; the marker records the
+    prior lifecycle fields for the operator undo.
+    """
+    committed = no_speech_terminal_db.close_no_speech(
+        uid,
+        conversation_id,
+        expected_revision=expected_revision,
+        run_id=run_id,
+        speech_seconds=speech_seconds,
+        audio_seconds=audio_seconds,
+        firestore_client=firestore_client,
+        expected_privacy_generation=expected_privacy_generation,
+    )
+    _ledger_terminal(
+        uid,
+        conversation_id,
+        pipeline_ledger.NO_SPEECH,
+        firestore_client=firestore_client,
+        speech_seconds=speech_seconds,
+        has_speech=False,
+        speech_basis='vad',
+    )
+    return committed
