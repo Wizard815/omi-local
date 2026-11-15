@@ -8,7 +8,6 @@
     "app/test/widgets/processing_today_render_test.dart",
     "backend/tests/unit/test_pending_work.py",
     "web/app/src/components/conversations/__tests__/ConversationSplitView.starToggle.test.tsx",
-    "desktop/macos/Desktop/Tests/HomeFailurePlacementTests.swift",
     "app/test/services/notes_attention_test.dart",
     "web/app/src/hooks/__tests__/useAttentionItems.test.tsx"
   ],
@@ -17,8 +16,7 @@
     "app/lib/pages/conversations/home_rows.dart",
     "app/lib/pages/activity/",
     "backend/database/processing_attention.py",
-    "web/app/src/components/conversations/",
-    "desktop/macos/Desktop/Sources/MainWindow/Conversations/HomeFailurePlacement.swift"
+    "web/app/src/components/conversations/"
   ],
   "status": "open"
 }
