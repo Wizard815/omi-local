@@ -392,8 +392,22 @@ def test_implementation_digest_is_the_explicit_prompt_version():
     assert dedupe.implementation_digest('l1').startswith(PROMPT_VERSIONS['l1'] + ':')
 
 
+@pytest.fixture
+def upstream_routing(monkeypatch):
+    # omi-local: the legacy aliases in config/llm_input_legacy.py are upstream production's
+    # checkpoints, recorded with upstream's model-routing sources. omi-local's routing sources
+    # (local models) differ, so its routing digest never equals LEGACY_ROUTING and the aliases
+    # correctly never apply there (test_historical_checkpoint_cannot_mask_changed_route covers
+    # that). Tests of the alias rules run with the routing the aliases were recorded under.
+    from config.llm_input_legacy import LEGACY_ROUTING
+
+    monkeypatch.setattr(dedupe, 'routing_digest', lambda: LEGACY_ROUTING)
+
+
 @pytest.mark.parametrize('feature', ['notes', 'l1'])
-def test_predeploy_checkpoint_survives_deploy_and_repeated_kill_switch_flips(enabled, monkeypatch, feature):
+def test_predeploy_checkpoint_survives_deploy_and_repeated_kill_switch_flips(
+    enabled, upstream_routing, monkeypatch, feature
+):
     from config.llm_input_legacy import LEGACY_IMPLEMENTATIONS
     from models.structured import Structured
 
@@ -424,7 +438,9 @@ def test_predeploy_checkpoint_survives_deploy_and_repeated_kill_switch_flips(ena
 
 
 @pytest.mark.parametrize('flag', ['true', 'off'])
-def test_dependency_qualified_notes_checkpoint_survives_prompt_version_bump(enabled, monkeypatch, flag):
+def test_dependency_qualified_notes_checkpoint_survives_prompt_version_bump(
+    enabled, upstream_routing, monkeypatch, flag
+):
     from models.structured import Structured
 
     monkeypatch.setenv('EPISODE_COMPOSER_REUSE', flag)
@@ -459,7 +475,7 @@ def test_historical_checkpoint_cannot_mask_changed_route(enabled, monkeypatch, f
     assert not dedupe._matches(old, feature, inputs, dedupe.fingerprint(feature, inputs))
 
 
-def test_additive_gist_does_not_rebuy_a_stable_l8a_checkpoint(enabled, monkeypatch):
+def test_additive_gist_does_not_rebuy_a_stable_l8a_checkpoint(enabled, upstream_routing, monkeypatch):
     from models.structured import Structured
 
     original = dedupe.implementation_digest
@@ -511,7 +527,7 @@ def test_dependency_upgrade_invalidates_checkpoint_in_both_modes(
 @pytest.mark.parametrize('dependency', [None, 'pydantic', 'langchain-core'])
 @pytest.mark.parametrize('flag', ['true', 'off'])
 def test_historical_aliases_require_the_recorded_dependency_versions(
-    enabled, monkeypatch, dependency_identity, feature, dependency, flag
+    enabled, upstream_routing, monkeypatch, dependency_identity, feature, dependency, flag
 ):
     monkeypatch.setenv('EPISODE_COMPOSER_REUSE', flag)
     monkeypatch.setattr(
