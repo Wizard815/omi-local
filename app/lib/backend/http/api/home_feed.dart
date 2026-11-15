@@ -8,8 +8,12 @@ import 'package:omi/env/env.dart';
 import 'package:omi/utils/off_ui_isolate.dart';
 
 class HomeFeedApi {
-  HomeFeedApi({String? baseUrl, this.send}) : baseUrl = baseUrl ?? Env.apiBaseUrl ?? 'http://127.0.0.1:8000/';
-  final String baseUrl;
+  HomeFeedApi({String? baseUrl, this.send}) : _baseUrl = baseUrl;
+  final String? _baseUrl;
+
+  /// Read per request, not at construction: the provider builds this at app start, before a
+  /// self-hosted login sets the server URL.
+  String get baseUrl => _baseUrl ?? Env.apiBaseUrl ?? 'http://127.0.0.1:8000/';
   final ApiSend? send;
   Future<ApiResult<HomeFeedPage>> page({String? cursor}) async {
     // Typed transport owns auth, replay and error taxonomy. Decode the bounded raw envelope off-isolate.

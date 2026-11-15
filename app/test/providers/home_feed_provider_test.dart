@@ -8,6 +8,7 @@ import 'package:omi/backend/http/api/home_feed.dart';
 import 'package:omi/backend/http/api_result.dart';
 import 'package:omi/backend/preferences.dart';
 import 'package:omi/backend/schema/home_feed.dart';
+import 'package:omi/env/env.dart';
 import 'package:omi/providers/home_feed_provider.dart';
 import 'package:omi/providers/conversation_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -77,6 +78,20 @@ void main() {
     expect(c.displaySeed().transcriptSegments, isEmpty);
     expect(c.episodeSeed().conversationIds, isEmpty);
     expect(c.episodeSeed().members, isEmpty);
+  });
+  test('a self-hosted server URL set after the API is built is the one it calls', () async {
+    // The provider builds its API at app start, before the login screen sets the server URL.
+    final urls = <String>[];
+    final api = HomeFeedApi(send: (request) async {
+      urls.add(request.url);
+      return http.Response(
+          jsonEncode({'items': [], 'next_cursor': null, 'has_more': false, 'truncated': false, 'generation': 'g'}), 200,
+          headers: {'content-type': 'application/json; charset=utf-8'});
+    });
+    Env.overrideApiBaseUrl('http://192.168.1.5:8000/');
+    addTearDown(Env.clearApiBaseUrlOverrideForTesting);
+    await api.page();
+    expect(urls.single, startsWith('http://192.168.1.5:8000/v1/home/feed?'));
   });
   test('unknown recording origin keeps pagination order without inventing detail timing', () {
     final json = card(1).toJson()..['started_at'] = null;
