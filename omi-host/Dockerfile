@@ -24,6 +24,12 @@ ENV PATH="/opt/jre21/bin:$PATH"
 # firebase-tools (emulators: firestore + auth)
 RUN npm install -g firebase-tools@15.28.2
 
+# Radicale, the stack's CalDAV server (omi-host/caldav-env.sh), in its own venv
+# so its dependencies never meet the backend's lock.
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv venv --python 3.11.15 /opt/radicale \
+ && uv pip install --python /opt/radicale/bin/python radicale==3.5.4
+
 WORKDIR /app
 # Dependencies first, from the lock alone, so a code edit does not reinstall
 # ~300 packages: this layer only changes when the lock does. uv's download
@@ -42,9 +48,10 @@ COPY omi-host/entrypoint.sh /entrypoint.sh
 COPY omi-host/local_llm_adapter.py /app/omi-host/local_llm_adapter.py
 COPY omi-host/audio-env.sh /app/omi-host/audio-env.sh
 COPY omi-host/auth-env.sh /app/omi-host/auth-env.sh
+COPY omi-host/caldav-env.sh /app/omi-host/caldav-env.sh
 COPY omi-host/maintenance.sh /app/omi-host/maintenance.sh
 RUN chmod +x /entrypoint.sh
 
 ENV PATH="/app/backend/.venv/bin:$PATH"
-EXPOSE 8000 8085
+EXPOSE 8000 8085 5232
 ENTRYPOINT ["/entrypoint.sh"]

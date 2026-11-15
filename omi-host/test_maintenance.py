@@ -9,8 +9,8 @@ What this pins down:
   * an export lands atomically: the live directory is swapped in only after
     the CLI wrote its metadata file, the previous export is kept as .prev,
     and a failed export leaves the current one untouched,
-  * a backup is one tarball of firebase-export, redis, storage, chroma and
-    secrets (whatever exists), model caches excluded, and only the newest
+  * a backup is one tarball of firebase-export, redis, storage, chroma,
+    secrets and radicale (whatever exists), model caches excluded, and only the newest
     OMI_BACKUP_KEEP tarballs survive,
   * a failed export fails the backup instead of archiving stale data.
 
@@ -65,7 +65,7 @@ def run(state, fn, **env):
 def _state():
     tmp = tempfile.mkdtemp()
     state = os.path.join(tmp, "data")
-    for d in ("firebase-export", "redis", "storage", "chroma", "secrets", "hf-cache", "whispercpp"):
+    for d in ("firebase-export", "redis", "storage", "chroma", "secrets", "radicale", "hf-cache", "whispercpp"):
         os.makedirs(os.path.join(state, d))
     with open(os.path.join(state, "firebase-export", "firebase-export-metadata.json"), "w") as f:
         f.write('{"version":"old"}')
@@ -118,6 +118,7 @@ def test_backup_archives_the_irreplaceable_data_and_prunes_old_ones():
     assert "firebase-export/firebase-export-metadata.json" in members
     assert "redis/appendonly.aof" in members
     assert "chroma" in members and "storage" in members and "secrets" in members
+    assert "radicale" in members, "the CalDAV calendars live only here"
     assert not any(m.startswith(("hf-cache", "whispercpp")) for m in members), "model caches are re-downloadable"
     assert "BGSAVE" not in out  # the fake redis answered; nothing to report
 
