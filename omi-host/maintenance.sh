@@ -66,7 +66,7 @@ omi_backup() {
   omi_export_firestore || return 1
   omi_snapshot_redis
   mkdir -p "$dir"
-  for name in firebase-export redis storage chroma secrets; do
+  for name in firebase-export redis storage chroma secrets radicale; do
     [ -e "$STATE/$name" ] && members+=("$name")
   done
   stamp="$(date -u +%Y%m%d-%H%M%S)"

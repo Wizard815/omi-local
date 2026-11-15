@@ -261,15 +261,17 @@ API: `PUT /v1/conversations/{id}/tags`, `GET /v1/conversations/tags`,
 `GET /v1/conversations?tag=work`.
 
 ### Calendar & tasks (CalDAV)
-Tasks and the day's events live outside Omi too. `omi-host` runs **Radicale** (`omi-radicale`,
-port `CALDAV_PORT`, default 5232; set `CALDAV_PASSWORD` in `.env` or it refuses to start) and
+Tasks and the day's events live outside Omi too. The `omi-local` container runs **Radicale**
+(`omi-host/caldav-env.sh`, port `CALDAV_PORT`, default 5232; no separate container) and
 the backend syncs with it by itself (a change lands within about 20 s, a full pass every
 `CALDAV_SYNC_SECONDS`, default 15 minutes) and on **Sync now** (Settings → **Calendar & tasks**):
 open tasks and recently completed ones go out as to-dos, a to-do ticked off on the phone flips
 the Omi task, to-dos made elsewhere become Omi tasks; day summaries land as all-day events and
 the events the pipeline extracted from conversations as timed ones; the calendar's own events
 come back into Omi for the chat's calendar tool. Point a phone (DAVx5 + Tasks.org) or a desktop
-client at `http://<host>:5232/` with the same user and password to see the same lists. To use
+client at `http://<host>:5232/` with the same user (`CALDAV_USER`, default `omi`) and password
+(`CALDAV_PASSWORD`; left empty, one is generated on first start: `docker exec omi-local cat
+/data/secrets/caldav_password`) to see the same lists. `OMI_BUNDLED_CALDAV=0` turns the server off. To use
 Nextcloud, Baïkal, iCloud or another server instead, enter it on the settings page (per user) or
 set `CALDAV_DEFAULT_URL` / `CALDAV_USER` / `CALDAV_PASSWORD` for the whole stack. Worked
 examples: `omi-host/examples/caldav/README.md`. Contacts (CardDAV) are not synced.
