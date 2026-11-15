@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -22,6 +24,8 @@ class _AuthComponentState extends State<AuthComponent> {
   final _serverUrlController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _buttonsTop = GlobalKey();
+  late final VoidCallback _releaseFeedbackClearance;
 
   @override
   void initState() {
@@ -31,14 +35,28 @@ class _AuthComponentState extends State<AuthComponent> {
     if (saved.isNotEmpty) {
       _serverUrlController.text = saved;
     }
+    // Sign-in errors are shown from the provider on the global navigator, so they float above the
+    // Log In button through the root clearance rather than a page OmiFeedbackClearance.
+    _releaseFeedbackClearance = OmiFeedback.claimBottomClearance(_clearSignInButtons);
   }
 
   @override
   void dispose() {
+    _releaseFeedbackClearance();
     _serverUrlController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  /// Lifts toasts above the Log In button, measured when the toast is shown: text size and
+  /// scrolling move it.
+  double _clearSignInButtons(BuildContext context) {
+    final marker = _buttonsTop.currentContext?.findRenderObject();
+    if (marker is! RenderBox || !marker.attached) return 0;
+    final media = MediaQuery.of(context);
+    final bottom = media.size.height - media.viewPadding.bottom;
+    return math.max(0, bottom - marker.localToGlobal(Offset.zero).dy);
   }
 
   bool get _canSubmitLogin => _usernameController.text.trim().isNotEmpty && _passwordController.text.isNotEmpty;
@@ -146,6 +164,8 @@ class _AuthComponentState extends State<AuthComponent> {
                   },
                 ),
                 const SizedBox(height: 12),
+                // Where the Log In button starts; sign-in error toasts float above it.
+                SizedBox(key: _buttonsTop, width: double.infinity),
                 SizedBox(
                   width: double.infinity,
                   height: 56,

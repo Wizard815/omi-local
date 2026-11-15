@@ -60,7 +60,6 @@ from database.redis_db import (
 from database.legal_holds import external_write_fence, destructive_operation_gate
 from utils.other import audio_packs
 from database.account_deletion_operational_holds import delete_owner_bucket_prefix
-from utils.request_validation import parse_sync_filename_timestamp
 from utils import encryption
 from utils.sync.staged_prefetch import MAX_FILE_BYTES, StagedBytes, staged_prefetch
 from utils.cloud_tasks import enqueue_audio_merge_job, is_audio_merge_dispatch_enabled
@@ -1002,7 +1001,7 @@ def upload_audio_chunks_batch(
             protection_level,
             sample_rate,
             owner_storage_write_gate,
-            archive_capture=_archive_pusher_capture if audio_packs.enabled() else None,
+            archive_capture=None,
             verify_overlap=(
                 frame_overlap_verifier(
                     uid, conversation_id, sample_rate, private_bucket, list_audio_chunks, _get_storage_client().bucket
@@ -1016,7 +1015,6 @@ def upload_audio_chunks_batch(
         try:
             raw_paths = verified_pcm_paths(private_bucket, uid, conversation_id, sorted_chunks, sample_rate)
             if raw_paths:
-                _archive_pusher_capture(sorted_chunks, uid, conversation_id, protection_level, sample_rate)
                 PCM_WRITES_AVOIDED.inc()
                 return raw_paths
         except Exception:
@@ -1048,7 +1046,6 @@ def upload_audio_chunks_batch(
                 uid, conversation_id, first_ts, payload, rate, require_spans=True
             )
             if verified >= len(payload):
-                _archive_pusher_capture(chunks, uid, conversation_id, protection_level, sample_rate)
                 return committed_paths + proven
             if verified > 0:
                 committed_paths += proven
@@ -1137,8 +1134,6 @@ def upload_audio_chunks_batch(
                 raise
             continue
         break
-
-    _archive_pusher_capture(chunks, uid, conversation_id, protection_level, sample_rate)
     return committed_paths + [path]
 
 
@@ -2638,44 +2633,7 @@ def archive_mobile_batch_raw_files(uid: str, paths: List[str], metadata: Optiona
                 data_protection_level=protection,
             )
         )
-        if mobile:
-            _archive_mobile_capture_forward(uid, path, raw, protection)
     return archived
-
-
-def _archive_mobile_capture_forward(uid: str, path: str, raw: bytes, protection: str | None) -> None:
-    """Preserve main's optional owner-pack archive after the primary commit."""
-    if not audio_packs.enabled():
-        return
-    try:
-        digest = hashlib.sha256(raw).hexdigest()
-        encrypted = protection == 'enhanced'
-        payload = encryption.encrypt_audio_chunk(raw, uid) if encrypted else raw
-        canonical = get_canonical_audio_bucket()
-        with owner_storage_write_gate(uid, canonical):
-            audio_packs.archive_capture(
-                canonical,
-                uid,
-                payload,
-                format='encrypted-omi-wal-uint32le-opus-v1' if encrypted else 'omi-wal-uint32le-opus-v1',
-                provenance={
-                    'capture_day': datetime.datetime.fromtimestamp(
-                        parse_sync_filename_timestamp(path), datetime.timezone.utc
-                    )
-                    .date()
-                    .isoformat(),
-                    'capture_start': parse_sync_filename_timestamp(path),
-                    'producer': 'raw-mobile-batch',
-                    'filename': Path(path).name,
-                    'encrypted': encrypted,
-                    'plaintext_sha256': digest,
-                },
-                conversation_ranges=[],
-                identity=f'{Path(path).name}:{digest}',
-            )
-    except Exception:
-        logger.exception('optional canonical mobile archive failed')
-        record_fallback(component='other', from_mode='none', to_mode='none', reason='other', outcome='degraded')
 
 
 def link_archive_captures(uid: str, paths: List[str], conversation_ids: List[str]) -> None:
@@ -2733,49 +2691,6 @@ def get_canonical_audio_bucket() -> Any:
             raise RuntimeError('canonical archive requires soft delete off')
         _canonical_bucket_cache = (client, name, time.monotonic() + 300, bucket)
         return bucket
-
-
-def _archive_pusher_capture(chunks, uid, conversation_id, protection_level, sample_rate) -> None:
-    """Optional forward archive; primary playback is already durably committed."""
-    if not audio_packs.enabled():
-        return
-    try:
-        # Archive the PCM bytes supplied by pusher, before further renditions.
-        # This is today's desktop/pendant server intake, not device Opus.
-        raw = b''.join(c['data'] for c in sorted(chunks, key=lambda c: c['timestamp']))
-        protection = protection_level
-        encrypted = protection == 'enhanced'
-        canonical = get_canonical_audio_bucket()
-        if conversation_tombstones.is_deleted(uid, conversation_id):
-            if len(audio_packs.conversation_chain(canonical, uid, conversation_id)) == 1:
-                raise audio_packs.CaptureDeleted('canonical capture blocked by existing deletion intent')
-        with owner_storage_write_gate(uid, canonical):
-            audio_packs.archive_capture(
-                canonical,
-                uid,
-                encryption.encrypt_audio_chunk(raw, uid) if encrypted else raw,
-                format='encrypted-pcm16le' if encrypted else 'pcm16le',
-                provenance={
-                    'capture_day': datetime.datetime.fromtimestamp(
-                        float(min(c['timestamp'] for c in chunks)), datetime.timezone.utc
-                    )
-                    .date()
-                    .isoformat(),
-                    'producer': 'pusher',
-                    'sample_rate': sample_rate,
-                    'encrypted': encrypted,
-                    'encryption_envelope': 'uint32be-nonce12-aes256gcm-hkdf-v1' if encrypted else None,
-                    'channels': 1,
-                    'bit_depth': 16,
-                    'plaintext_sha256': hashlib.sha256(raw).hexdigest(),
-                },
-                conversation_ranges=audio_packs.pcm_capture_ranges(chunks, conversation_id, sample_rate),
-                identity=hashlib.sha256(raw).hexdigest(),
-            )
-
-    except Exception:
-        logger.exception('optional canonical pusher archive failed')
-        record_fallback(component='pusher', from_mode='none', to_mode='none', reason='other', outcome='degraded')
 
 
 def delete_privacy_conversation_audio(uid: str, conversation_id: str, *, source_ids: List[str] | None = None) -> None:

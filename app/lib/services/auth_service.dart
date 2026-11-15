@@ -17,6 +17,7 @@ import 'package:omi/env/env.dart';
 import 'package:omi/env/environment_profile.dart';
 import 'package:omi/flavors.dart';
 import 'package:omi/services/auth/auth_token_result.dart';
+import 'package:omi/services/pending_work/pending_work_store.dart';
 import 'package:omi/services/siri_integration.dart';
 import 'package:omi/utils/jwt_expiry.dart';
 import 'package:omi/utils/logger.dart';
@@ -370,6 +371,7 @@ class AuthService {
       });
 
   void _invalidateRefreshes() {
+    PendingWorkStore.instance.reset();
     _sessionGeneration++;
     _refreshInFlight = null;
     _sessionGenerationController.add(_sessionGeneration);

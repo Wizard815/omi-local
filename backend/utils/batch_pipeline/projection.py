@@ -7,6 +7,7 @@ No admission flag is consulted: already accepted work drains after rollback.
 from config.stt_cap_dispatch import execution_admission_enabled as cap_dispatch_enabled
 from config.policy import ProjectionPolicy, kill_switch
 from collections.abc import Iterator
+from collections import Counter
 from contextlib import ExitStack, contextmanager
 from cryptography.exceptions import InvalidTag
 from dataclasses import dataclass
@@ -20,6 +21,7 @@ from typing import TYPE_CHECKING, Callable, NamedTuple, cast
 
 from config.batch_pipeline import (
     owner_drain_enabled,
+    owner_drain_admission_diagnostics_enabled,
     projection_index_deferred_enabled,
     projection_pending_page_enabled,
     projection_predecessor_replay_enabled,
@@ -28,6 +30,7 @@ from config.batch_pipeline import (
     sweep_owner_chain_enabled,
     serving_sweep_page_rows,
 )
+from config.record_latency import recent_native_record
 from database.batch_pipeline_projection import ProjectionBlocked, ProjectionReplay, ProjectionStore
 from database.batch_pipeline_projection_protocol import ProjectionGenerationAmbiguous
 from database.batch_pipeline_projection_protocol import ProjectionPredecessorPending
@@ -35,16 +38,19 @@ from database.batch_pipeline_projection_protocol import normalized_binding
 from database.batch_pipeline_quarantine_recovery import held_candidates
 from database.batch_pipeline_store import PROJECTION_ASSIGNMENT_STATES, PROJECTION_FINISH_STATES, FirestoreStore
 from utils.batch_pipeline.projection_discovery import ProjectionDiscovery
+from utils.batch_pipeline.projection_finish_backoff import FinishBackoff
 from utils.batch_pipeline.projection_disposition import persist_disposition, mirror_assignment
 from utils.batch_pipeline.projection_privacy import PRIVACY_HELD, settle_refusals
 from database.batch_pipeline_privacy import BatchPrivacyBlocked, BatchPrivacyReason
 from utils.batch_pipeline.projection_index import ProjectionIndex
 from database import conversations as conversations_db
 from utils.batch_pipeline.projection_walk_stop import walk_block_stop, walk_head_stop
+from utils.batch_pipeline import projection_drain_diagnostics as drain_diagnostics
 from utils.batch_pipeline.contracts import ProjectionBinding, WorkItem, projection_speech_spans
 from utils.batch_pipeline import artifact_missing
 from utils.batch_pipeline.errors import error_site_field
 from utils.batch_pipeline.correctness_metrics import record_labels
+from utils.batch_pipeline.metrics import PROJECTION_FINISH_COMPLETED, PROJECTION_FINISH_READS
 from utils.batch_pipeline.recovery_disposition import result_outcome
 from utils.batch_pipeline.projection_hold_policy import quarantines_assignment_conflict, log_conflict_hold
 from database.batch_pipeline_projection_claim import projection_claim
@@ -56,6 +62,7 @@ from utils.sync.assignment_errors import (
     SyncAssignmentSuperseded,
 )
 from utils.stt.transcript_admission import filter_admission
+from utils.episodes import transcript_receipts
 
 if TYPE_CHECKING:
     from utils.batch_pipeline.projection_prefetch import Prefetched
@@ -117,6 +124,8 @@ class Walk(NamedTuple):
     stop: str = ''
     # Scheduling hint only: the privacy-blocked head and its observed row version.
     blocked_head: tuple[str, object] | None = None
+    # Already-read recent single-unit records can finish without another scan.
+    eager_followups: tuple[str, ...] = ()
 
 
 def error_type(error: BaseException) -> str:
@@ -317,6 +326,8 @@ def build_incoming(
         **create.model_dump(),
     ).model_dump()
     incoming['data_protection_level'] = binding.data_protection_level
+    # Consumed by the existing assignment transaction, never a separate write.
+    incoming['_episode_transcript_receipt'] = True
     from utils.sync.intake_completion import apply_capture_evidence_dark_write
 
     apply_capture_evidence_dark_write(incoming, None, segments)
@@ -431,14 +442,16 @@ class Projector:
         # position cannot strand them and other owners are not starved.
         self.chain_followups: list[str] = []
         self.discovery = ProjectionDiscovery(store)
+        self.finish_backoff = FinishBackoff(self)
         # Pending-page mode: assignment never spends page slots on rows it can
         # only replay, and persisted/ready rows advance on their own cursor.
-        self.assignment_discovery = ProjectionDiscovery(store, states=PROJECTION_ASSIGNMENT_STATES)
+        self.assignment_discovery = ProjectionDiscovery(store, states=PROJECTION_ASSIGNMENT_STATES, recent=True)
         self.finish_discovery = ProjectionDiscovery(store, states=PROJECTION_FINISH_STATES)
         # Search/people-stats work walks owe, converged off the ordered chain.
         self.index = ProjectionIndex()
         # Owners a sweep or wake wants drained; ``draining`` is live in this process.
-        self.drain_requests: dict[str, None] = {}
+        self.drain_requests: dict[str, int | None] = {}
+        self.drain_request_counts = Counter() if owner_drain_admission_diagnostics_enabled() else None
         self.draining: set[str] = set()
         self.drains = None
         # Sweeps and wakes hand off from sync-pool threads while overlapping
@@ -452,8 +465,16 @@ class Projector:
         # Resume point of the held-release scan; a short page wraps it.
         self.release_after: str | None = None
 
-    def request_drain(self, owner_id: str) -> None:
+    def request_drain(self, owner_id: str, *, reason: str = 'unknown') -> None:
         with self.handoff:
+            previous = self.drain_requests.get(owner_id)
+            if self.drain_request_counts is not None:
+                self.drain_request_counts['handoff_requests'] += 1
+                self.drain_request_counts['handoff_coalesced'] += int(owner_id in self.drain_requests)
+                if previous is not None or len(self.drain_requests) < drain_diagnostics.MAX_OWNERS:
+                    self.drain_requests[owner_id] = (previous or 0) | drain_diagnostics.origin_mask(reason)
+                    return
+                self.drain_request_counts['handoff_overflow'] += 1
             self.drain_requests[owner_id] = None
 
     def owe_followups(self, segment_ids) -> None:
@@ -482,6 +503,11 @@ class Projector:
             self.drains = OwnerDrains(self)
         with self.handoff:
             requests, self.drain_requests = self.drain_requests, {}
+            counts = self.drain_request_counts
+            if counts is not None:
+                self.drain_request_counts = Counter()
+        if counts is not None and self.drains.diagnostics is not None:
+            self.drains.diagnostics.counts.update(counts)
         self.drains.request(requests)
 
     def schedule_index_flush(self, owner_id: str | None = None) -> None:
@@ -1059,6 +1085,7 @@ class Projector:
                             )
                         finally:
                             self._mirror_assignment(session)
+                        transcript_receipts.enqueue(binding.owner_id, assigned[0], firestore_client=self.store.client)
                         incoming.pop('_sync_lineage_eligible', None)
                         record_projection(
                             binding.owner_id,
@@ -1272,7 +1299,7 @@ class Projector:
         """
         walk = self._walk(owner_id, recovered=recovered, limit=limit, budget_seconds=budget_seconds)
         if walk.more and owner_drain_enabled():
-            self.request_drain(owner_id)
+            self.request_drain(owner_id, reason='targeted_wake')
         logger.info(
             'event=batch_projection action=owner_chain outcome=summary advanced=%d followups=%d stop=%s',
             len(walk.advanced),
@@ -1336,7 +1363,11 @@ class Projector:
         with ExitStack() as stack:
             drain = budget_seconds > 0 and owner_drain_enabled()
             if drain:
-                acquired = stack.enter_context(projection_claim(self.store.store.namespace, owner_key(owner_id)))
+                acquired = drain_diagnostics.observe(
+                    'claim_acquire',
+                    stack.enter_context,
+                    projection_claim(self.store.store.namespace, owner_key(owner_id)),
+                )
                 if not acquired:
                     logger.info('event=batch_projection action=owner_chain outcome=claim_busy')
                     return Walk([], [], stop='claim_busy')
@@ -1365,6 +1396,7 @@ class Projector:
         groups: dict[str, dict[str, None]] = {}
         first = None
         advanced: list[str] = []
+        eager_followups: list[str] = []
         more = False
         blocked_head = snapshot = None
 
@@ -1444,7 +1476,9 @@ class Projector:
             try:
                 prefetched = None
                 if prefetch is not None:
-                    prefetched = prefetch.take(segment_id, timeout=deadline - time.monotonic())
+                    prefetched = drain_diagnostics.observe(
+                        'prefetch_wait', prefetch.take, segment_id, timeout=deadline - time.monotonic()
+                    )
                     if prefetched is NOT_READY:
                         # Still loading at the step deadline: the next step
                         # resumes here instead of holding this pool slot.
@@ -1523,12 +1557,14 @@ class Projector:
                 if not privacy_held and not owe(segment_id, binding):
                     stop = 'owe_error'
                     break
+                if not privacy_held and len(binding.segment_ids) == 1 and recent_native_record(job, self.clock()):
+                    eager_followups.append(segment_id)
         else:
             more = True
             stop = 'limit'
         ordered = [groups.pop(first)] if first is not None else []
         followups = list(dict.fromkeys(sid for group in ordered + list(groups.values()) for sid in group))
-        return Walk(followups, advanced, more, stop, blocked_head)
+        return Walk(followups, advanced, more, stop, blocked_head, tuple(eager_followups))
 
     def sweep(self, limit: int | None = None) -> dict[str, int]:
         """Bounded durable-log recovery; no in-memory callback is an outbox."""
@@ -1595,7 +1631,7 @@ class Projector:
                     walked.add(binding.owner_id)
                     if drain:
                         handed.add(binding.owner_id)
-                        self.request_drain(binding.owner_id)
+                        self.request_drain(binding.owner_id, reason='predecessor_replay')
                     else:
                         if chain_deadline is None:
                             chain_deadline = time.monotonic() + OWNER_CHAIN_SECONDS
@@ -1642,7 +1678,7 @@ class Projector:
                 budget = 0.0
                 if drain:
                     handed.add(binding.owner_id)
-                    self.request_drain(binding.owner_id)
+                    self.request_drain(binding.owner_id, reason='discovery_after_assignment')
                 elif binding.owner_id not in walked:
                     if chain_deadline is None:
                         chain_deadline = time.monotonic() + OWNER_CHAIN_SECONDS
@@ -1694,22 +1730,31 @@ class Projector:
         Async rows belong to the follow-up drain; seeing one keeps it scheduled.
         Synchronous-policy rows replay assignment and finish exactly as the
         mixed page did, so no persisted or ready obligation loses its retry.
+        The dark finish backoff owns page selection and deferral; see
+        utils/batch_pipeline/projection_finish_backoff.py.
         """
         from database.batch_pipeline_privacy import BatchPrivacyBlocked
 
         contention = False
-        for segment_id in self.finish_discovery.next(limit=size):
+        for segment_id in self.finish_backoff.page(size):
             if segment_id in touched:
                 continue
+            PROJECTION_FINISH_READS.inc()
+            entry = None
+            result = None
+            defer = True
             try:
                 job, entry, binding = self.store.read(segment_id)
                 policy = ProjectionPolicy.from_dict(job['policy_parts']['projection'])
                 contention = contention or policy.projection_contention
                 if policy.async_projection:
                     self.has_async_followups = True
+                    defer = False
                     continue
                 result = self._project_read(segment_id, job, entry, binding)
                 counts['completed' if result is not None else 'waiting'] += 1
+                if result is not None:
+                    PROJECTION_FINISH_COMPLETED.inc()
             except (ProjectionBlocked, BatchPrivacyBlocked):
                 counts['blocked'] += 1
             except Exception as error:
@@ -1719,4 +1764,15 @@ class Projector:
                     error_type(error),
                     error_site_field(error),
                 )
+            finally:
+                if defer:
+                    # A failed deferral leaves the row due for the next page.
+                    try:
+                        self.finish_backoff.settled(segment_id, entry, result)
+                    except Exception as error:
+                        logger.error(
+                            'event=batch_projection action=sweep outcome=defer_error exception_type=%s%s',
+                            error_type(error),
+                            error_site_field(error),
+                        )
         return contention
