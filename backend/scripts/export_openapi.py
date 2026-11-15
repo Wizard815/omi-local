@@ -168,6 +168,14 @@ UNDOCUMENTED_PUBLIC_ROUTES: dict[tuple[str, str], str] = {
         '/v1/conversations/hidden-noise-counts',
     ): 'Firebase-authenticated first-party Home counts; not part of the Developer API key contract.',
     (
+        'GET',
+        '/v1/conversations/tags',
+    ): 'omi-local: Firebase-authenticated first-party tag catalog; not part of the Developer API key contract.',
+    (
+        'PUT',
+        '/v1/conversations/{conversation_id}/tags',
+    ): 'omi-local: Firebase-authenticated first-party tag edit; not part of the Developer API key contract.',
+    (
         'POST',
         '/v1/conversations/topic',
     ): 'Firebase-authenticated first-party desktop route for provisional titling; not part of the Developer API key contract.',
