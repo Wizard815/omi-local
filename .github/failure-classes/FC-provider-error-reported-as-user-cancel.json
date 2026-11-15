@@ -5,7 +5,7 @@
   "canonical_prevention": "Provider sign-in calls throw instead of returning null on failure; the error is classified once, in the shared sign-in failure classifier, into cancel versus failure class plus a closed provider code, and both analytics and the shown message read that single classification.",
   "canonical_prevention_artifact": [
     "app/lib/utils/auth/sign_in_failure.dart",
-    "app/test/unit/auth_service_apple_sign_in_error_test.dart"
+    "app/test/utils/auth/sign_in_failure_test.dart"
   ],
   "evidence_prs": [],
   "scope_hints": [
