@@ -2,7 +2,8 @@
 few (one VTODO per task, one VEVENT per day summary or conversation event)
 and every CalDAV server accepts this subset.
 
-Dates are written in UTC (``Z``); all-day values use VALUE=DATE. Text is
+Dates are written in UTC (``Z``); all-day values use VALUE=DATE. Read back, a
+local time with an IANA TZID (what phones write) is converted from that zone. Text is
 escaped per RFC 5545 and lines are folded at 75 octets. Parsing unfolds lines,
 unescapes text and reads the properties the sync needs; unknown properties
 are kept verbatim in ``props`` so nothing is lost on inspection.
@@ -14,6 +15,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from typing import Dict, List, Optional, Sequence
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 PRODID = '-//omi-local//CalDAV sync//EN'
 TASK_UID_PREFIX = 'omi-task-'
@@ -87,14 +89,36 @@ def date_stamp(value: date) -> str:
     return value.strftime('%Y%m%d')
 
 
-def parse_stamp(value: str) -> Optional[datetime]:
-    """DATE-TIME (UTC or floating, read as UTC) or DATE → aware UTC datetime."""
+_TZID = re.compile(r';TZID=("[^"]*"|[^;:]*)', re.IGNORECASE)
+
+
+def _zone(params: str) -> Optional[ZoneInfo]:
+    """The zone a property's TZID names, when it is an IANA name (what DAVx5, Tasks.org,
+    Thunderbird and Apple write). Windows names ("W. Europe Standard Time") and custom
+    VTIMEZONEs are not resolved: those times stay read as UTC."""
+    match = _TZID.search(params or '')
+    if not match:
+        return None
+    try:
+        return ZoneInfo(match.group(1).strip('"').strip())
+    except (ValueError, ZoneInfoNotFoundError):
+        return None
+
+
+def parse_stamp(value: str, params: str = '') -> Optional[datetime]:
+    """DATE-TIME or DATE → aware UTC datetime. A local time with a TZID parameter
+    (``DTSTART;TZID=Europe/Berlin:20261027T100000``) is read in that zone; a floating
+    one, or one whose zone is unknown, is read as UTC."""
     value = (value or '').strip()
     for fmt in ('%Y%m%dT%H%M%SZ', '%Y%m%dT%H%M%S', '%Y%m%d'):
         try:
-            return datetime.strptime(value, fmt).replace(tzinfo=timezone.utc)
+            parsed = datetime.strptime(value, fmt)
         except ValueError:
             continue
+        zone = _zone(params) if fmt == '%Y%m%dT%H%M%S' else None
+        if zone is None:
+            return parsed.replace(tzinfo=timezone.utc)
+        return parsed.replace(tzinfo=zone).astimezone(timezone.utc)
     return None
 
 
@@ -234,16 +258,16 @@ def parse_components(text: str) -> List[Component]:
         elif name == 'LOCATION':
             current.location = unescape_text(value)
         elif name == 'DTSTART':
-            current.start = parse_stamp(value)
+            current.start = parse_stamp(value, params)
             current.all_day = 'VALUE=DATE' in params.upper() and 'DATE-TIME' not in params.upper()
         elif name == 'DTEND':
-            current.end = parse_stamp(value)
+            current.end = parse_stamp(value, params)
         elif name == 'DUE':
-            current.due = parse_stamp(value)
+            current.due = parse_stamp(value, params)
         elif name == 'STATUS':
             current.status = value.strip().upper()
         elif name == 'COMPLETED':
-            current.completed_at = parse_stamp(value)
+            current.completed_at = parse_stamp(value, params)
         elif name == 'LAST-MODIFIED':
             current.last_modified = parse_stamp(value)
         elif name == 'CATEGORIES':
