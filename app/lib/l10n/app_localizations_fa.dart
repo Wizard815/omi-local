@@ -16107,4 +16107,21 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'بازگرداندن';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '«$title» رد شد';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'از این روز';
+
+  @override
+  String get dayReviewTasksRowBody => 'کارهای این روز را بررسی، ویرایش و تکمیل کنید';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'اصلاحیه حذف شد';
 }

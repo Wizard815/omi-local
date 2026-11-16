@@ -166,6 +166,16 @@ def test_decline_marks_the_event_and_drops_it_from_the_queue(world):
         fc.decline('u1', 'c1', 5)
 
 
+def test_a_decline_can_be_taken_back_and_the_event_waits_again(world):
+    store, saved = world
+    store['c1'] = _conversation('c1', [{'title': 'Inspection', 'start': NOW + timedelta(days=1)}])
+    fc.decline('u1', 'c1', 0)
+    out = fc.decline('u1', 'c1', 0, declined=False)
+    assert not out.declined and saved['c1'][0]['declined'] is False
+    waiting, recent = fc.pending('u1', now=NOW)
+    assert [e.title for e in waiting] == ['Inspection'] and recent == []
+
+
 def test_bound_to_a_member_the_event_is_created_as_that_member(world):
     store, _ = world
     store['c1'] = _conversation('c1', [{'title': 'Inspection', 'start': NOW + timedelta(days=1), 'duration': 30}])

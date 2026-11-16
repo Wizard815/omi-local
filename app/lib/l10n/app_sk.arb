@@ -4953,5 +4953,10 @@
     "familyCalendarNoteLabel": "Note",
     "@familyCalendarNoteLabel": {
         "description": "Label of the editable note field"
-    }
+    },
+    "familyCalendarBringBack": "Vrátiť",
+    "familyCalendarDeclinedToast": "„{title}“ odmietnuté",
+    "dayReviewFromThisDay": "Z tohto dňa",
+    "dayReviewTasksRowBody": "Skontrolujte, upravte a dokončite úlohy dňa",
+    "dayReviewCorrectionRemoved": "Oprava odstránená"
 }

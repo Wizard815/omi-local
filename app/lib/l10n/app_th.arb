@@ -4953,5 +4953,10 @@
     "familyCalendarNoteLabel": "Note",
     "@familyCalendarNoteLabel": {
         "description": "Label of the editable note field"
-    }
+    },
+    "familyCalendarBringBack": "นำกลับมา",
+    "familyCalendarDeclinedToast": "ปฏิเสธ “{title}” แล้ว",
+    "dayReviewFromThisDay": "จากวันนี้",
+    "dayReviewTasksRowBody": "ตรวจ แก้ไข และทำงานของวันนี้ให้เสร็จ",
+    "dayReviewCorrectionRemoved": "ลบการแก้ไขแล้ว"
 }

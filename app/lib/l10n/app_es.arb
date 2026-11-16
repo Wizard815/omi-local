@@ -4953,5 +4953,10 @@
     "familyCalendarNoteLabel": "Note",
     "@familyCalendarNoteLabel": {
         "description": "Label of the editable note field"
-    }
+    },
+    "familyCalendarBringBack": "Recuperar",
+    "familyCalendarDeclinedToast": "«{title}» rechazado",
+    "dayReviewFromThisDay": "De este día",
+    "dayReviewTasksRowBody": "Revisa, edita y completa las tareas del día",
+    "dayReviewCorrectionRemoved": "Corrección eliminada"
 }

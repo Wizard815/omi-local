@@ -16114,4 +16114,21 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'Khôi phục';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return 'Đã từ chối “$title”';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'Từ ngày này';
+
+  @override
+  String get dayReviewTasksRowBody => 'Xem, sửa và hoàn thành việc cần làm trong ngày';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'Đã xóa chỉnh sửa';
 }

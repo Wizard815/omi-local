@@ -46,13 +46,16 @@ Future<ApiResult<FamilyCalendarOutcome>> approveFamilyCalendarEvent(
           FamilyCalendarOutcome.fromGenerated(wire.GeneratedFamilyCalendarEventResponse.fromJson(_json(body))),
     );
 
-/// Omi got it wrong or it is not wanted: remember that and stop asking.
-Future<ApiResult<FamilyCalendarOutcome>> declineFamilyCalendarEvent(FamilyCalendarEvent event) => executeApi(
+/// Omi got it wrong or it is not wanted: remember that and stop asking. [declined] false takes a
+/// decline back (Undo, or "Bring Back" on a reviewed row) so the event waits for review again.
+Future<ApiResult<FamilyCalendarOutcome>> declineFamilyCalendarEvent(FamilyCalendarEvent event,
+        {bool declined = true}) =>
+    executeApi(
       request: ApiRequest(
         url: '${_base()}/events/decline',
         method: 'POST',
         headers: const {'Content-Type': 'application/json'},
-        body: jsonEncode({'conversation_id': event.conversationId, 'event_idx': event.eventIdx}),
+        body: jsonEncode({'conversation_id': event.conversationId, 'event_idx': event.eventIdx, 'declined': declined}),
       ),
       decode: (body) =>
           FamilyCalendarOutcome.fromGenerated(wire.GeneratedFamilyCalendarEventResponse.fromJson(_json(body))),

@@ -1,5 +1,7 @@
 // Day review (omi-local): the sorting view of a day of held clips, and the bundled review with its
 // sections, tags and favorite-out. Synthetic data: one day, twelve clips, seven of them small.
+// The family-day scenarios walk one household's day end to end: sort (star, merge, drop), bundle,
+// edit the summary, then the day's tasks and the calendar check reached from "From this day".
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -194,6 +196,231 @@ final dayReviewScenarios = <AuditScenario>[
       await a.tester.drag(find.byType(ListView).first, const Offset(0, -1200));
       await a.settle();
       await a.shot('Scroll to the later sections, the tags and the lists', step: 'scrolled');
+    },
+  ),
+];
+
+// ------------------------------------------------------------------------------------------------
+// A family day: eight clips, two of them about the same swim meet, one call that covered two
+// topics (the pediatrician and Leo's soccer form), tasks and three heard dates.
+
+Map<String, Object?> _famClip(String id, int h, int m, int minutes, String title, String snippet,
+        {bool starred = false, bool rolled = false, bool held = true, String overview = ''}) =>
+    {
+      'id': id,
+      'title': title,
+      'emoji': '',
+      'overview': overview,
+      'started_at': _at(h, m),
+      'finished_at': _at(h, m, minutes),
+      'starred': starred,
+      'tags': <String>[],
+      'rolled_up': rolled,
+      'dropped': false,
+      'held': held && !starred && !rolled,
+      'hold_rule': minutes <= 2 ? 'model_withheld' : 'hold',
+      'transcript_snippet': snippet,
+      'word_count': minutes * 40,
+    };
+
+List<Map<String, Object?>> _famClips({bool bundled = false}) => [
+      _famClip('f1', 7, 40, 2, 'School drop-off', 'Backpack, lunch, water bottle. Love you, have a good day.',
+          rolled: bundled),
+      _famClip('f2', 8, 10, 12, 'Call with the pediatrician',
+          'Thursday at three thirty works. And while I have you, does Leo need the physical for soccer?',
+          rolled: bundled),
+      _famClip('f3', 9, 30, 6, 'Grocery run', 'Oat milk, apples, the good bread, and candles for Saturday.',
+          rolled: bundled),
+      _famClip('f4', 12, 15, 34, 'Lunch with Grandma',
+          'Sunday dinner at five at ours. Her knee is better but she should not drive at night.',
+          starred: true, overview: 'Sunday dinner at five; Sam picks her up because of the night drive.'),
+      _famClip('f5', 15, 45, 4, 'Swim pickup', 'Coach said Mia did great today. The meet is on the 28th.',
+          rolled: bundled),
+      _famClip('f6', 16, 5, 9, 'Swim coach about the meet',
+          'Warm-up is at seven, so be there by six forty-five. Bring the team cap.',
+          rolled: bundled),
+      _famClip('f7', 18, 30, 22, 'Dinner: weekend plans',
+          'Soccer Saturday at nine at Lincoln field, then the birthday party at two. Dentist reminder for Mia.',
+          rolled: bundled),
+      _famClip('f8', 20, 10, 1, 'Bedtime', 'Goodnight. Lights off.', rolled: bundled),
+    ];
+
+final _famSections = [
+  _section(
+      'fs1',
+      'Morning',
+      'You dropped the kids at school at 07:40 and did a grocery run at 09:30: oat milk, apples, bread and candles for Saturday.',
+      ['f1', 'f3'],
+      ['school', 'groceries']),
+  _section(
+      'fs2',
+      'Call with the pediatrician',
+      'At 08:10 you booked Mia\'s check-up for Thursday at 3:30. On the same call you asked whether Leo needs a physical for soccer; he does, and the form has to be in before the first game.',
+      ['f2'],
+      ['mia', 'leo', 'doctor', 'soccer']),
+  _section(
+      'fs3',
+      'Swim meet on the 28th',
+      'At pickup the coach said Mia did great. The meet is on the 28th: warm-up at seven, so be there by 6:45 with the team cap.',
+      ['f5', 'f6'],
+      ['mia', 'swim']),
+  _section(
+      'fs4',
+      'Dinner: weekend plans',
+      'Over dinner you planned the weekend: soccer on Saturday at nine at Lincoln field, then a birthday party at two. Mia is due at the dentist.',
+      ['f7'],
+      ['weekend', 'soccer', 'party']),
+];
+
+String get _famText => _famSections.map((s) => s['text']).join('\n\n');
+
+Map<String, Object?> _famReview({List<Map<String, Object?>> corrections = const []}) => {
+      'date': _date,
+      'status': 'finalized',
+      'title': 'A check-up booked, a swim meet set, a full weekend',
+      'summary_text': _famText,
+      'final_text': _famText,
+      'corrections': corrections,
+      'sections': _famSections,
+      'tags': ['doctor', 'leo', 'mia', 'party', 'school', 'soccer', 'swim', 'weekend'],
+      'kept_conversation_ids': ['f4'],
+      'rolled_up_conversation_ids': ['f1', 'f2', 'f3', 'f5', 'f6', 'f7'],
+      'merged_groups': <Object?>[],
+      'dropped_conversation_ids': ['f8'],
+      'generated_at': DateTime.now().toUtc().toIso8601String(),
+      'generation_count': 1,
+      'time_zone': 'UTC',
+    };
+
+Map<String, Object?> _famDay({Map<String, Object?>? review}) => {
+      'date': _date,
+      'review': review,
+      'conversations': _famClips(bundled: review != null),
+      'processing_count': 0,
+      'dropped_auto_count': 1,
+      'hold_enabled': true,
+    };
+
+int _offsetOf(String quote) => _famText.indexOf(quote);
+
+Map<String, Object?> _highlight(String id, String quote, String text) => {
+      'id': id,
+      'type': 'highlight',
+      'quote': quote,
+      'start': _offsetOf(quote),
+      'end': _offsetOf(quote) + quote.length,
+      'text': text,
+      'created_at': DateTime.now().toUtc().toIso8601String(),
+    };
+
+Map<String, Object?> _paragraph(String id, String text, int after) => {
+      'id': id,
+      'type': 'paragraph',
+      'text': text,
+      'after_paragraph': after,
+      'created_at': DateTime.now().toUtc().toIso8601String(),
+    };
+
+Map<String, Object?> _famTask(String id, String description, {int dueInDays = 1, bool completed = false}) {
+  final due = DateTime(_day.year, _day.month, _day.day + dueInDays, 17);
+  return {
+    'id': id,
+    'description': description,
+    'completed': completed,
+    'created_at': DateTime(_day.year, _day.month, _day.day, 18, 40).toUtc().toIso8601String(),
+    'updated_at': DateTime(_day.year, _day.month, _day.day, 18, 40).toUtc().toIso8601String(),
+    'due_at': due.toUtc().toIso8601String(),
+    'conversation_id': 'f7',
+  };
+}
+
+final dayReviewFamilyScenarios = <AuditScenario>[
+  AuditScenario(
+    id: 'day-review-family-sort',
+    title: 'Family day before review: star, merge two swim clips, drop bedtime, then bundle',
+    page: _page,
+    state: 'Hold mode: eight clips of a family day, Lunch with Grandma starred; nothing summarized yet',
+    run: (a) async {
+      a.server.jsonRoutes['GET /v1/users/day-reviews/$_date'] = _famDay();
+      await a.pump(DayReviewPage(date: _date));
+      await a.settle();
+      await a.shot('Open the day: eight clips waiting, Grandma starred', step: 'top');
+      final checks = find.byType(Checkbox);
+      await a.tester.ensureVisible(checks.at(3));
+      await a.tap(checks.at(3)); // Swim pickup
+      await a.tap(checks.at(4)); // Swim coach
+      await a.shot('Tick the two swim clips: the merge bar appears', step: 'ticked');
+      await a.tap(find.text('Merge 2 clips into one'));
+      await a.shot('Merge them: one "Merged into one conversation" group with Ungroup', step: 'merged');
+      await a.tester.drag(find.byType(ListView).first, const Offset(0, -2000));
+      await a.settle();
+      await a.tap(find.byTooltip('Drop (noise)').last); // Bedtime, the last clip
+      await a.shot('Drop bedtime: the bottom button counts keep, merge, drop and summarize', step: 'sorted');
+      await a.tester.drag(find.byType(ListView).first, const Offset(0, 3000));
+      await a.settle();
+      await a.tap(find.byKey(const Key('day_review_bundle')));
+      await a.shot('Bundle the day: it now asks first and uses these choices', step: 'bundle-confirm');
+      expect(find.text('Build the day summary?'), findsOneWidget);
+    },
+  ),
+  AuditScenario(
+    id: 'day-review-family-summary',
+    title: 'Family day summary: edit, correct, remove with Undo, then the day\'s tasks and dates',
+    page: _page,
+    state:
+        'Bundled family day: four sections, Grandma kept, bedtime dropped; one pending correction and one added paragraph',
+    run: (a) async {
+      final corrections = [
+        _highlight('k1', 'Thursday at 3:30', 'It is 3:45, not 3:30'),
+        _paragraph('k2', 'Grandma is coming Sunday at five; Sam picks her up.', 1),
+      ];
+      a.server.jsonRoutes['GET /v1/users/day-reviews/$_date'] = _famDay(review: _famReview(corrections: corrections));
+      await a.pump(DayReviewPage(date: _date));
+      await a.settle();
+      await a.shot('Open the bundled day', step: 'top');
+      await a.tester.drag(find.byType(ListView).first, const Offset(0, -500));
+      await a.settle();
+      await a.shot('Scroll: the correction is highlighted, the added paragraph sits under its section',
+          step: 'corrections');
+      await a.tap(find.byTooltip('Add a paragraph after this section').first);
+      await a.enterText(find.byKey(const Key('day_review_text_field')), 'Leo\'s soccer form is in the blue folder.');
+      await a.shot('Tap + : an editing sheet with Save and Cancel', step: 'add-sheet');
+      await a.tap(find.byTooltip('Close'));
+      await a.shot('Close with text typed: Discard Changes? first', step: 'add-discard');
+      await a.tap(find.text('Keep Editing'));
+      a.server.jsonRoutes['POST /v1/users/day-reviews/$_date/corrections'] = _famReview(corrections: [
+        ...corrections,
+        _paragraph('k3', 'Leo\'s soccer form is in the blue folder.', 1),
+      ]);
+      await a.tap(find.byKey(const Key('day_review_text_save')));
+      await a.shot('Save: the paragraph waits under its section; Apply corrections (3)', step: 'added');
+      final delete = find.byKey(const Key('day_review_correction_delete_k1'));
+      await a.tester.scrollUntilVisible(delete, 300, scrollable: find.byType(Scrollable).first);
+      await a.settle();
+      a.server.jsonRoutes['DELETE /v1/users/day-reviews/$_date/corrections/k1'] = _famReview(corrections: [
+        corrections[1],
+        _paragraph('k3', 'Leo\'s soccer form is in the blue folder.', 1),
+      ]);
+      await a.tap(delete);
+      await a.shot('Remove a correction: an Undo toast', step: 'removed-undo');
+      expect(find.text('Correction removed'), findsOneWidget);
+      final tasks = find.byKey(const Key('day_review_tasks'));
+      await a.tester.scrollUntilVisible(tasks, 300, scrollable: find.byType(Scrollable).first);
+      await a.tester.pump(const Duration(seconds: 6));
+      await a.settle();
+      await a.shot('From this day: the day\'s tasks and the calendar check', step: 'from-this-day');
+      a.server.actionItems
+        ..clear()
+        ..addAll([
+          _famTask('t1', 'Send Leo\'s soccer physical form to the coach', dueInDays: 3),
+          _famTask('t2', 'Buy candles and a gift for Saturday\'s party', dueInDays: 2),
+          _famTask('t3', 'Book Mia\'s dentist appointment', dueInDays: 5),
+          _famTask('t4', 'Pack the team cap for the swim meet', dueInDays: 12),
+          _famTask('t5', 'Pick up Grandma Sunday at 4:30', dueInDays: 4),
+        ]);
+      await a.tap(tasks);
+      await a.settle();
+      await a.shot('Tap Tasks: the tasks made that day, each editable', step: 'tasks');
     },
   ),
 ];

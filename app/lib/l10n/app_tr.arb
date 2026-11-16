@@ -4988,5 +4988,10 @@
     "familyCalendarNoteLabel": "Note",
     "@familyCalendarNoteLabel": {
         "description": "Label of the editable note field"
-    }
+    },
+    "familyCalendarBringBack": "Geri Getir",
+    "familyCalendarDeclinedToast": "“{title}” reddedildi",
+    "dayReviewFromThisDay": "Bu günden",
+    "dayReviewTasksRowBody": "Günün görevlerini gözden geçirin, düzenleyin ve tamamlayın",
+    "dayReviewCorrectionRemoved": "Düzeltme kaldırıldı"
 }

@@ -4953,5 +4953,10 @@
     "familyCalendarNoteLabel": "Note",
     "@familyCalendarNoteLabel": {
         "description": "Label of the editable note field"
-    }
+    },
+    "familyCalendarBringBack": "Readu",
+    "familyCalendarDeclinedToast": "„{title}” refuzat",
+    "dayReviewFromThisDay": "Din această zi",
+    "dayReviewTasksRowBody": "Verifică, editează și finalizează sarcinile zilei",
+    "dayReviewCorrectionRemoved": "Corectura a fost eliminată"
 }

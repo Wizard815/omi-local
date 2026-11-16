@@ -996,16 +996,19 @@ class GeneratedApproveFamilyCalendarEventRequest {
 
 class GeneratedDeclineFamilyCalendarEventRequest {
   final String conversationId;
+  final bool declined;
   final int eventIdx;
 
   const GeneratedDeclineFamilyCalendarEventRequest({
     required this.conversationId,
+    this.declined = true,
     required this.eventIdx,
   });
 
   factory GeneratedDeclineFamilyCalendarEventRequest.fromJson(Map<String, dynamic> json) {
     return GeneratedDeclineFamilyCalendarEventRequest(
       conversationId: _required(_readFieldValue<String>(_readField(json, const ["conversation_id"]), "conversation_id", _readString, requiredField: true, nullable: false), "conversation_id"),
+      declined: _required(_readFieldValue<bool>(_readField(json, const ["declined"]), "declined", _readBool, requiredField: false, nullable: false, defaultValue: true), "declined"),
       eventIdx: _required(_readFieldValue<int>(_readField(json, const ["event_idx"]), "event_idx", _readInt, requiredField: true, nullable: false), "event_idx"),
     );
   }
@@ -1013,6 +1016,7 @@ class GeneratedDeclineFamilyCalendarEventRequest {
   Map<String, dynamic> toJson() {
     return {
       'conversation_id': conversationId,
+      'declined': declined,
       'event_idx': eventIdx,
     };
   }

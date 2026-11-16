@@ -93,13 +93,6 @@ Future<DayReviewResult<DayReview>> finalizeDayReview(
       response, (json) => DayReview.fromGenerated(wire.GeneratedDayReview.fromJson(json)), 'finalizeDayReview');
 }
 
-/// The hands-off review: starred conversations stay, everything else becomes the sectioned day summary.
-Future<DayReviewResult<DayReview>> bundleDayReview(String date) async {
-  final response = await makeApiCall(url: '${_base()}/$date/bundle', headers: {}, method: 'POST', body: '');
-  return _decode(
-      response, (json) => DayReview.fromGenerated(wire.GeneratedDayReview.fromJson(json)), 'bundleDayReview');
-}
-
 /// Pull a section's conversations back out as starred conversations ([favorited] = true) or fold them back in.
 Future<DayReviewResult<DayReview>> favoriteDayReviewSection(String date, String sectionId, bool favorited) async {
   final response = await makeApiCall(
@@ -155,4 +148,41 @@ Future<DayReviewResult<int>> reopenDayReview(String date) async {
   final response = await makeApiCall(url: '${_base()}/$date/reopen', headers: {}, method: 'POST', body: '');
   return _decode(
       response, (json) => wire.GeneratedReopenDayReviewResponse.fromJson(json).restoredCount, 'reopenDayReview');
+}
+
+/// The calls [DayReviewPage] makes, as one object so widget tests can stand in for the server.
+class DayReviewApi {
+  const DayReviewApi();
+
+  Future<DayReviewResult<DayReviewDay>> getDay(String date) => getDayReviewDay(date);
+
+  Future<DayReviewResult<DayReview>> finalize(
+    String date,
+    List<String> keep, {
+    List<List<String>> mergeGroups = const [],
+    List<String> drop = const [],
+  }) =>
+      finalizeDayReview(date, keep, mergeGroups: mergeGroups, dropConversationIds: drop);
+
+  Future<DayReviewResult<DayReview>> favoriteSection(String date, String sectionId, bool favorited) =>
+      favoriteDayReviewSection(date, sectionId, favorited);
+
+  Future<DayReviewResult<DayReview>> addCorrection(
+    String date, {
+    required DayReviewCorrectionType type,
+    String? quote,
+    int? start,
+    int? end,
+    String? text,
+    int? afterParagraph,
+  }) =>
+      addDayReviewCorrection(date,
+          type: type, quote: quote, start: start, end: end, text: text, afterParagraph: afterParagraph);
+
+  Future<DayReviewResult<DayReview>> deleteCorrection(String date, String correctionId) =>
+      deleteDayReviewCorrection(date, correctionId);
+
+  Future<DayReviewResult<DayReview>> regenerate(String date) => regenerateDayReview(date);
+
+  Future<DayReviewResult<int>> reopen(String date) => reopenDayReview(date);
 }

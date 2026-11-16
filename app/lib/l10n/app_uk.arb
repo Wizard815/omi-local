@@ -4953,5 +4953,10 @@
     "familyCalendarNoteLabel": "Note",
     "@familyCalendarNoteLabel": {
         "description": "Label of the editable note field"
-    }
+    },
+    "familyCalendarBringBack": "Повернути",
+    "familyCalendarDeclinedToast": "«{title}» відхилено",
+    "dayReviewFromThisDay": "З цього дня",
+    "dayReviewTasksRowBody": "Перегляньте, змініть і виконайте завдання цього дня",
+    "dayReviewCorrectionRemoved": "Виправлення видалено"
 }

@@ -1,5 +1,6 @@
 // The ask-first contract on the review page: nothing is sent until "Add to calendar" is
-// tapped, the user's edits are what gets sent, and a refusal keeps the card.
+// tapped, the user's edits are what gets sent, and a refusal keeps the card. A decline is not
+// final: Undo right after it, or Bring Back on the reviewed row later, puts the event back.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -23,8 +24,10 @@ FamilyCalendarEvent _inspection() => FamilyCalendarEvent(
 
 class _Fake {
   List<FamilyCalendarEvent> pending = [_inspection()];
+  List<FamilyCalendarEvent> recent = const [];
   final approved = <Map<String, Object?>>[];
   final declined = <String>[];
+  final restored = <String>[];
   bool refuse = false;
   int loads = 0;
   String? ownerId;
@@ -41,7 +44,7 @@ class _Fake {
         ownerId: ownerId,
         ownerName: ownerId == null ? '' : members.firstWhere((m) => m.id == ownerId).name,
         pending: pending,
-        recent: const [],
+        recent: recent,
       );
 
   Future<ApiResult<FamilyCalendar>> load() async {
@@ -63,11 +66,29 @@ class _Fake {
     return const ApiSuccess(FamilyCalendarOutcome(ok: true));
   }
 
-  Future<ApiResult<FamilyCalendarOutcome>> decline(FamilyCalendarEvent event) async {
-    declined.add(event.key);
-    pending = [];
+  Future<ApiResult<FamilyCalendarOutcome>> decline(FamilyCalendarEvent event, {bool declined = true}) async {
+    if (declined) {
+      this.declined.add(event.key);
+      pending = [];
+      recent = [_declined(event)];
+    } else {
+      restored.add(event.key);
+      pending = [_inspection()];
+      recent = const [];
+    }
     return const ApiSuccess(FamilyCalendarOutcome(ok: true));
   }
+
+  static FamilyCalendarEvent _declined(FamilyCalendarEvent e) => FamilyCalendarEvent(
+        conversationId: e.conversationId,
+        eventIdx: e.eventIdx,
+        conversationTitle: e.conversationTitle,
+        title: e.title,
+        description: e.description,
+        start: e.start,
+        duration: e.duration,
+        declined: true,
+      );
 }
 
 Future<void> _open(WidgetTester tester, _Fake fake) async {
@@ -124,6 +145,33 @@ void main() {
     expect(fake.declined, ['c10:0']);
     expect(fake.approved, isEmpty);
     expect(find.byKey(const Key('family_calendar_event_c10:0')), findsNothing);
+  });
+
+  testWidgets('Undo right after a decline puts the event back to check', (tester) async {
+    final fake = _Fake();
+    await _open(tester, fake);
+    await tester.ensureVisible(find.byKey(const Key('family_calendar_decline_c10:0')));
+    await tester.tap(find.byKey(const Key('family_calendar_decline_c10:0')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('“Inspecton friday” declined'), findsOneWidget);
+    await tester.tap(find.text('Undo'));
+    await tester.pumpAndSettle();
+    expect(fake.restored, ['c10:0']);
+    expect(find.byKey(const Key('family_calendar_event_c10:0')), findsOneWidget);
+    expect(fake.approved, isEmpty, reason: 'taking a decline back adds nothing');
+  });
+
+  testWidgets('a declined event in Reviewed lately can be brought back', (tester) async {
+    final fake = _Fake()
+      ..pending = []
+      ..recent = [_Fake._declined(_inspection())];
+    await _open(tester, fake);
+    await tester.tap(find.byKey(const Key('family_calendar_restore_c10:0')));
+    await tester.pumpAndSettle();
+    expect(fake.restored, ['c10:0']);
+    expect(find.byKey(const Key('family_calendar_event_c10:0')), findsOneWidget);
+    expect(find.byKey(const Key('family_calendar_restore_c10:0')), findsNothing);
   });
 
   testWidgets('picking a household member binds the added events to them', (tester) async {

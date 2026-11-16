@@ -4953,5 +4953,10 @@
     "familyCalendarNoteLabel": "Note",
     "@familyCalendarNoteLabel": {
         "description": "Label of the editable note field"
-    }
+    },
+    "familyCalendarBringBack": "Terugzetten",
+    "familyCalendarDeclinedToast": "“{title}” afgewezen",
+    "dayReviewFromThisDay": "Van deze dag",
+    "dayReviewTasksRowBody": "Bekijk, bewerk en voltooi de taken van de dag",
+    "dayReviewCorrectionRemoved": "Correctie verwijderd"
 }

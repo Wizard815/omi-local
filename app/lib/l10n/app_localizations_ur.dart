@@ -16126,4 +16126,21 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'واپس لائیں';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '“$title” مسترد';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'اس دن سے';
+
+  @override
+  String get dayReviewTasksRowBody => 'اس دن کے کام دیکھیں، ترمیم کریں اور مکمل کریں';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'تصحیح ہٹا دی گئی';
 }

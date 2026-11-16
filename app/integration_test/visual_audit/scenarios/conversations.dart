@@ -99,6 +99,38 @@ const _twoSourceGroup = CaptureGroup(
 
 final conversationsScenarios = <AuditScenario>[
   AuditScenario(
+    id: 'conversations-family-day-organize',
+    title: 'A family day in the list: the row menu (star, folder, select) and selecting two to merge',
+    page: _page,
+    state: 'Four conversations of one family day; nothing grouped yet',
+    run: (a) async {
+      ServerConversation at(String id, String title, int hour) {
+        final c = auditConversation(id, title: title);
+        return ServerConversation(
+          id: c.id,
+          createdAt: DateTime(2026, 9, 20, hour),
+          structured: c.structured,
+          status: c.status,
+        );
+      }
+
+      final items = [
+        at('fam-4', 'Dinner: weekend plans', 18),
+        at('fam-3', 'Swim coach about the meet', 16),
+        at('fam-2', 'Swim pickup', 15),
+        at('fam-1', 'Call with the pediatrician', 8),
+      ];
+      await a.pump(const ConversationsPage(requestInitialLoad: false), providers: _listProviders(items));
+      await a.shot('One family day in the list', step: 'list');
+      await a.longPress(find.byType(ConversationListItem).at(1));
+      expect(find.byKey(const ValueKey('conversation_action_select')), findsOneWidget);
+      await a.shot('Long-press: Star, Move to Folder and Select (to merge); no way to split one', step: 'row-menu');
+      await a.tap(find.byKey(const ValueKey('conversation_action_select')));
+      await a.tap(find.byType(ConversationListItem).at(2));
+      await a.shot('Select the two swim clips for a merge', step: 'selected');
+    },
+  ),
+  AuditScenario(
     id: 'conversations-buffered-home',
     title: 'A week of compact Home cards',
     page: _page,

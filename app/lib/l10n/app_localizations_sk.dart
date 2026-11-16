@@ -16115,4 +16115,21 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'Vrátiť';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '„$title“ odmietnuté';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'Z tohto dňa';
+
+  @override
+  String get dayReviewTasksRowBody => 'Skontrolujte, upravte a dokončite úlohy dňa';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'Oprava odstránená';
 }
