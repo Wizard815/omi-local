@@ -100,13 +100,13 @@ def update_folder(folder_id: str, request: UpdateFolderRequest, uid: str = Depen
         if update_data.get(field) is None and field in update_data:
             update_data.pop(field)
 
+    folder = folders_db.get_folder(uid, folder_id) if 'parent_id' in update_data else None
     if 'parent_id' in update_data:
-        folder = folders_db.get_folder(uid, folder_id)
         if not folder:
             raise HTTPException(status_code=404, detail="Folder not found")
         if update_data['parent_id'] == folder.parent_id:
             update_data.pop('parent_id')
-    if 'parent_id' in update_data:
+    if folder is not None and 'parent_id' in update_data:
         if folder.is_system and update_data['parent_id'] is not None:
             # AI folder assignment routes categories to the system folders; keep them findable at the top.
             raise HTTPException(status_code=400, detail="System folders stay at the top level")
