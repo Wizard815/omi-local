@@ -16023,4 +16023,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'إعادة';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return 'تم رفض “$title”';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'من هذا اليوم';
+
+  @override
+  String get dayReviewTasksRowBody => 'راجع مهام هذا اليوم وعدّلها وأكملها';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'تمت إزالة التصحيح';
 }

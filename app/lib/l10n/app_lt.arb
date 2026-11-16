@@ -4953,5 +4953,10 @@
     "familyCalendarNoteLabel": "Note",
     "@familyCalendarNoteLabel": {
         "description": "Label of the editable note field"
-    }
+    },
+    "familyCalendarBringBack": "Grąžinti",
+    "familyCalendarDeclinedToast": "„{title}“ atmesta",
+    "dayReviewFromThisDay": "Iš šios dienos",
+    "dayReviewTasksRowBody": "Peržiūrėkite, redaguokite ir atlikite dienos užduotis",
+    "dayReviewCorrectionRemoved": "Pataisymas pašalintas"
 }

@@ -16130,4 +16130,21 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'Kembalikan';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '“$title” ditolak';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'Dari hari ini';
+
+  @override
+  String get dayReviewTasksRowBody => 'Periksa, edit, dan selesaikan tugas hari ini';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'Koreksi dihapus';
 }

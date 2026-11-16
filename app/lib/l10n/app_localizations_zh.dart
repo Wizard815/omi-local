@@ -15856,4 +15856,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => '恢复';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '已拒绝“$title”';
+  }
+
+  @override
+  String get dayReviewFromThisDay => '这一天的内容';
+
+  @override
+  String get dayReviewTasksRowBody => '查看、编辑并完成这一天的任务';
+
+  @override
+  String get dayReviewCorrectionRemoved => '已移除更正';
 }

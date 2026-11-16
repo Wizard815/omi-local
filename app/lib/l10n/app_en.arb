@@ -19790,5 +19790,30 @@
     "familyCalendarNoteLabel": "Note",
     "@familyCalendarNoteLabel": {
         "description": "Label of the editable note field"
+    },
+    "familyCalendarBringBack": "Bring Back",
+    "@familyCalendarBringBack": {
+        "description": "Button on a declined calendar event that puts it back in the list to check"
+    },
+    "familyCalendarDeclinedToast": "“{title}” declined",
+    "@familyCalendarDeclinedToast": {
+        "description": "Undo toast after declining a heard calendar event; title is the event title",
+        "placeholders": {
+            "title": {
+                "type": "String"
+            }
+        }
+    },
+    "dayReviewFromThisDay": "From this day",
+    "@dayReviewFromThisDay": {
+        "description": "Section header on the day review linking to that day's tasks and calendar check"
+    },
+    "dayReviewTasksRowBody": "Check, edit and complete the day’s tasks",
+    "@dayReviewTasksRowBody": {
+        "description": "Subtitle of the Tasks row on the day review"
+    },
+    "dayReviewCorrectionRemoved": "Correction removed",
+    "@dayReviewCorrectionRemoved": {
+        "description": "Undo toast after removing a correction from a day summary"
     }
 }

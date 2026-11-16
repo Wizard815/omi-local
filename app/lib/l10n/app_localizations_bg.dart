@@ -16165,4 +16165,21 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'Върни';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '„$title“ е отказано';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'От този ден';
+
+  @override
+  String get dayReviewTasksRowBody => 'Прегледайте, редактирайте и отметнете задачите от деня';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'Корекцията е премахната';
 }

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "id": "FC-shortcut-action-ignores-unsaved-page-choices",
+  "violated_contract": "An action offered on a page where the user is making choices that are not saved yet (stars, merge selections, drops) must carry those choices or refuse; it must never act on the server's last saved state and silently discard what the page shows.",
+  "canonical_prevention": "Send every action on such a page through the one request that carries the page's current choices (DayReviewPage routes Bundle the day through the same finalize as its bottom button), and pin it with a widget test that makes a choice on the page and then takes the shortcut.",
+  "canonical_prevention_artifact": [
+    "app/test/pages/day_review/day_review_page_test.dart"
+  ],
+  "evidence_prs": [],
+  "scope_hints": [
+    "app/lib/pages/day_review/"
+  ],
+  "status": "open"
+}

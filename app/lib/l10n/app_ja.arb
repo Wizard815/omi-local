@@ -4953,5 +4953,10 @@
     "familyCalendarNoteLabel": "Note",
     "@familyCalendarNoteLabel": {
         "description": "Label of the editable note field"
-    }
+    },
+    "familyCalendarBringBack": "元に戻す",
+    "familyCalendarDeclinedToast": "「{title}」を見送りました",
+    "dayReviewFromThisDay": "この日から",
+    "dayReviewTasksRowBody": "この日のタスクを確認・編集・完了",
+    "dayReviewCorrectionRemoved": "修正を削除しました"
 }

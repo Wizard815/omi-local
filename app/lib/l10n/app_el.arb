@@ -4953,5 +4953,10 @@
     "familyCalendarNoteLabel": "Note",
     "@familyCalendarNoteLabel": {
         "description": "Label of the editable note field"
-    }
+    },
+    "familyCalendarBringBack": "Επαναφορά",
+    "familyCalendarDeclinedToast": "«{title}» απορρίφθηκε",
+    "dayReviewFromThisDay": "Από αυτή την ημέρα",
+    "dayReviewTasksRowBody": "Ελέγξτε, επεξεργαστείτε και ολοκληρώστε τις εργασίες της ημέρας",
+    "dayReviewCorrectionRemoved": "Η διόρθωση αφαιρέθηκε"
 }

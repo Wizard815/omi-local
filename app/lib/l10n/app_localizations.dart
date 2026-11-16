@@ -28100,6 +28100,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Note'**
   String get familyCalendarNoteLabel;
+
+  /// Button on a declined calendar event that puts it back in the list to check
+  ///
+  /// In en, this message translates to:
+  /// **'Bring Back'**
+  String get familyCalendarBringBack;
+
+  /// Undo toast after declining a heard calendar event; title is the event title
+  ///
+  /// In en, this message translates to:
+  /// **'“{title}” declined'**
+  String familyCalendarDeclinedToast(String title);
+
+  /// Section header on the day review linking to that day's tasks and calendar check
+  ///
+  /// In en, this message translates to:
+  /// **'From this day'**
+  String get dayReviewFromThisDay;
+
+  /// Subtitle of the Tasks row on the day review
+  ///
+  /// In en, this message translates to:
+  /// **'Check, edit and complete the day’s tasks'**
+  String get dayReviewTasksRowBody;
+
+  /// Undo toast after removing a correction from a day summary
+  ///
+  /// In en, this message translates to:
+  /// **'Correction removed'**
+  String get dayReviewCorrectionRemoved;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -16236,4 +16236,21 @@ class AppLocalizationsTl extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'Ibalik';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return 'Tinanggihan ang “$title”';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'Mula sa araw na ito';
+
+  @override
+  String get dayReviewTasksRowBody => 'Suriin, i-edit, at tapusin ang mga gawain ng araw';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'Inalis ang pagwawasto';
 }

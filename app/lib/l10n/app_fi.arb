@@ -4953,5 +4953,10 @@
     "familyCalendarNoteLabel": "Note",
     "@familyCalendarNoteLabel": {
         "description": "Label of the editable note field"
-    }
+    },
+    "familyCalendarBringBack": "Palauta",
+    "familyCalendarDeclinedToast": "”{title}” hylätty",
+    "dayReviewFromThisDay": "Tältä päivältä",
+    "dayReviewTasksRowBody": "Tarkista, muokkaa ja merkitse päivän tehtävät tehdyiksi",
+    "dayReviewCorrectionRemoved": "Korjaus poistettu"
 }

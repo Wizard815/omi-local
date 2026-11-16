@@ -15997,4 +15997,21 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'החזרה';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '„$title” נדחה';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'מהיום הזה';
+
+  @override
+  String get dayReviewTasksRowBody => 'בדקו, ערכו והשלימו את משימות היום';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'התיקון הוסר';
 }

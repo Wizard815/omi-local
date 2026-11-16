@@ -16143,4 +16143,21 @@ class AppLocalizationsLt extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'Grąžinti';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '„$title“ atmesta';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'Iš šios dienos';
+
+  @override
+  String get dayReviewTasksRowBody => 'Peržiūrėkite, redaguokite ir atlikite dienos užduotis';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'Pataisymas pašalintas';
 }

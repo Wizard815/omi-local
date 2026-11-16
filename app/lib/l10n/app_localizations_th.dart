@@ -16038,4 +16038,21 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'นำกลับมา';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return 'ปฏิเสธ “$title” แล้ว';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'จากวันนี้';
+
+  @override
+  String get dayReviewTasksRowBody => 'ตรวจ แก้ไข และทำงานของวันนี้ให้เสร็จ';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'ลบการแก้ไขแล้ว';
 }
