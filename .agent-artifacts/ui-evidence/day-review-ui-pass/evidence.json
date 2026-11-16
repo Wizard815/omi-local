@@ -1,0 +1,173 @@
+{
+  "version": 1,
+  "images": [
+    {
+      "file": "001-mobile-android-day-review-sort-top.png",
+      "platform": "mobile-android",
+      "description": "Family day before review: eight held clips, Grandma starred, Bundle the day on top, sort by hand below",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "002-mobile-android-day-review-sort-ticked.png",
+      "platform": "mobile-android",
+      "description": "Two swim clips ticked: the merge bar appears (ticks now carry a \"Select to merge\" label)",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "003-mobile-android-day-review-sort-merged.png",
+      "platform": "mobile-android",
+      "description": "Merged into one conversation group with Ungroup",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "004-mobile-android-day-review-sort-dropped.png",
+      "platform": "mobile-android",
+      "description": "Bedtime dropped (dimmed); bottom button reads Keep 1 · Merge 1 · Drop 1 · Summarize 4",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "005-mobile-android-before-bundle-ignores-choices.png",
+      "platform": "mobile-android",
+      "description": "BEFORE (origin/main): Bundle the day fires the server bundle at once, no confirmation, ignoring the star/merge/drop on the page",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "006-mobile-android-after-bundle-confirms-choices.png",
+      "platform": "mobile-android",
+      "description": "AFTER: Bundle the day asks first and carries the page choices (4 summarized, 1 merge, 1 dropped)",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "007-mobile-android-day-review-summary-top.png",
+      "platform": "mobile-android",
+      "description": "Bundled family day: title, counts, kept conversation, sections with time spans",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "008-mobile-android-day-review-summary-corrections.png",
+      "platform": "mobile-android",
+      "description": "A pending correction highlighted in the text and an added paragraph under its section; Apply corrections (2)",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "009-mobile-android-day-review-add-paragraph-sheet.png",
+      "platform": "mobile-android",
+      "description": "AFTER: + opens an editing sheet (Save / Cancel) instead of a bare dialog",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "010-mobile-android-day-review-add-paragraph-discard.png",
+      "platform": "mobile-android",
+      "description": "AFTER: closing the sheet with typed text asks Discard Changes? first",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "011-mobile-android-day-review-paragraph-added.png",
+      "platform": "mobile-android",
+      "description": "Saved: the paragraph waits under its section; Apply corrections (3)",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "012-mobile-android-day-review-correction-undo.png",
+      "platform": "mobile-android",
+      "description": "AFTER: removing a correction shows an Undo toast; Your corrections list below",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "013-mobile-android-day-review-from-this-day.png",
+      "platform": "mobile-android",
+      "description": "AFTER: From this day links to the day's Tasks and the Calendar check",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "014-mobile-android-day-review-day-tasks.png",
+      "platform": "mobile-android",
+      "description": "Tasks for that day (DayTasksPage), each row opens the task editor",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "015-mobile-android-task-edit-sheet.png",
+      "platform": "mobile-android",
+      "description": "Editing a task: description, due date, Save",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "016-mobile-android-calendar-family-day-top.png",
+      "platform": "mobile-android",
+      "description": "Calendar check: three dates heard on the family day",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "017-mobile-android-calendar-event-edited.png",
+      "platform": "mobile-android",
+      "description": "Title fixed; card marked Edited",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "018-mobile-android-calendar-event-added.png",
+      "platform": "mobile-android",
+      "description": "Add to calendar: confirmed and moved to Reviewed lately",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "019-mobile-android-before-calendar-decline-final.png",
+      "platform": "mobile-android",
+      "description": "BEFORE (origin/main): Not this is final, no Undo and no way back from Reviewed lately",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "020-mobile-android-after-calendar-decline-undo.png",
+      "platform": "mobile-android",
+      "description": "AFTER: Undo toast after Not this, and Bring Back on the declined row",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "021-mobile-android-conversation-calendar-row.png",
+      "platform": "mobile-android",
+      "description": "A conversation summary with a Calendar row for the events heard in it",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "022-mobile-android-conversation-row-menu.png",
+      "platform": "mobile-android",
+      "description": "Conversation row menu: Star, Move to Folder, Select (merge); no split",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "023-mobile-android-conversations-select-to-merge.png",
+      "platform": "mobile-android",
+      "description": "Two swim conversations selected for a merge",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "024-mobile-android-capture-group-separate.png",
+      "platform": "mobile-android",
+      "description": "A multi-device capture group offers Recordings and Separate",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    }
+  ]
+}

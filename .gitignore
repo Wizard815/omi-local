@@ -31,6 +31,7 @@ yarn.lock
 .coordination/
 
 # General
+/.agent-brief/
 /.pr-body.md
 .idea/
 .next/

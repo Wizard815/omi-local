@@ -1,10 +1,17 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:omi/providers/usage_provider.dart';
+
 import 'package:omi/models/subscription.dart';
 
 import '../../integration_test/visual_audit/demo_billing.dart';
 
 void main() {
+  // These surfaces only exist with a billing plane; self-hosted builds turn it
+  // off (UsageProvider.selfHosted). Run them with upstream's billing rules.
+  setUp(() => UsageProvider.selfHosted = false);
+  tearDown(() => UsageProvider.selfHosted = true);
+
   test('demo catalog is a free plan and does not call payment', () async {
     final usage = DemoBillingUsage();
     addTearDown(usage.dispose);

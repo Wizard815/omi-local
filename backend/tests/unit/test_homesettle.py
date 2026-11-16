@@ -350,6 +350,7 @@ def test_member_kill_switch_restores_version_and_cache_with_header(monkeypatch, 
     routes = conversation_routes
     # All independent time-dependent Home projections must be off for writer-version caching.
     monkeypatch.setenv('HOME_TRANSCRIPTION_PRESENTATION_GATE', 'off')
+    monkeypatch.setenv('HOME_STEP_PROJECTION', 'off')
     monkeypatch.setenv('HOME_HIDE_EPISODE_MEMBERS', 'off')
     monkeypatch.setenv('HOME_PROCESSING_OWNERSHIP_ENABLED', 'false')
     request = Request(
@@ -523,7 +524,13 @@ def test_date_filtered_members_stay_reachable_even_with_a_held_header(monkeypatc
     'deadline_hours, status, title',
     [(1, 'processing', 'Transcribing…'), (-1, 'failed', "Couldn't transcribe")],
 )
-def test_batch_placeholders_coexist_with_neutral_titles_and_floor_holding(deadline_hours, status, title):
+@pytest.mark.parametrize('queue_hold', ['true', 'false'])
+def test_batch_placeholders_coexist_with_neutral_titles_and_floor_holding(
+    monkeypatch, deadline_hours, status, title, queue_hold
+):
+    monkeypatch.setenv('HOME_TRANSCRIPTION_QUEUE_HOLD_ENABLED', queue_hold)
+    if queue_hold == 'true':
+        status, title = 'processing', 'Transcribing…'
     neutral = floor(
         summary_blocked_reason=None,
         started_at=NOW - timedelta(hours=4),

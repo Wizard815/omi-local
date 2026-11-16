@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Entrypoint for the Omi local host container.
-# Starts: redis (6380), firebase firestore+auth emulators (8085, auth 9099 on loopback), backend (8000).
+# Starts: redis (6380), firebase firestore+auth emulators (8085, auth 9099 on loopback),
+#         the CalDAV server (Radicale, 5232; caldav-env.sh), backend (8000).
 # Provider mode: "offline" = no external keys (STT/LLM calls are inert);
 #                "real" = uses OPENAI_API_KEY / DEEPGRAM_API_KEY from environment.
 set -uo pipefail
@@ -101,6 +102,7 @@ finish() {
   [ -n "${BACKEND_PID:-}" ] && kill -TERM "$BACKEND_PID" 2>/dev/null
   kill -TERM "$REDIS_PID" 2>/dev/null
   [ -n "${LLM_ADAPTER_PID:-}" ] && kill -TERM "$LLM_ADAPTER_PID" 2>/dev/null
+  [ -n "${RADICALE_PID:-}" ] && kill -TERM "$RADICALE_PID" 2>/dev/null
   exit "$code"
 }
 trap 'finish 0' TERM INT
@@ -210,6 +212,11 @@ fi
 
 # The key that signs login sessions (generated once, kept on the volume).
 . /app/omi-host/auth-env.sh
+
+# The stack's CalDAV server (tasks and calendar) and the backend's default
+# account on it; the password is generated once and kept on the volume.
+. /app/omi-host/caldav-env.sh
+omi_caldav_start
 
 echo "backend: starting"
 uvicorn main:app --host 0.0.0.0 --port 8000 &

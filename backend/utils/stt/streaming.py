@@ -2511,7 +2511,7 @@ class ParakeetWebSocketSocket(STTSocket):
                     raise RuntimeError('Parakeet returned an invalid readiness frame') from error
                 if not isinstance(ready, dict) or ready.get('type') != 'ready':
                     raise RuntimeError('Parakeet did not confirm stream admission')
-                self._receiver_task = create_named_task(self._receive_loop(ws), name="parakeet_ws_recv")
+                self._receiver_task = receiver_task = create_named_task(self._receive_loop(ws), name="parakeet_ws_recv")
                 self._connected_event.set()
                 self._startup_event.set()
 
@@ -2520,7 +2520,7 @@ class ParakeetWebSocketSocket(STTSocket):
                         data = await asyncio.wait_for(self._send_queue.get(), timeout=0.1)
                         if data is None:
                             await ws.send("finalize")
-                            await asyncio.sleep(5)
+                            await asyncio.wait({receiver_task}, timeout=5)  # ends when the server closes, not later
                             break
                         await ws.send(data)
                     except asyncio.TimeoutError:

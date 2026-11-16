@@ -7,16 +7,21 @@ tasks) runs it at once:
 
 | Direction | What | Where |
 |---|---|---|
-| push | every open task and tasks completed in the last 30 days, as VTODOs | the tasks calendar (`Omi Tasks`) |
-| pull | a VTODO you tick off on the phone flips the Omi task; VTODOs you create elsewhere become Omi tasks | same |
-| push | each day summary as an all-day event, and the events the pipeline extracted from conversations | the events calendar (`Omi`) |
-| pull | the calendar's events (last week, next 30 days) so the chat's calendar tool and the app see them | same |
+| push | every open task and tasks completed in the last 30 days, as VTODOs; a task deleted in Omi is deleted there | the tasks calendar (`Omi Tasks`) |
+| pull | a VTODO you tick off, rename, re-date or delete on the phone does the same to the Omi task; VTODOs you create elsewhere become Omi tasks (and stay one VTODO) | same |
+| push | each day summary as an all-day event, and the events the pipeline extracted from conversations (a declined one is taken off) | the events calendar (`Omi`) |
+| pull | the calendar's events (last week, next 30 days) so the chat's calendar tool and the app see them; an extracted event you move or rename on the phone changes it in Omi, one you delete is declined | same |
 
-**Where.** `omi-host/docker-compose.yml` runs Radicale as `omi-radicale` and the
-backend uses it by default (`CALDAV_DEFAULT_URL`). Set `CALDAV_PASSWORD` in
-`.env`; the server refuses to start without it. The same account works from a
-phone at `http://<host>:5232/` (DAVx5 for the calendar, Tasks.org or jtx Board
-for the VTODO list), so Omi, your phone and a desktop client share one list.
+When both sides changed the same task or event between two syncs, Omi's version wins.
+`omi-host/demo/` has an end-to-end demo that checks every row of this table against a
+real Radicale, and says how to point a phone at it.
+
+**Where.** The `omi-local` container runs Radicale itself (`omi-host/caldav-env.sh`,
+started by the entrypoint next to the backend; there is no separate container) and the
+backend uses it by default. Its calendars live on the data volume
+(`/data/radicale/collections`), so the volume backups cover them. The same account
+works from a phone at `http://<host>:5232/` (DAVx5 for the calendar, Tasks.org or jtx
+Board for the VTODO list), so Omi, your phone and a desktop client share one list.
 
 **Why.** Tasks and the day's events are the part of Omi you want outside Omi:
 on the phone's calendar, in a tasks app, in Thunderbird. CalDAV is the one
@@ -24,6 +29,14 @@ protocol all of those speak, and running the server in the stack keeps the
 data local; pointing at another server is one settings screen.
 
 ## Bundled Radicale (default)
+
+Nothing to set. On first start a password is generated and kept on the volume:
+
+```
+docker exec omi-local cat /data/secrets/caldav_password
+```
+
+Or choose your own:
 
 ```
 # .env
@@ -37,6 +50,13 @@ Phone: DAVx5 → add account → "Login with URL and user name" →
 `http://<lan-ip>:5232/` + the user and password. It discovers `Omi` and
 `Omi Tasks` (the backend creates both on first sync). Tasks.org (with DAVx5)
 shows `Omi Tasks`.
+
+**Moving from the old `omi-radicale` container.** Compose mounts its volume
+read-only at `/radicale-legacy`, and the first start copies its calendars into
+`/data/radicale` (never over existing ones). Same port, user and password, so
+phones keep working. Once copied, remove the `radicale-data:/radicale-legacy:ro`
+line and the `radicale-data` volume from `docker-compose.yml`, and
+`docker compose up -d --remove-orphans` drops the old container.
 
 ## Your own server, per user (app settings)
 
@@ -62,8 +82,8 @@ CALDAV_USER=alice
 CALDAV_PASSWORD=app-password
 ```
 
-Every user without their own settings then syncs there. The bundled
-`omi-radicale` still starts; stop it with `docker compose stop omi-radicale`.
+Every user without their own settings then syncs there. The bundled server
+still runs (phones may use it); `OMI_BUNDLED_CALDAV=0` turns it off.
 
 ## Checks
 

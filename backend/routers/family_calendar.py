@@ -92,9 +92,10 @@ async def approve_family_calendar_event(
 async def decline_family_calendar_event(
     request: DeclineFamilyCalendarEventRequest, uid: str = Depends(auth.get_current_user_uid)
 ):
+    """Stop asking about one heard event, or (``declined: false``) bring a declined one back for review."""
     try:
         event = await run_blocking(
-            db_executor, family_calendar.decline, uid, request.conversation_id, request.event_idx
+            db_executor, family_calendar.decline, uid, request.conversation_id, request.event_idx, request.declined
         )
     except LookupError as error:
         return FamilyCalendarEventResponse(ok=False, error=str(error))

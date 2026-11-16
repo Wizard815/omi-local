@@ -20,6 +20,9 @@ from utils.other import endpoints as auth
 
 router = APIRouter()
 
+# "Sync now" waits this long for a scheduled pass of the same user to finish.
+SYNC_NOW_WAIT_SECONDS = 60.0
+
 
 def _present(uid: str) -> CalDavSettingsResponse:
     stored = settings_db.get_settings(uid)
@@ -114,10 +117,10 @@ async def sync_caldav_now(uid: str = Depends(auth.get_current_user_uid)):
     """Run the sync now (the scheduler also runs it every hour)."""
 
     def _sync() -> CalDavSyncResponse:
-        outcome = caldav_sync.run_for_user(uid)
+        outcome = caldav_sync.run_for_user(uid, wait=SYNC_NOW_WAIT_SECONDS)
         if outcome is None:
             return CalDavSyncResponse(ok=False, error='No CalDAV server configured')
-        if 'error' in outcome and len(outcome) == 1:
+        if 'error' in outcome and 'errors' not in outcome:  # failed or busy: no report
             return CalDavSyncResponse(ok=False, error=str(outcome['error']))
         return CalDavSyncResponse(ok=not outcome.get('errors'), **outcome)
 
