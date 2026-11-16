@@ -182,9 +182,10 @@ def _save(uid: str, conversation_id: str, events: List[Event]) -> None:
     conversations_db.update_conversation_events(uid, conversation_id, [e.model_dump() for e in events])
 
 
-def decline(uid: str, conversation_id: str, event_idx: int) -> FamilyCalendarEvent:
+def decline(uid: str, conversation_id: str, event_idx: int, declined: bool = True) -> FamilyCalendarEvent:
+    """Remember "no" for one heard event, or take that back (``declined=False``: it waits again)."""
     conversation, events = _load(uid, conversation_id, event_idx)
-    events[event_idx].declined = True
+    events[event_idx].declined = declined
     _save(uid, conversation_id, events)
     return _present(conversation, event_idx, events[event_idx], _zone(uid))
 
