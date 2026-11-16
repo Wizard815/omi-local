@@ -7,10 +7,14 @@ tasks) runs it at once:
 
 | Direction | What | Where |
 |---|---|---|
-| push | every open task and tasks completed in the last 30 days, as VTODOs | the tasks calendar (`Omi Tasks`) |
-| pull | a VTODO you tick off on the phone flips the Omi task; VTODOs you create elsewhere become Omi tasks | same |
-| push | each day summary as an all-day event, and the events the pipeline extracted from conversations | the events calendar (`Omi`) |
-| pull | the calendar's events (last week, next 30 days) so the chat's calendar tool and the app see them | same |
+| push | every open task and tasks completed in the last 30 days, as VTODOs; a task deleted in Omi is deleted there | the tasks calendar (`Omi Tasks`) |
+| pull | a VTODO you tick off, rename, re-date or delete on the phone does the same to the Omi task; VTODOs you create elsewhere become Omi tasks (and stay one VTODO) | same |
+| push | each day summary as an all-day event, and the events the pipeline extracted from conversations (a declined one is taken off) | the events calendar (`Omi`) |
+| pull | the calendar's events (last week, next 30 days) so the chat's calendar tool and the app see them; an extracted event you move or rename on the phone changes it in Omi, one you delete is declined | same |
+
+When both sides changed the same task or event between two syncs, Omi's version wins.
+`omi-host/demo/` has an end-to-end demo that checks every row of this table against a
+real Radicale, and says how to point a phone at it.
 
 **Where.** The `omi-local` container runs Radicale itself (`omi-host/caldav-env.sh`,
 started by the entrypoint next to the backend; there is no separate container) and the
