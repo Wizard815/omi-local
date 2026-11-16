@@ -44,7 +44,9 @@ from database import episode_receipts, episode_timeline
 from database._client import get_firestore_client
 from database.transcript_pointer import run_preloaded_transactional as run_transactional
 from database.conversations import decode_transcript_segments_verified
+from database.conversation_revisions import firestore_revision_datetime
 from utils.encryption import decrypt, encrypt
+from utils.home_feed.projection import DISPLAY_FIELDS, stamp as stamp_home_display
 
 CURRENT = 'current'
 LAST_CLOSED = 'last_closed'
@@ -83,13 +85,16 @@ def seal(uid: str, episode: Mapping[str, Any]) -> dict[str, Any]:
     stored = {key: value for key, value in episode.items() if key not in CONTENT_FIELDS}
     content = {key: episode.get(key) for key in CONTENT_FIELDS if key in episode}
     stored['content'] = encrypt(json.dumps(content, ensure_ascii=False, default=_json_default), uid)
+    stored.update(stamp_home_display(uid, episode, 'episode'))
     return stored
 
 
 def unseal(uid: str, raw: Optional[Mapping[str, Any]]) -> Optional[dict[str, Any]]:
     if not raw:
         return None
-    episode = {key: value for key, value in raw.items() if key != 'content'}
+    # Compact encrypted display belongs to the list projection, never to a
+    # hydrated episode or the next logical-state mutation.
+    episode = {key: value for key, value in raw.items() if key != 'content' and key not in DISPLAY_FIELDS}
     blob = raw.get('content')
     content: dict[str, Any] = {}
     if isinstance(blob, str) and blob:
@@ -914,6 +919,7 @@ def _update(
     link_conversation_ids: Sequence[str],
     segment_receipts: Optional[Mapping[str, Sequence[str]]] = None,
     recovery_conversation_id: Optional[str] = None,
+    expected_member_revisions: Optional[Mapping[str, Optional[datetime]]] = None,
 ) -> dict[str, Any]:
     timeline_enabled = recorded_episodes_enabled()
     timeline_row = None
@@ -942,7 +948,30 @@ def _update(
             raise EpisodeConflict('conversation_hidden_or_repointed')
     if not raw or raw.get('state_version') != expected_version:
         raise EpisodeConflict('state_version_changed')
+    # A compose must still use the member snapshots whose visibility it checked.
+    # These reads join the episode CAS transaction, fencing a finalize or hide on
+    # another replica even when it has not updated the episode yet. None means
+    # the member was absent; missing revision metadata on an existing row fails
+    # closed rather than trusting a client-written updated_at field.
+    home_member_versions = {}
+    for cid, revision in (expected_member_revisions or {}).items():
+        member = (
+            client.collection('users')
+            .document(uid)
+            .collection('conversations')
+            .document(cid)
+            .get(transaction=transaction)
+        )
+        if member.exists:
+            home_member_versions[cid] = (member.to_dict() or {}).get('home_source_version')
+            current_revision = firestore_revision_datetime(getattr(member, 'update_time', None))
+            if revision is None or current_revision != revision:
+                raise EpisodeConflict('member_revision_changed')
+        elif revision is not None:
+            raise EpisodeConflict('member_revision_changed')
     merged = _merge_state(unseal(uid, raw) or {}, updates)
+    if expected_member_revisions is not None:
+        merged['home_content_member_versions'] = home_member_versions
     if retained_bounds_changed(raw, merged):
         merged = retained_bounds(transaction, client, uid, raw, merged)
     _drop_legacy_receipts(merged, segment_receipts)
@@ -986,11 +1015,14 @@ def update_episode(
     segment_receipts: Optional[Mapping[str, Sequence[str]]] = None,
     firestore_client: Any = None,
     recovery_conversation_id: Optional[str] = None,
+    expected_member_revisions: Optional[Mapping[str, Optional[datetime]]] = None,
 ) -> dict[str, Any]:
     """CAS update of any episode (open or closed). Raises ``EpisodeConflict`` on a lost race.
 
     ``segment_receipts`` records consumed unplaced-segment ids per conversation in the
     same transaction, so a receipt exists exactly when the state that consumed it does.
+    ``expected_member_revisions`` fences snapshot-derived notes against concurrent
+    member writes using canonical Firestore update times (None asserts absence).
     """
     client = _client(firestore_client)
     return run_transactional(
@@ -1004,5 +1036,6 @@ def update_episode(
         list(link_conversation_ids),
         dict(segment_receipts or {}) or None,
         recovery_conversation_id,
+        expected_member_revisions,
         transient=True,
     )

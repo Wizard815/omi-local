@@ -60,6 +60,7 @@ class SetFamilyCalendarOwnerRequest(BaseModel):
 class DeclineFamilyCalendarEventRequest(BaseModel):
     conversation_id: str
     event_idx: int = Field(ge=0)
+    declined: bool = Field(default=True, description='False takes a decline back: the event waits for review again')
 
 
 class FamilyCalendarEventResponse(BaseModel):

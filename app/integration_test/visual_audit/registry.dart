@@ -41,6 +41,7 @@ final auditSuite = AuditSuite(
     ...episodeScenarios,
     ...conversationsScenarios,
     ...dayReviewScenarios,
+    ...dayReviewFamilyScenarios,
     ...familyCalendarScenarios,
     ...offlineProcessingScenarios,
     ...speakerLabelScenarios,

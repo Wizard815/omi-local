@@ -63,7 +63,59 @@ Map<String, Object?> _calendar({bool configured = true, bool empty = false, Stri
       ],
     };
 
+/// The family day's heard dates (see day_review.dart): one to fix and add, one to decline and
+/// take back.
+Map<String, Object?> _familyDay({String stage = 'open'}) {
+  final checkup = _event('f2', 0, 'Call with the pediatrician', 'Mia check-up', _day(3, 15, 30),
+      duration: 30, description: 'Dr. Patel, bring the vaccination card.');
+  final soccer = _event('f7', 0, 'Dinner: weekend plans', 'Soccer at Lincoln field', _day(5, 9, 0), duration: 90);
+  final party = _event('f7', 1, 'Dinner: weekend plans', 'Birthday party', _day(5, 14, 0), duration: 120);
+  return {
+    ..._calendar(),
+    'pending': switch (stage) {
+      'added' => [soccer, party],
+      'declined' => [soccer],
+      _ => [checkup, soccer, party],
+    },
+    'recent': switch (stage) {
+      'added' => [
+          {...checkup, 'title': 'Mia check-up (3:45)', 'start': _utc(_day(3, 15, 45)), 'created': true},
+        ],
+      'declined' => [
+          {...checkup, 'title': 'Mia check-up (3:45)', 'start': _utc(_day(3, 15, 45)), 'created': true},
+          {...party, 'declined': true},
+        ],
+      _ => <Object?>[],
+    },
+  };
+}
+
 final familyCalendarScenarios = <AuditScenario>[
+  AuditScenario(
+    id: 'family-calendar-family-day',
+    title: 'Family day dates: fix and add one, decline one with Undo, Bring Back later',
+    page: _page,
+    state: 'Three dates heard on a family day (check-up, soccer, party); the check-up time is wrong',
+    run: (a) async {
+      a.server.jsonRoutes['GET /v1/family-calendar'] = _familyDay();
+      await a.pump(const FamilyCalendarReviewPage());
+      await a.settle();
+      await a.shot('Three heard dates to check', step: 'top');
+      await a.enterText(find.byKey(const Key('family_calendar_title_f2:0')), 'Mia check-up (3:45)');
+      await a.shot('Fix the title; the card is marked Edited (the time is fixed with the time chip)', step: 'edited');
+      a.server.jsonRoutes['POST /v1/family-calendar/events'] = {'ok': true};
+      a.server.jsonRoutes['GET /v1/family-calendar'] = _familyDay(stage: 'added');
+      await a.tester.ensureVisible(find.byKey(const Key('family_calendar_approve_f2:0')));
+      await a.tap(find.byKey(const Key('family_calendar_approve_f2:0')));
+      await a.shot('Add to calendar: confirmed, it moves to Reviewed lately', step: 'added');
+      a.server.jsonRoutes['POST /v1/family-calendar/events/decline'] = {'ok': true};
+      a.server.jsonRoutes['GET /v1/family-calendar'] = _familyDay(stage: 'declined');
+      await a.tester.ensureVisible(find.byKey(const Key('family_calendar_decline_f7:1')));
+      await a.tap(find.byKey(const Key('family_calendar_decline_f7:1')));
+      await a.shot('Not this on the party: an Undo toast, and Bring Back on its reviewed row', step: 'declined');
+      expect(find.byKey(const Key('family_calendar_restore_f7:1')), findsOneWidget);
+    },
+  ),
   AuditScenario(
     id: 'family-calendar-review',
     title: 'Family calendar: three heard events to check, two reviewed lately',
