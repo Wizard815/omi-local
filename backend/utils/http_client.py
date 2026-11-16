@@ -13,6 +13,7 @@ at application shutdown via ``close_all_clients()``.
 import asyncio
 import ipaddress
 import logging
+import os
 import socket
 import time
 from collections import defaultdict
@@ -54,6 +55,44 @@ def _is_unsafe_ip(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
     )
 
 
+def _allowed_private_networks() -> list[ipaddress.IPv4Network | ipaddress.IPv6Network]:
+    """Self-hosted opt-in: private networks a user's own webhooks may reach.
+
+    `OMI_WEBHOOK_ALLOWED_PRIVATE_NETWORKS` is a comma-separated list of IPs or
+    CIDRs (e.g. `192.168.1.5/32`, for a home server such as an LLMWIKI vault).
+    Read at call time; unset means no private address is ever allowed. Entries
+    that aren't private networks are ignored, so this can't open loopback,
+    link-local (cloud metadata), multicast or public ranges.
+    """
+    networks = []
+    for part in os.environ.get('OMI_WEBHOOK_ALLOWED_PRIVATE_NETWORKS', '').split(','):
+        part = part.strip()
+        if not part:
+            continue
+        try:
+            net = ipaddress.ip_network(part, strict=False)
+        except ValueError:
+            logger.warning('OMI_WEBHOOK_ALLOWED_PRIVATE_NETWORKS: ignoring %r (not an IP or CIDR)', part)
+            continue
+        if net.is_private and not (net.is_loopback or net.is_link_local or net.is_multicast or net.is_unspecified):
+            networks.append(net)
+        else:
+            logger.warning('OMI_WEBHOOK_ALLOWED_PRIVATE_NETWORKS: ignoring %r (only private LAN ranges)', part)
+    return networks
+
+
+def _is_blocked_ip(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
+    """`_is_unsafe_ip`, except a private LAN address the operator explicitly allowed."""
+    if not _is_unsafe_ip(ip):
+        return False
+    mapped = getattr(ip, 'ipv4_mapped', None)
+    if mapped is not None:
+        ip = mapped
+    if ip.is_loopback or ip.is_link_local or ip.is_multicast or ip.is_unspecified or not ip.is_private:
+        return True
+    return not any(ip.version == net.version and ip in net for net in _allowed_private_networks())
+
+
 def assert_public_http_url(url: str) -> str:
     """Reject webhook/callback URLs that don't point at a public host.
 
@@ -80,7 +119,7 @@ def assert_public_http_url(url: str) -> str:
     first_safe_ip: str | None = None
     for _family, _type, _proto, _canonname, sockaddr in addrinfo:
         ip = ipaddress.ip_address(sockaddr[0])
-        if _is_unsafe_ip(ip):
+        if _is_blocked_ip(ip):
             raise UnsafeWebhookURLError(f'{hostname!r} resolves to non-public address {ip}')
         if first_safe_ip is None:
             first_safe_ip = str(ip)
@@ -115,7 +154,7 @@ def assert_public_http_url_all(url: str) -> list[str]:
     safe_ips: list[str] = []
     for _family, _type, _proto, _canonname, sockaddr in addrinfo:
         ip = ipaddress.ip_address(sockaddr[0])
-        if _is_unsafe_ip(ip):
+        if _is_blocked_ip(ip):
             raise UnsafeWebhookURLError(f'{hostname!r} resolves to non-public address {ip}')
         text = str(ip)
         if text not in safe_ips:
