@@ -175,32 +175,39 @@ def wav_bytes(pcm16: bytes, sample_rate: int) -> bytes:
 
 
 def parse_wav(data: bytes) -> Tuple[np.ndarray, int]:
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tf:
-        tf.write(data)
-        tmp = tf.name
-    try:
-        import soundfile as sf
-        audio, sr = sf.read(tmp, dtype="float32", always_2d=False)
-        if audio.ndim > 1:
-            audio = audio[:, 0]
-        return audio.astype(np.float32), int(sr)
-    finally:
-        os.unlink(tmp)
+    """Decode an uploaded WAV in memory (no temp-file round trip)."""
+    import soundfile as sf
+    audio, sr = sf.read(io.BytesIO(data), dtype="float32", always_2d=False)
+    if audio.ndim > 1:
+        audio = audio[:, 0]
+    return audio.astype(np.float32, copy=False), int(sr)
 
 
 # --------------------------------------------------------------------------- energy VAD
+VAD_STEP = int(16000 * VAD_WIN_MS / 1000)
+MIN_SPEECH_SAMPLES = int(VAD_MIN_SPEECH_MS / 1000 * 16000)
+
+
 class EnergyVAD:
     """Stateful endpointer over a running stream. Keeps a per-session rolling peak
-    (AGC) so the threshold tracks mic gain; emits completed utterance spans."""
+    (AGC) so the threshold tracks mic gain; emits completed utterance spans.
+
+    Windows sit on a fixed VAD_WIN_MS grid of the whole stream: a frame that does
+    not end on a window boundary leaves its tail for the next feed() instead of
+    going unanalysed (the backend relays 40 ms frames, so a per-frame grid used
+    to skip a quarter of all audio). RMS is computed for all of a feed's windows
+    in one numpy pass; the per-window state machine is unchanged."""
 
     def __init__(self) -> None:
         self.win = VAD_WIN_MS
-        self.n = 0            # samples buffered (16k)
+        self.n = 0            # samples analysed so far (16k) == absolute index of the next window
         self.peak = 0.02      # rolling 95th-percentile-ish rms floor
         self.in_speech = False
         self.start = 0
         self.last_voice = -1
-        self._rms_window: List[float] = []
+        self._rest = np.zeros(0, dtype=np.float32)  # < one window carried to the next feed
+        self._min_sil = int(VAD_MIN_SIL_MS / 1000 * 16000)
+        self._max_ut = VAD_MAX_UT_S * 16000
 
     def _thr(self) -> float:
         return max(0.004, self.peak * VAD_THRESH_REL)
@@ -212,47 +219,98 @@ class EnergyVAD:
         else:
             self.peak = max(0.02, self.peak * 0.9995)
 
+    def retain_from(self) -> int:
+        """Oldest absolute sample a span still to come can start at."""
+        return self.start if self.in_speech else self.n
+
     def feed(self, chunk: np.ndarray) -> List[Tuple[int, int]]:
         """Append 16k audio; return completed (start,end) spans in absolute samples."""
         out: List[Tuple[int, int]] = []
+        if len(self._rest):
+            chunk = np.concatenate([self._rest, chunk])
+        step = VAD_STEP
+        nwin = len(chunk) // step
         base = self.n
-        self.n += len(chunk)
-        win = VAD_WIN_MS  # ms
-        step = int(16000 * win / 1000)
-        i = 0
-        while i + step <= len(chunk):
-            seg = chunk[i:i + step]
-            rms = float(np.sqrt(np.mean(seg * seg) + 1e-12))
-            self._update_peak(rms)
-            t_abs = base + i
-            thr = self._thr()
-            exit_thr = thr * 0.5
-            min_sil_s = int(VAD_MIN_SIL_MS / 1000 * 16000)
-            min_speech_s = int(VAD_MIN_SPEECH_MS / 1000 * 16000)
-            max_ut_s = VAD_MAX_UT_S * 16000
-            if not self.in_speech:
-                if rms >= thr:
-                    self.in_speech = True
-                    self.start = t_abs
-                    self.last_voice = t_abs
-            else:
-                if rms >= exit_thr:
-                    self.last_voice = t_abs + step
-                if (t_abs - self.last_voice) >= min_sil_s or \
-                   (t_abs - self.start) >= max_ut_s:
-                    if self.last_voice - self.start >= min_speech_s:
-                        out.append((self.start, self.last_voice))
-                    self.in_speech = False
-            i += step
+        if nwin:
+            frames = chunk[:nwin * step].reshape(nwin, step)
+            rms_all = np.sqrt(np.einsum("ij,ij->i", frames, frames) / step + 1e-12).tolist()
+            for k, rms in enumerate(rms_all):
+                self._update_peak(rms)
+                t_abs = base + k * step
+                thr = self._thr()
+                exit_thr = thr * 0.5
+                if not self.in_speech:
+                    if rms >= thr:
+                        self.in_speech = True
+                        self.start = t_abs
+                        self.last_voice = t_abs
+                else:
+                    if rms >= exit_thr:
+                        self.last_voice = t_abs + step
+                    if (t_abs - self.last_voice) >= self._min_sil or \
+                       (t_abs - self.start) >= self._max_ut:
+                        if self.last_voice - self.start >= MIN_SPEECH_SAMPLES:
+                            out.append((self.start, self.last_voice))
+                        self.in_speech = False
+        self.n = base + nwin * step
+        self._rest = chunk[nwin * step:].copy()
         return out
 
     def flush(self) -> Optional[Tuple[int, int]]:
-        min_speech_s = int(VAD_MIN_SPEECH_MS / 1000 * 16000)
-        if self.in_speech and self.last_voice - self.start >= min_speech_s:
+        if self.in_speech and self.last_voice - self.start >= MIN_SPEECH_SAMPLES:
             span = (self.start, self.last_voice)
             self.in_speech = False
             return span
         return None
+
+
+class SessionAudio:
+    """A live session's 16 kHz audio, addressed by absolute sample index, holding
+    only what an utterance still in progress can need.
+
+    The stream used to keep every sample since connect in one array and
+    np.concatenate each 40 ms frame onto it: a copy of the whole session per
+    frame (quadratic CPU, 230 MB/hour of RAM). Here appends are amortised O(1)
+    and discard_before() lets go of audio no span can reach any more."""
+
+    def __init__(self, capacity: int = 16000 * 32) -> None:
+        self._data = np.zeros(capacity, dtype=np.float32)
+        self._head = 0        # index in _data of absolute sample self.start
+        self.start = 0        # oldest absolute sample still held
+        self.end = 0          # one past the newest absolute sample
+
+    def __len__(self) -> int:
+        return self.end - self.start
+
+    def append(self, x: np.ndarray) -> None:
+        n = len(x)
+        if not n:
+            return
+        held = self.end - self.start
+        if self._head + held + n > len(self._data):
+            cap = len(self._data)
+            while held + n > cap // 2:
+                cap *= 2
+            data = self._data if cap == len(self._data) else np.empty(cap, dtype=np.float32)
+            data[:held] = self._data[self._head:self._head + held]
+            self._data = data
+            self._head = 0
+        tail = self._head + held
+        self._data[tail:tail + n] = x
+        self.end += n
+
+    def discard_before(self, idx: int) -> None:
+        idx = min(max(idx, self.start), self.end)
+        self._head += idx - self.start
+        self.start = idx
+
+    def slice(self, a: int, b: int) -> np.ndarray:
+        """Copy of absolute samples [a, b), clipped to what is held."""
+        a = max(a, self.start)
+        b = min(b, self.end)
+        if b <= a:
+            return np.zeros(0, dtype=np.float32)
+        return self._data[self._head + a - self.start:self._head + b - self.start].copy()
 
 
 # --------------------------------------------------------------------------- speaker clustering
@@ -687,6 +745,16 @@ async def health():
 # --------------------------------------------------------------------------- WS /v3/stream
 @app.websocket("/v3/stream")
 async def ws_stream(ws: WebSocket, sample_rate: int = 16000):
+    """Receive frames, endpoint them, transcribe each utterance, send segments.
+
+    Receiving and transcribing are two tasks. The receive loop only decodes,
+    runs the VAD and queues finished utterances; one worker transcribes them in
+    order and sends the segments. Transcribing used to happen inside the receive
+    loop, so a slow ASR call (a cold whisper-server start after idle unload, a
+    long utterance on CPU) stopped this side reading the socket: the backend's
+    websocket keepalive pings went unanswered and it dropped the stream with
+    1011 after ~20 s, and its 1000-frame send queue overflowed behind it.
+    """
     await ws.accept()
     if not MODELS.ready:
         await ws.close(code=1013, reason="service_not_ready")
@@ -694,30 +762,23 @@ async def ws_stream(ws: WebSocket, sample_rate: int = 16000):
     await ws.send_json({"type": "ready"})
 
     loop = asyncio.get_running_loop()
-    buf = np.zeros(0, dtype=np.float32)   # full 16k session audio
+    audio = SessionAudio()
     vad = EnergyVAD()
     tracker = SpeakerTracker()
-    emitted_until = 0                     # absolute sample index already transcribed
+    pending: "asyncio.Queue[Optional[Tuple[int, int, np.ndarray]]]" = asyncio.Queue()
 
-    async def emit(span: Tuple[int, int]) -> None:
-        nonlocal emitted_until
-        a, b = span
-        a = max(a, emitted_until)
-        if b - a < VAD_MIN_SPEECH_MS:
-            return
-        seg_audio = buf[a:b]
+    async def emit(a: int, b: int, seg_audio: np.ndarray) -> None:
         t0 = time.time()
         segs = await loop.run_in_executor(None, transcribe, seg_audio)
         if not segs:
-            emitted_until = max(emitted_until, b)
             return
         text = " ".join(s["text"] for s in segs)
         spk = 0
         if MODELS.diarize:
             emb = await loop.run_in_executor(None, embed, seg_audio)
             spk = tracker.assign(emb)
-        log.info("stream %.1f-%.1fs -> %r (%d seg) in %.1fs",
-                 a / 16000, b / 16000, text[:40], len(segs), time.time() - t0)
+        log.info("stream %.1f-%.1fs -> %r (%d seg) in %.1fs (%d queued)",
+                 a / 16000, b / 16000, text[:40], len(segs), time.time() - t0, pending.qsize())
         await ws.send_json({
             "text": text,
             "start": round(a / 16000, 3),
@@ -729,20 +790,43 @@ async def ws_stream(ws: WebSocket, sample_rate: int = 16000):
             "person_id": None,
             "type": "utterance",
         })
+
+    async def worker() -> None:
+        while True:
+            item = await pending.get()
+            if item is None:
+                return
+            await emit(*item)
+
+    emitted_until = 0                     # absolute sample index already queued
+
+    def queue_span(span: Tuple[int, int]) -> None:
+        nonlocal emitted_until
+        a, b = span
+        a = max(a, emitted_until)
+        if b - a < MIN_SPEECH_SAMPLES:
+            return
+        # Copied out now, so the session buffer can let go of it at once.
+        pending.put_nowait((a, b, audio.slice(a, b)))
         emitted_until = max(emitted_until, b)
 
+    worker_task = asyncio.create_task(worker())
+    finalized = False
     try:
         while True:
             msg = await ws.receive()
             if msg.get("type") == "websocket.disconnect":
                 break
+            if worker_task.done():
+                break  # sending failed: the client is gone
             data = msg.get("bytes")
             text = msg.get("text")
             if text is not None:
                 if text.strip() == "finalize":
                     span = vad.flush()
                     if span:
-                        await emit(span)
+                        queue_span(span)
+                    finalized = True
                     break
                 continue
             if not data:
@@ -750,14 +834,26 @@ async def ws_stream(ws: WebSocket, sample_rate: int = 16000):
             chunk = pcm16_to_float(data)
             if sample_rate != 16000:
                 chunk = resample_linear(chunk, sample_rate, 16000)
-            buf = np.concatenate([buf, chunk]) if len(chunk) else buf
+            audio.append(chunk)
             for span in vad.feed(chunk):
-                await emit(span)
+                queue_span(span)
+            audio.discard_before(vad.retain_from())
+        if finalized:
+            pending.put_nowait(None)
+            await asyncio.wait({worker_task})  # every queued utterance is sent before the close
     except WebSocketDisconnect:
         pass
     except Exception as e:  # noqa: BLE001
         log.error("ws stream error: %s", e)
     finally:
+        if not worker_task.done():
+            worker_task.cancel()
+        try:
+            await worker_task
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:  # noqa: BLE001
+            log.error("ws stream send failed: %s", e)
         try:
             await ws.close()
         except Exception:  # noqa: BLE001
@@ -770,11 +866,11 @@ async def do_transcribe(file_bytes: bytes, diarize: bool) -> Dict[str, Any]:
     audio, sr = await loop.run_in_executor(None, parse_wav, file_bytes)
     if len(audio) == 0:
         return {"text": "", "segments": []}
-    audio16 = resample_linear(audio, sr, 16000) if sr != 16000 else audio.astype(np.float32)
+    audio16 = resample_linear(audio, sr, 16000) if sr != 16000 else audio.astype(np.float32, copy=False)
 
     vad = EnergyVAD()
     spans: List[Tuple[int, int]] = []
-    step = 16000 // 2
+    step = 16000 * 30  # same spans whatever the step; bounds the per-feed working copy
     for i in range(0, len(audio16), step):
         spans.extend(vad.feed(audio16[i:i + step]))
     f = vad.flush()
@@ -787,7 +883,7 @@ async def do_transcribe(file_bytes: bytes, diarize: bool) -> Dict[str, Any]:
     segments: List[Dict[str, Any]] = []
     for (a, b) in spans:
         seg_audio = audio16[max(0, a):b]
-        if len(seg_audio) < VAD_MIN_SPEECH_MS:
+        if len(seg_audio) < MIN_SPEECH_SAMPLES:
             continue
         segs = await loop.run_in_executor(None, transcribe, seg_audio)
         for s in segs:

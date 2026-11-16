@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "id": "FC-stream-reader-work-grows-or-waits",
+  "violated_contract": "A long-lived streaming receiver must keep reading its socket at real-time cost for the whole stream: per-frame work bounded by the frame, not by how long the stream has run, and slow downstream work (model calls, cold starts) handed off rather than awaited between reads, so peer keepalives and send queues never see a stalled reader.",
+  "canonical_prevention": "Hold only the audio an open utterance can still reach (an amortised append-only buffer with an explicit retention point), and run per-utterance work in a separate ordered worker that the reader only enqueues to; prove both with a long-stream memory bound and a blocked-model-call test.",
+  "canonical_prevention_artifact": ["omi-host/test_audio_stream_pipeline.py"],
+  "evidence_prs": [],
+  "scope_hints": ["omi-host/local_audio_service.py"],
+  "status": "open"
+}
