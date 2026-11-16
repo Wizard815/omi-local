@@ -16175,4 +16175,21 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'Visszahozás';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '„$title” elutasítva';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'Erről a napról';
+
+  @override
+  String get dayReviewTasksRowBody => 'A nap feladatainak ellenőrzése, szerkesztése és teljesítése';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'Javítás eltávolítva';
 }

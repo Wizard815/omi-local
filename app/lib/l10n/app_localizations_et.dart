@@ -16107,4 +16107,21 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'Too tagasi';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '„$title“ tagasi lükatud';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'Sellest päevast';
+
+  @override
+  String get dayReviewTasksRowBody => 'Vaata üle, muuda ja lõpeta päeva ülesanded';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'Parandus eemaldatud';
 }

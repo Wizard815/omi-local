@@ -4953,5 +4953,10 @@
     "familyCalendarNoteLabel": "Note",
     "@familyCalendarNoteLabel": {
         "description": "Label of the editable note field"
-    }
+    },
+    "familyCalendarBringBack": "Kembalikan",
+    "familyCalendarDeclinedToast": "“{title}” ditolak",
+    "dayReviewFromThisDay": "Dari hari ini",
+    "dayReviewTasksRowBody": "Semak, sunting dan selesaikan tugasan hari ini",
+    "dayReviewCorrectionRemoved": "Pembetulan dibuang"
 }

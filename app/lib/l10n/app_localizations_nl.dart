@@ -16154,4 +16154,21 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'Terugzetten';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '“$title” afgewezen';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'Van deze dag';
+
+  @override
+  String get dayReviewTasksRowBody => 'Bekijk, bewerk en voltooi de taken van de dag';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'Correctie verwijderd';
 }

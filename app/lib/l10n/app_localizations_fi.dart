@@ -16119,4 +16119,21 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'Palauta';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '”$title” hylätty';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'Tältä päivältä';
+
+  @override
+  String get dayReviewTasksRowBody => 'Tarkista, muokkaa ja merkitse päivän tehtävät tehdyiksi';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'Korjaus poistettu';
 }

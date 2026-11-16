@@ -15887,4 +15887,21 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => '되돌리기';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '“$title” 거절됨';
+  }
+
+  @override
+  String get dayReviewFromThisDay => '이날의 항목';
+
+  @override
+  String get dayReviewTasksRowBody => '이날의 할 일을 확인, 수정, 완료하세요';
+
+  @override
+  String get dayReviewCorrectionRemoved => '수정 사항을 삭제했습니다';
 }

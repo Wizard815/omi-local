@@ -16165,4 +16165,21 @@ class AppLocalizationsKn extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'ಮರಳಿ ತನ್ನಿ';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '“$title” ತಿರಸ್ಕರಿಸಲಾಗಿದೆ';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'ಈ ದಿನದಿಂದ';
+
+  @override
+  String get dayReviewTasksRowBody => 'ಈ ದಿನದ ಕಾರ್ಯಗಳನ್ನು ಪರಿಶೀಲಿಸಿ, ಸಂಪಾದಿಸಿ ಮತ್ತು ಪೂರ್ಣಗೊಳಿಸಿ';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'ತಿದ್ದುಪಡಿ ತೆಗೆದುಹಾಕಲಾಗಿದೆ';
 }

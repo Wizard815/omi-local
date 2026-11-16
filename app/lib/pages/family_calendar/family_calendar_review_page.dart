@@ -35,7 +35,9 @@ class FamilyCalendarReviewPage extends StatefulWidget {
     DateTime? start,
     int? duration,
   })? approve;
-  final Future<ApiResult<FamilyCalendarOutcome>> Function(FamilyCalendarEvent event)? decline;
+
+  /// [declined] false takes a decline back (Undo, Bring Back).
+  final Future<ApiResult<FamilyCalendarOutcome>> Function(FamilyCalendarEvent event, {bool declined})? decline;
   final Future<ApiResult<FamilyCalendar>> Function(String? ownerId)? setOwner;
 
   @override
@@ -97,20 +99,32 @@ class _FamilyCalendarReviewPageState extends State<FamilyCalendarReviewPage> {
     }
   }
 
+  /// Declining is undoable for the toast's 5 s, and afterwards from the reviewed row's Bring Back.
   Future<void> _decline(FamilyCalendarEvent event) async {
+    if (!await _setDeclined(event, true) || !mounted) return;
+    OmiFeedback.undo(
+      context,
+      context.l10n.familyCalendarDeclinedToast(event.title),
+      onUndo: () => _setDeclined(event, false),
+    );
+  }
+
+  Future<bool> _setDeclined(FamilyCalendarEvent event, bool declined) async {
     setState(() => _busy.add(event.key));
-    final result = await (widget.decline ?? declineFamilyCalendarEvent)(event);
-    if (!mounted) return;
+    final result = await (widget.decline ?? declineFamilyCalendarEvent)(event, declined: declined);
+    if (!mounted) return false;
     setState(() => _busy.remove(event.key));
     switch (result) {
       case ApiSuccess(:final data) when data.ok:
         _drafts.remove(event.key);
         await _load();
+        return true;
       case ApiSuccess(:final data):
         OmiFeedback.error(context, context.l10n.familyCalendarFailed(data.error));
       case ApiFailure(:final problem):
         OmiFeedback.error(context, context.l10n.familyCalendarFailed(problem.kind.name));
     }
+    return false;
   }
 
   /// Which household member the added events belong to.
@@ -397,6 +411,15 @@ class _FamilyCalendarReviewPageState extends State<FamilyCalendarReviewPage> {
               ],
             ),
           ),
+          // A "no" is not final: it goes back to the list to check.
+          if (event.declined && !event.created)
+            OmiButton.tertiary(
+              key: Key('family_calendar_restore_${event.key}'),
+              label: l10n.familyCalendarBringBack,
+              size: OmiButtonSize.compact,
+              isLoading: _busy.contains(event.key),
+              onPressed: _busy.contains(event.key) ? null : () => _setDeclined(event, false),
+            ),
         ],
       ),
     );

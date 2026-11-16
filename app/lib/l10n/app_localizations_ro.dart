@@ -16181,4 +16181,21 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'Readu';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '„$title” refuzat';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'Din această zi';
+
+  @override
+  String get dayReviewTasksRowBody => 'Verifică, editează și finalizează sarcinile zilei';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'Corectura a fost eliminată';
 }

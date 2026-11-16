@@ -4953,5 +4953,10 @@
     "familyCalendarNoteLabel": "Note",
     "@familyCalendarNoteLabel": {
         "description": "Label of the editable note field"
-    }
+    },
+    "familyCalendarBringBack": "Too tagasi",
+    "familyCalendarDeclinedToast": "„{title}“ tagasi lükatud",
+    "dayReviewFromThisDay": "Sellest päevast",
+    "dayReviewTasksRowBody": "Vaata üle, muuda ja lõpeta päeva ülesanded",
+    "dayReviewCorrectionRemoved": "Parandus eemaldatud"
 }

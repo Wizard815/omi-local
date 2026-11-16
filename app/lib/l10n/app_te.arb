@@ -12510,5 +12510,10 @@
     "familyCalendarNoteLabel": "Note",
     "@familyCalendarNoteLabel": {
         "description": "Label of the editable note field"
-    }
+    },
+    "familyCalendarBringBack": "తిరిగి తీసుకురండి",
+    "familyCalendarDeclinedToast": "“{title}” తిరస్కరించబడింది",
+    "dayReviewFromThisDay": "ఈ రోజు నుండి",
+    "dayReviewTasksRowBody": "ఈ రోజు పనులను చూసి, సవరించి, పూర్తి చేయండి",
+    "dayReviewCorrectionRemoved": "సవరణ తీసివేయబడింది"
 }

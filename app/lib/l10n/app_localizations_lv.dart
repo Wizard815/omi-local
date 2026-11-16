@@ -16151,4 +16151,21 @@ class AppLocalizationsLv extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'Atjaunot';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '“$title” noraidīts';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'No šīs dienas';
+
+  @override
+  String get dayReviewTasksRowBody => 'Pārskatiet, rediģējiet un pabeidziet dienas uzdevumus';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'Labojums noņemts';
 }

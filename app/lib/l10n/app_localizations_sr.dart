@@ -16123,4 +16123,21 @@ class AppLocalizationsSr extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'Врати';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '„$title“ одбијено';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'Из овог дана';
+
+  @override
+  String get dayReviewTasksRowBody => 'Прегледајте, измените и завршите задатке дана';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'Исправка уклоњена';
 }

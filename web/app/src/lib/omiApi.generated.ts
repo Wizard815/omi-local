@@ -2338,6 +2338,7 @@ export interface DecisionRecord {
 
 export interface DeclineFamilyCalendarEventRequest {
   conversation_id: string;
+  declined?: boolean;
   event_idx: number;
 }
 
