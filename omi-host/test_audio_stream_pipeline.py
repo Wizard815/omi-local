@@ -14,7 +14,9 @@ What this pins down:
   * a slow ASR call does not stop the receive loop (it used to: the backend's
     keepalive then dropped the stream with 1011 after ~20-40 s),
   * utterances queued behind a slow call are sent in order, and all of them
-    before the server closes after "finalize".
+    before the server closes after "finalize",
+  * with whisper.cpp, a stopped server is started at the speech onset, so a
+    cold start overlaps the utterance instead of following it.
 
 Run:  python3 test_audio_stream_pipeline.py   (no pytest required; needs
 fastapi, numpy, httpx, e.g. backend/.venv/bin/python)
@@ -201,6 +203,56 @@ def test_slow_asr_does_not_stop_the_receive_loop_and_order_is_kept():
     assert starts == sorted(starts), starts
 
 
+def test_whisper_server_is_started_at_speech_onset_not_after_the_utterance():
+    events = []
+    started = threading.Event()
+
+    class FakeServer:
+        running = False
+
+        def is_running(self):
+            return self.running
+
+        def ensure_running(self):
+            events.append("start")
+            self.running = True
+            started.set()
+
+        def stop(self):
+            self.running = False
+
+    asr = _FakeASR()
+
+    def transcribe(audio16, language=None):
+        started.wait(timeout=2)  # the prewarm runs on another executor thread
+        events.append("transcribe")
+        return asr(audio16, language)
+
+    saved = (las.OMI_ASR_ENGINE, las.WHISPER_CPP_SERVER, las.transcribe)
+    las.OMI_ASR_ENGINE, las.WHISPER_CPP_SERVER, las.transcribe = "whispercpp", FakeServer(), transcribe
+    try:
+        # Two utterances, each sent before the VAD has closed it.
+        audio = _session(2)
+        with TestClient(las.app) as client:
+            with client.websocket_connect("/v3/stream?sample_rate=16000") as ws:
+                assert ws.receive_json() == {"type": "ready"}
+                for f in _frames(audio):
+                    ws.send_bytes(f)
+                ws.send_text("finalize")
+                while ws.receive()["type"] != "websocket.close":
+                    pass
+    finally:
+        las.OMI_ASR_ENGINE, las.WHISPER_CPP_SERVER, las.transcribe = saved
+    # Started once, before the first transcription; already running for the second.
+    assert events == ["start", "transcribe", "transcribe"], events
+    assert las._whisper_cpp_in_flight == 0
+
+
+def test_whisper_server_start_is_polled_finely():
+    # The first utterance after an idle unload waits on this poll.
+    assert las.WHISPER_CPP_START_POLL_S <= 0.2
+
+
 def test_parse_wav_reads_in_memory():
     audio = _tone(0.5)
     wav = las.wav_bytes(las.float_to_pcm16(audio), SR)
@@ -215,6 +267,8 @@ def main() -> None:
         test_session_audio_matches_a_full_history_array,
         test_long_stream_holds_a_bounded_buffer,
         test_slow_asr_does_not_stop_the_receive_loop_and_order_is_kept,
+        test_whisper_server_is_started_at_speech_onset_not_after_the_utterance,
+        test_whisper_server_start_is_polled_finely,
         test_parse_wav_reads_in_memory,
     ]
     for t in tests:

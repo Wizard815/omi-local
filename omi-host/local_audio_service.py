@@ -84,6 +84,7 @@ WHISPER_CPP_MODELS_DIR = os.getenv("WHISPER_CPP_MODELS_DIR", "/data/whispercpp/m
 WHISPER_CPP_MODEL_NAME = os.getenv("WHISPER_MODEL", "large-v3-turbo")
 WHISPER_CPP_SERVER_THREADS = int(os.getenv("THREADS", "8"))
 WHISPER_CPP_START_TIMEOUT_S = float(os.getenv("OMI_ASR_START_TIMEOUT_S", "240"))
+WHISPER_CPP_START_POLL_S = 0.1
 # whisper-server accepts these per-request (examples/server/server.cpp's
 # get_req_parameters), so tuning them doesn't need a container restart of the
 # server process itself -- only of this service, which reads the env once at
@@ -471,7 +472,9 @@ class WhisperCppServer:
                         return
                 except Exception:  # noqa: BLE001
                     pass
-                time.sleep(1)
+                # The first utterance after an idle unload waits on this loop;
+                # a 1 s poll added up to a second to its latency.
+                time.sleep(WHISPER_CPP_START_POLL_S)
             self._stop_locked()
             raise RuntimeError(
                 f"whisper-server at {WHISPER_CPP_SERVER_URL} did not become ready within "
@@ -586,6 +589,22 @@ async def _whisper_cpp_idle_unloader() -> None:
 
 
 app = FastAPI(lifespan=lifespan)
+
+
+def prewarm_asr() -> None:
+    """Start whisper-server now, at a speech onset, instead of when the
+    utterance has ended and is sent for transcription. The model load (the
+    cold start after an idle unload) then overlaps the utterance itself and
+    the VAD's silence tail rather than adding to the first segment's latency.
+    Counted as an ASR call so the idle unloader cannot stop the server between
+    this start and the transcription that follows."""
+    _whisper_cpp_touch(True)
+    try:
+        WHISPER_CPP_SERVER.ensure_running()
+    except Exception as e:  # noqa: BLE001
+        log.warning("whisper-server prewarm failed: %s", e)
+    finally:
+        _whisper_cpp_touch(False)
 
 
 # --------------------------------------------------------------------------- inference helpers
@@ -812,6 +831,7 @@ async def ws_stream(ws: WebSocket, sample_rate: int = 16000):
 
     worker_task = asyncio.create_task(worker())
     finalized = False
+    prewarmed_onset = -1
     try:
         while True:
             msg = await ws.receive()
@@ -838,6 +858,10 @@ async def ws_stream(ws: WebSocket, sample_rate: int = 16000):
             for span in vad.feed(chunk):
                 queue_span(span)
             audio.discard_before(vad.retain_from())
+            if (vad.in_speech and vad.start != prewarmed_onset and OMI_ASR_ENGINE == "whispercpp"
+                    and not WHISPER_CPP_SERVER.is_running()):
+                prewarmed_onset = vad.start  # once per onset, even if the start fails
+                loop.run_in_executor(None, prewarm_asr)
         if finalized:
             pending.put_nowait(None)
             await asyncio.wait({worker_task})  # every queued utterance is sent before the close
