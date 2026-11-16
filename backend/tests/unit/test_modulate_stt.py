@@ -1023,6 +1023,39 @@ class TestProcessAudioParakeet(unittest.TestCase):
         finally:
             loop.close()
 
+    def _drain_after_finalize(self, mock_ws_module, ws):
+        from utils.stt.streaming import process_audio_parakeet
+
+        loop = asyncio.new_event_loop()
+        try:
+
+            async def run():
+                enter_started = asyncio.Event()
+                allow_enter = asyncio.Event()
+                allow_enter.set()
+                segments = []
+                mock_ws_module.connect.side_effect = lambda *args, **kwargs: _FakeParakeetConnect(
+                    ws, enter_started, allow_enter
+                )
+                sock = await asyncio.wait_for(process_audio_parakeet(segments.extend, 'en', 16000, 1), timeout=1)
+                self.assertTrue(sock.send(b'pcm0'))
+                started = loop.time()
+                await sock.drain_and_close()
+                return loop.time() - started, segments
+
+            return loop.run_until_complete(run())
+        finally:
+            loop.close()
+
+    @patch.dict('os.environ', {'HOSTED_PARAKEET_API_URL': 'http://parakeet.local', 'ENCRYPTION_SECRET': 'secret'})
+    @patch('utils.stt.streaming.websockets')
+    def test_drain_returns_once_the_server_closes_after_finalize(self, mock_ws_module):
+        # The self-hosted server sends its tail and closes after "finalize"; the
+        # drain used to sit out a fixed 5 s sleep regardless.
+        elapsed, segments = self._drain_after_finalize(mock_ws_module, _FakeParakeetWebSocket())
+        self.assertEqual(segments, [{'text': 'hello', 'speaker': 'SPEAKER_00', 'start': 0, 'end': 1}])
+        self.assertLess(elapsed, 1.0)
+
 
 class TestPrerecordedRequestShape(unittest.TestCase):
     @patch.dict('os.environ', {'MODULATE_API_KEY': 'test-key'})
