@@ -5,10 +5,14 @@ import 'package:intl/intl.dart';
 
 import 'package:omi/backend/http/api/day_reviews.dart';
 import 'package:omi/backend/schema/day_review.dart';
-import 'package:omi/ui/omi_tokens.dart';
+import 'package:omi/pages/action_items/day_tasks_page.dart';
+import 'package:omi/pages/day_review/day_review_text_sheet.dart';
+import 'package:omi/pages/family_calendar/family_calendar_review_page.dart';
+import 'package:omi/ui/ui.dart';
 import 'package:omi/utils/alerts/app_snackbar.dart';
 import 'package:omi/utils/day_review/summary_segments.dart';
 import 'package:omi/utils/l10n_extensions.dart';
+import 'package:omi/utils/other/temp.dart';
 
 /// End-of-day review for one local date.
 ///
@@ -19,10 +23,15 @@ import 'package:omi/utils/l10n_extensions.dart';
 /// gets the full treatment.
 /// After: the summary reads like a doc you can correct — select text to attach
 /// a correction or redact it, add whole paragraphs, then "Apply corrections".
+/// "From this day" links to the day's tasks and the calendar check, so the
+/// tasks and events Omi heard are reviewed in the same pass.
 class DayReviewPage extends StatefulWidget {
   final String date;
 
-  const DayReviewPage({super.key, required this.date});
+  /// The day-review server calls; tests pass a fake.
+  final DayReviewApi api;
+
+  const DayReviewPage({super.key, required this.date, this.api = const DayReviewApi()});
 
   static String todayKey([DateTime? now]) => DateFormat('yyyy-MM-dd').format(now ?? DateTime.now());
 
@@ -51,7 +60,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
   }
 
   Future<void> _load() async {
-    final result = await getDayReviewDay(widget.date);
+    final result = await widget.api.getDay(widget.date);
     if (!mounted) return;
     setState(() {
       if (result.ok) {
@@ -149,20 +158,13 @@ class _DayReviewPageState extends State<DayReviewPage> {
   void _ungroup(List<String> group) => setState(() => _groups.remove(group));
 
   /// One tap: starred conversations stay, everything else becomes the sectioned day summary.
-  Future<void> _bundle() async {
-    final l10n = context.l10n;
-    await _busy(l10n.dayReviewBundleWriting, () async {
-      final result = await bundleDayReview(widget.date);
-      if (result.ok) {
-        await _load();
-      } else {
-        _applyReview(result);
-      }
-    });
-  }
+  /// It is the same finalize as the bottom button, so the stars, merges and drops made on this
+  /// page count (the server's bundle reads only stars already saved, and would roll up a
+  /// conversation starred here a moment ago).
+  Future<void> _bundle() => _finalize(busyMessage: context.l10n.dayReviewBundleWriting);
 
   Future<void> _favoriteSection(DayReviewSection section, bool favorited) async {
-    final result = await favoriteDayReviewSection(widget.date, section.id, favorited);
+    final result = await widget.api.favoriteSection(widget.date, section.id, favorited);
     if (!mounted) return;
     if (result.ok) {
       await _load();
@@ -171,32 +173,27 @@ class _DayReviewPageState extends State<DayReviewPage> {
     }
   }
 
-  Future<void> _finalize() async {
+  Future<void> _finalize({String? busyMessage}) async {
     final l10n = context.l10n;
     final rolled = _rolledCount;
     if (rolled > 0 || _groups.isNotEmpty || _drop.isNotEmpty) {
       final extra = _groups.isNotEmpty || _drop.isNotEmpty
           ? '\n\n${l10n.dayReviewConfirmExtra(_groups.length, _drop.length)}'
           : '';
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(l10n.dayReviewConfirmTitle),
-          content: Text('${l10n.dayReviewConfirmBody(rolled)}$extra'),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
-            TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.dayReviewConfirmAction)),
-          ],
-        ),
+      final confirmed = await showOmiConfirm(
+        context,
+        title: l10n.dayReviewConfirmTitle,
+        message: '${l10n.dayReviewConfirmBody(rolled)}$extra',
+        confirmLabel: l10n.dayReviewConfirmAction,
       );
-      if (confirmed != true) return;
+      if (!confirmed || !mounted) return;
     }
-    await _busy(l10n.dayReviewWriting, () async {
-      final result = await finalizeDayReview(
+    await _busy(busyMessage ?? l10n.dayReviewWriting, () async {
+      final result = await widget.api.finalize(
         widget.date,
         _keep.toList(),
         mergeGroups: _groups.map((g) => List<String>.from(g)).toList(),
-        dropConversationIds: _drop.toList(),
+        drop: _drop.toList(),
       );
       if (result.ok) {
         await _load();
@@ -208,26 +205,22 @@ class _DayReviewPageState extends State<DayReviewPage> {
 
   Future<void> _regenerate() async {
     await _busy(context.l10n.dayReviewApplying, () async {
-      _applyReview(await regenerateDayReview(widget.date));
+      _applyReview(await widget.api.regenerate(widget.date));
     });
   }
 
   Future<void> _reopen() async {
     final l10n = context.l10n;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.dayReviewReopenTitle),
-        content: Text(l10n.dayReviewReopenBody),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.dayReviewReopenAction)),
-        ],
-      ),
+    final confirmed = await showOmiConfirm(
+      context,
+      title: l10n.dayReviewReopenTitle,
+      message: l10n.dayReviewReopenBody,
+      confirmLabel: l10n.dayReviewReopenAction,
+      destructive: true,
     );
-    if (confirmed != true) return;
+    if (!confirmed || !mounted) return;
     await _busy(l10n.dayReviewReopening, () async {
-      final result = await reopenDayReview(widget.date);
+      final result = await widget.api.reopen(widget.date);
       if (!result.ok) {
         if (mounted) AppSnackbar.showSnackbarError(result.error ?? l10n.dayReviewActionFailed);
         return;
@@ -236,46 +229,14 @@ class _DayReviewPageState extends State<DayReviewPage> {
     });
   }
 
-  Future<String?> _askText({required String title, String? hint, String? quote}) {
-    final controller = TextEditingController();
-    return showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(title),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (quote != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text('“$quote”', style: TextStyle(color: OmiColors.textSecondary, fontStyle: FontStyle.italic)),
-              ),
-            TextField(
-              controller: controller,
-              autofocus: true,
-              minLines: 2,
-              maxLines: 8,
-              decoration: InputDecoration(hintText: hint),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(context.l10n.cancel)),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: Text(context.l10n.save),
-          ),
-        ],
-      ),
-    );
-  }
+  Future<String?> _askText({required String title, String? hint, String? quote}) =>
+      showDayReviewTextSheet(context, title: title, hint: hint, quote: quote);
 
   Future<void> _addParagraph(int? afterParagraph) async {
     final text =
         await _askText(title: context.l10n.dayReviewAddParagraphTitle, hint: context.l10n.dayReviewAddParagraphHint);
     if (text == null || text.isEmpty) return;
-    _applyReview(await addDayReviewCorrection(
+    _applyReview(await widget.api.addCorrection(
       widget.date,
       type: DayReviewCorrectionType.paragraph,
       text: text,
@@ -290,7 +251,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
       quote: quote,
     );
     if (text == null || text.isEmpty) return;
-    _applyReview(await addDayReviewCorrection(
+    _applyReview(await widget.api.addCorrection(
       widget.date,
       type: DayReviewCorrectionType.highlight,
       quote: quote,
@@ -301,7 +262,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
   }
 
   Future<void> _redactSelection(int start, int end, String quote) async {
-    _applyReview(await addDayReviewCorrection(
+    _applyReview(await widget.api.addCorrection(
       widget.date,
       type: DayReviewCorrectionType.redaction,
       quote: quote,
@@ -310,8 +271,24 @@ class _DayReviewPageState extends State<DayReviewPage> {
     ));
   }
 
+  /// Removing a correction takes back what the user wrote, so it is undoable (docs/ux-contract.md
+  /// §4): Undo adds the same correction again, waiting to be applied.
   Future<void> _deleteCorrection(DayReviewCorrection c) async {
-    _applyReview(await deleteDayReviewCorrection(widget.date, c.id));
+    final l10n = context.l10n;
+    final result = await widget.api.deleteCorrection(widget.date, c.id);
+    _applyReview(result);
+    if (!result.ok || !mounted) return;
+    OmiFeedback.undo(context, l10n.dayReviewCorrectionRemoved, onUndo: () async {
+      _applyReview(await widget.api.addCorrection(
+        widget.date,
+        type: c.type,
+        quote: c.quote,
+        start: c.start,
+        end: c.end,
+        text: c.text,
+        afterParagraph: c.afterParagraph,
+      ));
+    });
   }
 
   // -------------------------------------------------------------------- UI
@@ -442,11 +419,15 @@ class _DayReviewPageState extends State<DayReviewPage> {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Checkbox(
-              value: _selected.contains(c.id),
-              onChanged: dropped ? null : (_) => _toggleSelected(c.id),
-              visualDensity: VisualDensity.compact,
-              side: BorderSide(color: OmiColors.textSecondary),
+            // The tick only means "merge with another"; say so to touch and screen-reader users.
+            Tooltip(
+              message: l10n.dayReviewMergeTooltip,
+              child: Checkbox(
+                value: _selected.contains(c.id),
+                onChanged: dropped ? null : (_) => _toggleSelected(c.id),
+                visualDensity: VisualDensity.compact,
+                side: BorderSide(color: OmiColors.textSecondary),
+              ),
             ),
             IconButton(
               tooltip: l10n.dayReviewKeepTooltip,
@@ -695,6 +676,8 @@ class _DayReviewPageState extends State<DayReviewPage> {
             ),
           ),
           IconButton(
+            key: Key('day_review_paragraph_remove_${c.id}'),
+            tooltip: context.l10n.delete,
             icon: Icon(Icons.close, size: 18, color: OmiColors.textSecondary),
             onPressed: () => _deleteCorrection(c),
           ),
@@ -743,6 +726,8 @@ class _DayReviewPageState extends State<DayReviewPage> {
       subtitle: Text(c.isApplied ? l10n.dayReviewCorrectionApplied : l10n.dayReviewCorrectionPending,
           style: TextStyle(color: OmiColors.textSecondary, fontSize: 11.5)),
       trailing: IconButton(
+        key: Key('day_review_correction_delete_${c.id}'),
+        tooltip: l10n.delete,
         icon: Icon(Icons.delete_outline, color: OmiColors.textSecondary, size: 20),
         onPressed: () => _deleteCorrection(c),
       ),
@@ -897,6 +882,41 @@ class _DayReviewPageState extends State<DayReviewPage> {
         ),
       );
 
+  /// The rest of the day's review: the tasks it produced (edit, complete, add) and the dates Omi
+  /// heard (check, fix, add or decline). Without these the day review ends at the summary and the
+  /// user has to find both elsewhere.
+  Widget _fromThisDay() {
+    final l10n = context.l10n;
+    final day = DateTime.tryParse(widget.date);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        OmiSectionHeader(l10n.dayReviewFromThisDay),
+        OmiSettingsGroup(
+          children: [
+            if (day != null)
+              OmiSettingsRow(
+                key: const Key('day_review_tasks'),
+                leading: const Icon(Icons.check_circle_outline),
+                title: l10n.tasks,
+                subtitle: l10n.dayReviewTasksRowBody,
+                showChevron: true,
+                onTap: () => routeToPage(context, DayTasksPage(date: day)),
+              ),
+            OmiSettingsRow(
+              key: const Key('day_review_calendar'),
+              leading: const Icon(Icons.event_outlined),
+              title: l10n.familyCalendarTitle,
+              subtitle: l10n.familyCalendarBannerBody,
+              showChevron: true,
+              onTap: () => routeToPage(context, const FamilyCalendarReviewPage()),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildReviewView(DayReviewDay day, DayReview review) {
     final l10n = context.l10n;
     final paragraphs = buildSummaryParagraphs(review.summaryText, review.corrections);
@@ -957,6 +977,8 @@ class _DayReviewPageState extends State<DayReviewPage> {
               for (final card in cards) _sectionCard(review, card.$1, card.$2, byId, anchoredAt),
               for (final c in anchoredAt(null)) _userParagraph(c),
               if (paragraphs.isEmpty) _addParagraphButton(null),
+              const SizedBox(height: OmiSpacing.md),
+              _fromThisDay(),
               if (review.tags.isNotEmpty) ...[
                 const SizedBox(height: OmiSpacing.md),
                 Text(l10n.dayReviewTagsTitle, style: OmiType.subhead.copyWith(color: OmiColors.textPrimary)),

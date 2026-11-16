@@ -16177,4 +16177,21 @@ class AppLocalizationsTe extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'తిరిగి తీసుకురండి';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '“$title” తిరస్కరించబడింది';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'ఈ రోజు నుండి';
+
+  @override
+  String get dayReviewTasksRowBody => 'ఈ రోజు పనులను చూసి, సవరించి, పూర్తి చేయండి';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'సవరణ తీసివేయబడింది';
 }

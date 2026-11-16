@@ -16119,4 +16119,21 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'Vrátit';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '„$title“ odmítnuto';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'Z tohoto dne';
+
+  @override
+  String get dayReviewTasksRowBody => 'Projděte, upravte a dokončete úkoly tohoto dne';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'Oprava odstraněna';
 }

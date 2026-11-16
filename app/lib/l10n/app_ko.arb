@@ -4953,5 +4953,10 @@
     "familyCalendarNoteLabel": "Note",
     "@familyCalendarNoteLabel": {
         "description": "Label of the editable note field"
-    }
+    },
+    "familyCalendarBringBack": "되돌리기",
+    "familyCalendarDeclinedToast": "“{title}” 거절됨",
+    "dayReviewFromThisDay": "이날의 항목",
+    "dayReviewTasksRowBody": "이날의 할 일을 확인, 수정, 완료하세요",
+    "dayReviewCorrectionRemoved": "수정 사항을 삭제했습니다"
 }

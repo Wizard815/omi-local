@@ -4953,5 +4953,10 @@
     "familyCalendarNoteLabel": "Note",
     "@familyCalendarNoteLabel": {
         "description": "Label of the editable note field"
-    }
+    },
+    "familyCalendarBringBack": "Atjaunot",
+    "familyCalendarDeclinedToast": "“{title}” noraidīts",
+    "dayReviewFromThisDay": "No šīs dienas",
+    "dayReviewTasksRowBody": "Pārskatiet, rediģējiet un pabeidziet dienas uzdevumus",
+    "dayReviewCorrectionRemoved": "Labojums noņemts"
 }

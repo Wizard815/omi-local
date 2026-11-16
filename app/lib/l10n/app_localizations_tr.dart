@@ -16125,4 +16125,21 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'Geri Getir';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '“$title” reddedildi';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'Bu günden';
+
+  @override
+  String get dayReviewTasksRowBody => 'Günün görevlerini gözden geçirin, düzenleyin ve tamamlayın';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'Düzeltme kaldırıldı';
 }

@@ -15880,4 +15880,21 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => '元に戻す';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '「$title」を見送りました';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'この日から';
+
+  @override
+  String get dayReviewTasksRowBody => 'この日のタスクを確認・編集・完了';
+
+  @override
+  String get dayReviewCorrectionRemoved => '修正を削除しました';
 }

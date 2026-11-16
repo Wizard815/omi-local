@@ -4953,5 +4953,10 @@
     "familyCalendarNoteLabel": "Note",
     "@familyCalendarNoteLabel": {
         "description": "Label of the editable note field"
-    }
+    },
+    "familyCalendarBringBack": "Khôi phục",
+    "familyCalendarDeclinedToast": "Đã từ chối “{title}”",
+    "dayReviewFromThisDay": "Từ ngày này",
+    "dayReviewTasksRowBody": "Xem, sửa và hoàn thành việc cần làm trong ngày",
+    "dayReviewCorrectionRemoved": "Đã xóa chỉnh sửa"
 }

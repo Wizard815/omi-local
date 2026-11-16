@@ -12510,5 +12510,10 @@
     "familyCalendarNoteLabel": "Note",
     "@familyCalendarNoteLabel": {
         "description": "Label of the editable note field"
-    }
+    },
+    "familyCalendarBringBack": "Врати",
+    "familyCalendarDeclinedToast": "„{title}“ одбијено",
+    "dayReviewFromThisDay": "Из овог дана",
+    "dayReviewTasksRowBody": "Прегледајте, измените и завршите задатке дана",
+    "dayReviewCorrectionRemoved": "Исправка уклоњена"
 }

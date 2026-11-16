@@ -12510,5 +12510,10 @@
     "familyCalendarNoteLabel": "Note",
     "@familyCalendarNoteLabel": {
         "description": "Label of the editable note field"
-    }
+    },
+    "familyCalendarBringBack": "परत आणा",
+    "familyCalendarDeclinedToast": "“{title}” नाकारले",
+    "dayReviewFromThisDay": "या दिवसातून",
+    "dayReviewTasksRowBody": "या दिवसाची कामे पहा, संपादित करा आणि पूर्ण करा",
+    "dayReviewCorrectionRemoved": "दुरुस्ती काढली"
 }

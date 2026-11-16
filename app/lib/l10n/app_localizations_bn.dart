@@ -16109,4 +16109,21 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'ফিরিয়ে আনুন';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '“$title” প্রত্যাখ্যাত';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'এই দিন থেকে';
+
+  @override
+  String get dayReviewTasksRowBody => 'এই দিনের কাজগুলো দেখুন, সম্পাদনা করুন ও সম্পন্ন করুন';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'সংশোধন সরানো হয়েছে';
 }

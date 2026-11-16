@@ -12510,5 +12510,10 @@
     "familyCalendarNoteLabel": "Note",
     "@familyCalendarNoteLabel": {
         "description": "Label of the editable note field"
-    }
+    },
+    "familyCalendarBringBack": "واپس لائیں",
+    "familyCalendarDeclinedToast": "“{title}” مسترد",
+    "dayReviewFromThisDay": "اس دن سے",
+    "dayReviewTasksRowBody": "اس دن کے کام دیکھیں، ترمیم کریں اور مکمل کریں",
+    "dayReviewCorrectionRemoved": "تصحیح ہٹا دی گئی"
 }

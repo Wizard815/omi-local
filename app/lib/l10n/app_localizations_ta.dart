@@ -16219,4 +16219,21 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get familyCalendarNoteLabel => 'Note';
+
+  @override
+  String get familyCalendarBringBack => 'மீட்டெடு';
+
+  @override
+  String familyCalendarDeclinedToast(String title) {
+    return '“$title” நிராகரிக்கப்பட்டது';
+  }
+
+  @override
+  String get dayReviewFromThisDay => 'இந்த நாளிலிருந்து';
+
+  @override
+  String get dayReviewTasksRowBody => 'இந்த நாளின் பணிகளைச் சரிபார்த்து, திருத்தி, முடிக்கவும்';
+
+  @override
+  String get dayReviewCorrectionRemoved => 'திருத்தம் அகற்றப்பட்டது';
 }

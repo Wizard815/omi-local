@@ -5049,5 +5049,10 @@
     "familyCalendarNoteLabel": "Note",
     "@familyCalendarNoteLabel": {
         "description": "Label of the editable note field"
-    }
+    },
+    "familyCalendarBringBack": "Visszahozás",
+    "familyCalendarDeclinedToast": "„{title}” elutasítva",
+    "dayReviewFromThisDay": "Erről a napról",
+    "dayReviewTasksRowBody": "A nap feladatainak ellenőrzése, szerkesztése és teljesítése",
+    "dayReviewCorrectionRemoved": "Javítás eltávolítva"
 }
