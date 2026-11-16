@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "FC-two-way-sync-loses-one-sides-change",
+  "violated_contract": "A sync presented as two-way must leave both sides holding every change either side made: a create, edit, completion or deletion on one side reaches the other; objects it imported are not pushed back as new ones; times are read in the zone the other side wrote them in; and two passes for the same account never interleave so that one writes back the state the other just replaced. The CalDAV sync carried only completion from the phone, ignored deletions and declines in both directions, pushed phone-made tasks back as duplicates, read TZID times as UTC, and let Sync now, the change pass and the full pass overlap.",
+  "canonical_prevention": "Drive every kind of change in both directions through one end-to-end harness against a real server and an independent client, keep a unit test per direction that runs the sync against a server whose objects outlive each pass, and hold a per-account lease around each pass.",
+  "canonical_prevention_artifact": [
+    "omi-host/demo/caldav_demo.py",
+    "backend/tests/unit/test_caldav_sync.py"
+  ],
+  "evidence_prs": [],
+  "scope_hints": [
+    "backend/utils/caldav/"
+  ],
+  "status": "open"
+}
