@@ -15024,6 +15024,12 @@
             "title": "Conversation Id",
             "type": "string"
           },
+          "declined": {
+            "default": true,
+            "description": "False takes a decline back: the event waits for review again",
+            "title": "Declined",
+            "type": "boolean"
+          },
           "event_idx": {
             "minimum": 0.0,
             "title": "Event Idx",
@@ -62785,6 +62791,7 @@
     },
     "/v1/family-calendar/events/decline": {
       "post": {
+        "description": "Stop asking about one heard event, or (``declined: false``) bring a declined one back for review.",
         "operationId": "decline_family_calendar_event_v1_family_calendar_events_decline_post",
         "parameters": [
           {
