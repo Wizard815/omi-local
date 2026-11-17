@@ -574,7 +574,8 @@ class App {
     if (image.startsWith('http')) {
       return image;
     } else {
-      return 'https://raw.githubusercontent.com/BasedHardware/Omi/main$image';
+      // Relative paths pointed at Omi's GitHub; a self-hosted app shows no image instead.
+      return '';
     }
   }
 

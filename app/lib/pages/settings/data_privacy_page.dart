@@ -231,7 +231,7 @@ class _DataPrivacyPageState extends State<DataPrivacyPage> {
                         children: [
                           for (final app in appsWithDataAccess)
                             OmiSettingsRow(
-                              leading: CircleAvatar(radius: 16, backgroundImage: NetworkImage(app.getImageUrl())),
+                              leading: CircleAvatar(radius: 16, backgroundImage: app.getImageUrl().isEmpty ? null : NetworkImage(app.getImageUrl())),
                               title: app.getName(),
                               subtitle: _getAccessDescription(context, app),
                               onTap: () {
