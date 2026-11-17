@@ -12,9 +12,14 @@ class DayReviewResult<T> {
   final T? value;
   final String? error;
 
-  const DayReviewResult.ok(T this.value) : error = null;
+  /// The HTTP status of a failure (409: e.g. a rewrite would replace the user's edits).
+  final int? statusCode;
 
-  const DayReviewResult.failed(this.error) : value = null;
+  const DayReviewResult.ok(T this.value)
+      : error = null,
+        statusCode = null;
+
+  const DayReviewResult.failed(this.error, {this.statusCode}) : value = null;
 
   bool get ok => value != null;
 }
@@ -30,11 +35,12 @@ DayReviewResult<T> _decode<T>(dynamic response, T Function(Map<String, dynamic>)
     return DayReviewResult.ok(parse(jsonDecode(body) as Map<String, dynamic>));
   }
   Logger.debug('$label failed: ${response.statusCode} $body');
+  final int status = response.statusCode;
   try {
     final detail = wire.GeneratedErrorResponse.fromJson(jsonDecode(body) as Map<String, dynamic>).detail;
-    return DayReviewResult.failed(detail is String ? detail : null);
+    return DayReviewResult.failed(detail is String ? detail : null, statusCode: status);
   } catch (_) {
-    return const DayReviewResult.failed(null);
+    return DayReviewResult.failed(null, statusCode: status);
   }
 }
 
@@ -99,9 +105,13 @@ Future<DayReviewResult<DayReview>> finalizeDayReview(
       response, (json) => DayReview.fromGenerated(wire.GeneratedDayReview.fromJson(json)), 'finalizeDayReview');
 }
 
+String _replaceEdits(bool replaceEdits) => replaceEdits ? '?replace_edits=true' : '';
+
 /// Approve the day's draft: finalize with its split and text; only then does its summary go to the calendar.
-Future<DayReviewResult<DayReview>> approveDayReview(String date) async {
-  final response = await makeApiCall(url: '${_base()}/$date/approve', headers: {}, method: 'POST', body: '');
+/// [replaceEdits]: the user agreed that a rewrite (the day changed since they edited it) replaces their edits.
+Future<DayReviewResult<DayReview>> approveDayReview(String date, {bool replaceEdits = false}) async {
+  final response = await makeApiCall(
+      url: '${_base()}/$date/approve${_replaceEdits(replaceEdits)}', headers: {}, method: 'POST', body: '');
   return _decode(
       response, (json) => DayReview.fromGenerated(wire.GeneratedDayReview.fromJson(json)), 'approveDayReview');
 }
@@ -151,10 +161,36 @@ Future<DayReviewResult<DayReview>> deleteDayReviewCorrection(String date, String
       response, (json) => DayReview.fromGenerated(wire.GeneratedDayReview.fromJson(json)), 'deleteDayReviewCorrection');
 }
 
-Future<DayReviewResult<DayReview>> regenerateDayReview(String date) async {
-  final response = await makeApiCall(url: '${_base()}/$date/regenerate', headers: {}, method: 'POST', body: '');
+Future<DayReviewResult<DayReview>> regenerateDayReview(String date, {bool replaceEdits = false}) async {
+  final response = await makeApiCall(
+      url: '${_base()}/$date/regenerate${_replaceEdits(replaceEdits)}', headers: {}, method: 'POST', body: '');
   return _decode(
       response, (json) => DayReview.fromGenerated(wire.GeneratedDayReview.fromJson(json)), 'regenerateDayReview');
+}
+
+/// The user's own words: the title and changed sections ({id: (title, text)}), or the whole text of
+/// a summary without sections.
+Future<DayReviewResult<DayReview>> editDayReviewText(
+  String date, {
+  String? title,
+  Map<String, ({String title, String text})>? sections,
+  String? summaryText,
+}) async {
+  final response = await makeApiCall(
+    url: '${_base()}/$date/text',
+    headers: {'Content-Type': 'application/json'},
+    method: 'PUT',
+    body: jsonEncode({
+      if (title != null) 'title': title,
+      if (sections != null)
+        'sections': [
+          for (final entry in sections.entries) {'id': entry.key, 'title': entry.value.title, 'text': entry.value.text}
+        ],
+      if (summaryText != null) 'summary_text': summaryText,
+    }),
+  );
+  return _decode(
+      response, (json) => DayReview.fromGenerated(wire.GeneratedDayReview.fromJson(json)), 'editDayReviewText');
 }
 
 Future<DayReviewResult<int>> reopenDayReview(String date) async {
@@ -177,7 +213,8 @@ class DayReviewApi {
   }) =>
       finalizeDayReview(date, keep, mergeGroups: mergeGroups, dropConversationIds: drop);
 
-  Future<DayReviewResult<DayReview>> approve(String date) => approveDayReview(date);
+  Future<DayReviewResult<DayReview>> approve(String date, {bool replaceEdits = false}) =>
+      approveDayReview(date, replaceEdits: replaceEdits);
 
   Future<DayReviewResult<DayReview>> favoriteSection(String date, String sectionId, bool favorited) =>
       favoriteDayReviewSection(date, sectionId, favorited);
@@ -197,7 +234,16 @@ class DayReviewApi {
   Future<DayReviewResult<DayReview>> deleteCorrection(String date, String correctionId) =>
       deleteDayReviewCorrection(date, correctionId);
 
-  Future<DayReviewResult<DayReview>> regenerate(String date) => regenerateDayReview(date);
+  Future<DayReviewResult<DayReview>> regenerate(String date, {bool replaceEdits = false}) =>
+      regenerateDayReview(date, replaceEdits: replaceEdits);
+
+  Future<DayReviewResult<DayReview>> editText(
+    String date, {
+    String? title,
+    Map<String, ({String title, String text})>? sections,
+    String? summaryText,
+  }) =>
+      editDayReviewText(date, title: title, sections: sections, summaryText: summaryText);
 
   Future<DayReviewResult<int>> reopen(String date) => reopenDayReview(date);
 }
