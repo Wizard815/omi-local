@@ -598,6 +598,11 @@ def push_tasks(
         stored = action_items_db.get_action_item(uid, task_id)
         if not _task_gone(stored) and approved(stored):
             continue
+        if stored is None and not _hget(_digest_key(uid), task_id):
+            # Never pushed or imported by this user (no rendering remembered): an old sync's pull
+            # remembered another user's unscoped omi-task-<id> on a shared list. Not ours to delete.
+            _forget_task(uid, task_id)
+            continue
         remote_uid = imported.get(task_id)
         try:
             client.delete(hrefs.get(task_id) or object_href(tasks_href, remote_uid or _task_uid(task_id, scope)))
@@ -1255,6 +1260,60 @@ SHARED_LIST_NOTE = (
 )
 
 
+def move_out(
+    uid: str,
+    client: CalDavClient,
+    previous: Tuple[str, str, bool],
+    hrefs: Dict[str, str],
+    report: SyncReport,
+) -> None:
+    """The user picked other collections: take what this user's sync wrote off the ones they
+    leave, so the next pass puts it in the new ones once (a move, not a copy). Only objects the
+    memos say this user wrote are touched; another person's on a shared list never are. The old
+    shared omi-day-<date> objects are left: they may hold another user's text (that user's own
+    next sync replaces them). A collection that cannot be reached any more is only noted."""
+    old_tasks, old_calendar, legacy = previous
+    old_scope = Scope(tag=owner_tag(uid), legacy=legacy)
+    failed = 0
+    # Same collection but leaving the old unscoped UIDs: the objects are re-written under the
+    # owner's UIDs, so the old ones go too (otherwise the phone would show both).
+    if old_tasks and (old_tasks != hrefs['tasks_href'] or legacy):
+        memo_hrefs = _hgetall(_href_key(uid))
+        imported = _imported_by_task(uid)
+        rendered = _hgetall(_digest_key(uid))
+        for task_id in _hgetall(_remote_key(uid)):
+            if task_id not in rendered:
+                continue  # remembered by an old pull, not written by this user (see push_tasks)
+            href = memo_hrefs.get(task_id) or object_href(
+                old_tasks, imported.get(task_id) or old_scope.task_uid(task_id)
+            )
+            try:
+                client.delete(href)
+            except CalDavError:
+                failed += 1
+        if _hget(_digest_key(uid), PARENT_KEY):
+            try:
+                client.delete(object_href(old_tasks, f'{ical.PARENT_UID_PREFIX}{old_scope.tag}{ical.UID_DOMAIN}'))
+            except CalDavError:
+                failed += 1
+    if old_calendar and (old_calendar != hrefs['calendar_href'] or legacy):
+        for key in _hgetall(_digest_key(uid)):
+            if key.startswith(('event:', 'conversation:')):
+                href = _event_key_href(old_calendar, key, old_scope)
+            elif key.startswith(DAY_KEY):
+                href = object_href(old_calendar, old_scope.day_uid(key[len(DAY_KEY) :]))
+            else:
+                continue
+            try:
+                client.delete(href)
+            except CalDavError:
+                failed += 1
+    if failed:
+        report.notes.append(
+            f'{failed} of your objects could not be taken off the collections you left; delete them there if they remain.'
+        )
+
+
 def resolve_scope(uid: str, settings: Dict[str, Any], hrefs: Dict[str, str], *, legacy: bool) -> Scope:
     tag = owner_tag(uid)
     label = str(settings.get('_label') or '') or owner_label(uid)
@@ -1294,6 +1353,9 @@ def sync_user(
         want_events = events_wanted(settings)
         hrefs = ensure_calendars(client, settings, need_events=want_events, uid=uid, label=label)
         report.collections = dict(hrefs)
+        previous = bound_collections(uid)
+        if previous is not None and (previous[0], previous[1]) != (hrefs['tasks_href'], hrefs['calendar_href']):
+            move_out(uid, client, previous, hrefs, report)
         legacy = bind_collections(uid, hrefs['tasks_href'], hrefs['calendar_href'])
         register_collections(uid, label, [hrefs['tasks_href'], hrefs['calendar_href']])
         scope = resolve_scope(uid, settings, hrefs, legacy=legacy)

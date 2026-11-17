@@ -787,6 +787,24 @@ def test_switching_collections_from_the_picker_starts_over_and_deletes_nothing(w
     report = _sync(picked, client)
     assert report.tasks_deleted == 0 and report.events_declined == 0 and {'t1', 't3'} <= set(tasks)
     assert task_href(HOME + 'new-list/', 't1') in objects and day_href(HOME + 'new-cal/', '2026-10-26') in objects
+    # a move, not a copy: what this user wrote is gone from the lists they left
+    assert task_href(TASKS, 't1') not in objects and day_href(CAL, '2026-10-26') not in objects
+    assert event_href(CAL, 'c1-0') not in objects and event_href(HOME + 'new-cal/', 'c1-0') in objects
+
+
+def test_moving_off_an_old_shared_list_moves_only_my_objects(world, server):
+    settings, tasks, created, redis, stored = world
+    client, objects = server
+    old_tasks, old_cal = HOME + 'omi-tasks/', HOME + 'omi/'
+    redis.set('caldav:collections:u1', f'{old_tasks}|{old_cal}')
+    bobs = old_tasks + 'omi-task-bob1@omi-local.ics'
+    objects[bobs] = ical.render_todo(uid='omi-task-bob1@omi-local', summary="Bob's thing", stamp=NOW)
+    _sync(settings, client)  # migrated: stays on the shared lists, old UIDs
+    assert old_tasks + 'omi-task-t1@omi-local.ics' in objects
+    report = _sync({**settings, 'tasks_href': HOME + 'mine/', 'calendar_href': HOME + 'my-cal/'}, client)
+    assert old_tasks + 'omi-task-t1@omi-local.ics' not in objects and task_href(HOME + 'mine/', 't1') in objects
+    assert bobs in objects and report.tasks_deleted == 0 and {'t1', 't3'} <= set(tasks)
+    assert sum(1 for h, ics in objects.items() if 'SUMMARY:Book the retro room' in ics) == 1
 
 
 def test_parent_mode_puts_tasks_under_the_users_parent_and_imports_only_its_subtasks(world, server):
@@ -920,3 +938,18 @@ def test_owner_tags_never_read_as_an_old_uid():
         'foreign',
         None,
     )
+
+
+def test_an_old_syncs_poisoned_memo_never_deletes_the_other_users_task(world, server):
+    """The pre-change pull remembered every unscoped omi-task-<id> on a shared list, another
+    user's too. Such an entry has no rendering memo: it is forgotten, not deleted."""
+    settings, tasks, created, redis, stored = world
+    client, objects = server
+    old_tasks = HOME + 'omi-tasks/'
+    redis.set('caldav:collections:u1', f'{old_tasks}|{HOME}omi/')
+    bobs = old_tasks + 'omi-task-bob1@omi-local.ics'
+    objects[bobs] = ical.render_todo(uid='omi-task-bob1@omi-local', summary="Bob's thing", stamp=NOW)
+    redis.hset('caldav:remote:u1', 'bob1', '"old-etag"')  # what the old pull wrote
+    redis.hset('caldav:href:u1', 'bob1', bobs)
+    report = _sync(settings, client)
+    assert bobs in objects and report.tasks_removed == 0 and redis.hget('caldav:remote:u1', 'bob1') is None

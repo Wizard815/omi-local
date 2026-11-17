@@ -671,7 +671,9 @@ class Demo:
         # the user adds a line to it. Nothing has been approved yet.
         self.omi.call('GET', f'/v1/users/day-reviews/{date_str}')
         draft = self.omi.call('POST', f'/v1/users/day-reviews/{date_str}/bundle')
-        self.r.add('day', '-', 'the day summary is prepared as a draft', draft.get('status') == 'draft', draft.get('status'))
+        self.r.add('day', '-', 'the day summary is prepared as a draft', draft.get('draft') is True, f"draft={draft.get('draft')}")
+        old_view = self.omi.call('GET', f'/v1/users/day-reviews/{date_str}')
+        self.r.add('day', '-', 'a released app (no include_drafts) sees the draft day as not reviewed yet', old_view.get('review') is None)
         self.omi.call(
             'POST',
             f'/v1/users/day-reviews/{date_str}/corrections',
@@ -745,7 +747,7 @@ class Demo:
         self.r.add('approve', '-', 'a decline can be undone (the task waits again)', (undone.get('task') or {}).get('approval') == 'pending')
         self.omi.call('POST', f'/v1/approvals/tasks/{trip}/decline', {})
         approved_day = self.omi.call('POST', f'/v1/users/day-reviews/{date_str}/approve')
-        self.r.add('approve', '-', 'Approve finalizes the draft day', approved_day.get('status') == 'finalized', approved_day.get('status'))
+        self.r.add('approve', '-', 'Approve finalizes the draft day', approved_day.get('draft') is False, f"draft={approved_day.get('draft')}")
         # Calendar check: every heard event but Mia's (approved with edits further down).
         mia = self.conversations[0]
         for conversation in self.conversations:
@@ -824,7 +826,7 @@ class Demo:
             'day',
             'send',
             '... and approving the draft again puts it back',
-            lambda: (again.get('status') == 'finalized' and self.day_of(date_str) is not None, again.get('status')),
+            lambda: (again.get('draft') is False and self.day_of(date_str) is not None, f"draft={again.get('draft')}"),
         )
 
         # Edits in Omi reach the server.
@@ -1297,6 +1299,158 @@ class Demo:
             new_href,
         )
 
+    # ---- two people already on the old shared "Omi" / "Omi Tasks" (an existing install) -----
+    def legacy_people(self) -> None:
+        """Carol and Dan synced with the code from before per-person lists: both into the shared
+        "Omi" and "Omi Tasks", with unscoped UIDs, and the same omi-day-<date> (Dan's overwrote
+        Carol's). The new code must keep them where they are without duplicating or deleting
+        anything, fix the summary collision, and move Carol cleanly when she picks lists of her own."""
+        if not self.args.seed_cmd:
+            return
+        try:
+            source = subprocess.run(
+                ['git', '-C', os.path.join(HERE, '..', '..'), 'show', f'{self.args.legacy_ref}:backend/utils/caldav/sync.py'],
+                capture_output=True, text=True, check=True,
+            ).stdout
+        except Exception as error:  # noqa: BLE001
+            self.r.add('legacy', '-', 'old sync code available', False, f'{type(error).__name__}: {error}')
+            return
+        if 'owner_tag' in source:
+            self.r.add('legacy', '-', f'{self.args.legacy_ref} still has the old sync code', False, 'it already scopes UIDs')
+            return
+        date_str = self.day.isoformat()
+        shared_tasks_path, shared_cal_path = f'{self.args.caldav_user}/omi-tasks/', f'{self.args.caldav_user}/omi/'
+        found = self.phone.collections()
+        if 'Omi' not in found:
+            self.phone.make_calendar(shared_cal_path, 'Omi', 'VEVENT')
+        if 'Omi Tasks' not in found:
+            self.phone.make_calendar(shared_tasks_path, 'Omi Tasks', 'VTODO')
+        found = self.phone.collections()
+        shared_cal, shared_tasks = found['Omi']['href'], found['Omi Tasks']['href']
+        people: Dict[str, Dict[str, Any]] = {}
+        for who, line in (('carol', "Carol's day: the piano lesson."), ('dan', "Dan's day: the car service.")):
+            name = f'caldav-demo-{who}-{secrets.token_hex(3)}'
+            password = secrets.token_urlsafe(12)
+            uid = seed(self.args.seed_cmd, {'op': 'account', 'username': name, 'password': password})['uid']
+            omi = Omi(self.args.backend)
+            omi.login(name, password)
+            title = f"{who.title()}'s appointment"
+            (cid,) = seed(
+                self.args.seed_cmd,
+                {'op': 'conversations', 'uid': uid, 'conversations': [{
+                    'title': title, 'overview': line, 'started_at': at(self.day, 10, 0).isoformat(), 'starred': True,
+                    'transcript': [line],
+                    'events': [{'title': title, 'start': at(self.today + timedelta(days=4), 15, 0).isoformat(), 'duration': 60}],
+                }]},
+            )['ids']
+            task = omi.call('POST', '/v1/action-items', {'description': f'{who.title()}: call back about the appointment'})['id']
+            omi.call('POST', f'/v1/users/day-reviews/{date_str}/bundle')
+            omi.call('POST', f'/v1/users/day-reviews/{date_str}/corrections', {'type': 'paragraph', 'text': line})
+            omi.call('POST', f'/v1/users/day-reviews/{date_str}/approve')
+            people[who] = {'uid': uid, 'name': name, 'omi': omi, 'cid': cid, 'task': task, 'tag': owner_tag(uid),
+                           'title': title, 'line': line}
+        for who in ('carol', 'dan'):  # the old code, as an existing install ran it
+            report = seed(self.args.seed_cmd, {'op': 'legacy_sync', 'uid': people[who]['uid'], 'source': source})
+            if report.get('error'):
+                self.r.add('legacy', '-', f'old sync for {who}', False, json.dumps(report)[:200])
+
+        def todos():
+            return self.phone.objects(shared_tasks, 'VTODO')
+
+        def evs(href=shared_cal):
+            return self.phone.objects(href, 'VEVENT')
+
+        old_day = f'omi-day-{date_str}@omi-local'
+        before = evs().get(old_day)
+        self.r.add(
+            'legacy', '-',
+            'before: the old code wrote both people into the shared lists, one omi-day-<date> for both (Dan\'s won)',
+            before is not None and 'car service' in unescape(before.value('DESCRIPTION'))
+            and all(f"omi-task-{p['task']}@omi-local" in todos() for p in people.values()),
+            f'day: {before and unescape(before.value("DESCRIPTION"))[:60]!r}',
+        )
+
+        # The new code: each one's next sync.
+        for who in ('carol', 'dan'):
+            report = people[who]['omi'].call('POST', '/v1/caldav/sync')
+            self.r.add('legacy', '-', f"{who}'s first sync with the new code reports no errors", bool(report.get('ok')),
+                       json.dumps(report)[:200])
+        carol, dan = people['carol'], people['dan']
+        settings = carol['omi'].call('GET', '/v1/caldav/settings')
+        names = set(self.phone.collections())
+        self.r.add(
+            'legacy', '-', 'both stay on the shared "Omi" / "Omi Tasks" (no new lists made for them)',
+            settings.get('calendar_href', '').endswith(shared_cal) and settings.get('tasks_href', '').endswith(shared_tasks)
+            and not any(carol['name'] in n or dan['name'] in n for n in names),
+            f"{settings.get('calendar_href')} {settings.get('tasks_href')}",
+        )
+
+        def count(objects: Dict[str, DavObject], summary: str) -> int:
+            return sum(1 for o in objects.values() if unescape(o.value('SUMMARY')) == summary)
+
+        def kept():
+            t, e = todos(), evs()
+            ok = all(
+                f"omi-task-{p['task']}@omi-local" in t and count(t, f"{w.title()}: call back about the appointment") == 1
+                and f"omi-event-{p['cid']}-0@omi-local" in e and count(e, p['title']) == 1
+                for w, p in people.items()
+            )
+            return ok, f'{len(t)} VTODOs, {len(e)} VEVENTs in the shared lists'
+
+        self.guard('legacy', 'both', 'their tasks and events keep their old UIDs: none duplicated, none deleted', kept)
+
+        def days_apart():
+            e = evs()
+            c, d = e.get(f"omi-day-{carol['tag']}-{date_str}@omi-local"), e.get(f"omi-day-{dan['tag']}-{date_str}@omi-local")
+            ok = (c is not None and d is not None and 'piano' in unescape(c.value('DESCRIPTION'))
+                  and 'car service' in unescape(d.value('DESCRIPTION')) and old_day not in e)
+            return ok, f'carol={bool(c)} dan={bool(d)} old shared day left={old_day in e}'
+
+        self.guard('legacy', 'send', 'the colliding omi-day-<date> is replaced by one summary per person', days_apart)
+        tasks_listed = {t['id']: t for t in carol['omi'].tasks()}
+        self.r.add('legacy', '-', "Carol's task is still in Omi, approved (it existed before approvals)",
+                   carol['task'] in tasks_listed and tasks_listed[carol['task']].get('approval') in (None, 'approved'))
+
+        # Carol picks lists of her own (Create new… in the picker, twice).
+        made_tasks = carol['omi'].call('POST', '/v1/caldav/collections', {'name': f"Carol's tasks {secrets.token_hex(2)}", 'kind': 'tasks'})
+        made_cal = carol['omi'].call('POST', '/v1/caldav/collections', {'name': f"Carol's calendar {secrets.token_hex(2)}", 'kind': 'calendar'})
+        report = carol['omi'].call('POST', '/v1/caldav/sync')
+        self.r.add('legacy', '-', "Carol's sync after picking her own lists reports no errors", bool(report.get('ok')) and made_tasks.get('ok') and made_cal.get('ok'),
+                   json.dumps(report)[:200])
+        new_tasks = urllib.parse.urlparse((made_tasks.get('collection') or {}).get('href') or '').path
+        new_cal = urllib.parse.urlparse((made_cal.get('collection') or {}).get('href') or '').path
+
+        def moved():
+            t_new, e_new, t_old, e_old = self.phone.objects(new_tasks, 'VTODO'), evs(new_cal), todos(), evs()
+            ok = (
+                f"omi-task-{carol['tag']}-{carol['task']}@omi-local" in t_new
+                and f"omi-event-{carol['tag']}-{carol['cid']}-0@omi-local" in e_new
+                and f"omi-day-{carol['tag']}-{date_str}@omi-local" in e_new
+                and f"omi-task-{carol['task']}@omi-local" not in t_old
+                and f"omi-event-{carol['cid']}-0@omi-local" not in e_old
+                and f"omi-day-{carol['tag']}-{date_str}@omi-local" not in e_old
+            )
+            return ok, f'new lists: {len(t_new)} VTODO, {len(e_new)} VEVENT'
+
+        self.guard('legacy', 'send', "Carol's task, event and summary move to her new lists (and leave the shared ones)", moved)
+
+        def no_dupes():
+            everything = [*todos().values(), *self.phone.objects(new_tasks, 'VTODO').values()]
+            n = sum(1 for o in everything if unescape(o.value('SUMMARY')) == 'Carol: call back about the appointment')
+            return n == 1, f'{n} VTODOs with her title on the server'
+
+        self.guard('legacy', 'send', '... once: no duplicate anywhere on the account', no_dupes)
+        dan['omi'].call('POST', '/v1/caldav/sync')
+
+        def dan_intact():
+            t, e = todos(), evs()
+            ok = (f"omi-task-{dan['task']}@omi-local" in t and f"omi-event-{dan['cid']}-0@omi-local" in e
+                  and f"omi-day-{dan['tag']}-{date_str}@omi-local" in e)
+            return ok, 'Dan: task, event and summary still in the shared lists' if ok else 'something of Dan\'s is gone'
+
+        self.guard('legacy', 'both', "nothing of Dan's is deleted by Carol's move (or by either sync)", dan_intact)
+        self.r.add('legacy', '-', "Carol's task is still in Omi after the move", carol['omi'].task(carol['task']) is not None)
+
     def run(self) -> int:
         try:
             if self.setup():
@@ -1304,6 +1458,7 @@ class Demo:
                 self.send()
                 self.receive()
                 self.second_person()
+                self.legacy_people()
         except SystemExit as stop:
             self.r.add('demo', '-', 'stopped early', False, str(stop))
         except Exception as error:  # noqa: BLE001
@@ -1348,6 +1503,10 @@ def main() -> int:
     )
     parser.add_argument('--keep-data', action='store_true', help='with --isolate: leave the run\'s calendars')
     parser.add_argument('--strict', action='store_true', help='GAP rows fail the run too')
+    parser.add_argument(
+        '--legacy-ref', default='origin/main',
+        help='git revision whose backend/utils/caldav/sync.py is the pre-change sync (builds an existing install\'s state)',
+    )
     args = parser.parse_args()
     if not args.caldav_password:
         parser.error('--caldav-password (or CALDAV_PASSWORD) is required')
