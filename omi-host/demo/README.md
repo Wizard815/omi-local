@@ -14,7 +14,9 @@ show up in Omi. It prints a PASS/FAIL table and exits 1 on any FAIL.
 | send | the events heard in conversations, approved in the Calendar check; one approved with edits, one declined (`/v1/family-calendar/events`, `.../decline`) | `omi-event-<owner>-<conversation>-<n>` VEVENTs: SUMMARY, DTSTART, DTEND; the waiting and declined ones absent |
 | people | a second Omi user on the same server and CalDAV account, same date | their own calendar and task list; both day summaries on the server, neither overwritten; approve without a gateway; the collections API names who uses what; "Create new…" moves the tasks without deleting any |
 | auto | auto-approve off (default), then on at 00:00, run as the hourly job runs it | the waiting task stays off, then is approved and synced |
-| legacy | two people synced first with the pre-change sync code (`--legacy-ref`, default `origin/main`), both into the shared `Omi`/`Omi Tasks`; then the new code; then one of them makes lists of her own (Create new…) | they stay on the shared lists with their old UIDs, nothing duplicated or deleted; the shared `omi-day-<date>` becomes one summary each; her task, event and summary move (not copy) to her new lists; nothing of the other person's is touched |
+| legacy | two people synced first with the pre-change sync code (`--legacy-ref`, default `c9671643ea`, main before per-person CalDAV merged), both into the shared `Omi`/`Omi Tasks`; then the new code; then one of them makes lists of her own (Create new…) | they stay on the shared lists with their old UIDs, nothing duplicated or deleted; the shared `omi-day-<date>` becomes one summary each; her task, event and summary move (not copy) to her new lists; nothing of the other person's is touched |
+| edit | the approved day's title and text edited by hand (`PUT /day-reviews/{date}/text`) | still approved; the all-day VEVENT shows the new SUMMARY and DESCRIPTION; a rewrite answers 409 until confirmed |
+| all | a third person (no family-calendar gateway): Approve all of her day (`POST /v1/approvals/batch`), its Undo (`/batch/undo`), then Approve selected with the summary unticked | her task, event and summary on the server, then all three off again with the day back to its draft unchanged; then task and event on, the summary still waiting; a second Approve all approves only the summary |
 | send | a task created with no "Sync now" | it reaches the server through the scheduler's change pass (~20 s) |
 | receive | the phone completes, renames, re-dates (TZID), deletes a task; creates one and completes it | `GET /v1/action-items/{id}`; no duplicate VTODO on the phone |
 | receive | the phone creates, moves, renames, deletes an event | `GET /v1/device-calendar/events` |
@@ -51,7 +53,7 @@ Ports default to 8000, 8085, 9099, 5232, 6390, 4410 and 8791; `OMI_DEMO_<NAME>_P
 moves any of them (see the script's header). It takes about four minutes, most of it
 the two scheduler checks.
 
-Last run here (this branch): 75 passed, 0 failed, 0 gaps, 2 info.
+Last run here (this branch): 85 passed, 0 failed, 0 gaps, 2 info.
 
 ## Run it against the Docker stack
 
