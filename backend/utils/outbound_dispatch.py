@@ -28,7 +28,7 @@ DELAY_ENV = 'OMI_OUTBOUND_DAY_DELAY_SECONDS'
 DEFAULT_DELAY_SECONDS = 600.0
 APPROVED_BY_USER = 'user'
 APPROVED_BY_AUTO = 'auto'
-AUTO_NOT_SENT = 'Not sent: the day was approved automatically, and this connection sends only days you approve'
+AUTO_NOT_SENT = 'The day was approved automatically, and this connection sends only days you approve'
 
 
 def delay() -> timedelta:

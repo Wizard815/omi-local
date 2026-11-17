@@ -178,6 +178,7 @@ class _SendToAgentSheetState extends State<SendToAgentSheet> {
                 onChanged: _busy ? null : (v) => setState(() => _studioAgent = v ?? _studioAgent),
               ),
             ),
+          const SizedBox(height: OmiSpacing.sm),
           TextField(
             key: const Key('send_to_agent_prompt'),
             controller: _prompt,
@@ -188,7 +189,7 @@ class _SendToAgentSheetState extends State<SendToAgentSheet> {
               labelText: l10n.sendToAgentPrompt,
               hintText: l10n.sendToAgentPromptHint,
               filled: true,
-              fillColor: OmiColors.surface1,
+              fillColor: OmiColors.surface2,
               border: const OutlineInputBorder(borderRadius: OmiRadius.mdAll, borderSide: BorderSide.none),
             ),
           ),
@@ -245,23 +246,24 @@ class _SendToAgentSheetState extends State<SendToAgentSheet> {
               child: Text(_error!,
                   key: const Key('send_to_agent_error'), style: OmiType.footnote.copyWith(color: OmiColors.danger)),
             ),
-          Row(children: [
-            Expanded(
-              child: OmiButton.secondary(
-                key: const Key('send_to_agent_show_preview'),
-                label: previewCurrent ? l10n.sendToAgentPreviewAgain : l10n.sendToAgentShowPreview,
-                onPressed: _busy ? null : _showPreview,
-              ),
+          // Stacked: each label is a sentence and must not be cut off.
+          SizedBox(
+            width: double.infinity,
+            child: OmiButton.secondary(
+              key: const Key('send_to_agent_show_preview'),
+              label: previewCurrent ? l10n.sendToAgentPreviewAgain : l10n.sendToAgentShowPreview,
+              onPressed: _busy ? null : _showPreview,
             ),
-            const SizedBox(width: OmiSpacing.sm),
-            Expanded(
-              child: OmiButton(
-                key: const Key('send_to_agent_send'),
-                label: l10n.sendToAgentSend(_agentName(context, _target)),
-                onPressed: _busy || !previewCurrent ? null : _send,
-              ),
+          ),
+          const SizedBox(height: OmiSpacing.xs),
+          SizedBox(
+            width: double.infinity,
+            child: OmiButton(
+              key: const Key('send_to_agent_send'),
+              label: l10n.sendToAgentSend(_agentName(context, _target)),
+              onPressed: _busy || !previewCurrent ? null : _send,
             ),
-          ]),
+          ),
           if (!previewCurrent)
             Padding(
               padding: const EdgeInsets.only(top: OmiSpacing.xs),
