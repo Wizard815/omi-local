@@ -36,6 +36,7 @@ with 409 until the user confirms (``replace_edits``).
 from __future__ import annotations
 
 from utils.caldav import sync as caldav_sync
+from utils import outbound_dispatch
 import os
 import uuid
 from dataclasses import dataclass
@@ -429,6 +430,7 @@ def finalize(
     drop_ids: Sequence[str] = (),
     *,
     replace_edits: bool = False,
+    approved_by: str = outbound_dispatch.APPROVED_BY_USER,
 ) -> Dict[str, Any]:
     day = parse_date(date_str)
     tz_name = notification_db.get_user_time_zone(uid)
@@ -541,6 +543,9 @@ def finalize(
         undo['tags'] = retagged
         day_reviews_db.set_day_review(uid, date_str, review)
     caldav_sync.mark_dirty(uid)
+    # The user's OK: queue what their Connections send for this day (the wiki, Orb). Sent
+    # after the Undo window, and only while this approval stands (utils/outbound_worker.py).
+    outbound_dispatch.day_approved(uid, date_str, review, approved_by)
     return present({**review, 'date': date_str})
 
 
@@ -635,7 +640,13 @@ def bundle(uid: str, date_str: str) -> Dict[str, Any]:
     return prepare_draft(uid, date_str)
 
 
-def approve(uid: str, date_str: str, *, replace_edits: bool = False) -> Dict[str, Any]:
+def approve(
+    uid: str,
+    date_str: str,
+    *,
+    replace_edits: bool = False,
+    approved_by: str = outbound_dispatch.APPROVED_BY_USER,
+) -> Dict[str, Any]:
     """The user's OK on a draft: finalize the day with the draft's split and text. Starred
     clips stay (also ones starred after the draft was written); a conversation that came in
     since is rolled up too, and only then is the summary written again."""
@@ -649,7 +660,7 @@ def approve(uid: str, date_str: str, *, replace_edits: bool = False) -> Dict[str
     planned = set(review.get('kept_conversation_ids') or [])
     keep = [cid for cid in visible if cid in planned or cid in starred]
     drop = [cid for cid in (review.get('dropped_conversation_ids') or []) if cid in visible and cid not in keep]
-    return finalize(uid, date_str, keep, (), drop, replace_edits=replace_edits)
+    return finalize(uid, date_str, keep, (), drop, replace_edits=replace_edits, approved_by=approved_by)
 
 
 def favorite_section(uid: str, date_str: str, section_id: str, favorited: bool) -> Dict[str, Any]:
@@ -676,6 +687,7 @@ def favorite_section(uid: str, date_str: str, section_id: str, favorited: bool) 
             conversations_db.set_conversation_starred(uid, cid, True)
             _submit(_enrich_held, uid, cid)
         kept.extend(ids)
+        outbound_dispatch.conversations_kept(uid, ids)
     else:
         for cid in ids:
             conversations_db.set_conversation_starred(uid, cid, False)

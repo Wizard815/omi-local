@@ -28,6 +28,13 @@ def set_day_review(uid: str, date: str, data: Dict[str, Any]) -> None:
     _ref(uid, date).set({**data, 'date': date})
 
 
+def merge_day_review_fields(uid: str, date: str, fields: Dict[str, Any]) -> None:
+    """Record a side note on an existing review (e.g. where it was sent) without rewriting it."""
+    ref = _ref(uid, date)
+    if getattr(ref.get(), 'exists', False):
+        ref.set(fields, merge=True)
+
+
 def delete_day_review(uid: str, date: str) -> None:
     _ref(uid, date).delete()
 

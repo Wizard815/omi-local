@@ -79,6 +79,16 @@
       "basis": "planning-bound",
       "source": "Inherited from upstream BasedHardware/omi in the 2026-11-15 sync; upstream ships this name without a budget entry. In omi-local it runs against the bundled Firestore emulator (no billed reads) and only where upstream's batch-pipeline / Cloud Tasks workers are deployed, which omi-host's compose does not run. Planning envelope, not measured; re-review if omi-local ever deploys the batch pipeline against real Firestore.",
       "reviewed": "2026-11-15"
+    },
+    {
+      "collection": "outbound_work",
+      "owner": "omi-local Connections (backend/utils/outbound_worker.py)",
+      "unit": "one queued outbound item (an approved day to the wiki or Orb, a kept clip, an agent job being followed)",
+      "reads_per_unit_budget": 400,
+      "reads_per_day_budget": 200000,
+      "basis": "planning-bound",
+      "source": "The local scheduler streams the whole collection every 15 s (5,760 ticks/day); each document is read once per tick while it is open. An approved day waits 10 minutes (40 ticks) then costs ~4 reads to send; an agent job is followed for at most a few hours (Hermes poll 1 read + job doc 1 per tick). Planning envelope: a self-hosted household stack with <=30 open items at a time = 172,800 stream reads/day plus sends. Runs only where OMI_LOCAL_SCHEDULER=1 (omi-host), against the bundled Firestore emulator; never in upstream Cloud Run.",
+      "reviewed": "2026-11-17"
     }
   ],
   "dynamic": [
