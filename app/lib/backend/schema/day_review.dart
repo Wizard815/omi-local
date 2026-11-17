@@ -99,6 +99,10 @@ class DayReview {
   final DateTime? generatedAt;
   final int generationCount;
 
+  /// 'draft': written for the user to review (overnight, or "Summarize for me"); nothing sorted or
+  /// sent to a calendar yet. 'finalized': approved.
+  final String status;
+
   const DayReview({
     required this.date,
     required this.title,
@@ -113,7 +117,10 @@ class DayReview {
     this.droppedConversationIds = const [],
     this.generatedAt,
     this.generationCount = 0,
+    this.status = 'finalized',
   });
+
+  bool get isDraft => status == 'draft';
 
   /// Corrections the summary text does not reflect yet: unapplied paragraphs and
   /// highlights, plus redactions added since the last generation (until then
@@ -138,6 +145,7 @@ class DayReview {
         mergedGroups: (g.mergedGroups ?? const []).map((group) => group.conversationIds ?? const <String>[]).toList(),
         droppedConversationIds: g.droppedConversationIds ?? const [],
         generatedAt: g.generatedAt?.toLocal(),
+        status: g.status,
         generationCount: g.generationCount,
       );
 }

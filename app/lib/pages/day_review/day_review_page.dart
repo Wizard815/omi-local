@@ -4,7 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import 'package:omi/backend/http/api/day_reviews.dart';
+import 'package:omi/backend/http/api/approvals.dart';
 import 'package:omi/backend/schema/day_review.dart';
+import 'package:omi/pages/approvals/waiting_tasks_section.dart';
+import 'package:omi/providers/waiting_approval_controller.dart';
 import 'package:omi/pages/action_items/day_tasks_page.dart';
 import 'package:omi/pages/day_review/day_review_text_sheet.dart';
 import 'package:omi/pages/family_calendar/family_calendar_review_page.dart';
@@ -31,7 +34,11 @@ class DayReviewPage extends StatefulWidget {
   /// The day-review server calls; tests pass a fake.
   final DayReviewApi api;
 
-  const DayReviewPage({super.key, required this.date, this.api = const DayReviewApi()});
+  /// omi-local: the day's tasks Omi heard wait for the user's OK in "From this day".
+  final ApprovalsApi approvals;
+
+  const DayReviewPage(
+      {super.key, required this.date, this.api = const DayReviewApi(), this.approvals = const ApprovalsApi()});
 
   static String todayKey([DateTime? now]) => DateFormat('yyyy-MM-dd').format(now ?? DateTime.now());
 
@@ -53,10 +60,19 @@ class _DayReviewPageState extends State<DayReviewPage> {
   /// Sections whose conversation list is unfolded in the review.
   final Set<String> _openSections = {};
 
+  late final WaitingApprovalController _waiting = WaitingApprovalController(api: widget.approvals);
+
   @override
   void initState() {
     super.initState();
     _load();
+    _waiting.load();
+  }
+
+  @override
+  void dispose() {
+    _waiting.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -209,13 +225,29 @@ class _DayReviewPageState extends State<DayReviewPage> {
     });
   }
 
+  /// The user's OK on a draft: the day is finalized as the draft says (no new model call unless the
+  /// day changed), and only now does its summary go to the calendar.
+  Future<void> _approve() async {
+    final l10n = context.l10n;
+    await _busy(l10n.approvalApproving, () async {
+      final result = await widget.api.approve(widget.date);
+      if (!result.ok) {
+        if (mounted) AppSnackbar.showSnackbarError(result.error ?? l10n.dayReviewActionFailed);
+        return;
+      }
+      if (mounted) OmiFeedback.confirm(context, l10n.approvalDayApproved);
+      await _load();
+    });
+  }
+
   Future<void> _reopen() async {
     final l10n = context.l10n;
+    final draft = _day?.review?.isDraft ?? false;
     final confirmed = await showOmiConfirm(
       context,
-      title: l10n.dayReviewReopenTitle,
-      message: l10n.dayReviewReopenBody,
-      confirmLabel: l10n.dayReviewReopenAction,
+      title: draft ? l10n.approvalDraftSortTitle : l10n.dayReviewReopenTitle,
+      message: draft ? l10n.approvalDraftSortBody : l10n.approvalReopenBody,
+      confirmLabel: draft ? l10n.approvalDraftSortAction : l10n.dayReviewReopenAction,
       destructive: true,
     );
     if (!confirmed || !mounted) return;
@@ -317,7 +349,12 @@ class _DayReviewPageState extends State<DayReviewPage> {
               onSelected: (value) {
                 if (value == 'reopen') _reopen();
               },
-              itemBuilder: (_) => [PopupMenuItem(value: 'reopen', child: Text(l10n.dayReviewReopenAction))],
+              itemBuilder: (_) => [
+                PopupMenuItem(
+                  value: 'reopen',
+                  child: Text(review.isDraft ? l10n.approvalDraftSortAction : l10n.dayReviewReopenAction),
+                ),
+              ],
             ),
         ],
       ),
@@ -892,6 +929,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         OmiSectionHeader(l10n.dayReviewFromThisDay),
+        if (day != null) WaitingTasksSection(controller: _waiting, only: (c) => c.tasksOf(day)),
         OmiSettingsGroup(
           children: [
             if (day != null)
@@ -968,6 +1006,25 @@ class _DayReviewPageState extends State<DayReviewPage> {
                 const SizedBox(height: OmiSpacing.xxs),
                 Text(l10n.dayReviewEditHint, style: OmiType.caption.copyWith(color: OmiColors.textSecondary)),
               ],
+              if (review.isDraft) ...[
+                const SizedBox(height: OmiSpacing.sm),
+                Container(
+                  key: const Key('day_review_draft_notice'),
+                  padding: const EdgeInsets.all(OmiSpacing.sm),
+                  decoration: BoxDecoration(color: OmiColors.surface1, borderRadius: OmiRadius.mdAll),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.hourglass_top_rounded, size: 18, color: OmiColors.textSecondary),
+                      const SizedBox(width: OmiSpacing.xs),
+                      Expanded(
+                        child: Text(l10n.approvalDraftNotice,
+                            style: OmiType.footnote.copyWith(color: OmiColors.textSecondary)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: OmiSpacing.md),
               if (kept.isNotEmpty) ...[
                 _group(l10n.dayReviewKeptTitle(kept.length), [for (final c in kept) _conversationTile(c)],
@@ -1010,23 +1067,43 @@ class _DayReviewPageState extends State<DayReviewPage> {
             ],
           ),
         ),
-        if (review.pendingCorrectionCount > 0)
+        if (review.pendingCorrectionCount > 0 || review.isDraft)
           SafeArea(
             top: false,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(OmiSpacing.md, OmiSpacing.xxs, OmiSpacing.md, OmiSpacing.sm),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: OmiColors.accent,
-                    foregroundColor: OmiColors.surface0,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: const RoundedRectangleBorder(borderRadius: OmiRadius.lgAll),
-                  ),
-                  onPressed: _regenerate,
-                  child: Text(l10n.dayReviewApplyButton(review.pendingCorrectionCount)),
-                ),
+              child: Row(
+                children: [
+                  if (review.pendingCorrectionCount > 0)
+                    Expanded(
+                      child: review.isDraft
+                          ? OmiButton.secondary(
+                              key: const Key('day_review_apply'),
+                              label: l10n.dayReviewApplyButton(review.pendingCorrectionCount),
+                              onPressed: _regenerate,
+                            )
+                          : ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: OmiColors.accent,
+                                foregroundColor: OmiColors.surface0,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: const RoundedRectangleBorder(borderRadius: OmiRadius.lgAll),
+                              ),
+                              onPressed: _regenerate,
+                              child: Text(l10n.dayReviewApplyButton(review.pendingCorrectionCount)),
+                            ),
+                    ),
+                  if (review.pendingCorrectionCount > 0 && review.isDraft) const SizedBox(width: OmiSpacing.sm),
+                  if (review.isDraft)
+                    Expanded(
+                      child: OmiButton(
+                        key: const Key('day_review_approve'),
+                        label: l10n.approvalApproveDay,
+                        icon: Icons.check_rounded,
+                        onPressed: _approve,
+                      ),
+                    ),
+                ],
               ),
             ),
           ),

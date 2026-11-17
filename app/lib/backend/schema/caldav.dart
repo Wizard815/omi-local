@@ -16,8 +16,20 @@ class CalDavSettings {
   final bool pushConversationEvents;
   final bool pushConversations;
   final bool pullEvents;
+
+  /// 'list' (my tasks are to-dos in my own task list) or 'parent' (subtasks of one task named
+  /// after me in a list shared with others on the server).
+  final String taskMode;
+  final String ownerLabel;
+  final String suggestedCalendarName;
+  final String suggestedTasksName;
+  final String parentTaskName;
+
+  /// The bundled server: every Omi user on this server shares one CalDAV login.
+  final bool sharedAccount;
   final DateTime? lastSyncAt;
   final String lastError;
+  final Map<String, dynamic> lastReport;
 
   const CalDavSettings({
     required this.configured,
@@ -34,9 +46,20 @@ class CalDavSettings {
     this.pushConversationEvents = true,
     this.pushConversations = false,
     this.pullEvents = true,
+    this.taskMode = 'list',
+    this.ownerLabel = '',
+    this.suggestedCalendarName = '',
+    this.suggestedTasksName = '',
+    this.parentTaskName = '',
+    this.sharedAccount = false,
     this.lastSyncAt,
     this.lastError = '',
+    this.lastReport = const {},
   });
+
+  bool get parentMode => taskMode == 'parent';
+
+  int reportCount(String key) => (lastReport[key] as num?)?.toInt() ?? 0;
 
   factory CalDavSettings.fromGenerated(wire.GeneratedCalDavSettingsResponse g) => CalDavSettings(
         configured: g.configured,
@@ -53,8 +76,49 @@ class CalDavSettings {
         pushConversationEvents: g.pushConversationEvents,
         pushConversations: g.pushConversations,
         pullEvents: g.pullEvents,
+        taskMode: g.taskMode,
+        ownerLabel: g.ownerLabel,
+        suggestedCalendarName: g.suggestedCalendarName,
+        suggestedTasksName: g.suggestedTasksName,
+        parentTaskName: g.parentTaskName,
+        sharedAccount: g.sharedAccount,
         lastSyncAt: g.lastSyncAt?.toLocal(),
         lastError: g.lastError,
+        lastReport: g.lastReport ?? const {},
+      );
+}
+
+/// A calendar or task list on the CalDAV server, as the picker shows it.
+class CalDavCollection {
+  final String href;
+  final String name;
+  final List<String> components;
+
+  /// Other people on this Omi server whose sync uses it.
+  final List<String> usedBy;
+
+  /// 'calendar' and/or 'tasks' when it is this user's chosen one.
+  final List<String> mine;
+
+  const CalDavCollection({
+    required this.href,
+    this.name = '',
+    this.components = const [],
+    this.usedBy = const [],
+    this.mine = const [],
+  });
+
+  /// A server that lists no component set accepts everything.
+  bool supports(String component) => components.isEmpty || components.contains(component);
+  bool get isCalendar => supports('VEVENT');
+  bool get isTaskList => supports('VTODO');
+
+  factory CalDavCollection.fromGenerated(wire.GeneratedCalDavCollection g) => CalDavCollection(
+        href: g.href,
+        name: g.name,
+        components: g.components ?? const [],
+        usedBy: g.usedBy ?? const [],
+        mine: g.mine ?? const [],
       );
 }
 

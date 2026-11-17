@@ -31,7 +31,7 @@ class _DayReviewsListPageState extends State<DayReviewsListPage> {
   Future<void> _load() async {
     final results = await Future.wait([getPendingDayReviews(days: 14), listDayReviews()]);
     if (!mounted) return;
-    final pending = results[0] as ({String today, List<String> pendingDates})?;
+    final pending = results[0] as ({String today, List<String> pendingDates, List<String> draftDates})?;
     setState(() {
       _pending = (pending?.pendingDates ?? const <String>[]).reversed.toList();
       _reviews = results[1] as List<DayReview>;

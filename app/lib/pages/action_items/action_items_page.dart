@@ -32,6 +32,7 @@ import 'widgets/action_item_form_sheet.dart';
 import 'widgets/action_item_shimmer_widget.dart';
 import 'widgets/task_row_parts.dart';
 import 'widgets/task_suggestions_section.dart';
+import 'package:omi/pages/approvals/waiting_tasks_section.dart';
 
 // Re-export Goal from goals.dart for use in this file
 export 'package:omi/backend/http/api/goals.dart' show Goal;
@@ -101,6 +102,8 @@ class _ActionItemsPageState extends State<ActionItemsPage> with AutomaticKeepAli
       if (suggestions != null && !suggestions.loaded && suggestions.loadProblem == null) {
         suggestions.load();
       }
+      final waiting = provider.waiting;
+      if (waiting != null && !waiting.loaded) waiting.load();
       final phase = provider.apiViewState.phase;
       final typedResultAlreadyProjected = phase == ApiViewPhase.error ||
           phase == ApiViewPhase.locked ||
@@ -507,6 +510,7 @@ class _ActionItemsPageState extends State<ActionItemsPage> with AutomaticKeepAli
                               controller: _scrollController,
                               physics: const AlwaysScrollableScrollPhysics(),
                               slivers: [
+                                SliverToBoxAdapter(child: WaitingTasksSection(controller: provider.waiting)),
                                 SliverToBoxAdapter(child: TaskSuggestionsSection(controller: provider.suggestions)),
                                 SliverFillRemaining(
                                   hasScrollBody: false,
@@ -548,8 +552,9 @@ class _ActionItemsPageState extends State<ActionItemsPage> with AutomaticKeepAli
       controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
+        SliverToBoxAdapter(child: WaitingTasksSection(controller: provider.waiting)),
         SliverToBoxAdapter(child: TaskSuggestionsSection(controller: provider.suggestions)),
-        if (provider.suggestions?.items.isEmpty ?? true)
+        if ((provider.suggestions?.items.isEmpty ?? true) && (provider.waiting?.tasks.isEmpty ?? true))
           SliverFillRemaining(hasScrollBody: false, child: Center(child: _buildEmptyTasksContent())),
         SliverPadding(padding: EdgeInsets.only(bottom: homeBottomClearance(context))),
       ],
@@ -584,6 +589,7 @@ class _ActionItemsPageState extends State<ActionItemsPage> with AutomaticKeepAli
       slivers: [
         const SliverPadding(padding: EdgeInsets.only(top: 8)),
         SliverToBoxAdapter(child: _buildPageHeader(provider)),
+        if (!isSearching) SliverToBoxAdapter(child: WaitingTasksSection(controller: provider.waiting)),
         if (!isSearching) SliverToBoxAdapter(child: TaskSuggestionsSection(controller: provider.suggestions)),
 
         if (isSearching) ...[
