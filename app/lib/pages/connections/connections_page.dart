@@ -226,6 +226,7 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
           child: ExpansionTile(
             key: Key('connections_tile_${t.name}'),
+            expandedCrossAxisAlignment: CrossAxisAlignment.start,
             tilePadding: const EdgeInsets.symmetric(horizontal: OmiSpacing.md),
             childrenPadding: const EdgeInsets.fromLTRB(OmiSpacing.md, 0, OmiSpacing.md, OmiSpacing.md),
             title: Row(children: [
@@ -249,23 +250,24 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
                       ? (t.tokenFromEnv ? l10n.connectionsTokenFromServer : l10n.connectionsTokenSaved)
                       : l10n.connectionsTokenNone),
               ..._options(t),
-              Row(children: [
-                Expanded(
-                  child: OmiButton(
-                    key: Key('connections_save_${t.name}'),
-                    label: l10n.connectionsSave,
-                    onPressed: _busy ? null : () => _save(t.name),
-                  ),
+              // Stacked so "Test connection" is never cut off.
+              SizedBox(
+                width: double.infinity,
+                child: OmiButton(
+                  key: Key('connections_save_${t.name}'),
+                  label: l10n.connectionsSave,
+                  onPressed: _busy ? null : () => _save(t.name),
                 ),
-                const SizedBox(width: OmiSpacing.sm),
-                Expanded(
-                  child: OmiButton.secondary(
-                    key: Key('connections_test_${t.name}'),
-                    label: l10n.connectionsTest,
-                    onPressed: _busy ? null : () => _test(t.name),
-                  ),
+              ),
+              const SizedBox(height: OmiSpacing.xs),
+              SizedBox(
+                width: double.infinity,
+                child: OmiButton.secondary(
+                  key: Key('connections_test_${t.name}'),
+                  label: l10n.connectionsTest,
+                  onPressed: _busy ? null : () => _test(t.name),
                 ),
-              ]),
+              ),
               if (t.hasToken && !t.tokenFromEnv)
                 Align(
                   alignment: Alignment.centerLeft,

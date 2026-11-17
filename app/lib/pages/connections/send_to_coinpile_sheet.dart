@@ -122,7 +122,7 @@ class _SendToCoinpileSheetState extends State<SendToCoinpileSheet> {
         labelText: label,
         hintText: hint,
         filled: true,
-        fillColor: OmiColors.surface1,
+        fillColor: OmiColors.surface2,
         border: const OutlineInputBorder(borderRadius: OmiRadius.mdAll, borderSide: BorderSide.none),
       );
 
