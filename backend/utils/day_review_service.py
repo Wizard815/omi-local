@@ -25,6 +25,12 @@ which finalizes using the draft's text when the split is the one it was
 written for (no second model call). Only a finalized day reaches CalDAV;
 ``reopen`` turns it back into a draft, so its summary comes off the calendar
 until it is approved again.
+
+The user can also edit the text by hand (``edit_text``: the title and each
+section), on a draft or an approved day; an approved day's summary on the
+calendar follows. A rewrite by the model (``regenerate``, or approving a draft
+whose conversations changed since) would replace those edits, so it refuses
+with 409 until the user confirms (``replace_edits``).
 """
 
 from __future__ import annotations
@@ -55,10 +61,12 @@ from utils.day_review import (
     MaterialItem,
     build_prompt,
     compose_final_text,
+    join_paragraphs,
     parse_sections,
     redaction_quotes,
     render_material,
     sections_to_rows,
+    split_paragraphs,
 )
 from utils.llm.clients import get_llm
 from utils.llm.usage_tracker import Features, track_usage
@@ -66,12 +74,26 @@ from utils.llm.usage_tracker import Features, track_usage
 DAY_REVIEW_DATE_FIELD = 'day_review_date'
 DRAFT = 'draft'
 FINALIZED = 'finalized'
+EDITED_AT = 'edited_by_user_at'
+# The text as the model last wrote it, kept while the user's edits stand: an edit that puts it
+# back (Undo) is no edit any more. Stored only; the API never returns it.
+GENERATED_VERSION = 'generated_version'
+EDITS_WOULD_BE_REPLACED = 'Rewriting replaces the text you edited. Confirm to rewrite it anyway.'
+# An approval from a draft keeps what it changed, so Approve all's Undo can put the draft back
+# exactly (its split, corrections, text and edits) without a model call. Stored only.
+UNDO_APPROVAL = 'undo_approval'
+UNDO_APPROVAL_WINDOW = timedelta(minutes=10)
+_HIDDEN_FIELDS = (GENERATED_VERSION, UNDO_APPROVAL)
 _DAY_QUERY_LIMIT = 300
 _SNIPPET_CHARS = 240
 
 
 def is_draft(review: Optional[Dict[str, Any]]) -> bool:
     return bool(review) and str((review or {}).get('status') or FINALIZED) == DRAFT
+
+
+def has_user_edits(review: Optional[Dict[str, Any]]) -> bool:
+    return bool((review or {}).get(EDITED_AT))
 
 
 class DayReviewError(Exception):
@@ -274,8 +296,9 @@ def present(review: Dict[str, Any]) -> Dict[str, Any]:
                 'text': _apply_quotes(str(row.get('text') or ''), quotes),
             }
         )
+    shown = {k: v for k, v in review.items() if k not in _HIDDEN_FIELDS}
     return {
-        **review,
+        **shown,
         # The API keeps status 'finalized' (all a released app decodes) and says draft-ness in
         # `draft`; the stored document keeps status 'draft' until the day is approved.
         'status': FINALIZED,
@@ -292,9 +315,13 @@ def _apply_quotes(text: str, quotes: Sequence[str]) -> str:
     return apply_redactions(text, quotes)
 
 
-def _apply_section_tags(uid: str, conversations: Sequence[Conversation], sections: Sequence[Dict[str, Any]]) -> None:
-    """The model's section tags land on the conversations the section came from, on top of the user's own."""
+def _apply_section_tags(
+    uid: str, conversations: Sequence[Conversation], sections: Sequence[Dict[str, Any]]
+) -> Dict[str, List[str]]:
+    """The model's section tags land on the conversations the section came from, on top of the user's own.
+    Returns the tags each changed conversation had before."""
     by_id = {c.id: c for c in conversations}
+    previous: Dict[str, List[str]] = {}
     for row in sections:
         tags = list(row.get('tags') or [])
         if not tags:
@@ -303,14 +330,17 @@ def _apply_section_tags(uid: str, conversations: Sequence[Conversation], section
             conversation = by_id.get(cid)
             if conversation is None:
                 continue
-            merged = normalize_tags([*(getattr(conversation, 'tags', None) or []), *tags])
-            if merged != list(getattr(conversation, 'tags', None) or []):
+            before = list(getattr(conversation, 'tags', None) or [])
+            merged = normalize_tags([*before, *tags])
+            if merged != before:
                 try:
                     conversations_db.set_conversation_tags(uid, cid, merged)
+                    previous.setdefault(cid, before)
                 except Exception as error:  # noqa: BLE001 — tags are a bonus; the bundle stands without them
                     import logging
 
                     logging.getLogger(__name__).warning('day review: tagging %s failed: %s', cid, type(error).__name__)
+    return previous
 
 
 def get_day(uid: str, date_str: str, *, include_drafts: bool = True) -> Dict[str, Any]:
@@ -397,6 +427,8 @@ def finalize(
     keep_ids: Sequence[str],
     merge_groups: Sequence[Sequence[str]] = (),
     drop_ids: Sequence[str] = (),
+    *,
+    replace_edits: bool = False,
 ) -> Dict[str, Any]:
     day = parse_date(date_str)
     tz_name = notification_db.get_user_time_zone(uid)
@@ -429,6 +461,10 @@ def finalize(
     now = datetime.now(timezone.utc)
     corrections = list((draft or {}).get('corrections') or [])
     reused = draft_fits(draft, [c.id for c in rolled])
+    if not reused and rolled and has_user_edits(draft) and not replace_edits:
+        # The conversations changed since the user edited the draft: writing it for this split
+        # would throw their edits away, so ask first.
+        raise DayReviewError(409, EDITS_WOULD_BE_REPLACED)
     # Generate before mutating anything: a model failure leaves the day (and its draft) untouched.
     if reused and draft is not None:
         title = str(draft.get('title') or '')
@@ -471,6 +507,22 @@ def finalize(
         'generated_at': generated_at,
         'generation_count': generation_count,
     }
+    if reused and draft is not None and has_user_edits(draft):
+        # Approved as the user edited it: the edits stand (and a later rewrite still asks).
+        review[EDITED_AT] = draft.get(EDITED_AT)
+        if draft.get(GENERATED_VERSION):
+            review[GENERATED_VERSION] = draft.get(GENERATED_VERSION)
+    newly_starred = [c.id for c in keep if not getattr(c, 'starred', False)]
+    undo: Optional[Dict[str, Any]] = None
+    if draft is not None and not merge_groups:
+        # Approved from a draft: remember the draft as it was, for Approve all's Undo.
+        undo = {
+            'draft': {k: v for k, v in draft.items() if k not in ('date', UNDO_APPROVAL)},
+            'starred': newly_starred,
+            'tags': {},
+            'at': now,
+        }
+        review[UNDO_APPROVAL] = undo
     day_reviews_db.set_day_review(uid, date_str, review)
     for conversation in keep:
         if not getattr(conversation, 'starred', False):
@@ -484,9 +536,50 @@ def finalize(
     for conversation in [*dropped, *rolled]:
         conversations_db.update_conversation(uid, conversation.id, {DAY_REVIEW_DATE_FIELD: date_str})
         lifecycle.discard(uid, conversation.id)
-    _apply_section_tags(uid, rolled, sections)
+    retagged = _apply_section_tags(uid, rolled, sections)
+    if undo is not None and retagged:
+        undo['tags'] = retagged
+        day_reviews_db.set_day_review(uid, date_str, review)
     caldav_sync.mark_dirty(uid)
     return present({**review, 'date': date_str})
+
+
+def undo_approval(uid: str, date_str: str, *, now: Optional[datetime] = None) -> Dict[str, Any]:
+    """Approve all's Undo for a day: put the draft back exactly as it was before the approval
+    (split, corrections, text and hand edits; no model call). The rolled-up and dropped
+    conversations come back, the stars and tags the approval added come off, and the summary
+    comes off the calendar. Only for an approval made from a draft in the last few minutes;
+    a draft (already undone) is returned as it is."""
+    review = _require_review(uid, date_str)
+    if is_draft(review):
+        return present(review)
+    undo = review.get(UNDO_APPROVAL) or {}
+    at = undo.get('at')
+    now = now or datetime.now(timezone.utc)
+    if not undo.get('draft') or not isinstance(at, datetime) or now - _aware(at) > UNDO_APPROVAL_WINDOW:
+        raise DayReviewError(409, 'This approval can no longer be undone here; reopen the day instead')
+    for conversation_id in [
+        *(review.get('rolled_up_conversation_ids') or []),
+        *(review.get('dropped_conversation_ids') or []),
+    ]:
+        if not conversations_db.get_conversation(uid, conversation_id):
+            continue
+        lifecycle.restore_discarded(uid, conversation_id)
+        conversations_db.update_conversation(uid, conversation_id, {DAY_REVIEW_DATE_FIELD: None})
+    for conversation_id in undo.get('starred') or []:
+        if conversations_db.get_conversation(uid, conversation_id):
+            conversations_db.set_conversation_starred(uid, conversation_id, False)
+    for conversation_id, tags in (undo.get('tags') or {}).items():
+        if conversations_db.get_conversation(uid, conversation_id):
+            conversations_db.set_conversation_tags(uid, conversation_id, list(tags))
+    draft = dict(undo['draft'])
+    day_reviews_db.set_day_review(uid, date_str, draft)
+    caldav_sync.mark_dirty(uid)
+    return present({**draft, 'date': date_str})
+
+
+def _aware(value: datetime) -> datetime:
+    return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
 
 
 def draft_fits(draft: Optional[Dict[str, Any]], rolled_ids: Sequence[str]) -> bool:
@@ -542,7 +635,7 @@ def bundle(uid: str, date_str: str) -> Dict[str, Any]:
     return prepare_draft(uid, date_str)
 
 
-def approve(uid: str, date_str: str) -> Dict[str, Any]:
+def approve(uid: str, date_str: str, *, replace_edits: bool = False) -> Dict[str, Any]:
     """The user's OK on a draft: finalize the day with the draft's split and text. Starred
     clips stay (also ones starred after the draft was written); a conversation that came in
     since is rolled up too, and only then is the summary written again."""
@@ -556,7 +649,7 @@ def approve(uid: str, date_str: str) -> Dict[str, Any]:
     planned = set(review.get('kept_conversation_ids') or [])
     keep = [cid for cid in visible if cid in planned or cid in starred]
     drop = [cid for cid in (review.get('dropped_conversation_ids') or []) if cid in visible and cid not in keep]
-    return finalize(uid, date_str, keep, (), drop)
+    return finalize(uid, date_str, keep, (), drop, replace_edits=replace_edits)
 
 
 def favorite_section(uid: str, date_str: str, section_id: str, favorited: bool) -> Dict[str, Any]:
@@ -650,9 +743,12 @@ def delete_correction(uid: str, date_str: str, correction_id: str) -> Dict[str, 
     return present(review)
 
 
-def regenerate(uid: str, date_str: str) -> Dict[str, Any]:
-    """Rewrite the summary with every correction as ground truth."""
+def regenerate(uid: str, date_str: str, *, replace_edits: bool = False) -> Dict[str, Any]:
+    """Rewrite the summary with every correction as ground truth. Text the user edited by hand
+    is replaced only once they confirm (``replace_edits``); otherwise 409."""
     review = _require_review(uid, date_str)
+    if has_user_edits(review) and not replace_edits:
+        raise DayReviewError(409, EDITS_WOULD_BE_REPLACED)
     # The summary still covers a favorited section's conversations: favoriting
     # pulls them out of the bundle, it does not remove them from the day.
     rolled_ids = list(review.get('rolled_up_conversation_ids') or [])
@@ -695,10 +791,92 @@ def regenerate(uid: str, date_str: str) -> Dict[str, Any]:
             'updated_at': now,
             'generated_at': now,
             'generation_count': int(review.get('generation_count') or 0) + 1,
+            EDITED_AT: None,
         }
     )
+    review.pop(GENERATED_VERSION, None)
     day_reviews_db.set_day_review(uid, date_str, review)
     _apply_section_tags(uid, conversations, sections)
+    if not is_draft(review):
+        caldav_sync.mark_dirty(uid)  # an approved day's calendar summary follows the new text
+    return present(review)
+
+
+def _text_of(review: Dict[str, Any]) -> Dict[str, Any]:
+    """The user-editable text of a review: what ``edit_text`` changes and Undo puts back."""
+    return {
+        'title': str(review.get('title') or ''),
+        'summary_text': str(review.get('summary_text') or ''),
+        'sections': [
+            {'id': str(s.get('id') or ''), 'title': str(s.get('title') or ''), 'text': str(s.get('text') or '')}
+            for s in review.get('sections') or []
+        ],
+    }
+
+
+def _tidy(text: str) -> str:
+    """The user's text in the stored shape: paragraphs separated by one blank line."""
+    return join_paragraphs(split_paragraphs(text))
+
+
+def edit_text(
+    uid: str,
+    date_str: str,
+    *,
+    title: Optional[str] = None,
+    sections: Optional[Sequence[Dict[str, Any]]] = None,
+    summary_text: Optional[str] = None,
+) -> Dict[str, Any]:
+    """The user's own words for the summary: the title, and each section's heading and text (or,
+    for a summary without sections, its whole text). A draft stays a draft; an approved day stays
+    approved and its summary on the calendar follows. Corrections are left as they are (a
+    redaction stays enforced on the new text)."""
+    review = _require_review(uid, date_str)
+    before = _text_of(review)
+    rows = [dict(r) for r in review.get('sections') or []]
+    if sections is not None:
+        by_id = {str(r.get('id') or ''): r for r in rows}
+        unknown = [str(e.get('id')) for e in sections if str(e.get('id')) not in by_id]
+        if unknown:
+            raise DayReviewError(422, f'No such section: {", ".join(unknown[:5])}')
+        for edit in sections:
+            row = by_id[str(edit.get('id'))]
+            if edit.get('title') is not None:
+                row['title'] = str(edit['title']).strip()
+            if edit.get('text') is not None:
+                text = _tidy(str(edit['text']))
+                if not text:
+                    raise DayReviewError(422, 'A section cannot be empty')
+                row['text'] = text
+        review['sections'] = rows
+        review['summary_text'] = join_paragraphs(str(r.get('text') or '') for r in rows)
+    if summary_text is not None:
+        if rows:
+            raise DayReviewError(422, 'This summary has sections: edit the sections')
+        text = _tidy(summary_text)
+        if not text:
+            raise DayReviewError(422, 'The summary cannot be empty')
+        review['summary_text'] = text
+    if title is not None:
+        if not title.strip():
+            raise DayReviewError(422, 'The title cannot be empty')
+        review['title'] = title.strip()
+    after = _text_of(review)
+    if after == before:
+        return present(review)
+    now = datetime.now(timezone.utc)
+    if not has_user_edits(review):
+        review[GENERATED_VERSION] = before
+    if after == review.get(GENERATED_VERSION):
+        # Put back as the model wrote it (Undo): nothing of the user's would be lost to a rewrite.
+        review[EDITED_AT] = None
+        review.pop(GENERATED_VERSION, None)
+    else:
+        review[EDITED_AT] = now
+    review['updated_at'] = now
+    day_reviews_db.set_day_review(uid, date_str, review)
+    if not is_draft(review):
+        caldav_sync.mark_dirty(uid)
     return present(review)
 
 
@@ -722,6 +900,7 @@ def reopen(uid: str, date_str: str) -> Tuple[int, int]:
     if review.get('summary_text') or review.get('corrections'):
         draft = {**review, 'status': DRAFT, 'merged_groups': [], 'updated_at': datetime.now(timezone.utc)}
         draft.pop('approved_at', None)
+        draft.pop(UNDO_APPROVAL, None)
         day_reviews_db.set_day_review(uid, date_str, draft)
     else:
         day_reviews_db.delete_day_review(uid, date_str)

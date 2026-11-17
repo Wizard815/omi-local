@@ -407,3 +407,178 @@ def test_a_released_app_never_sees_a_draft(bundled, monkeypatch):
     assert reviews[DAY]['status'] == 'draft'  # stored as a draft
     review = service.finalize('u1', DAY, ['budget'])  # the old app's sort-and-summarize
     assert review['draft'] is False and len(llm.prompts) == 1  # same split as the draft: text reused
+
+
+# --- editing the text by hand (PUT /day-reviews/{date}/text) -------------------------------------
+
+
+@pytest.fixture
+def marks(monkeypatch):
+    marked = []
+    monkeypatch.setattr(service.caldav_sync, 'mark_dirty', lambda uid: marked.append(uid))
+    return marked
+
+
+def test_editing_a_draft_keeps_it_a_draft_and_pushes_nothing(bundled, marks):
+    convs, reviews, llm, submitted, tagged = bundled
+    service.prepare_draft('u1', DAY)
+    marks.clear()
+    review = service.edit_text(
+        'u1',
+        DAY,
+        title='  Coffee, lunch and mom  ',
+        sections=[{'id': 's2', 'title': 'Lunch with Dana', 'text': 'Lunch with Dana.\n\n\n\nShe got the job.'}],
+    )
+    assert review['draft'] is True and reviews[DAY]['status'] == 'draft'
+    assert review['title'] == 'Coffee, lunch and mom'
+    assert review['sections'][1]['title'] == 'Lunch with Dana'
+    assert review['sections'][1]['text'] == 'Lunch with Dana.\n\nShe got the job.'
+    # the body is the sections' text, so corrections keep anchoring on what the user reads
+    assert review['summary_text'] == (
+        'You talked shop over coffee.\n\nLunch with Dana.\n\nShe got the job.\n\nHallway noise, then mom called.'
+    )
+    assert review['edited_by_user_at'] is not None
+    assert 'generated_version' not in review  # stored only, never returned
+    assert marks == []  # a draft is not on the calendar
+
+
+def test_editing_an_approved_day_stays_approved_and_re_pushes_its_calendar_summary(bundled, marks):
+    convs, reviews, llm, submitted, tagged = bundled
+    service.prepare_draft('u1', DAY)
+    approved = service.approve('u1', DAY)
+    marks.clear()
+    review = service.edit_text('u1', DAY, sections=[{'id': 's1', 'text': 'Coffee with Sam.'}])
+    assert review['draft'] is False and reviews[DAY]['status'] == 'finalized'
+    assert reviews[DAY]['approved_at'] == approved['approved_at']
+    assert review['final_text'].startswith('Coffee with Sam.')
+    assert marks == ['u1']
+    # nothing changed: no write, no push
+    marks.clear()
+    service.edit_text('u1', DAY, sections=[{'id': 's1', 'text': 'Coffee with Sam.'}])
+    assert marks == []
+
+
+def test_edit_validates_sections_and_shape(bundled):
+    service.prepare_draft('u1', DAY)
+    with pytest.raises(service.DayReviewError) as e:
+        service.edit_text('u1', DAY, sections=[{'id': 'nope', 'text': 'x'}])
+    assert e.value.status_code == 422
+    with pytest.raises(service.DayReviewError) as e:
+        service.edit_text('u1', DAY, sections=[{'id': 's1', 'text': ' \n\n '}])
+    assert e.value.status_code == 422
+    with pytest.raises(service.DayReviewError) as e:
+        service.edit_text('u1', DAY, summary_text='All of it')  # a sectioned summary is edited by section
+    assert e.value.status_code == 422
+    with pytest.raises(service.DayReviewError) as e:
+        service.edit_text('u1', '2026-10-09', title='No review that day')
+    assert e.value.status_code == 404
+
+
+def test_a_summary_without_sections_is_edited_whole(world, marks):
+    convs, reviews, llm, submitted = world
+    reviews[DAY] = {'date': DAY, 'status': 'finalized', 'title': 'Old', 'summary_text': 'Old text.', 'sections': []}
+    review = service.edit_text('u1', DAY, summary_text='New text.\n\nSecond paragraph.')
+    assert review['summary_text'] == 'New text.\n\nSecond paragraph.' and marks == ['u1']
+
+
+def test_undo_puts_the_models_text_back_and_clears_the_edit_mark(bundled):
+    convs, reviews, llm, submitted, tagged = bundled
+    draft = service.prepare_draft('u1', DAY)
+    service.edit_text('u1', DAY, title='Mine', sections=[{'id': 's1', 'text': 'My words.'}])
+    undone = service.edit_text(
+        'u1',
+        DAY,
+        title=draft['title'],
+        sections=[{'id': s['id'], 'title': s['title'], 'text': s['text']} for s in draft['sections']],
+    )
+    assert undone['summary_text'] == draft['summary_text']
+    assert undone['edited_by_user_at'] is None and 'generated_version' not in reviews[DAY]
+
+
+def test_rewrite_asks_before_replacing_hand_edits(bundled, marks):
+    convs, reviews, llm, submitted, tagged = bundled
+    service.prepare_draft('u1', DAY)
+    service.approve('u1', DAY)
+    service.edit_text('u1', DAY, sections=[{'id': 's1', 'text': 'My own words.'}])
+    service.add_correction('u1', DAY, {'type': 'paragraph', 'text': 'Also: the dentist called.'})
+    prompts = len(llm.prompts)
+    with pytest.raises(service.DayReviewError) as e:
+        service.regenerate('u1', DAY)
+    assert e.value.status_code == 409 and e.value.message == service.EDITS_WOULD_BE_REPLACED
+    assert len(llm.prompts) == prompts and reviews[DAY]['sections'][0]['text'] == 'My own words.'
+    # confirmed: rewritten from the edited text (the earlier version the model rewrites), mark cleared
+    marks.clear()
+    review = service.regenerate('u1', DAY, replace_edits=True)
+    assert 'My own words.' in llm.prompts[-1]
+    assert review['edited_by_user_at'] is None and 'generated_version' not in reviews[DAY]
+    assert marks == ['u1']  # the approved day's calendar summary follows the rewrite
+    service.add_correction('u1', DAY, {'type': 'paragraph', 'text': 'One more.'})
+    service.regenerate('u1', DAY)  # no edits since: no question
+
+
+def test_approving_an_edited_draft_keeps_the_edits(bundled):
+    convs, reviews, llm, submitted, tagged = bundled
+    service.prepare_draft('u1', DAY)
+    service.edit_text('u1', DAY, sections=[{'id': 's3', 'text': 'Mom called about Sunday.'}])
+    approved = service.approve('u1', DAY)
+    assert approved['final_text'].endswith('Mom called about Sunday.') and len(llm.prompts) == 1
+    assert approved['edited_by_user_at'] is not None
+    with pytest.raises(service.DayReviewError) as e:
+        service.regenerate('u1', DAY)  # still the user's words: a rewrite still asks
+    assert e.value.status_code == 409
+
+
+def test_approving_an_edited_draft_whose_day_changed_asks_before_rewriting(bundled):
+    convs, reviews, llm, submitted, tagged = bundled
+    service.prepare_draft('u1', DAY)
+    service.edit_text('u1', DAY, title='My day')
+    convs['late'] = _conv('late', 22, 'Late chat')  # came in after the draft
+    with pytest.raises(service.DayReviewError) as e:
+        service.approve('u1', DAY)
+    assert e.value.status_code == 409 and reviews[DAY]['status'] == 'draft'
+    approved = service.approve('u1', DAY, replace_edits=True)
+    assert 'late' in approved['rolled_up_conversation_ids'] and approved.get('edited_by_user_at') is None
+
+
+# --- Approve all's Undo for a day: the draft comes back exactly -----------------------------------
+
+
+def test_undo_of_an_approval_restores_the_draft_exactly_without_a_model_call(bundled, marks, monkeypatch):
+    convs, reviews, llm, submitted, tagged = bundled
+    service.prepare_draft('u1', DAY)
+    service.add_correction('u1', DAY, {'type': 'paragraph', 'text': 'We also walked the dog.'})
+    service.favorite_section('u1', DAY, 's1', True)  # planned: held-a and held-b stay as starred clips
+    service.edit_text('u1', DAY, title='My Saturday')
+    draft = dict(reviews[DAY])
+    tags_before = {cid: list(c.get('tags') or []) for cid, c in convs.items()}
+    starred_before = {cid: c['starred'] for cid, c in convs.items()}
+    approved = service.approve('u1', DAY)
+    assert not approved['draft'] and 'undo_approval' not in approved  # stored, never returned
+    assert convs['call']['discarded'] and tagged
+    prompts = len(llm.prompts)
+    marks.clear()
+    restored = service.undo_approval('u1', DAY)
+    assert restored['draft'] is True and len(llm.prompts) == prompts
+    assert reviews[DAY] == draft  # split, corrections, edits and text exactly as before
+    assert not any(c['discarded'] for cid, c in convs.items() if cid != 'auto-discarded')
+    assert {cid: c['starred'] for cid, c in convs.items()} == starred_before
+    assert {cid: list(c.get('tags') or []) for cid, c in convs.items()} == tags_before
+    assert marks == ['u1']  # its summary comes off the calendar
+    assert service.undo_approval('u1', DAY)['draft'] is True  # undone already: unchanged
+    # approve again works as before
+    assert service.approve('u1', DAY)['title'] == 'My Saturday'
+
+
+def test_undo_of_an_approval_is_only_for_a_fresh_approval_from_a_draft(bundled):
+    convs, reviews, llm, submitted, tagged = bundled
+    service.prepare_draft('u1', DAY)
+    approved = service.approve('u1', DAY)
+    later = approved['approved_at'] + service.UNDO_APPROVAL_WINDOW + service.timedelta(seconds=1)
+    with pytest.raises(service.DayReviewError) as e:
+        service.undo_approval('u1', DAY, now=later)
+    assert e.value.status_code == 409 and reviews[DAY]['status'] == 'finalized'
+    # a day sorted by hand (never a draft) has no draft to go back to
+    reviews.clear()
+    service.finalize('u1', DAY, ['budget'])
+    with pytest.raises(service.DayReviewError):
+        service.undo_approval('u1', DAY)

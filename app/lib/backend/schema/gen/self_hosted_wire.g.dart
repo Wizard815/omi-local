@@ -201,6 +201,7 @@ class GeneratedDayReview {
   final String date;
   final bool draft;
   final List<String>? droppedConversationIds;
+  final DateTime? editedByUserAt;
   final String finalText;
   final DateTime? generatedAt;
   final int generationCount;
@@ -222,6 +223,7 @@ class GeneratedDayReview {
     required this.date,
     this.draft = false,
     this.droppedConversationIds,
+    this.editedByUserAt,
     this.finalText = "",
     this.generatedAt,
     this.generationCount = 0,
@@ -245,6 +247,7 @@ class GeneratedDayReview {
       date: _required(_readFieldValue<String>(_readField(json, const ["date"]), "date", _readString, requiredField: true, nullable: false), "date"),
       draft: _required(_readFieldValue<bool>(_readField(json, const ["draft"]), "draft", _readBool, requiredField: false, nullable: false, defaultValue: false), "draft"),
       droppedConversationIds: _readFieldValue<List<String>>(_readField(json, const ["dropped_conversation_ids"]), "dropped_conversation_ids", _readStringList, requiredField: false, nullable: true),
+      editedByUserAt: _readFieldValue<DateTime>(_readField(json, const ["edited_by_user_at"]), "edited_by_user_at", _readDateTime, requiredField: false, nullable: true),
       finalText: _required(_readFieldValue<String>(_readField(json, const ["final_text"]), "final_text", _readString, requiredField: false, nullable: false, defaultValue: ""), "final_text"),
       generatedAt: _readFieldValue<DateTime>(_readField(json, const ["generated_at"]), "generated_at", _readDateTime, requiredField: false, nullable: true),
       generationCount: _required(_readFieldValue<int>(_readField(json, const ["generation_count"]), "generation_count", _readInt, requiredField: false, nullable: false, defaultValue: 0), "generation_count"),
@@ -269,6 +272,7 @@ class GeneratedDayReview {
       'date': date,
       'draft': draft,
       'dropped_conversation_ids': droppedConversationIds,
+      'edited_by_user_at': editedByUserAt?.toUtc().toIso8601String(),
       'final_text': finalText,
       'generated_at': generatedAt?.toUtc().toIso8601String(),
       'generation_count': generationCount,
@@ -490,6 +494,62 @@ class GeneratedFavoriteDayReviewSectionRequest {
   Map<String, dynamic> toJson() {
     return {
       'favorited': favorited,
+    };
+  }
+}
+
+class GeneratedDayReviewSectionTextEdit {
+  final String id;
+  final String? text;
+  final String? title;
+
+  const GeneratedDayReviewSectionTextEdit({
+    required this.id,
+    this.text,
+    this.title,
+  });
+
+  factory GeneratedDayReviewSectionTextEdit.fromJson(Map<String, dynamic> json) {
+    return GeneratedDayReviewSectionTextEdit(
+      id: _required(_readFieldValue<String>(_readField(json, const ["id"]), "id", _readString, requiredField: true, nullable: false), "id"),
+      text: _readFieldValue<String>(_readField(json, const ["text"]), "text", _readString, requiredField: false, nullable: true),
+      title: _readFieldValue<String>(_readField(json, const ["title"]), "title", _readString, requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'text': text,
+      'title': title,
+    };
+  }
+}
+
+class GeneratedEditDayReviewTextRequest {
+  final List<GeneratedDayReviewSectionTextEdit>? sections;
+  final String? summaryText;
+  final String? title;
+
+  const GeneratedEditDayReviewTextRequest({
+    this.sections,
+    this.summaryText,
+    this.title,
+  });
+
+  factory GeneratedEditDayReviewTextRequest.fromJson(Map<String, dynamic> json) {
+    return GeneratedEditDayReviewTextRequest(
+      sections: _readFieldValue<List<GeneratedDayReviewSectionTextEdit>>(_readField(json, const ["sections"]), "sections", (value) => _readObjectList(value, GeneratedDayReviewSectionTextEdit.fromJson), requiredField: false, nullable: true),
+      summaryText: _readFieldValue<String>(_readField(json, const ["summary_text"]), "summary_text", _readString, requiredField: false, nullable: true),
+      title: _readFieldValue<String>(_readField(json, const ["title"]), "title", _readString, requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'sections': sections?.map((value) => value.toJson()).toList(),
+      'summary_text': summaryText,
+      'title': title,
     };
   }
 }

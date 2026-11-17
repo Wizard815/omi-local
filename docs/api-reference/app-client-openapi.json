@@ -4140,6 +4140,27 @@
         "title": "AppleHealthSyncResponse",
         "type": "object"
       },
+      "ApprovalEventRef": {
+        "properties": {
+          "conversation_id": {
+            "maxLength": 128,
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "event_idx": {
+            "maximum": 1000.0,
+            "minimum": 0.0,
+            "title": "Event Idx",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "conversation_id",
+          "event_idx"
+        ],
+        "title": "ApprovalEventRef",
+        "type": "object"
+      },
       "ApprovalSettings": {
         "properties": {
           "auto_approve": {
@@ -4162,6 +4183,118 @@
           }
         },
         "title": "ApprovalSettings",
+        "type": "object"
+      },
+      "ApproveBatchRequest": {
+        "properties": {
+          "all_waiting": {
+            "default": false,
+            "description": "Approve everything waiting (tasks, events, day summary drafts); the lists are ignored",
+            "title": "All Waiting",
+            "type": "boolean"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With all_waiting: only what is of this local day (the day review's \"From this day\")",
+            "title": "Date"
+          },
+          "day_dates": {
+            "description": "Days whose summary draft to approve",
+            "items": {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "type": "string"
+            },
+            "maxItems": 31,
+            "title": "Day Dates",
+            "type": "array"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/ApprovalEventRef"
+            },
+            "maxItems": 500,
+            "title": "Events",
+            "type": "array"
+          },
+          "task_ids": {
+            "items": {
+              "maxLength": 128,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 500,
+            "title": "Task Ids",
+            "type": "array"
+          }
+        },
+        "title": "ApproveBatchRequest",
+        "type": "object"
+      },
+      "ApproveBatchResponse": {
+        "properties": {
+          "day_count": {
+            "default": 0,
+            "title": "Day Count",
+            "type": "integer"
+          },
+          "day_dates": {
+            "description": "The days whose summary draft was approved",
+            "items": {
+              "type": "string"
+            },
+            "title": "Day Dates",
+            "type": "array"
+          },
+          "event_count": {
+            "default": 0,
+            "title": "Event Count",
+            "type": "integer"
+          },
+          "events": {
+            "description": "The events approved",
+            "items": {
+              "$ref": "#/components/schemas/ApprovalEventRef"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "failed_day_dates": {
+            "description": "Days that could not be approved now (they still wait in their day review)",
+            "items": {
+              "type": "string"
+            },
+            "title": "Failed Day Dates",
+            "type": "array"
+          },
+          "failed_event_count": {
+            "default": 0,
+            "description": "Events the family calendar refused; they still wait",
+            "title": "Failed Event Count",
+            "type": "integer"
+          },
+          "task_count": {
+            "default": 0,
+            "title": "Task Count",
+            "type": "integer"
+          },
+          "task_ids": {
+            "description": "The tasks approved: what Undo takes back",
+            "items": {
+              "type": "string"
+            },
+            "title": "Task Ids",
+            "type": "array"
+          }
+        },
+        "title": "ApproveBatchResponse",
         "type": "object"
       },
       "ApproveFamilyCalendarEventRequest": {
@@ -14721,6 +14854,19 @@
             "title": "Dropped Conversation Ids",
             "type": "array"
           },
+          "edited_by_user_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When the user last edited the text by hand; a rewrite asks before replacing it (then clears it)",
+            "title": "Edited By User At"
+          },
           "final_text": {
             "default": "",
             "description": "summary_text with redactions masked and pending corrections applied",
@@ -15128,6 +15274,47 @@
           "id"
         ],
         "title": "DayReviewSection",
+        "type": "object"
+      },
+      "DayReviewSectionTextEdit": {
+        "properties": {
+          "id": {
+            "description": "The section's id",
+            "maxLength": 64,
+            "title": "Id",
+            "type": "string"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Omitted keeps it; cannot be blank",
+            "title": "Text"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Omitted keeps it",
+            "title": "Title"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "DayReviewSectionTextEdit",
         "type": "object"
       },
       "DayReviewsListResponse": {
@@ -17220,6 +17407,54 @@
           "evidence"
         ],
         "title": "Edit",
+        "type": "object"
+      },
+      "EditDayReviewTextRequest": {
+        "properties": {
+          "sections": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DayReviewSectionTextEdit"
+                },
+                "maxItems": 100,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Changed sections; summary_text becomes the sections' text",
+            "title": "Sections"
+          },
+          "summary_text": {
+            "anyOf": [
+              {
+                "maxLength": 60000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The whole text, only for a summary without sections (written before sections existed)",
+            "title": "Summary Text"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Omitted keeps it",
+            "title": "Title"
+          }
+        },
+        "title": "EditDayReviewTextRequest",
         "type": "object"
       },
       "EditReceiptBlock": {
@@ -40646,6 +40881,69 @@
         "title": "UnapprovedPublicAppResponse",
         "type": "object"
       },
+      "UndoApproveBatchRequest": {
+        "properties": {
+          "day_dates": {
+            "items": {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "type": "string"
+            },
+            "maxItems": 31,
+            "title": "Day Dates",
+            "type": "array"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/ApprovalEventRef"
+            },
+            "maxItems": 500,
+            "title": "Events",
+            "type": "array"
+          },
+          "task_ids": {
+            "items": {
+              "maxLength": 128,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 500,
+            "title": "Task Ids",
+            "type": "array"
+          }
+        },
+        "title": "UndoApproveBatchRequest",
+        "type": "object"
+      },
+      "UndoApproveBatchResponse": {
+        "properties": {
+          "day_count": {
+            "default": 0,
+            "description": "Days back to their draft, as it was",
+            "title": "Day Count",
+            "type": "integer"
+          },
+          "event_count": {
+            "default": 0,
+            "description": "Events waiting again",
+            "title": "Event Count",
+            "type": "integer"
+          },
+          "kept_count": {
+            "default": 0,
+            "description": "Items that could not be taken back here",
+            "title": "Kept Count",
+            "type": "integer"
+          },
+          "task_count": {
+            "default": 0,
+            "description": "Tasks waiting again",
+            "title": "Task Count",
+            "type": "integer"
+          }
+        },
+        "title": "UndoApproveBatchResponse",
+        "type": "object"
+      },
       "UndoChatReceiptResponse": {
         "properties": {
           "block": {
@@ -42670,6 +42968,14 @@
             "description": "Heard events waiting in the Calendar check",
             "title": "Event Count",
             "type": "integer"
+          },
+          "events": {
+            "description": "Those events, soonest first (for choosing what to approve)",
+            "items": {
+              "$ref": "#/components/schemas/FamilyCalendarEvent"
+            },
+            "title": "Events",
+            "type": "array"
           },
           "task_count": {
             "default": 0,
@@ -47579,6 +47885,182 @@
           }
         ],
         "summary": "Get Waiting For Approval",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/v1/approvals/batch": {
+      "post": {
+        "description": "Approve all (``all_waiting``, optionally of one local ``date``) or the listed tasks, events and\nday summary drafts, as if the user tapped Approve on each. Answers with exactly what it approved.",
+        "operationId": "approve_batch_v1_approvals_batch_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveBatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApproveBatchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Approve Batch",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/v1/approvals/batch/undo": {
+      "post": {
+        "description": "Undo a batch, given exactly what it approved: tasks and events wait again and come off the\nuser's CalDAV server at the next sync; each day goes back to its draft as it was.",
+        "operationId": "undo_approve_batch_v1_approvals_batch_undo_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UndoApproveBatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UndoApproveBatchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Undo Approve Batch",
         "tags": [
           "approvals"
         ]
@@ -82051,6 +82533,18 @@
             }
           },
           {
+            "description": "The user confirmed that a rewrite may replace the text they edited by hand (without it, such a rewrite answers 409)",
+            "in": "query",
+            "name": "replace_edits",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "The user confirmed that a rewrite may replace the text they edited by hand (without it, such a rewrite answers 409)",
+              "title": "Replace Edits",
+              "type": "boolean"
+            }
+          },
+          {
             "in": "header",
             "name": "X-App-Platform",
             "required": false,
@@ -82431,6 +82925,18 @@
             }
           },
           {
+            "description": "The user confirmed that a rewrite may replace the text they edited by hand (without it, such a rewrite answers 409)",
+            "in": "query",
+            "name": "replace_edits",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "The user confirmed that a rewrite may replace the text they edited by hand (without it, such a rewrite answers 409)",
+              "title": "Replace Edits",
+              "type": "boolean"
+            }
+          },
+          {
             "in": "header",
             "name": "X-App-Platform",
             "required": false,
@@ -82515,7 +83021,7 @@
     },
     "/v1/users/day-reviews/{date}/regenerate": {
       "post": {
-        "description": "Rewrite the summary with every correction applied (redactions stay enforced).",
+        "description": "Rewrite the summary with every correction applied (redactions stay enforced). Text the user\nedited by hand is replaced only with ``replace_edits=true``; otherwise 409.",
         "operationId": "regenerate_day_review_v1_users_day_reviews__date__regenerate_post",
         "parameters": [
           {
@@ -82528,6 +83034,18 @@
               "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
               "title": "Date",
               "type": "string"
+            }
+          },
+          {
+            "description": "The user confirmed that a rewrite may replace the text they edited by hand (without it, such a rewrite answers 409)",
+            "in": "query",
+            "name": "replace_edits",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "The user confirmed that a rewrite may replace the text they edited by hand (without it, such a rewrite answers 409)",
+              "title": "Replace Edits",
+              "type": "boolean"
             }
           },
           {
@@ -82797,6 +83315,106 @@
           }
         ],
         "summary": "Favorite Day Review Section",
+        "tags": [
+          "day-reviews"
+        ]
+      }
+    },
+    "/v1/users/day-reviews/{date}/text": {
+      "put": {
+        "description": "Edit the summary's text by hand: the title, and each section's heading and text. A draft stays\na draft; an approved day stays approved and its summary on the calendar follows.",
+        "operationId": "edit_day_review_text_v1_users_day_reviews__date__text_put",
+        "parameters": [
+          {
+            "description": "Local calendar date, YYYY-MM-DD",
+            "in": "path",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "description": "Local calendar date, YYYY-MM-DD",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "title": "Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditDayReviewTextRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayReview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Edit Day Review Text",
         "tags": [
           "day-reviews"
         ]
