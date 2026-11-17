@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "images": [
+    {
+      "file": "001-mobile-android-waiting-approve-all.png",
+      "platform": "mobile-android",
+      "description": "Waiting for your OK: \"Approve all (6)\" (3 tasks, 2 heard dates, yesterday's summary draft), the \"Hold to choose what to approve\" hint and Choose…",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "002-mobile-android-hold-choose-all-ticked.png",
+      "platform": "mobile-android",
+      "description": "Holding Approve all opens the checklist: every task, event and the summary draft, all ticked",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "003-mobile-android-choose-summary-unticked.png",
+      "platform": "mobile-android",
+      "description": "The summary unticked: \"Approve selected (5)\"; the summary keeps waiting for its own OK",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "004-mobile-android-approved-selected-undo.png",
+      "platform": "mobile-android",
+      "description": "After Approve selected: tasks and events approved, the summary still waits; the toast offers Undo",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "005-mobile-android-approve-all-tap-undo.png",
+      "platform": "mobile-android",
+      "description": "One tap on Approve all: no question, everything approved; the toast offers Undo (it takes back exactly that batch)",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "006-mobile-android-from-this-day-approve-all.png",
+      "platform": "mobile-android",
+      "description": "Day review, From this day: \"Approve all from this day (5)\", including that day's summary draft",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "007-mobile-android-day-review-edit-text-button.png",
+      "platform": "mobile-android",
+      "description": "An approved day review: \"Edit text\" under the title",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "008-mobile-android-edit-text-sheet.png",
+      "platform": "mobile-android",
+      "description": "Edit text: the title and each section's heading and text, Save disabled until something changes",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "009-mobile-android-edit-text-typed.png",
+      "platform": "mobile-android",
+      "description": "Edited: the title and the first section; the sheet guards a stray close with Discard Changes?",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "010-mobile-android-edit-text-saved-undo.png",
+      "platform": "mobile-android",
+      "description": "Saved: the new title and text, \"Edited by you\", and Undo in the toast",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    }
+  ]
+}
