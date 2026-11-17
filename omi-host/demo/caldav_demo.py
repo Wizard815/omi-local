@@ -420,6 +420,27 @@ def new_event(uid: str, summary: str, start: datetime, minutes: int, location: s
     )
 
 
+# ---- the pre-change sync code (for the legacy section) ------------------------------------------
+
+LEGACY_SYNC_PATH = 'backend/utils/caldav/sync.py'
+
+
+def legacy_sync_ref(repo: str, ref: Optional[str] = None) -> str:
+    """The revision whose sync.py is the code from before per-person lists.
+
+    An explicit ``ref`` wins. Otherwise: the parent of the first commit that put ``owner_tag``
+    into sync.py, so the default keeps working once that change is on main (a fixed
+    ``origin/main`` stopped being "before" the day it merged). On a tree that never had the
+    change, its own HEAD is the old code."""
+    if ref:
+        return ref
+    added = subprocess.run(
+        ['git', '-C', repo, 'log', '--format=%H', '--reverse', '-S', 'owner_tag', '--', LEGACY_SYNC_PATH],
+        capture_output=True, text=True, check=True,
+    ).stdout.split()
+    return f'{added[0]}^' if added else 'HEAD'
+
+
 # ---- seeding -----------------------------------------------------------------------------------
 
 
@@ -1307,16 +1328,18 @@ class Demo:
         anything, fix the summary collision, and move Carol cleanly when she picks lists of her own."""
         if not self.args.seed_cmd:
             return
+        repo = os.path.join(HERE, '..', '..')
         try:
+            ref = legacy_sync_ref(repo, self.args.legacy_ref)
             source = subprocess.run(
-                ['git', '-C', os.path.join(HERE, '..', '..'), 'show', f'{self.args.legacy_ref}:backend/utils/caldav/sync.py'],
+                ['git', '-C', repo, 'show', f'{ref}:{LEGACY_SYNC_PATH}'],
                 capture_output=True, text=True, check=True,
             ).stdout
         except Exception as error:  # noqa: BLE001
             self.r.add('legacy', '-', 'old sync code available', False, f'{type(error).__name__}: {error}')
             return
         if 'owner_tag' in source:
-            self.r.add('legacy', '-', f'{self.args.legacy_ref} still has the old sync code', False, 'it already scopes UIDs')
+            self.r.add('legacy', '-', f'{ref} still has the old sync code', False, 'it already scopes UIDs')
             return
         date_str = self.day.isoformat()
         shared_tasks_path, shared_cal_path = f'{self.args.caldav_user}/omi-tasks/', f'{self.args.caldav_user}/omi/'
@@ -1334,6 +1357,11 @@ class Demo:
             uid = seed(self.args.seed_cmd, {'op': 'account', 'username': name, 'password': password})['uid']
             omi = Omi(self.args.backend)
             omi.login(name, password)
+            # Before the old code has run, the new one must not sync them: the backend syncs a
+            # user within seconds of a new task or an approved day (and on the full pass), which
+            # would give them lists of their own and make them a new user, not an existing one.
+            # The old code ignores this switch on the bundled server, as it ignored every choice.
+            omi.call('PUT', '/v1/caldav/settings', {'enabled': False})
             title = f"{who.title()}'s appointment"
             (cid,) = seed(
                 self.args.seed_cmd,
@@ -1353,6 +1381,8 @@ class Demo:
             report = seed(self.args.seed_cmd, {'op': 'legacy_sync', 'uid': people[who]['uid'], 'source': source})
             if report.get('error'):
                 self.r.add('legacy', '-', f'old sync for {who}', False, json.dumps(report)[:200])
+        for who in ('carol', 'dan'):  # the upgrade: the new code may sync them from here on
+            people[who]['omi'].call('PUT', '/v1/caldav/settings', {'enabled': True})
 
         def todos():
             return self.phone.objects(shared_tasks, 'VTODO')
@@ -1678,9 +1708,9 @@ def main() -> int:
     parser.add_argument('--keep-data', action='store_true', help='with --isolate: leave the run\'s calendars')
     parser.add_argument('--strict', action='store_true', help='GAP rows fail the run too')
     parser.add_argument(
-        # main before #14 (per-person CalDAV) merged; origin/main has the per-person sync since.
-        '--legacy-ref', default='c9671643ea',
-        help='git revision whose backend/utils/caldav/sync.py is the pre-change sync (builds an existing install\'s state)',
+        '--legacy-ref', default=None,
+        help='git revision whose backend/utils/caldav/sync.py is the pre-change sync (builds an existing install\'s state); '
+        'default: the parent of the commit that introduced per-person UIDs',
     )
     args = parser.parse_args()
     if not args.caldav_password:

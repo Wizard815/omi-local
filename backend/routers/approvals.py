@@ -22,7 +22,7 @@ from models.approvals import (
     WaitingForApprovalResponse,
 )
 from utils import auto_approve, day_review_service, task_approval
-from utils.executors import db_executor, run_blocking
+from utils.executors import db_executor, postprocess_executor, run_blocking
 from utils.other import endpoints as auth
 
 router = APIRouter()
@@ -38,8 +38,10 @@ async def get_waiting_for_approval(uid: str = Depends(auth.get_current_user_uid)
 async def approve_task(task_id: str, request: ApproveTaskRequest, uid: str = Depends(auth.get_current_user_uid)):
     """Approve one task, with the user's edits: it reaches their CalDAV list, reminders and task apps."""
     try:
+        # The approval also delivers what was held back (reminder, task app): awaited here so it
+        # is not lost to a restart, on the post-processing pool that does this work elsewhere.
         task = await run_blocking(
-            db_executor,
+            postprocess_executor,
             lambda: task_approval.approve(uid, task_id, description=request.description, due_at=request.due_at),
         )
     except task_approval.TaskApprovalError as error:
