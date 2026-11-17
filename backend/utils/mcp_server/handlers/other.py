@@ -581,16 +581,20 @@ def get_day_review(
     if not date:
         date = day_review_service.local_today(notification_db.get_user_time_zone(uid)).isoformat()
     try:
-        day = day_review_service.get_day(uid, date)
+        # A draft waits for the user's OK: an agent reading through MCP sees the day as not yet
+        # bundled, exactly as a released app does (nothing leaves Omi before the user approves).
+        day = day_review_service.get_day(uid, date, include_drafts=False)
     except day_review_service.DayReviewError as error:
         raise ToolExecutionError(error.message, code=-32602)
     except ValueError as error:
         raise ToolExecutionError(f'Invalid date: {error}', code=-32602)
     review = day.get('review')
+    if review and review.get('draft'):
+        review = None  # never hand an unapproved draft to an agent, whatever get_day returned
     compact_review = None
     if review:
         compact_review = {
-            'status': 'draft' if review.get('draft') else 'finalized',
+            'status': 'finalized',
             'title': review.get('title') or '',
             'text': review.get('final_text') or '',
             'tags': list(review.get('tags') or []),
@@ -628,7 +632,7 @@ def get_day_review(
     return {
         'date': date,
         # A draft (prepared overnight, waiting for the user's OK) is not a bundled day yet.
-        'bundled': compact_review is not None and compact_review['status'] == 'finalized',
+        'bundled': compact_review is not None,
         'review': compact_review,
         'conversations': conversations,
         'processing_count': day.get('processing_count', 0),
