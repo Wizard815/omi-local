@@ -940,6 +940,17 @@
             ],
             "title": "Apple Reminder Id"
           },
+          "approval": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval"
+          },
           "completed": {
             "title": "Completed",
             "type": "boolean"
@@ -4129,6 +4140,30 @@
         "title": "AppleHealthSyncResponse",
         "type": "object"
       },
+      "ApprovalSettings": {
+        "properties": {
+          "auto_approve": {
+            "default": false,
+            "description": "Approve what still waits from past days at `time`, as if the user tapped Approve. Off by default",
+            "title": "Auto Approve",
+            "type": "boolean"
+          },
+          "operator_disabled": {
+            "default": false,
+            "description": "The server operator turned auto-approve off",
+            "title": "Operator Disabled",
+            "type": "boolean"
+          },
+          "time": {
+            "default": "21:00",
+            "description": "The user's local time, HH:MM",
+            "title": "Time",
+            "type": "string"
+          }
+        },
+        "title": "ApprovalSettings",
+        "type": "object"
+      },
       "ApproveFamilyCalendarEventRequest": {
         "properties": {
           "conversation_id": {
@@ -4198,6 +4233,38 @@
           "event_idx"
         ],
         "title": "ApproveFamilyCalendarEventRequest",
+        "type": "object"
+      },
+      "ApproveTaskRequest": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Edited text; omitted keeps it",
+            "title": "Description"
+          },
+          "due_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Edited due date; omitted keeps it",
+            "title": "Due At"
+          }
+        },
+        "title": "ApproveTaskRequest",
         "type": "object"
       },
       "ArtifactDescriptor": {
@@ -6091,6 +6158,111 @@
         "title": "CalDavCalendar",
         "type": "object"
       },
+      "CalDavCollection": {
+        "properties": {
+          "components": {
+            "description": "VEVENT (calendar), VTODO (task list)",
+            "items": {
+              "type": "string"
+            },
+            "title": "Components",
+            "type": "array"
+          },
+          "href": {
+            "title": "Href",
+            "type": "string"
+          },
+          "mine": {
+            "description": "'calendar' and/or 'tasks' when it is this user's chosen one",
+            "items": {
+              "type": "string"
+            },
+            "title": "Mine",
+            "type": "array"
+          },
+          "name": {
+            "default": "",
+            "title": "Name",
+            "type": "string"
+          },
+          "used_by": {
+            "description": "Other people on this Omi server whose sync uses it (known from their syncs)",
+            "items": {
+              "type": "string"
+            },
+            "title": "Used By",
+            "type": "array"
+          }
+        },
+        "required": [
+          "href"
+        ],
+        "title": "CalDavCollection",
+        "type": "object"
+      },
+      "CalDavCollectionResponse": {
+        "properties": {
+          "collection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CalDavCollection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "default": "",
+            "title": "Error",
+            "type": "string"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "settings": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CalDavSettingsResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "CalDavCollectionResponse",
+        "type": "object"
+      },
+      "CalDavCollectionsResponse": {
+        "properties": {
+          "collections": {
+            "items": {
+              "$ref": "#/components/schemas/CalDavCollection"
+            },
+            "title": "Collections",
+            "type": "array"
+          },
+          "error": {
+            "default": "",
+            "title": "Error",
+            "type": "string"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "CalDavCollectionsResponse",
+        "type": "object"
+      },
       "CalDavSettingsResponse": {
         "properties": {
           "bundled": {
@@ -6141,6 +6313,18 @@
             ],
             "title": "Last Sync At"
           },
+          "owner_label": {
+            "default": "",
+            "description": "How the user is named in their collections and parent task",
+            "title": "Owner Label",
+            "type": "string"
+          },
+          "parent_task_name": {
+            "default": "",
+            "description": "The parent to-do in parent mode (\"<name>'s tasks\")",
+            "title": "Parent Task Name",
+            "type": "string"
+          },
           "pull_events": {
             "default": true,
             "title": "Pull Events",
@@ -6170,6 +6354,34 @@
             "default": true,
             "title": "Push Tasks",
             "type": "boolean"
+          },
+          "shared_account": {
+            "default": false,
+            "description": "The bundled server: every Omi user on this server shares one CalDAV login",
+            "title": "Shared Account",
+            "type": "boolean"
+          },
+          "suggested_calendar_name": {
+            "default": "",
+            "description": "Name for a new calendar of their own",
+            "title": "Suggested Calendar Name",
+            "type": "string"
+          },
+          "suggested_tasks_name": {
+            "default": "",
+            "description": "Name for a new task list of their own",
+            "title": "Suggested Tasks Name",
+            "type": "string"
+          },
+          "task_mode": {
+            "default": "list",
+            "description": "'list': my tasks are to-dos in my task list; 'parent': subtasks of one task named after me in a task list shared with others on the server",
+            "enum": [
+              "list",
+              "parent"
+            ],
+            "title": "Task Mode",
+            "type": "string"
           },
           "tasks_href": {
             "default": "",
@@ -6217,6 +6429,11 @@
             "title": "Events Pushed",
             "type": "integer"
           },
+          "events_removed": {
+            "default": 0,
+            "title": "Events Removed",
+            "type": "integer"
+          },
           "notes": {
             "description": "What the sync left out on purpose (tasks-only server)",
             "items": {
@@ -6242,6 +6459,11 @@
           "tasks_pushed": {
             "default": 0,
             "title": "Tasks Pushed",
+            "type": "integer"
+          },
+          "tasks_removed": {
+            "default": 0,
+            "title": "Tasks Removed",
             "type": "integer"
           }
         },
@@ -12510,6 +12732,36 @@
         "title": "CreateAnnouncementRequest",
         "type": "object"
       },
+      "CreateCalDavCollectionRequest": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "calendar",
+              "tasks"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "select": {
+            "default": true,
+            "description": "Make it my calendar / task list right away",
+            "title": "Select",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "kind"
+        ],
+        "title": "CreateCalDavCollectionRequest",
+        "type": "object"
+      },
       "CreateChatSessionRequest": {
         "properties": {
           "app_id": {
@@ -14419,6 +14671,19 @@
       },
       "DayReview": {
         "properties": {
+          "approved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When the user approved the day",
+            "title": "Approved At"
+          },
           "corrections": {
             "items": {
               "$ref": "#/components/schemas/DayReviewCorrection"
@@ -14504,8 +14769,12 @@
             "type": "array"
           },
           "status": {
-            "const": "finalized",
             "default": "finalized",
+            "description": "'draft': written for the user to review, nothing sorted or sent to a calendar yet",
+            "enum": [
+              "finalized",
+              "draft"
+            ],
             "title": "Status",
             "type": "string"
           },
@@ -15041,6 +15310,18 @@
           "event_idx"
         ],
         "title": "DeclineFamilyCalendarEventRequest",
+        "type": "object"
+      },
+      "DeclineTaskRequest": {
+        "properties": {
+          "declined": {
+            "default": true,
+            "description": "False takes a decline back: the task waits again",
+            "title": "Declined",
+            "type": "boolean"
+          }
+        },
+        "title": "DeclineTaskRequest",
         "type": "object"
       },
       "DefaultTaskIntegrationRequest": {
@@ -17814,6 +18095,12 @@
       },
       "Event": {
         "properties": {
+          "approved": {
+            "default": false,
+            "description": "Approved by the user (goes to their CalDAV calendar)",
+            "title": "Approved",
+            "type": "boolean"
+          },
           "calendar": {
             "anyOf": [
               {
@@ -18657,6 +18944,12 @@
       },
       "FamilyCalendarEvent": {
         "properties": {
+          "approved": {
+            "default": false,
+            "description": "The user said yes; on their CalDAV calendar once synced",
+            "title": "Approved",
+            "type": "boolean"
+          },
           "calendar": {
             "anyOf": [
               {
@@ -18795,6 +19088,12 @@
       },
       "FamilyCalendarResponse": {
         "properties": {
+          "caldav": {
+            "default": false,
+            "description": "Approved events also go to the user's CalDAV calendar (Settings, Calendar sync)",
+            "title": "Caldav",
+            "type": "boolean"
+          },
           "configured": {
             "description": "A family calendar is reachable (the ALLGlance gateway with dayGLANCE)",
             "title": "Configured",
@@ -23376,6 +23675,12 @@
             "title": "Sections",
             "type": "array"
           },
+          "status": {
+            "default": "finalized",
+            "description": "'draft' while it waits for the user's OK",
+            "title": "Status",
+            "type": "string"
+          },
           "tags": {
             "items": {
               "type": "string"
@@ -27424,8 +27729,16 @@
       },
       "PendingDayReviewsResponse": {
         "properties": {
+          "draft_dates": {
+            "description": "Of those, the dates with a summary draft ready to review",
+            "items": {
+              "type": "string"
+            },
+            "title": "Draft Dates",
+            "type": "array"
+          },
           "pending_dates": {
-            "description": "Recent local dates with unsorted conversations",
+            "description": "Recent local dates with unsorted conversations or a draft waiting for approval",
             "items": {
               "type": "string"
             },
@@ -37664,6 +37977,34 @@
         "title": "TaskAnswer",
         "type": "object"
       },
+      "TaskApprovalResponse": {
+        "properties": {
+          "error": {
+            "default": "",
+            "title": "Error",
+            "type": "string"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "task": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ActionItemResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "TaskApprovalResponse",
+        "type": "object"
+      },
       "TaskAssistantSettings": {
         "properties": {
           "allowed_apps": {
@@ -40527,6 +40868,36 @@
         "title": "UpdateAnnouncementRequest",
         "type": "object"
       },
+      "UpdateApprovalSettingsRequest": {
+        "properties": {
+          "auto_approve": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Approve"
+          },
+          "time": {
+            "anyOf": [
+              {
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "HH:MM, local",
+            "title": "Time"
+          }
+        },
+        "title": "UpdateApprovalSettingsRequest",
+        "type": "object"
+      },
       "UpdateAssistantSettingsRequest": {
         "properties": {
           "advice": {
@@ -40719,6 +41090,21 @@
               }
             ],
             "title": "Push Tasks"
+          },
+          "task_mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "list",
+                  "parent"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Mode"
           },
           "tasks_href": {
             "anyOf": [
@@ -42256,6 +42642,54 @@
         ],
         "title": "VoiceReadiness",
         "type": "string"
+      },
+      "WaitingForApprovalResponse": {
+        "properties": {
+          "auto_approve": {
+            "default": false,
+            "title": "Auto Approve",
+            "type": "boolean"
+          },
+          "auto_approve_time": {
+            "default": "",
+            "title": "Auto Approve Time",
+            "type": "string"
+          },
+          "draft_dates": {
+            "description": "Days with a summary draft to approve",
+            "items": {
+              "type": "string"
+            },
+            "title": "Draft Dates",
+            "type": "array"
+          },
+          "event_count": {
+            "default": 0,
+            "description": "Heard events waiting in the Calendar check",
+            "title": "Event Count",
+            "type": "integer"
+          },
+          "task_count": {
+            "default": 0,
+            "title": "Task Count",
+            "type": "integer"
+          },
+          "tasks": {
+            "description": "Tasks waiting for approval, oldest first",
+            "items": {
+              "$ref": "#/components/schemas/ActionItemResponse"
+            },
+            "title": "Tasks",
+            "type": "array"
+          },
+          "today": {
+            "default": "",
+            "title": "Today",
+            "type": "string"
+          }
+        },
+        "title": "WaitingForApprovalResponse",
+        "type": "object"
       },
       "WebSearchAssistantSettings": {
         "properties": {
@@ -47070,6 +47504,441 @@
         ]
       }
     },
+    "/v1/approvals": {
+      "get": {
+        "description": "Tasks waiting for approval, and how many heard events and day summary drafts wait too.",
+        "operationId": "get_waiting_for_approval_v1_approvals_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitingForApprovalResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Get Waiting For Approval",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/v1/approvals/settings": {
+      "get": {
+        "operationId": "get_approval_settings_v1_approvals_settings_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalSettings"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Get Approval Settings",
+        "tags": [
+          "approvals"
+        ]
+      },
+      "put": {
+        "description": "Turn auto-approve on or off and set its local time (off by default).",
+        "operationId": "update_approval_settings_v1_approvals_settings_put",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateApprovalSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalSettings"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Update Approval Settings",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/v1/approvals/tasks/{task_id}/approve": {
+      "post": {
+        "description": "Approve one task, with the user's edits: it reaches their CalDAV list, reminders and task apps.",
+        "operationId": "approve_task_v1_approvals_tasks__task_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveTaskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskApprovalResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Approve Task",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/v1/approvals/tasks/{task_id}/decline": {
+      "post": {
+        "description": "Decline one waiting task (kept, never synced), or (``declined: false``) undo that: it waits again.",
+        "operationId": "decline_task_v1_approvals_tasks__task_id__decline_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeclineTaskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskApprovalResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Decline Task",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
     "/v1/apps": {
       "get": {
         "operationId": "get_apps_v1_apps_get",
@@ -50185,6 +51054,170 @@
         "summary": "Retry",
         "tags": [
           "processing"
+        ]
+      }
+    },
+    "/v1/caldav/collections": {
+      "get": {
+        "description": "The server's calendars and task lists, marking the user's own and the ones other people on this\nOmi server sync into (one CalDAV login is shared by everyone on the bundled server).",
+        "operationId": "list_caldav_collections_v1_caldav_collections_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalDavCollectionsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "List Caldav Collections",
+        "tags": [
+          "caldav"
+        ]
+      },
+      "post": {
+        "description": "Make a new calendar or task list on the server and (by default) make it the user's own.",
+        "operationId": "create_caldav_collection_v1_caldav_collections_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCalDavCollectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalDavCollectionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Create Caldav Collection",
+        "tags": [
+          "caldav"
         ]
       }
     },
@@ -62703,7 +63736,7 @@
     },
     "/v1/family-calendar/events": {
       "post": {
-        "description": "Put one reviewed event on the family calendar, with the user's edits. The only path that writes one.",
+        "description": "Approve one reviewed event, with the user's edits: onto the family calendar when there is one,\nand onto the user's CalDAV calendar at the next sync. The only path that approves one.",
         "operationId": "approve_family_calendar_event_v1_family_calendar_events_post",
         "parameters": [
           {
@@ -80974,9 +82007,99 @@
         ]
       }
     },
+    "/v1/users/day-reviews/{date}/approve": {
+      "post": {
+        "description": "Approve the day's draft: finalize with its split and text (no new model call unless the day changed).\nOnly an approved day's summary goes to the user's calendar.",
+        "operationId": "approve_day_review_v1_users_day_reviews__date__approve_post",
+        "parameters": [
+          {
+            "description": "Local calendar date, YYYY-MM-DD",
+            "in": "path",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "description": "Local calendar date, YYYY-MM-DD",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "title": "Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayReview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Approve Day Review",
+        "tags": [
+          "day-reviews"
+        ]
+      }
+    },
     "/v1/users/day-reviews/{date}/bundle": {
       "post": {
-        "description": "Hands-off review: starred conversations stay, every other one is rolled into one sectioned day summary.",
+        "description": "Hands-off review as a draft: starred conversations would stay, every other one is written into one\nsectioned day summary. Nothing is sorted or sent to a calendar until the day is approved.",
         "operationId": "bundle_day_v1_users_day_reviews__date__bundle_post",
         "parameters": [
           {
@@ -81456,7 +82579,7 @@
     },
     "/v1/users/day-reviews/{date}/reopen": {
       "post": {
-        "description": "Undo the review: rolled-up and dropped conversations come back, the summary is deleted. Merges stay.",
+        "description": "Undo the approval: rolled-up and dropped conversations come back and the summary becomes a draft again\n(off the calendar until re-approved). Reopening a draft discards it. Merges stay.",
         "operationId": "reopen_day_review_v1_users_day_reviews__date__reopen_post",
         "parameters": [
           {

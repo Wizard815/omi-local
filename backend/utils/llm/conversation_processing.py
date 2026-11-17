@@ -630,6 +630,7 @@ def _finish_shaped_notes(
     for event in structured.events:
         event.duration = min(event.duration, 180)
         event.created = False
+        event.approved = False  # omi-local: only the user approves an event (Calendar check)
     structured.overview = render_sections_markdown(structured.sections) or structured.overview
     # Provisional meeting identities ride the parsed structure to the save seam
     # as server-only context (outside the client/model schema): roster entries,

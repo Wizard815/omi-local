@@ -19,9 +19,9 @@ construction): those must not re-buy anything.
 from __future__ import annotations
 
 # omi-local: upstream's notes-4 plus the fork's reviewed-event fields (calendar, external_id,
-# declined) on the Event output schema. A later upstream bump replaces this with its own
-# version; re-apply the omi-local suffix then.
-NOTES_PROMPT_VERSION = 'notes-4-omi-local'
+# declined, approved) on the Event output schema. A later upstream bump replaces this with its
+# own version; re-apply the omi-local suffix then.
+NOTES_PROMPT_VERSION = 'notes-4-omi-local-2'
 # The scaled-detail change leaves short and switch-off packets byte-identical.
 # Accept their notes-3 checkpoints with identical routing, dependencies and inputs.
 NOTES_UNSCALED_PREVIOUS_VERSION = 'notes-3'

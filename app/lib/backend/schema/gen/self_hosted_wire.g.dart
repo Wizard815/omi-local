@@ -195,6 +195,7 @@ class GeneratedDayReviewSection {
 }
 
 class GeneratedDayReview {
+  final DateTime? approvedAt;
   final List<GeneratedDayReviewCorrection>? corrections;
   final DateTime? createdAt;
   final String date;
@@ -214,6 +215,7 @@ class GeneratedDayReview {
   final DateTime? updatedAt;
 
   const GeneratedDayReview({
+    this.approvedAt,
     this.corrections,
     this.createdAt,
     required this.date,
@@ -235,6 +237,7 @@ class GeneratedDayReview {
 
   factory GeneratedDayReview.fromJson(Map<String, dynamic> json) {
     return GeneratedDayReview(
+      approvedAt: _readFieldValue<DateTime>(_readField(json, const ["approved_at"]), "approved_at", _readDateTime, requiredField: false, nullable: true),
       corrections: _readFieldValue<List<GeneratedDayReviewCorrection>>(_readField(json, const ["corrections"]), "corrections", (value) => _readObjectList(value, GeneratedDayReviewCorrection.fromJson), requiredField: false, nullable: true),
       createdAt: _readFieldValue<DateTime>(_readField(json, const ["created_at"]), "created_at", _readDateTime, requiredField: false, nullable: true),
       date: _required(_readFieldValue<String>(_readField(json, const ["date"]), "date", _readString, requiredField: true, nullable: false), "date"),
@@ -257,6 +260,7 @@ class GeneratedDayReview {
 
   Map<String, dynamic> toJson() {
     return {
+      'approved_at': approvedAt?.toUtc().toIso8601String(),
       'corrections': corrections?.map((value) => value.toJson()).toList(),
       'created_at': createdAt?.toUtc().toIso8601String(),
       'date': date,
@@ -411,16 +415,19 @@ class GeneratedDayReviewsListResponse {
 }
 
 class GeneratedPendingDayReviewsResponse {
+  final List<String>? draftDates;
   final List<String>? pendingDates;
   final String today;
 
   const GeneratedPendingDayReviewsResponse({
+    this.draftDates,
     this.pendingDates,
     required this.today,
   });
 
   factory GeneratedPendingDayReviewsResponse.fromJson(Map<String, dynamic> json) {
     return GeneratedPendingDayReviewsResponse(
+      draftDates: _readFieldValue<List<String>>(_readField(json, const ["draft_dates"]), "draft_dates", _readStringList, requiredField: false, nullable: true),
       pendingDates: _readFieldValue<List<String>>(_readField(json, const ["pending_dates"]), "pending_dates", _readStringList, requiredField: false, nullable: true),
       today: _required(_readFieldValue<String>(_readField(json, const ["today"]), "today", _readString, requiredField: true, nullable: false), "today"),
     );
@@ -428,6 +435,7 @@ class GeneratedPendingDayReviewsResponse {
 
   Map<String, dynamic> toJson() {
     return {
+      'draft_dates': draftDates,
       'pending_dates': pendingDates,
       'today': today,
     };
@@ -555,12 +563,18 @@ class GeneratedCalDavSettingsResponse {
   final String lastError;
   final Map<String, dynamic>? lastReport;
   final DateTime? lastSyncAt;
+  final String ownerLabel;
+  final String parentTaskName;
   final bool pullEvents;
   final bool pullTasks;
   final bool pushConversationEvents;
   final bool pushConversations;
   final bool pushDaySummaries;
   final bool pushTasks;
+  final bool sharedAccount;
+  final String suggestedCalendarName;
+  final String suggestedTasksName;
+  final String taskMode;
   final String tasksHref;
   final String url;
   final String username;
@@ -574,12 +588,18 @@ class GeneratedCalDavSettingsResponse {
     this.lastError = "",
     this.lastReport,
     this.lastSyncAt,
+    this.ownerLabel = "",
+    this.parentTaskName = "",
     this.pullEvents = true,
     this.pullTasks = true,
     this.pushConversationEvents = true,
     this.pushConversations = false,
     this.pushDaySummaries = true,
     this.pushTasks = true,
+    this.sharedAccount = false,
+    this.suggestedCalendarName = "",
+    this.suggestedTasksName = "",
+    this.taskMode = "list",
     this.tasksHref = "",
     this.url = "",
     this.username = "",
@@ -595,12 +615,18 @@ class GeneratedCalDavSettingsResponse {
       lastError: _required(_readFieldValue<String>(_readField(json, const ["last_error"]), "last_error", _readString, requiredField: false, nullable: false, defaultValue: ""), "last_error"),
       lastReport: _readFieldValue<Map<String, dynamic>>(_readField(json, const ["last_report"]), "last_report", _readMap, requiredField: false, nullable: true),
       lastSyncAt: _readFieldValue<DateTime>(_readField(json, const ["last_sync_at"]), "last_sync_at", _readDateTime, requiredField: false, nullable: true),
+      ownerLabel: _required(_readFieldValue<String>(_readField(json, const ["owner_label"]), "owner_label", _readString, requiredField: false, nullable: false, defaultValue: ""), "owner_label"),
+      parentTaskName: _required(_readFieldValue<String>(_readField(json, const ["parent_task_name"]), "parent_task_name", _readString, requiredField: false, nullable: false, defaultValue: ""), "parent_task_name"),
       pullEvents: _required(_readFieldValue<bool>(_readField(json, const ["pull_events"]), "pull_events", _readBool, requiredField: false, nullable: false, defaultValue: true), "pull_events"),
       pullTasks: _required(_readFieldValue<bool>(_readField(json, const ["pull_tasks"]), "pull_tasks", _readBool, requiredField: false, nullable: false, defaultValue: true), "pull_tasks"),
       pushConversationEvents: _required(_readFieldValue<bool>(_readField(json, const ["push_conversation_events"]), "push_conversation_events", _readBool, requiredField: false, nullable: false, defaultValue: true), "push_conversation_events"),
       pushConversations: _required(_readFieldValue<bool>(_readField(json, const ["push_conversations"]), "push_conversations", _readBool, requiredField: false, nullable: false, defaultValue: false), "push_conversations"),
       pushDaySummaries: _required(_readFieldValue<bool>(_readField(json, const ["push_day_summaries"]), "push_day_summaries", _readBool, requiredField: false, nullable: false, defaultValue: true), "push_day_summaries"),
       pushTasks: _required(_readFieldValue<bool>(_readField(json, const ["push_tasks"]), "push_tasks", _readBool, requiredField: false, nullable: false, defaultValue: true), "push_tasks"),
+      sharedAccount: _required(_readFieldValue<bool>(_readField(json, const ["shared_account"]), "shared_account", _readBool, requiredField: false, nullable: false, defaultValue: false), "shared_account"),
+      suggestedCalendarName: _required(_readFieldValue<String>(_readField(json, const ["suggested_calendar_name"]), "suggested_calendar_name", _readString, requiredField: false, nullable: false, defaultValue: ""), "suggested_calendar_name"),
+      suggestedTasksName: _required(_readFieldValue<String>(_readField(json, const ["suggested_tasks_name"]), "suggested_tasks_name", _readString, requiredField: false, nullable: false, defaultValue: ""), "suggested_tasks_name"),
+      taskMode: _required(_readFieldValue<String>(_readField(json, const ["task_mode"]), "task_mode", _readString, requiredField: false, nullable: false, defaultValue: "list"), "task_mode"),
       tasksHref: _required(_readFieldValue<String>(_readField(json, const ["tasks_href"]), "tasks_href", _readString, requiredField: false, nullable: false, defaultValue: ""), "tasks_href"),
       url: _required(_readFieldValue<String>(_readField(json, const ["url"]), "url", _readString, requiredField: false, nullable: false, defaultValue: ""), "url"),
       username: _required(_readFieldValue<String>(_readField(json, const ["username"]), "username", _readString, requiredField: false, nullable: false, defaultValue: ""), "username"),
@@ -617,12 +643,18 @@ class GeneratedCalDavSettingsResponse {
       'last_error': lastError,
       'last_report': lastReport,
       'last_sync_at': lastSyncAt?.toUtc().toIso8601String(),
+      'owner_label': ownerLabel,
+      'parent_task_name': parentTaskName,
       'pull_events': pullEvents,
       'pull_tasks': pullTasks,
       'push_conversation_events': pushConversationEvents,
       'push_conversations': pushConversations,
       'push_day_summaries': pushDaySummaries,
       'push_tasks': pushTasks,
+      'shared_account': sharedAccount,
+      'suggested_calendar_name': suggestedCalendarName,
+      'suggested_tasks_name': suggestedTasksName,
+      'task_mode': taskMode,
       'tasks_href': tasksHref,
       'url': url,
       'username': username,
@@ -640,6 +672,7 @@ class GeneratedUpdateCalDavSettingsRequest {
   final bool? pushConversations;
   final bool? pushDaySummaries;
   final bool? pushTasks;
+  final String? taskMode;
   final String? tasksHref;
   final String? url;
   final String? username;
@@ -654,6 +687,7 @@ class GeneratedUpdateCalDavSettingsRequest {
     this.pushConversations,
     this.pushDaySummaries,
     this.pushTasks,
+    this.taskMode,
     this.tasksHref,
     this.url,
     this.username,
@@ -670,6 +704,7 @@ class GeneratedUpdateCalDavSettingsRequest {
       pushConversations: _readFieldValue<bool>(_readField(json, const ["push_conversations"]), "push_conversations", _readBool, requiredField: false, nullable: true),
       pushDaySummaries: _readFieldValue<bool>(_readField(json, const ["push_day_summaries"]), "push_day_summaries", _readBool, requiredField: false, nullable: true),
       pushTasks: _readFieldValue<bool>(_readField(json, const ["push_tasks"]), "push_tasks", _readBool, requiredField: false, nullable: true),
+      taskMode: _readFieldValue<String>(_readField(json, const ["task_mode"]), "task_mode", _readString, requiredField: false, nullable: true),
       tasksHref: _readFieldValue<String>(_readField(json, const ["tasks_href"]), "tasks_href", _readString, requiredField: false, nullable: true),
       url: _readFieldValue<String>(_readField(json, const ["url"]), "url", _readString, requiredField: false, nullable: true),
       username: _readFieldValue<String>(_readField(json, const ["username"]), "username", _readString, requiredField: false, nullable: true),
@@ -687,6 +722,7 @@ class GeneratedUpdateCalDavSettingsRequest {
       'push_conversations': pushConversations,
       'push_day_summaries': pushDaySummaries,
       'push_tasks': pushTasks,
+      'task_mode': taskMode,
       'tasks_href': tasksHref,
       'url': url,
       'username': username,
@@ -755,22 +791,26 @@ class GeneratedCalDavSyncResponse {
   final List<String>? errors;
   final int eventsPulled;
   final int eventsPushed;
+  final int eventsRemoved;
   final List<String>? notes;
   final bool ok;
   final int tasksImported;
   final int tasksPulled;
   final int tasksPushed;
+  final int tasksRemoved;
 
   const GeneratedCalDavSyncResponse({
     this.error = "",
     this.errors,
     this.eventsPulled = 0,
     this.eventsPushed = 0,
+    this.eventsRemoved = 0,
     this.notes,
     required this.ok,
     this.tasksImported = 0,
     this.tasksPulled = 0,
     this.tasksPushed = 0,
+    this.tasksRemoved = 0,
   });
 
   factory GeneratedCalDavSyncResponse.fromJson(Map<String, dynamic> json) {
@@ -779,11 +819,13 @@ class GeneratedCalDavSyncResponse {
       errors: _readFieldValue<List<String>>(_readField(json, const ["errors"]), "errors", _readStringList, requiredField: false, nullable: true),
       eventsPulled: _required(_readFieldValue<int>(_readField(json, const ["events_pulled"]), "events_pulled", _readInt, requiredField: false, nullable: false, defaultValue: 0), "events_pulled"),
       eventsPushed: _required(_readFieldValue<int>(_readField(json, const ["events_pushed"]), "events_pushed", _readInt, requiredField: false, nullable: false, defaultValue: 0), "events_pushed"),
+      eventsRemoved: _required(_readFieldValue<int>(_readField(json, const ["events_removed"]), "events_removed", _readInt, requiredField: false, nullable: false, defaultValue: 0), "events_removed"),
       notes: _readFieldValue<List<String>>(_readField(json, const ["notes"]), "notes", _readStringList, requiredField: false, nullable: true),
       ok: _required(_readFieldValue<bool>(_readField(json, const ["ok"]), "ok", _readBool, requiredField: true, nullable: false), "ok"),
       tasksImported: _required(_readFieldValue<int>(_readField(json, const ["tasks_imported"]), "tasks_imported", _readInt, requiredField: false, nullable: false, defaultValue: 0), "tasks_imported"),
       tasksPulled: _required(_readFieldValue<int>(_readField(json, const ["tasks_pulled"]), "tasks_pulled", _readInt, requiredField: false, nullable: false, defaultValue: 0), "tasks_pulled"),
       tasksPushed: _required(_readFieldValue<int>(_readField(json, const ["tasks_pushed"]), "tasks_pushed", _readInt, requiredField: false, nullable: false, defaultValue: 0), "tasks_pushed"),
+      tasksRemoved: _required(_readFieldValue<int>(_readField(json, const ["tasks_removed"]), "tasks_removed", _readInt, requiredField: false, nullable: false, defaultValue: 0), "tasks_removed"),
     );
   }
 
@@ -793,16 +835,143 @@ class GeneratedCalDavSyncResponse {
       'errors': errors,
       'events_pulled': eventsPulled,
       'events_pushed': eventsPushed,
+      'events_removed': eventsRemoved,
       'notes': notes,
       'ok': ok,
       'tasks_imported': tasksImported,
       'tasks_pulled': tasksPulled,
       'tasks_pushed': tasksPushed,
+      'tasks_removed': tasksRemoved,
+    };
+  }
+}
+
+class GeneratedCalDavCollection {
+  final List<String>? components;
+  final String href;
+  final List<String>? mine;
+  final String name;
+  final List<String>? usedBy;
+
+  const GeneratedCalDavCollection({
+    this.components,
+    required this.href,
+    this.mine,
+    this.name = "",
+    this.usedBy,
+  });
+
+  factory GeneratedCalDavCollection.fromJson(Map<String, dynamic> json) {
+    return GeneratedCalDavCollection(
+      components: _readFieldValue<List<String>>(_readField(json, const ["components"]), "components", _readStringList, requiredField: false, nullable: true),
+      href: _required(_readFieldValue<String>(_readField(json, const ["href"]), "href", _readString, requiredField: true, nullable: false), "href"),
+      mine: _readFieldValue<List<String>>(_readField(json, const ["mine"]), "mine", _readStringList, requiredField: false, nullable: true),
+      name: _required(_readFieldValue<String>(_readField(json, const ["name"]), "name", _readString, requiredField: false, nullable: false, defaultValue: ""), "name"),
+      usedBy: _readFieldValue<List<String>>(_readField(json, const ["used_by"]), "used_by", _readStringList, requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'components': components,
+      'href': href,
+      'mine': mine,
+      'name': name,
+      'used_by': usedBy,
+    };
+  }
+}
+
+class GeneratedCalDavCollectionsResponse {
+  final List<GeneratedCalDavCollection>? collections;
+  final String error;
+  final bool ok;
+
+  const GeneratedCalDavCollectionsResponse({
+    this.collections,
+    this.error = "",
+    required this.ok,
+  });
+
+  factory GeneratedCalDavCollectionsResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedCalDavCollectionsResponse(
+      collections: _readFieldValue<List<GeneratedCalDavCollection>>(_readField(json, const ["collections"]), "collections", (value) => _readObjectList(value, GeneratedCalDavCollection.fromJson), requiredField: false, nullable: true),
+      error: _required(_readFieldValue<String>(_readField(json, const ["error"]), "error", _readString, requiredField: false, nullable: false, defaultValue: ""), "error"),
+      ok: _required(_readFieldValue<bool>(_readField(json, const ["ok"]), "ok", _readBool, requiredField: true, nullable: false), "ok"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'collections': collections?.map((value) => value.toJson()).toList(),
+      'error': error,
+      'ok': ok,
+    };
+  }
+}
+
+class GeneratedCreateCalDavCollectionRequest {
+  final String kind;
+  final String name;
+  final bool select;
+
+  const GeneratedCreateCalDavCollectionRequest({
+    required this.kind,
+    required this.name,
+    this.select = true,
+  });
+
+  factory GeneratedCreateCalDavCollectionRequest.fromJson(Map<String, dynamic> json) {
+    return GeneratedCreateCalDavCollectionRequest(
+      kind: _required(_readFieldValue<String>(_readField(json, const ["kind"]), "kind", _readString, requiredField: true, nullable: false), "kind"),
+      name: _required(_readFieldValue<String>(_readField(json, const ["name"]), "name", _readString, requiredField: true, nullable: false), "name"),
+      select: _required(_readFieldValue<bool>(_readField(json, const ["select"]), "select", _readBool, requiredField: false, nullable: false, defaultValue: true), "select"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'kind': kind,
+      'name': name,
+      'select': select,
+    };
+  }
+}
+
+class GeneratedCalDavCollectionResponse {
+  final GeneratedCalDavCollection? collection;
+  final String error;
+  final bool ok;
+  final GeneratedCalDavSettingsResponse? settings;
+
+  const GeneratedCalDavCollectionResponse({
+    this.collection,
+    this.error = "",
+    required this.ok,
+    this.settings,
+  });
+
+  factory GeneratedCalDavCollectionResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedCalDavCollectionResponse(
+      collection: _readFieldValue<GeneratedCalDavCollection>(_readField(json, const ["collection"]), "collection", (value) => _readObject(value, GeneratedCalDavCollection.fromJson), requiredField: false, nullable: true),
+      error: _required(_readFieldValue<String>(_readField(json, const ["error"]), "error", _readString, requiredField: false, nullable: false, defaultValue: ""), "error"),
+      ok: _required(_readFieldValue<bool>(_readField(json, const ["ok"]), "ok", _readBool, requiredField: true, nullable: false), "ok"),
+      settings: _readFieldValue<GeneratedCalDavSettingsResponse>(_readField(json, const ["settings"]), "settings", (value) => _readObject(value, GeneratedCalDavSettingsResponse.fromJson), requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'collection': collection?.toJson(),
+      'error': error,
+      'ok': ok,
+      'settings': settings?.toJson(),
     };
   }
 }
 
 class GeneratedFamilyCalendarEvent {
+  final bool approved;
   final String? calendar;
   final String conversationId;
   final String conversationTitle;
@@ -817,6 +986,7 @@ class GeneratedFamilyCalendarEvent {
   final String title;
 
   const GeneratedFamilyCalendarEvent({
+    this.approved = false,
     this.calendar,
     required this.conversationId,
     this.conversationTitle = "",
@@ -833,6 +1003,7 @@ class GeneratedFamilyCalendarEvent {
 
   factory GeneratedFamilyCalendarEvent.fromJson(Map<String, dynamic> json) {
     return GeneratedFamilyCalendarEvent(
+      approved: _required(_readFieldValue<bool>(_readField(json, const ["approved"]), "approved", _readBool, requiredField: false, nullable: false, defaultValue: false), "approved"),
       calendar: _readFieldValue<String>(_readField(json, const ["calendar"]), "calendar", _readString, requiredField: false, nullable: true),
       conversationId: _required(_readFieldValue<String>(_readField(json, const ["conversation_id"]), "conversation_id", _readString, requiredField: true, nullable: false), "conversation_id"),
       conversationTitle: _required(_readFieldValue<String>(_readField(json, const ["conversation_title"]), "conversation_title", _readString, requiredField: false, nullable: false, defaultValue: ""), "conversation_title"),
@@ -850,6 +1021,7 @@ class GeneratedFamilyCalendarEvent {
 
   Map<String, dynamic> toJson() {
     return {
+      'approved': approved,
       'calendar': calendar,
       'conversation_id': conversationId,
       'conversation_title': conversationTitle,
@@ -891,6 +1063,7 @@ class GeneratedFamilyCalendarMember {
 }
 
 class GeneratedFamilyCalendarResponse {
+  final bool caldav;
   final bool configured;
   final String label;
   final List<GeneratedFamilyCalendarMember>? members;
@@ -900,6 +1073,7 @@ class GeneratedFamilyCalendarResponse {
   final List<GeneratedFamilyCalendarEvent>? recent;
 
   const GeneratedFamilyCalendarResponse({
+    this.caldav = false,
     required this.configured,
     this.label = "",
     this.members,
@@ -911,6 +1085,7 @@ class GeneratedFamilyCalendarResponse {
 
   factory GeneratedFamilyCalendarResponse.fromJson(Map<String, dynamic> json) {
     return GeneratedFamilyCalendarResponse(
+      caldav: _required(_readFieldValue<bool>(_readField(json, const ["caldav"]), "caldav", _readBool, requiredField: false, nullable: false, defaultValue: false), "caldav"),
       configured: _required(_readFieldValue<bool>(_readField(json, const ["configured"]), "configured", _readBool, requiredField: true, nullable: false), "configured"),
       label: _required(_readFieldValue<String>(_readField(json, const ["label"]), "label", _readString, requiredField: false, nullable: false, defaultValue: ""), "label"),
       members: _readFieldValue<List<GeneratedFamilyCalendarMember>>(_readField(json, const ["members"]), "members", (value) => _readObjectList(value, GeneratedFamilyCalendarMember.fromJson), requiredField: false, nullable: true),
@@ -923,6 +1098,7 @@ class GeneratedFamilyCalendarResponse {
 
   Map<String, dynamic> toJson() {
     return {
+      'caldav': caldav,
       'configured': configured,
       'label': label,
       'members': members?.map((value) => value.toJson()).toList(),

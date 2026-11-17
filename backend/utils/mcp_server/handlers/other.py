@@ -590,6 +590,7 @@ def get_day_review(
     compact_review = None
     if review:
         compact_review = {
+            'status': review.get('status') or 'finalized',
             'title': review.get('title') or '',
             'text': review.get('final_text') or '',
             'tags': list(review.get('tags') or []),
@@ -626,7 +627,8 @@ def get_day_review(
     ]
     return {
         'date': date,
-        'bundled': compact_review is not None,
+        # A draft (prepared overnight, waiting for the user's OK) is not a bundled day yet.
+        'bundled': compact_review is not None and compact_review['status'] == 'finalized',
         'review': compact_review,
         'conversations': conversations,
         'processing_count': day.get('processing_count', 0),

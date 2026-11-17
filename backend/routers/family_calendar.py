@@ -14,6 +14,7 @@ from models.family_calendar import (
     SetFamilyCalendarOwnerRequest,
 )
 from utils import family_calendar
+from utils.caldav import sync as caldav_sync
 from utils.executors import db_executor, run_blocking
 from utils.other import endpoints as auth
 
@@ -24,16 +25,17 @@ async def _present(uid: str, conversation_id: Optional[str] = None) -> FamilyCal
     def _read():
         target = family_calendar.integration(uid)
         waiting, recent = family_calendar.pending(uid, conversation_id=conversation_id)
-        return target, waiting, recent
+        return target, waiting, recent, caldav_sync.effective_settings(uid) is not None
 
-    target, waiting, recent = await run_blocking(db_executor, _read)
+    target, waiting, recent, caldav = await run_blocking(db_executor, _read)
     if target is None:
-        return FamilyCalendarResponse(configured=False, pending=waiting, recent=recent)
+        return FamilyCalendarResponse(configured=False, caldav=caldav, pending=waiting, recent=recent)
     roster = await family_calendar.members(target)
     owner_id = target.get('owner_id')
     owner_name = next((m['name'] for m in roster if m['id'] == owner_id), owner_id or '')
     return FamilyCalendarResponse(
         configured=True,
+        caldav=caldav,
         label=family_calendar.LABEL,
         members=[FamilyCalendarMember(**m) for m in roster],
         owner_id=owner_id,
@@ -68,7 +70,8 @@ async def set_family_calendar_owner(
 async def approve_family_calendar_event(
     request: ApproveFamilyCalendarEventRequest, uid: str = Depends(auth.get_current_user_uid)
 ):
-    """Put one reviewed event on the family calendar, with the user's edits. The only path that writes one."""
+    """Approve one reviewed event, with the user's edits: onto the family calendar when there is one,
+    and onto the user's CalDAV calendar at the next sync. The only path that approves one."""
     try:
         event = await family_calendar.approve(
             uid,

@@ -985,3 +985,36 @@ def test_telemetry_is_bounded_and_carries_no_ids_or_text(monkeypatch, caplog):
     text = caplog.text
     assert 'event=action_item_identity' in text
     assert not any(secret in text for secret in ('secret-id', 'Call mom', 'Pay rent', 'Buy milk'))
+
+
+# --------------------------------------------------------------------------- omi-local: approval
+
+
+def test_extracted_tasks_wait_for_approval_and_re_extraction_keeps_the_answer(world, monkeypatch):
+    """With approvals on, an extracted task is written as waiting: no reminder, no task-app copy.
+    A re-extraction keeps an approved task approved and a declined one declined."""
+    from utils import task_approval
+
+    monkeypatch.setenv('OMI_TASK_APPROVAL', 'on')
+    world.process('conv-1', [_item(BUDGET, DUE), _item(VENUE)])
+    tasks = world.store.tasks('conv-1')
+    assert {data['approval'] for data in tasks.values()} == {'pending'}
+    assert world.external == [] and world.reminders == []
+    ids = world.ids()
+    action_items_db.update_action_item(UID, ids[BUDGET], {'approval': 'approved'})
+    action_items_db.update_action_item(UID, ids[VENUE], {'approval': 'declined'})
+    world.process('conv-1', [_item(BUDGET, DUE), _item(VENUE), _item(NOTES)])
+    by_text = {data['description']: data for data in world.store.tasks('conv-1').values()}
+    assert by_text[BUDGET]['approval'] == 'approved' and by_text[VENUE]['approval'] == 'declined'
+    assert by_text[NOTES]['approval'] == 'pending'
+    # only the approved one reaches the task app and its reminder
+    assert world.external == [BUDGET]
+    assert [k['action_item_id'] for kind, k in world.reminders] == [ids[BUDGET]]
+    assert task_approval.is_waiting(by_text[NOTES]) and not task_approval.is_waiting(by_text[BUDGET])
+
+
+def test_with_approvals_off_extracted_tasks_are_approved_as_before(world, monkeypatch):
+    monkeypatch.setenv('OMI_TASK_APPROVAL', 'off')
+    world.process('conv-1', [_item(BUDGET)])
+    assert all('approval' not in data for data in world.store.tasks('conv-1').values())
+    assert world.external == [BUDGET]

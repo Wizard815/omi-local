@@ -11,11 +11,20 @@ conversation, and discard the dropped and rolled-up ones (tagged
 merge deleted its sources and stays.
 
 The summary is written in sections, each naming the conversations it came
-from (utils/day_review.parse_sections). ``bundle`` is the hands-off form of
-finalize (starred clips stay, everything else is rolled up; the scheduler in
-utils/day_bundle_scheduler.py runs it), and ``favorite_section`` pulls a
-section's conversations back out of the bundle as starred conversations.
-The model's per-section tags land on those conversations (utils/conversations/tags.py).
+from (utils/day_review.parse_sections). ``favorite_section`` pulls a section's
+conversations back out of the bundle as starred conversations. The model's
+per-section tags land on those conversations (utils/conversations/tags.py).
+
+Nothing is approved for the user. ``prepare_draft`` (``bundle``; the overnight
+job in utils/day_bundle_scheduler.py runs it) writes the summary of the
+hands-off split (starred clips stay, everything else rolled up) as a review
+with ``status = 'draft'``: no conversation is touched and nothing goes to the
+calendar. The user edits the draft (corrections, regenerate, favorite a
+section) and approves it (``approve``, or ``finalize`` with their own sort),
+which finalizes using the draft's text when the split is the one it was
+written for (no second model call). Only a finalized day reaches CalDAV;
+``reopen`` turns it back into a draft, so its summary comes off the calendar
+until it is approved again.
 """
 
 from __future__ import annotations
@@ -55,8 +64,14 @@ from utils.llm.clients import get_llm
 from utils.llm.usage_tracker import Features, track_usage
 
 DAY_REVIEW_DATE_FIELD = 'day_review_date'
+DRAFT = 'draft'
+FINALIZED = 'finalized'
 _DAY_QUERY_LIMIT = 300
 _SNIPPET_CHARS = 240
+
+
+def is_draft(review: Optional[Dict[str, Any]]) -> bool:
+    return bool(review) and str((review or {}).get('status') or FINALIZED) == DRAFT
 
 
 class DayReviewError(Exception):
@@ -379,8 +394,10 @@ def finalize(
     tz_name = notification_db.get_user_time_zone(uid)
     if day > local_today(tz_name):
         raise DayReviewError(422, 'Date cannot be in the future')
-    if day_reviews_db.get_day_review(uid, date_str):
+    existing = day_reviews_db.get_day_review(uid, date_str)
+    if existing and not is_draft(existing):
         raise DayReviewError(409, 'This day is already reviewed. Reopen it to sort it again.')
+    draft = existing if is_draft(existing) else None
 
     loaded = load_day(uid, day, tz_name)
     if not loaded.visible:
@@ -401,28 +418,50 @@ def finalize(
     sorted_out = set(keep_ids) | set(drop_ids) | merged_ids
     rolled = [c for c in loaded.visible if c.id not in sorted_out]
 
-    # Generate before mutating anything: a model failure leaves the day untouched.
-    if rolled:
-        title, body, sections = generate_summary(uid, day, tz_name, rolled, [])
+    now = datetime.now(timezone.utc)
+    corrections = list((draft or {}).get('corrections') or [])
+    reused = draft_fits(draft, [c.id for c in rolled])
+    # Generate before mutating anything: a model failure leaves the day (and its draft) untouched.
+    if reused and draft is not None:
+        title = str(draft.get('title') or '')
+        body = str(draft.get('summary_text') or '')
+        sections = list(draft.get('sections') or [])
+        generated_at, generation_count = draft.get('generated_at'), int(draft.get('generation_count') or 0)
+    elif rolled:
+        # The user's sort differs from the draft's: write it for this split, with the draft's
+        # corrections as ground truth and its text as the previous version.
+        title, body, sections = generate_summary(
+            uid,
+            day,
+            tz_name,
+            rolled,
+            corrections,
+            previous_summary=(draft or {}).get('summary_text') or None,
+        )
+        for c in corrections:
+            if c.get('type') != 'redaction' and not c.get('applied_at'):
+                c['applied_at'] = now
+        generated_at, generation_count = now, int((draft or {}).get('generation_count') or 0) + 1
     else:
         title, body, sections = 'Everything kept', '', []
+        generated_at, generation_count = None, 0
 
-    now = datetime.now(timezone.utc)
     review = {
-        'status': 'finalized',
+        'status': FINALIZED,
         'title': title,
         'summary_text': body,
         'sections': sections,
-        'corrections': [],
+        'corrections': corrections if body else [],
         'kept_conversation_ids': [c.id for c in keep],
         'rolled_up_conversation_ids': [c.id for c in rolled],
         'merged_groups': [{'conversation_ids': list(g)} for g in merge_groups],
         'dropped_conversation_ids': [c.id for c in dropped],
         'time_zone': tz_name,
-        'created_at': now,
+        'created_at': (draft or {}).get('created_at') or now,
         'updated_at': now,
-        'generated_at': now if rolled else None,
-        'generation_count': 1 if rolled else 0,
+        'approved_at': now,
+        'generated_at': generated_at,
+        'generation_count': generation_count,
     }
     day_reviews_db.set_day_review(uid, date_str, review)
     for conversation in keep:
@@ -442,15 +481,74 @@ def finalize(
     return present({**review, 'date': date_str})
 
 
-def bundle(uid: str, date_str: str) -> Dict[str, Any]:
-    """The hands-off review: starred conversations stay, every other completed
-    one is rolled into the sectioned day summary. Nothing is dropped or merged;
-    favorite a section afterwards to pull its conversations back out."""
+def draft_fits(draft: Optional[Dict[str, Any]], rolled_ids: Sequence[str]) -> bool:
+    """Whether a draft's text was written for exactly these rolled-up conversations (then
+    approving it needs no second model call)."""
+    if not is_draft(draft) or not (draft or {}).get('summary_text'):
+        return False
+    return set(rolled_ids) == set((draft or {}).get('rolled_up_conversation_ids') or [])
+
+
+def prepare_draft(uid: str, date_str: str) -> Dict[str, Any]:
+    """The hands-off split, written down for the user to review: starred conversations stay,
+    every other completed one goes into the sectioned summary. A draft only: no conversation
+    is starred, discarded or rolled up, and nothing reaches the calendar until ``approve``."""
     day = parse_date(date_str)
     tz_name = notification_db.get_user_time_zone(uid)
+    if day > local_today(tz_name):
+        raise DayReviewError(422, 'Date cannot be in the future')
+    if day_reviews_db.get_day_review(uid, date_str):
+        raise DayReviewError(409, 'This day already has a summary')
     loaded = load_day(uid, day, tz_name)
-    keep = [c.id for c in loaded.visible if getattr(c, 'starred', False)]
-    return finalize(uid, date_str, keep)
+    if not loaded.visible:
+        raise DayReviewError(400, f'No conversations to review for {date_str}')
+    keep = [c for c in loaded.visible if getattr(c, 'starred', False)]
+    rolled = [c for c in loaded.visible if not getattr(c, 'starred', False)]
+    if rolled:
+        title, body, sections = generate_summary(uid, day, tz_name, rolled, [])
+    else:
+        title, body, sections = 'Everything kept', '', []
+    now = datetime.now(timezone.utc)
+    review = {
+        'status': DRAFT,
+        'title': title,
+        'summary_text': body,
+        'sections': sections,
+        'corrections': [],
+        'kept_conversation_ids': [c.id for c in keep],
+        'rolled_up_conversation_ids': [c.id for c in rolled],
+        'merged_groups': [],
+        'dropped_conversation_ids': [],
+        'time_zone': tz_name,
+        'created_at': now,
+        'updated_at': now,
+        'generated_at': now if rolled else None,
+        'generation_count': 1 if rolled else 0,
+    }
+    day_reviews_db.set_day_review(uid, date_str, review)
+    return present({**review, 'date': date_str})
+
+
+def bundle(uid: str, date_str: str) -> Dict[str, Any]:
+    """The hands-off review (POST /bundle, and the overnight job): a draft to approve."""
+    return prepare_draft(uid, date_str)
+
+
+def approve(uid: str, date_str: str) -> Dict[str, Any]:
+    """The user's OK on a draft: finalize the day with the draft's split and text. Starred
+    clips stay (also ones starred after the draft was written); a conversation that came in
+    since is rolled up too, and only then is the summary written again."""
+    review = _require_review(uid, date_str)
+    if not is_draft(review):
+        raise DayReviewError(409, 'This day is already approved')
+    day = parse_date(date_str)
+    loaded = load_day(uid, day, notification_db.get_user_time_zone(uid))
+    visible = [c.id for c in loaded.visible]  # day order
+    starred = {c.id for c in loaded.visible if getattr(c, 'starred', False)}
+    planned = set(review.get('kept_conversation_ids') or [])
+    keep = [cid for cid in visible if cid in planned or cid in starred]
+    drop = [cid for cid in (review.get('dropped_conversation_ids') or []) if cid in visible and cid not in keep]
+    return finalize(uid, date_str, keep, (), drop)
 
 
 def favorite_section(uid: str, date_str: str, section_id: str, favorited: bool) -> Dict[str, Any]:
@@ -466,7 +564,12 @@ def favorite_section(uid: str, date_str: str, section_id: str, favorited: bool) 
     ids = [cid for cid in (section.get('conversation_ids') or []) if conversations_db.get_conversation(uid, cid)]
     kept = [cid for cid in (review.get('kept_conversation_ids') or []) if cid not in ids]
     rolled = [cid for cid in (review.get('rolled_up_conversation_ids') or []) if cid not in ids]
-    if favorited:
+    if is_draft(review):
+        # A draft only plans the split: star (or unstar) them, nothing is discarded or restored.
+        for cid in ids:
+            conversations_db.set_conversation_starred(uid, cid, favorited)
+        (kept if favorited else rolled).extend(ids)
+    elif favorited:
         for cid in ids:
             lifecycle.restore_discarded(uid, cid)
             conversations_db.set_conversation_starred(uid, cid, True)
@@ -592,9 +695,14 @@ def regenerate(uid: str, date_str: str) -> Dict[str, Any]:
 
 
 def reopen(uid: str, date_str: str) -> Tuple[int, int]:
-    """Undo a review: restore the rolled-up and dropped conversations and delete
-    the review. Returns (restored, merged groups that stay merged)."""
+    """Undo an approval: restore the rolled-up and dropped conversations and turn the review
+    back into a draft (its summary comes off the calendar until it is approved again; the
+    user can approve it as it is or sort the day anew). Reopening a draft discards it.
+    Returns (restored, merged groups that stay merged)."""
     review = _require_review(uid, date_str)
+    if is_draft(review):
+        day_reviews_db.delete_day_review(uid, date_str)
+        return 0, 0
     restored = 0
     hidden = [*(review.get('rolled_up_conversation_ids') or []), *(review.get('dropped_conversation_ids') or [])]
     for conversation_id in hidden:
@@ -603,7 +711,13 @@ def reopen(uid: str, date_str: str) -> Tuple[int, int]:
         lifecycle.restore_discarded(uid, conversation_id)
         conversations_db.update_conversation(uid, conversation_id, {DAY_REVIEW_DATE_FIELD: None})
         restored += 1
-    day_reviews_db.delete_day_review(uid, date_str)
+    if review.get('summary_text'):
+        draft = {**review, 'status': DRAFT, 'merged_groups': [], 'updated_at': datetime.now(timezone.utc)}
+        draft.pop('approved_at', None)
+        day_reviews_db.set_day_review(uid, date_str, draft)
+    else:
+        day_reviews_db.delete_day_review(uid, date_str)
+    caldav_sync.mark_dirty(uid)
     return restored, len(review.get('merged_groups') or [])
 
 
@@ -627,8 +741,15 @@ def pending_dates(uid: str, days: int = 7) -> Dict[str, Any]:
             if started.tzinfo is None:
                 started = started.replace(tzinfo=timezone.utc)
             dates.add(started.astimezone(zone).date().isoformat())
-    reviewed = {r.get('date') for r in day_reviews_db.list_day_reviews(uid, limit=max(days, 1) + 7)}
-    return {'today': today.isoformat(), 'pending_dates': sorted(d for d in dates if d not in reviewed)}
+    reviews = day_reviews_db.list_day_reviews(uid, limit=max(days, 1) + 7)
+    reviewed = {r.get('date') for r in reviews if not is_draft(r)}
+    drafts = {str(r.get('date')) for r in reviews if is_draft(r)}
+    first_str = first.isoformat()
+    return {
+        'today': today.isoformat(),
+        'pending_dates': sorted(d for d in dates | drafts if d not in reviewed and d >= first_str),
+        'draft_dates': sorted(d for d in drafts if d >= first_str),
+    }
 
 
 def list_reviews(uid: str, limit: int = 30) -> List[Dict[str, Any]]:
