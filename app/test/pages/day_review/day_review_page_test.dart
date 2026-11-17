@@ -28,9 +28,9 @@ DayReviewConversation _clip(String id, String title, {bool starred = false}) => 
 
 const _summary = 'Mia had swim at four.\n\nYou booked the pediatrician for Thursday.';
 
-DayReview _review(List<DayReviewCorrection> corrections, {String status = 'finalized'}) => DayReview(
+DayReview _review(List<DayReviewCorrection> corrections, {bool draft = false}) => DayReview(
       date: _date,
-      status: status,
+      isDraft: draft,
       title: 'Swim, a doctor and dinner',
       summaryText: _summary,
       finalText: _summary,
@@ -204,7 +204,7 @@ void main() {
   });
 
   testWidgets('a draft says nothing is sent yet, and Approve finalizes it', (tester) async {
-    final api = _FakeApi(review: _review(const [], status: 'draft'));
+    final api = _FakeApi(review: _review(const [], draft: true));
     await _open(tester, api);
     expect(find.byKey(const Key('day_review_draft_notice')), findsOneWidget);
     await tester.tap(find.byKey(const Key('day_review_approve')));

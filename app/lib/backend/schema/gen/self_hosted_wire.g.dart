@@ -199,6 +199,7 @@ class GeneratedDayReview {
   final List<GeneratedDayReviewCorrection>? corrections;
   final DateTime? createdAt;
   final String date;
+  final bool draft;
   final List<String>? droppedConversationIds;
   final String finalText;
   final DateTime? generatedAt;
@@ -219,6 +220,7 @@ class GeneratedDayReview {
     this.corrections,
     this.createdAt,
     required this.date,
+    this.draft = false,
     this.droppedConversationIds,
     this.finalText = "",
     this.generatedAt,
@@ -241,6 +243,7 @@ class GeneratedDayReview {
       corrections: _readFieldValue<List<GeneratedDayReviewCorrection>>(_readField(json, const ["corrections"]), "corrections", (value) => _readObjectList(value, GeneratedDayReviewCorrection.fromJson), requiredField: false, nullable: true),
       createdAt: _readFieldValue<DateTime>(_readField(json, const ["created_at"]), "created_at", _readDateTime, requiredField: false, nullable: true),
       date: _required(_readFieldValue<String>(_readField(json, const ["date"]), "date", _readString, requiredField: true, nullable: false), "date"),
+      draft: _required(_readFieldValue<bool>(_readField(json, const ["draft"]), "draft", _readBool, requiredField: false, nullable: false, defaultValue: false), "draft"),
       droppedConversationIds: _readFieldValue<List<String>>(_readField(json, const ["dropped_conversation_ids"]), "dropped_conversation_ids", _readStringList, requiredField: false, nullable: true),
       finalText: _required(_readFieldValue<String>(_readField(json, const ["final_text"]), "final_text", _readString, requiredField: false, nullable: false, defaultValue: ""), "final_text"),
       generatedAt: _readFieldValue<DateTime>(_readField(json, const ["generated_at"]), "generated_at", _readDateTime, requiredField: false, nullable: true),
@@ -264,6 +267,7 @@ class GeneratedDayReview {
       'corrections': corrections?.map((value) => value.toJson()).toList(),
       'created_at': createdAt?.toUtc().toIso8601String(),
       'date': date,
+      'draft': draft,
       'dropped_conversation_ids': droppedConversationIds,
       'final_text': finalText,
       'generated_at': generatedAt?.toUtc().toIso8601String(),

@@ -267,7 +267,7 @@ def test_bundle_keeps_starred_and_sections_the_rest_with_tags(bundled):
     convs, reviews, llm, submitted, tagged = bundled
     draft = service.bundle('u1', DAY)
     # a draft: written, but nothing sorted, tagged or discarded until the user approves it
-    assert draft['status'] == 'draft' and draft['kept_conversation_ids'] == ['budget']
+    assert draft['draft'] and draft['status'] == 'finalized' and draft['kept_conversation_ids'] == ['budget']
     assert tagged == {} and not any(convs[c]['discarded'] for c in draft['rolled_up_conversation_ids'])
     review = service.approve('u1', DAY)
     assert review['status'] == 'finalized' and len(llm.prompts) == 1  # approving reused the draft's text
@@ -345,7 +345,7 @@ def test_a_draft_touches_nothing_and_counts_as_still_waiting(bundled, monkeypatc
     convs, reviews, llm, submitted, tagged = bundled
     monkeypatch.setattr(service, 'local_today', lambda tz: datetime(2026, 10, 11).date())
     draft = service.prepare_draft('u1', DAY)
-    assert draft['status'] == 'draft' and draft['final_text']
+    assert draft['draft'] and draft['final_text']
     assert not any(c['discarded'] for c in convs.values() if c['id'] != 'auto-discarded')
     assert submitted == [] and tagged == {}
     assert service.pending_dates('u1', days=3) == {
@@ -355,11 +355,11 @@ def test_a_draft_touches_nothing_and_counts_as_still_waiting(bundled, monkeypatc
     }
     # favoriting a section of a draft only plans it: starred, nothing discarded or enriched
     review = service.favorite_section('u1', DAY, 's1', True)
-    assert review['status'] == 'draft' and convs['held-a']['starred'] and submitted == []
+    assert review['draft'] and convs['held-a']['starred'] and submitted == []
     assert review['kept_conversation_ids'] == ['budget', 'held-a', 'held-b']
     # approving uses the draft as it stands: no second model call
     approved = service.approve('u1', DAY)
-    assert approved['status'] == 'finalized' and approved['approved_at'] and len(llm.prompts) == 1
+    assert not approved['draft'] and approved['approved_at'] and len(llm.prompts) == 1
     assert approved['kept_conversation_ids'] == ['held-a', 'held-b', 'budget']  # in day order
     assert service.pending_dates('u1', days=3)['pending_dates'] == []
     with pytest.raises(service.DayReviewError) as e:
@@ -392,3 +392,18 @@ def test_an_everything_kept_day_keeps_its_paragraph_through_approve_and_reopen(w
     service.reopen('u1', DAY)
     assert reviews[DAY]['status'] == 'draft' and reviews[DAY]['corrections']
     assert service.approve('u1', DAY)['final_text'] == 'A quiet day at home.'
+
+
+def test_a_released_app_never_sees_a_draft(bundled, monkeypatch):
+    """Released apps decode status 'finalized' only: a draft reaches them as an unreviewed day
+    (they offer sorting, and their finalize approves it), never as a finished review."""
+    convs, reviews, llm, submitted, tagged = bundled
+    monkeypatch.setattr(service.day_bundle_users_db, 'mark_active', lambda uid: None)
+    service.prepare_draft('u1', DAY)
+    assert service.get_day('u1', DAY, include_drafts=False)['review'] is None
+    assert service.list_reviews('u1', include_drafts=False) == []
+    shown = service.get_day('u1', DAY)['review']
+    assert shown['draft'] is True and shown['status'] == 'finalized'
+    assert reviews[DAY]['status'] == 'draft'  # stored as a draft
+    review = service.finalize('u1', DAY, ['budget'])  # the old app's sort-and-summarize
+    assert review['draft'] is False and len(llm.prompts) == 1  # same split as the draft: text reused

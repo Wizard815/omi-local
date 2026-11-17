@@ -57,7 +57,8 @@ Future<({String today, List<String> pendingDates, List<String> draftDates})?> ge
 }
 
 Future<List<DayReview>> listDayReviews({int limit = 30}) async {
-  final response = await makeApiCall(url: '${_base()}?limit=$limit', headers: {}, method: 'GET', body: '');
+  final response =
+      await makeApiCall(url: '${_base()}?limit=$limit&include_drafts=true', headers: {}, method: 'GET', body: '');
   final result = _decode(
     response,
     (json) =>
@@ -68,7 +69,7 @@ Future<List<DayReview>> listDayReviews({int limit = 30}) async {
 }
 
 Future<DayReviewResult<DayReviewDay>> getDayReviewDay(String date) async {
-  final response = await makeApiCall(url: '${_base()}/$date', headers: {}, method: 'GET', body: '');
+  final response = await makeApiCall(url: '${_base()}/$date?include_drafts=true', headers: {}, method: 'GET', body: '');
   return _decode(
     response,
     (json) => DayReviewDay.fromGenerated(wire.GeneratedDayReviewDayResponse.fromJson(json)),

@@ -2289,6 +2289,7 @@ export interface DayReview {
   corrections?: Array<DayReviewCorrection>;
   created_at?: string | null;
   date: string;
+  draft?: boolean;
   dropped_conversation_ids?: Array<string>;
   final_text?: string;
   generated_at?: string | null;
@@ -2297,7 +2298,7 @@ export interface DayReview {
   merged_groups?: Array<DayReviewMergeGroup>;
   rolled_up_conversation_ids?: Array<string>;
   sections?: Array<DayReviewSection>;
-  status?: "finalized" | "draft";
+  status?: "finalized";
   summary_text?: string;
   tags?: Array<string>;
   time_zone?: string | null;
@@ -22357,7 +22358,7 @@ export async function test_daily_summary_v1_users_daily_summary_settings_test_po
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
-export async function list_day_reviews_v1_users_day_reviews_get(query: { limit?: number }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<DayReviewsListResponse> {
+export async function list_day_reviews_v1_users_day_reviews_get(query: { limit?: number, include_drafts?: boolean }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<DayReviewsListResponse> {
   const _base = init?.baseURL ?? "";
   const _path = `/v1/users/day-reviews`;
   const _params = query ? Object.entries(query)
@@ -22401,10 +22402,13 @@ export async function get_pending_day_reviews_v1_users_day_reviews_pending_get(q
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
-export async function get_day_review_v1_users_day_reviews__date__get(path: { date: string }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<DayReviewDayResponse> {
+export async function get_day_review_v1_users_day_reviews__date__get(path: { date: string }, query: { include_drafts?: boolean }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<DayReviewDayResponse> {
   const _base = init?.baseURL ?? "";
   const _path = `/v1/users/day-reviews/${path.date}`;
-  const _search = "";
+  const _params = query ? Object.entries(query)
+    .filter(([, v]) => v !== undefined && v !== null)
+    .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`).join('&') : '';
+  const _search = _params ? `?${_params}` : "";
   const _res = await fetch(`${_base}${_path}${_search}`, {
     method: "GET",
     headers: {
