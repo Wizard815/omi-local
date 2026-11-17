@@ -139,6 +139,7 @@ export interface ActionItemIdsResponse {
 
 export interface ActionItemResponse {
   apple_reminder_id?: string | null;
+  approval?: string | null;
   completed: boolean;
   completed_at?: string | null;
   conversation_id?: string | null;
@@ -602,6 +603,12 @@ export interface AppleHealthSyncResponse {
   synced_at: string;
 }
 
+export interface ApprovalSettings {
+  auto_approve?: boolean;
+  operator_disabled?: boolean;
+  time?: string;
+}
+
 export interface ApproveFamilyCalendarEventRequest {
   conversation_id: string;
   description?: string | null;
@@ -609,6 +616,11 @@ export interface ApproveFamilyCalendarEventRequest {
   event_idx: number;
   start?: string | null;
   title?: string | null;
+}
+
+export interface ApproveTaskRequest {
+  description?: string | null;
+  due_at?: string | null;
 }
 
 export interface ArtifactDescriptor {
@@ -974,6 +986,27 @@ export interface CalDavCalendar {
   name?: string;
 }
 
+export interface CalDavCollection {
+  components?: Array<string>;
+  href: string;
+  mine?: Array<string>;
+  name?: string;
+  used_by?: Array<string>;
+}
+
+export interface CalDavCollectionResponse {
+  collection?: CalDavCollection | null;
+  error?: string;
+  ok: boolean;
+  settings?: CalDavSettingsResponse | null;
+}
+
+export interface CalDavCollectionsResponse {
+  collections?: Array<CalDavCollection>;
+  error?: string;
+  ok: boolean;
+}
+
 export interface CalDavSettingsResponse {
   bundled?: boolean;
   calendar_href?: string;
@@ -983,12 +1016,18 @@ export interface CalDavSettingsResponse {
   last_error?: string;
   last_report?: Record<string, unknown>;
   last_sync_at?: string | null;
+  owner_label?: string;
+  parent_task_name?: string;
   pull_events?: boolean;
   pull_tasks?: boolean;
   push_conversation_events?: boolean;
   push_conversations?: boolean;
   push_day_summaries?: boolean;
   push_tasks?: boolean;
+  shared_account?: boolean;
+  suggested_calendar_name?: string;
+  suggested_tasks_name?: string;
+  task_mode?: "list" | "parent";
   tasks_href?: string;
   url?: string;
   username?: string;
@@ -999,11 +1038,13 @@ export interface CalDavSyncResponse {
   errors?: Array<string>;
   events_pulled?: number;
   events_pushed?: number;
+  events_removed?: number;
   notes?: Array<string>;
   ok: boolean;
   tasks_imported?: number;
   tasks_pulled?: number;
   tasks_pushed?: number;
+  tasks_removed?: number;
 }
 
 export interface CalDavTestResponse {
@@ -1972,6 +2013,12 @@ export interface CreateAnnouncementRequest {
   type: AnnouncementType;
 }
 
+export interface CreateCalDavCollectionRequest {
+  kind: "calendar" | "tasks";
+  name: string;
+  select?: boolean;
+}
+
 export interface CreateChatSessionRequest {
   app_id?: string | null;
   title?: string | null;
@@ -2238,6 +2285,7 @@ export interface DailySummaryUnresolvedQuestion {
 }
 
 export interface DayReview {
+  approved_at?: string | null;
   corrections?: Array<DayReviewCorrection>;
   created_at?: string | null;
   date: string;
@@ -2249,7 +2297,7 @@ export interface DayReview {
   merged_groups?: Array<DayReviewMergeGroup>;
   rolled_up_conversation_ids?: Array<string>;
   sections?: Array<DayReviewSection>;
-  status?: "finalized";
+  status?: "finalized" | "draft";
   summary_text?: string;
   tags?: Array<string>;
   time_zone?: string | null;
@@ -2340,6 +2388,10 @@ export interface DeclineFamilyCalendarEventRequest {
   conversation_id: string;
   declined?: boolean;
   event_idx: number;
+}
+
+export interface DeclineTaskRequest {
+  declined?: boolean;
 }
 
 export interface DefaultTaskIntegrationRequest {
@@ -2839,6 +2891,7 @@ export interface EvaluationRequest {
 }
 
 export interface Event {
+  approved?: boolean;
   calendar?: string | null;
   created?: boolean;
   declined?: boolean;
@@ -2982,6 +3035,7 @@ export interface FairUseUsagePctResponse {
 }
 
 export interface FamilyCalendarEvent {
+  approved?: boolean;
   calendar?: string | null;
   conversation_id: string;
   conversation_title?: string;
@@ -3008,6 +3062,7 @@ export interface FamilyCalendarMember {
 }
 
 export interface FamilyCalendarResponse {
+  caldav?: boolean;
   configured: boolean;
   label?: string;
   members?: Array<FamilyCalendarMember>;
@@ -3746,6 +3801,7 @@ export interface McpDayReview {
   kept_conversation_ids?: Array<string>;
   rolled_up_conversation_ids?: Array<string>;
   sections?: Array<McpDayReviewSection>;
+  status?: string;
   tags?: Array<string>;
   text?: string;
   title?: string;
@@ -4422,6 +4478,7 @@ export interface PaywallStatusResponse {
 }
 
 export interface PendingDayReviewsResponse {
+  draft_dates?: Array<string>;
   pending_dates?: Array<string>;
   today: string;
 }
@@ -6165,6 +6222,12 @@ export interface TaskAnswer {
   workstream_id?: string | null;
 }
 
+export interface TaskApprovalResponse {
+  error?: string;
+  ok: boolean;
+  task?: ActionItemResponse | null;
+}
+
 export interface TaskAssistantSettings {
   allowed_apps?: Array<string> | null;
   analysis_prompt?: string | null;
@@ -6593,6 +6656,11 @@ export interface UpdateAnnouncementRequest {
   targeting?: Targeting | null;
 }
 
+export interface UpdateApprovalSettingsRequest {
+  auto_approve?: boolean | null;
+  time?: string | null;
+}
+
 export interface UpdateAssistantSettingsRequest {
   advice?: AdviceAssistantSettings | null;
   floating_bar?: FloatingBarSettings | null;
@@ -6614,6 +6682,7 @@ export interface UpdateCalDavSettingsRequest {
   push_conversations?: boolean | null;
   push_day_summaries?: boolean | null;
   push_tasks?: boolean | null;
+  task_mode?: "list" | "parent" | null;
   tasks_href?: string | null;
   url?: string | null;
   username?: string | null;
@@ -6855,6 +6924,16 @@ export interface VoiceProfileSettingsUpdate {
 }
 
 export type VoiceReadiness = "ready" | "saved_sample_awaiting_embedding" | "not_learned" | "unknown";
+
+export interface WaitingForApprovalResponse {
+  auto_approve?: boolean;
+  auto_approve_time?: string;
+  draft_dates?: Array<string>;
+  event_count?: number;
+  task_count?: number;
+  tasks?: Array<ActionItemResponse>;
+  today?: string;
+}
 
 export interface WebSearchAssistantSettings {
   enabled?: boolean | null;
@@ -7101,7 +7180,9 @@ export interface OmiApiSchemas {
   "AppThumbnailUploadResponse": AppThumbnailUploadResponse;
   "AppleHealthSyncData": AppleHealthSyncData;
   "AppleHealthSyncResponse": AppleHealthSyncResponse;
+  "ApprovalSettings": ApprovalSettings;
   "ApproveFamilyCalendarEventRequest": ApproveFamilyCalendarEventRequest;
+  "ApproveTaskRequest": ApproveTaskRequest;
   "ArtifactDescriptor": ArtifactDescriptor;
   "ArtifactDescriptorCreate": ArtifactDescriptorCreate;
   "ArtifactStatus": ArtifactStatus;
@@ -7165,6 +7246,9 @@ export interface OmiApiSchemas {
   "BulkMoveConversationsResponse": BulkMoveConversationsResponse;
   "ButtonEventRequest": ButtonEventRequest;
   "CalDavCalendar": CalDavCalendar;
+  "CalDavCollection": CalDavCollection;
+  "CalDavCollectionResponse": CalDavCollectionResponse;
+  "CalDavCollectionsResponse": CalDavCollectionsResponse;
   "CalDavSettingsResponse": CalDavSettingsResponse;
   "CalDavSyncResponse": CalDavSyncResponse;
   "CalDavTestResponse": CalDavTestResponse;
@@ -7284,6 +7368,7 @@ export interface OmiApiSchemas {
   "ConversationsCountResponse": ConversationsCountResponse;
   "CreateActionItemRequest": CreateActionItemRequest;
   "CreateAnnouncementRequest": CreateAnnouncementRequest;
+  "CreateCalDavCollectionRequest": CreateCalDavCollectionRequest;
   "CreateChatSessionRequest": CreateChatSessionRequest;
   "CreateCheckoutRequest": CreateCheckoutRequest;
   "CreateConversationCalendarMeeting": CreateConversationCalendarMeeting;
@@ -7327,6 +7412,7 @@ export interface OmiApiSchemas {
   "DecisionDebugProjection": DecisionDebugProjection;
   "DecisionRecord": DecisionRecord;
   "DeclineFamilyCalendarEventRequest": DeclineFamilyCalendarEventRequest;
+  "DeclineTaskRequest": DeclineTaskRequest;
   "DefaultTaskIntegrationRequest": DefaultTaskIntegrationRequest;
   "DefaultTaskIntegrationResponse": DefaultTaskIntegrationResponse;
   "DeferralCreateRequest": DeferralCreateRequest;
@@ -7833,6 +7919,7 @@ export interface OmiApiSchemas {
   "SynthesizeAIUserProfileResponse": SynthesizeAIUserProfileResponse;
   "Targeting": Targeting;
   "TaskAnswer": TaskAnswer;
+  "TaskApprovalResponse": TaskApprovalResponse;
   "TaskAssistantSettings": TaskAssistantSettings;
   "TaskCancelCandidate": TaskCancelCandidate;
   "TaskCandidate": TaskCandidate;
@@ -7892,6 +7979,7 @@ export interface OmiApiSchemas {
   "UpdateActionItemDescriptionRequest": UpdateActionItemDescriptionRequest;
   "UpdateActionItemRequest": UpdateActionItemRequest;
   "UpdateAnnouncementRequest": UpdateAnnouncementRequest;
+  "UpdateApprovalSettingsRequest": UpdateApprovalSettingsRequest;
   "UpdateAssistantSettingsRequest": UpdateAssistantSettingsRequest;
   "UpdateCalDavSettingsRequest": UpdateCalDavSettingsRequest;
   "UpdateChatSessionRequest": UpdateChatSessionRequest;
@@ -7925,6 +8013,7 @@ export interface OmiApiSchemas {
   "VoiceProfileSettings": VoiceProfileSettings;
   "VoiceProfileSettingsUpdate": VoiceProfileSettingsUpdate;
   "VoiceReadiness": VoiceReadiness;
+  "WaitingForApprovalResponse": WaitingForApprovalResponse;
   "WebSearchAssistantSettings": WebSearchAssistantSettings;
   "WebhookType": WebhookType;
   "WhatMattersNowProjection": WhatMattersNowProjection;
@@ -8361,6 +8450,54 @@ export interface OmiApiPaths {
       };
     };
   };
+  "/v1/approvals": {
+    get: {
+      operationId: "get_waiting_for_approval_v1_approvals_get";
+      responses: {
+        "200": WaitingForApprovalResponse;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/approvals/settings": {
+    get: {
+      operationId: "get_approval_settings_v1_approvals_settings_get";
+      responses: {
+        "200": ApprovalSettings;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+    put: {
+      operationId: "update_approval_settings_v1_approvals_settings_put";
+      responses: {
+        "200": ApprovalSettings;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/approvals/tasks/{task_id}/approve": {
+    post: {
+      operationId: "approve_task_v1_approvals_tasks__task_id__approve_post";
+      responses: {
+        "200": TaskApprovalResponse;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/approvals/tasks/{task_id}/decline": {
+    post: {
+      operationId: "decline_task_v1_approvals_tasks__task_id__decline_post";
+      responses: {
+        "200": TaskApprovalResponse;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
   "/v1/apps": {
     get: {
       operationId: "get_apps_v1_apps_get";
@@ -8736,6 +8873,24 @@ export interface OmiApiPaths {
       operationId: "retry_v1_attention_items__item_id__retry_post";
       responses: {
         "200": AttentionRetryResponse;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/caldav/collections": {
+    get: {
+      operationId: "list_caldav_collections_v1_caldav_collections_get";
+      responses: {
+        "200": CalDavCollectionsResponse;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+    post: {
+      operationId: "create_caldav_collection_v1_caldav_collections_post";
+      responses: {
+        "200": CalDavCollectionResponse;
         "401": void;
         "422": HTTPValidationError;
       };
@@ -12247,6 +12402,16 @@ export interface OmiApiPaths {
       };
     };
   };
+  "/v1/users/day-reviews/{date}/approve": {
+    post: {
+      operationId: "approve_day_review_v1_users_day_reviews__date__approve_post";
+      responses: {
+        "200": DayReview;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
   "/v1/users/day-reviews/{date}/bundle": {
     post: {
       operationId: "bundle_day_v1_users_day_reviews__date__bundle_post";
@@ -14577,6 +14742,107 @@ export async function upload_app_thumbnail_endpoint_v1_app_thumbnails_post(heade
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
+export async function get_waiting_for_approval_v1_approvals_get(header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<WaitingForApprovalResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/approvals`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "GET",
+    headers: {
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function get_approval_settings_v1_approvals_settings_get(header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<ApprovalSettings> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/approvals/settings`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "GET",
+    headers: {
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function update_approval_settings_v1_approvals_settings_put(header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, body: UpdateApprovalSettingsRequest, init?: OmiApiClientInit): Promise<ApprovalSettings> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/approvals/settings`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "PUT",
+    headers: {
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function approve_task_v1_approvals_tasks__task_id__approve_post(path: { task_id: string }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, body: ApproveTaskRequest, init?: OmiApiClientInit): Promise<TaskApprovalResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/approvals/tasks/${path.task_id}/approve`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "POST",
+    headers: {
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function decline_task_v1_approvals_tasks__task_id__decline_post(path: { task_id: string }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, body: DeclineTaskRequest, init?: OmiApiClientInit): Promise<TaskApprovalResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/approvals/tasks/${path.task_id}/decline`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "POST",
+    headers: {
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
 export async function get_apps_v1_apps_get(query: { include_reviews?: boolean }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<Array<AppBaseModel>> {
   const _base = init?.baseURL ?? "";
   const _path = `/v1/apps`;
@@ -15300,6 +15566,46 @@ export async function retry_v1_attention_items__item_id__retry_post(path: { item
       ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
       ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
     },
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function list_caldav_collections_v1_caldav_collections_get(header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<CalDavCollectionsResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/caldav/collections`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "GET",
+    headers: {
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function create_caldav_collection_v1_caldav_collections_post(header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, body: CreateCalDavCollectionRequest, init?: OmiApiClientInit): Promise<CalDavCollectionResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/caldav/collections`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "POST",
+    headers: {
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
   });
   if (!_res.ok) throw new OmiApiError(_res.status, _res);
   return _res.status === 204 ? (undefined as any) : await _res.json();
@@ -22114,6 +22420,25 @@ export async function get_day_review_v1_users_day_reviews__date__get(path: { dat
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
+export async function approve_day_review_v1_users_day_reviews__date__approve_post(path: { date: string }, header: { X_App_Platform?: string, authorization?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<DayReview> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/users/day-reviews/${path.date}/approve`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "POST",
+    headers: {
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
 export async function bundle_day_v1_users_day_reviews__date__bundle_post(path: { date: string }, header: { X_App_Platform?: string, authorization?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<DayReview> {
   const _base = init?.baseURL ?? "";
   const _path = `/v1/users/day-reviews/${path.date}/bundle`;
@@ -25193,4 +25518,4 @@ export async function get_speech_profile_v4_speech_profile_get(header: { authori
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
-// Total: 575 client methods generated.
+// Total: 583 client methods generated.

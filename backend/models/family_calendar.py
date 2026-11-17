@@ -23,6 +23,7 @@ class FamilyCalendarEvent(BaseModel):
     calendar: Optional[str] = None
     external_id: Optional[str] = None
     declined: bool = False
+    approved: bool = Field(default=False, description='The user said yes; on their CalDAV calendar once synced')
 
 
 class FamilyCalendarMember(BaseModel):
@@ -32,6 +33,9 @@ class FamilyCalendarMember(BaseModel):
 
 class FamilyCalendarResponse(BaseModel):
     configured: bool = Field(description='A family calendar is reachable (the ALLGlance gateway with dayGLANCE)')
+    caldav: bool = Field(
+        default=False, description='Approved events also go to the user\'s CalDAV calendar (Settings, Calendar sync)'
+    )
     label: str = Field(default='', description='What to call it in the app')
     members: List[FamilyCalendarMember] = Field(
         default_factory=list, description='The household (the gateway\'s roster); empty when it could not be read'

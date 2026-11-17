@@ -146,13 +146,28 @@ def test_approve_reports_a_gateway_refusal_and_keeps_the_event_pending(world):
     assert saved == {}
 
 
-def test_approve_without_a_family_calendar_is_a_clear_error(world, monkeypatch):
-    store, _ = world
+def test_approve_without_a_family_calendar_means_add_to_my_caldav_calendar(world, monkeypatch):
+    """No ALLGlance gateway: approve still works, records the yes (with the user's edits) and
+    asks the CalDAV sync to put it on the user's own calendar; nothing is posted anywhere."""
+    store, saved = world
     store['c1'] = _conversation('c1', [{'title': 'Inspection', 'start': NOW + timedelta(days=1)}])
     monkeypatch.setattr(fc.users_db, 'get_task_integration', lambda uid, key: None)
+    dirty, remembered = [], []
+    monkeypatch.setattr(fc.caldav_sync, 'mark_dirty', dirty.append)
+    monkeypatch.setattr(fc.caldav_sync, 'remember_approved_event', lambda uid, cid: remembered.append(cid))
     assert fc.integration('u1') is None
-    with pytest.raises(RuntimeError, match='No family calendar'):
-        asyncio.run(fc.approve('u1', 'c1', 0))
+    event = asyncio.run(fc.approve('u1', 'c1', 0, title='Home inspection', duration=45))
+    assert event.approved and not event.created and not event.declined and event.title == 'Home inspection'
+    stored = saved['c1'][0]
+    assert stored['approved'] and not stored['created'] and stored['duration'] == 45
+    assert dirty == ['u1'] and remembered == ['c1']
+    # it moves from "waiting" to "reviewed lately"
+    waiting, recent = fc.pending('u1', now=NOW)
+    assert waiting == [] and [e.title for e in recent] == ['Home inspection']
+    # declining afterwards takes the approval back (the sync then takes it off the calendar)
+    declined = fc.decline('u1', 'c1', 0)
+    assert declined.declined and not declined.approved and saved['c1'][0]['approved'] is False
+    assert dirty == ['u1', 'u1']
 
 
 def test_decline_marks_the_event_and_drops_it_from_the_queue(world):

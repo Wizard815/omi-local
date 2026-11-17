@@ -225,14 +225,17 @@ def test_reopen_restores_rolled_and_dropped_but_not_merges(world):
     convs, reviews, _, _ = world
     service.finalize('u1', DAY, ['budget'], [['held-a', 'held-b']], ['call'])
     assert service.reopen('u1', DAY) == (3, 1)  # lunch + held-c rolled, call dropped; one merge stays
-    assert reviews == {}
+    # the approval is undone, the summary stays as a draft (off the calendar until approved again)
+    assert reviews[DAY]['status'] == 'draft' and reviews[DAY]['summary_text']
+    # reopening the draft discards it
+    assert service.reopen('u1', DAY) == (0, 0) and reviews == {}
     for cid in ('lunch', 'held-c', 'call'):
         assert not convs[cid]['discarded'] and convs[cid]['day_review_date'] is None
 
 
 def test_pending_dates_skip_reviewed_days(world, monkeypatch):
     monkeypatch.setattr(service, 'local_today', lambda tz: datetime(2026, 10, 11).date())
-    assert service.pending_dates('u1', days=3) == {'today': '2026-10-11', 'pending_dates': [DAY]}
+    assert service.pending_dates('u1', days=3) == {'today': '2026-10-11', 'pending_dates': [DAY], 'draft_dates': []}
     service.finalize('u1', DAY, [])
     assert service.pending_dates('u1', days=3)['pending_dates'] == []
 
@@ -262,7 +265,12 @@ def bundled(world, monkeypatch):
 
 def test_bundle_keeps_starred_and_sections_the_rest_with_tags(bundled):
     convs, reviews, llm, submitted, tagged = bundled
-    review = service.bundle('u1', DAY)
+    draft = service.bundle('u1', DAY)
+    # a draft: written, but nothing sorted, tagged or discarded until the user approves it
+    assert draft['status'] == 'draft' and draft['kept_conversation_ids'] == ['budget']
+    assert tagged == {} and not any(convs[c]['discarded'] for c in draft['rolled_up_conversation_ids'])
+    review = service.approve('u1', DAY)
+    assert review['status'] == 'finalized' and len(llm.prompts) == 1  # approving reused the draft's text
     assert review['kept_conversation_ids'] == ['budget']
     assert review['rolled_up_conversation_ids'] == ['held-a', 'held-b', 'lunch', 'held-c', 'call']
     assert [s['conversation_ids'] for s in review['sections']] == [['held-a', 'held-b'], ['lunch'], ['held-c', 'call']]
@@ -295,6 +303,7 @@ def test_bundle_refuses_a_future_day_and_a_reviewed_day(bundled):
 def test_favorite_a_section_pulls_its_conversations_back_out_and_unfavorite_folds_them_in(bundled):
     convs, reviews, llm, submitted, tagged = bundled
     service.bundle('u1', DAY)
+    service.approve('u1', DAY)
     submitted.clear()
     review = service.favorite_section('u1', DAY, 's1', True)
     assert review['sections'][0]['favorited'] is True
@@ -320,9 +329,51 @@ def test_favorite_a_section_pulls_its_conversations_back_out_and_unfavorite_fold
 def test_regenerate_keeps_a_favorited_section_favorited_and_retags(bundled):
     convs, reviews, llm, submitted, tagged = bundled
     service.bundle('u1', DAY)
+    service.approve('u1', DAY)
     service.favorite_section('u1', DAY, 's2', True)
     llm.reply = 'TITLE: Again\n\nSECTION c1+c2+c3: Everything\nAll of it.\nTAGS: all\n\nSECTION c4+c5: Later\nLater.\n'
     service.add_correction('u1', DAY, {'type': 'paragraph', 'text': 'Also: the dentist called.'})
     review = service.regenerate('u1', DAY)
     assert [s['favorited'] for s in review['sections']] == [True, False]
     assert tagged['lunch'] == ['lunch', 'all'] and tagged['held-a'] == ['coffee', 'work', 'all']
+
+
+# --- drafts: written overnight, approved by the user ---------------------------------------------
+
+
+def test_a_draft_touches_nothing_and_counts_as_still_waiting(bundled, monkeypatch):
+    convs, reviews, llm, submitted, tagged = bundled
+    monkeypatch.setattr(service, 'local_today', lambda tz: datetime(2026, 10, 11).date())
+    draft = service.prepare_draft('u1', DAY)
+    assert draft['status'] == 'draft' and draft['final_text']
+    assert not any(c['discarded'] for c in convs.values() if c['id'] != 'auto-discarded')
+    assert submitted == [] and tagged == {}
+    assert service.pending_dates('u1', days=3) == {
+        'today': '2026-10-11',
+        'pending_dates': [DAY],
+        'draft_dates': [DAY],
+    }
+    # favoriting a section of a draft only plans it: starred, nothing discarded or enriched
+    review = service.favorite_section('u1', DAY, 's1', True)
+    assert review['status'] == 'draft' and convs['held-a']['starred'] and submitted == []
+    assert review['kept_conversation_ids'] == ['budget', 'held-a', 'held-b']
+    # approving uses the draft as it stands: no second model call
+    approved = service.approve('u1', DAY)
+    assert approved['status'] == 'finalized' and approved['approved_at'] and len(llm.prompts) == 1
+    assert approved['kept_conversation_ids'] == ['held-a', 'held-b', 'budget']  # in day order
+    assert service.pending_dates('u1', days=3)['pending_dates'] == []
+    with pytest.raises(service.DayReviewError) as e:
+        service.approve('u1', DAY)
+    assert e.value.status_code == 409
+
+
+def test_sorting_a_draft_differently_rewrites_it_with_its_corrections_on_approval(bundled):
+    convs, reviews, llm, submitted, tagged = bundled
+    service.prepare_draft('u1', DAY)
+    service.add_correction('u1', DAY, {'type': 'paragraph', 'text': 'We also walked the dog.'})
+    llm.reply = 'TITLE: Shorter day\n\nSECTION c1: Lunch\nLunch only.\n'
+    review = service.finalize('u1', DAY, ['budget', 'held-a', 'held-b', 'held-c'], (), ['call'])
+    assert review['status'] == 'finalized' and len(llm.prompts) == 2
+    assert 'We also walked the dog.' in llm.prompts[-1]  # the draft's corrections are ground truth
+    assert review['corrections'][0]['applied_at'] is not None
+    assert review['rolled_up_conversation_ids'] == ['lunch'] and convs['call']['discarded']

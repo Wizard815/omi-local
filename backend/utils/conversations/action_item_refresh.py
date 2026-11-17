@@ -21,6 +21,7 @@ from utils.executors import postprocess_executor, submit_with_context
 from utils.metrics import OMI_ACTION_ITEM_REFRESH_TOTAL
 from utils.notification_dispatch import dispatch_action_item_reminder
 from utils.task_sync import auto_sync_action_items_batch
+from utils import task_approval
 
 logger = logging.getLogger(__name__)
 OUTCOMES = ('kept_existing', 'added_new', 'transferred_from_donor', 'skipped_duplicate', 'disabled')
@@ -74,6 +75,8 @@ def _deliver(uid: str, conversation_id: str, rows: list[dict]) -> None:
         and not row.get('exported')
         and not row.get('sync_requested')
         and not row.get('apple_reminder_id')
+        # omi-local: a task waiting for the user's OK gets no reminder or integration copy yet.
+        and task_approval.deliverable(row)
     ]
     for row in rows:
         if row.get('due_at'):

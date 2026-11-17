@@ -55,6 +55,7 @@ INTEGRATION_PUBLIC_PATHS = (
 APP_CLIENT_PREFIXES = (
     '/v1/caldav',  # omi-local: tasks + calendar sync settings
     '/v1/family-calendar',  # omi-local: review heard events before they go to the family calendar
+    '/v1/approvals',  # omi-local: tasks waiting for the user's OK, auto-approve
     '/v1/pending-work',
     '/v1/attention-items',
     '/v1/messaging/links',
