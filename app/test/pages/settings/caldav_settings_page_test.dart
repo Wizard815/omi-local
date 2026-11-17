@@ -4,7 +4,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:omi/backend/http/api/approvals.dart';
 import 'package:omi/backend/http/api_result.dart';
 import 'package:omi/backend/schema/caldav.dart';
 import 'package:omi/l10n/app_localizations.dart';

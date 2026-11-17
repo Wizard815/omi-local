@@ -47,7 +47,7 @@ def store(monkeypatch):
         'get_action_items',
         lambda uid, completed=None, limit=None, **k: [dict(t) for t in tasks.values() if not t.get('completed')],
     )
-    monkeypatch.setattr(task_approval, 'submit_with_context', lambda pool, fn, *a: delivered.append((fn.__name__, *a)))
+    monkeypatch.setattr(task_approval, '_deliver', lambda *a: delivered.append(('_deliver', *a)))
     return tasks, delivered
 
 
@@ -73,7 +73,9 @@ def test_approve_with_edits_delivers_once_and_decline_is_undoable(store):
     tasks, delivered = store
     approved = task_approval.approve('u1', 'heard', description='Call the plumber about the leak')
     assert approved['approval'] == 'approved' and tasks['heard']['description'] == 'Call the plumber about the leak'
+    # delivered before approve() returns (inside the request), with the user's edits
     assert delivered and delivered[0][0] == '_deliver'
+    assert delivered[0][2]['description'] == 'Call the plumber about the leak'
     task_approval.approve('u1', 'heard')  # again: nothing delivered twice
     assert len(delivered) == 1
     # a waiting task declined, then the decline undone: it waits again
