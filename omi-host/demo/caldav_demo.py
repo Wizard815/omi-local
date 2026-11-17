@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import hashlib
 import json
 import os
 import re
@@ -38,6 +39,11 @@ from xml.etree import ElementTree
 from zoneinfo import ZoneInfo
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def owner_tag(uid: str) -> str:
+    """The owner part of the UIDs Omi writes for one Omi user (utils/caldav/sync.owner_tag)."""
+    return 'u' + hashlib.sha256(uid.encode('utf-8')).hexdigest()[:8]
 NS = {'d': 'DAV:', 'c': 'urn:ietf:params:xml:ns:caldav'}
 PHONE_TZ = 'Europe/Berlin'  # what the "phone" writes its times in (TZID), as DAVx5 does
 
@@ -437,13 +443,15 @@ def at(day: date, hour: int, minute: int = 0) -> datetime:
 
 
 def family_day(day: date, today: date) -> List[Dict[str, Any]]:
-    """Three family conversations from ``day`` and what the extractor would have pulled from them."""
+    """Three family conversations from ``day`` and what the extractor would have pulled from them.
+    Starred, so the day's summary draft keeps them all (the offline stack has no model)."""
     d1, d2, d3, d5 = (today + timedelta(days=n) for n in (1, 2, 3, 5))
     return [
         {
             'title': "Mia's dentist appointment",
             'overview': "Talked about Mia's check-up at Dr. Weber's and calling to confirm it.",
             'started_at': at(day, 8, 10).isoformat(),
+            'starred': True,
             'transcript': [
                 "Mia's dentist check-up is on " + d2.strftime('%A') + ' at three.',
                 "Can you call Dr. Weber's office tomorrow morning to confirm?",
@@ -462,6 +470,7 @@ def family_day(day: date, today: date) -> List[Dict[str, Any]]:
             'title': "Leo's soccer season",
             'overview': 'Practice moved to Thursday; Leo has outgrown his cleats.',
             'started_at': at(day, 12, 30).isoformat(),
+            'starred': True,
             'transcript': ['Practice is ' + d3.strftime('%A') + ' at half five now.', 'And Leo needs new cleats.'],
             'events': [
                 {'title': 'Leo soccer practice', 'description': 'Field 2', 'start': at(d3, 17, 30).isoformat(), 'duration': 90}
@@ -472,6 +481,7 @@ def family_day(day: date, today: date) -> List[Dict[str, Any]]:
             'title': "Grandma's 80th birthday",
             'overview': "Planning grandma's birthday dinner at Luigi's and the cake.",
             'started_at': at(day, 18, 0).isoformat(),
+            'starred': True,
             'transcript': ["Grandma's dinner is at seven, at Luigi's.", 'Someone has to pick up the cake at four.'],
             'events': [
                 {'title': "Grandma's 80th birthday dinner", 'description': "Luigi's", 'start': at(d5, 19, 0).isoformat(), 'duration': 120},
@@ -500,8 +510,12 @@ class Demo:
         self.events_href = ''
         # The calendars Omi syncs into: the bundled server's own ("Omi", "Omi Tasks"), or with
         # --isolate a pair made for this run (a real stack's family keeps its lists untouched).
+        # Each Omi user gets their own pair on the shared account: "Omi – <name>", "Omi Tasks – <name>".
         self.events_name, self.tasks_name = 'Omi', 'Omi Tasks'
         self.isolated: List[str] = []
+        self.tag = ''
+        self.username = ''
+        self.expected: Dict[str, str] = {}  # task id -> the SUMMARY the server should show
 
     # helpers
     def sync(self) -> Dict[str, Any]:
@@ -517,10 +531,13 @@ class Demo:
         return self.phone.objects(self.events_href, 'VEVENT')
 
     def todo_of(self, task_id: str) -> Optional[DavObject]:
-        return self.todos().get(f'omi-task-{task_id}@omi-local')
+        return self.todos().get(f'omi-task-{self.tag}-{task_id}@omi-local')
 
     def event_of(self, conversation_id: str, idx: int) -> Optional[DavObject]:
-        return self.events().get(f'omi-event-{conversation_id}-{idx}@omi-local')
+        return self.events().get(f'omi-event-{self.tag}-{conversation_id}-{idx}@omi-local')
+
+    def day_of(self, date_str: str) -> Optional[DavObject]:
+        return self.events().get(f'omi-day-{self.tag}-{date_str}@omi-local')
 
     def wait_for(self, predicate: Callable[[], Any], seconds: float, step: float = 2.0) -> Tuple[Any, float]:
         start = time.monotonic()
@@ -551,6 +568,9 @@ class Demo:
         if not uid:
             uid = 'unknown'
         self.uid = uid
+        self.tag = owner_tag(uid)
+        self.username = username
+        self.events_name, self.tasks_name = f'Omi – {username}', f'Omi Tasks – {username}'
         self.r.add('setup', '-', f'local login as {username}', True)
 
         settings = self.omi.call('GET', '/v1/caldav/settings')
@@ -617,17 +637,21 @@ class Demo:
             raise SystemExit('--seed-cmd is required: conversations are seeded with their extraction results')
         plan = family_day(self.day, self.today)
         ids = seed(self.args.seed_cmd, {'op': 'conversations', 'uid': self.uid, 'conversations': plan})['ids']
+        specs = []
         for cid, item in zip(ids, plan):
             item['id'] = cid
             self.conversations.append(item)
             for description, due in item['tasks']:
-                # What conversation processing stores for an extracted action item, through the app's API.
-                created = self.omi.call(
-                    'POST',
-                    '/v1/action-items',
-                    {'description': description, 'due_at': due.isoformat(), 'conversation_id': cid, 'source': 'conversation'},
-                )
-                self.tasks[description] = created['id']
+                specs.append({'description': description, 'due_at': due.isoformat(), 'conversation_id': cid,
+                              'created_at': item['started_at']})
+        # One more heard task, which the user will decline.
+        specs.append({'description': 'Ask about the school trip', 'conversation_id': ids[0],
+                      'created_at': plan[0]['started_at']})
+        # What conversation processing stores for extracted action items: waiting for the user's OK.
+        task_ids = seed(self.args.seed_cmd, {'op': 'tasks', 'uid': self.uid, 'tasks': specs})['ids']
+        for spec, task_id in zip(specs, task_ids):
+            self.tasks[spec['description']] = task_id
+            self.expected[task_id] = spec['description']
         if self.args.allglance_url:
             seed(
                 self.args.seed_cmd,
@@ -642,14 +666,12 @@ class Demo:
 
     # ---- send: Omi -> CalDAV ----------------------------------------------------------------
     def send(self) -> None:
-        # The day review, as the app does it: open the day, keep the three conversations, add a line.
         date_str = self.day.isoformat()
+        # The night's job writes a summary DRAFT (here: the app's "Summarize for me", the same call);
+        # the user adds a line to it. Nothing has been approved yet.
         self.omi.call('GET', f'/v1/users/day-reviews/{date_str}')
-        self.omi.call(
-            'POST',
-            f'/v1/users/day-reviews/{date_str}/finalize',
-            {'keep_conversation_ids': [c['id'] for c in self.conversations]},
-        )
+        draft = self.omi.call('POST', f'/v1/users/day-reviews/{date_str}/bundle')
+        self.r.add('day', '-', 'the day summary is prepared as a draft', draft.get('status') == 'draft', draft.get('status'))
         self.omi.call(
             'POST',
             f'/v1/users/day-reviews/{date_str}/corrections',
@@ -665,23 +687,84 @@ class Demo:
             ok = 'VTODO' in tasks.get('components', []) and 'VEVENT' in events.get('components', [])
             return ok, json.dumps({self.events_name: events, self.tasks_name: tasks})
 
-        what = (
-            f'the phone sees "{self.events_name}" (VEVENT) and "{self.tasks_name}" (VTODO)'
-            if self.isolated
-            else 'Omi created the "Omi" (VEVENT) and "Omi Tasks" (VTODO) calendars'
-        )
+        what = f'the phone sees this person\'s own "{self.events_name}" (VEVENT) and "{self.tasks_name}" (VTODO)'
         if not self.guard('setup', 'send', what, collections):
             raise SystemExit('no calendars on the server; nothing else can be checked')
+
+        # ---- nothing Omi heard is on the server before the user's OK ----
+        waiting = self.omi.call('GET', '/v1/approvals')
+        self.r.add(
+            'approve',
+            '-',
+            'GET /v1/approvals lists the heard tasks, events and the draft day',
+            waiting.get('task_count') == len(self.tasks) and waiting.get('event_count', 0) >= 4
+            and date_str in (waiting.get('draft_dates') or []),
+            f"tasks={waiting.get('task_count')} events={waiting.get('event_count')} drafts={waiting.get('draft_dates')}",
+        )
+        self.guard(
+            'approve',
+            'send',
+            'unapproved tasks are NOT on the server',
+            lambda: ((n := sum(1 for t in self.tasks.values() if self.todo_of(t))) == 0, f'{n} of {len(self.tasks)} pushed'),
+        )
+        self.guard(
+            'approve',
+            'send',
+            'unapproved events are NOT on the server',
+            lambda: (
+                (n := sum(1 for c in self.conversations for i, _ in enumerate(c['events']) if self.event_of(c['id'], i))) == 0,
+                f'{n} pushed',
+            ),
+        )
+        self.guard(
+            'approve',
+            'send',
+            'the draft day summary is NOT on the server',
+            lambda: ((obj := self.day_of(date_str)) is None, 'absent' if obj is None else 'a draft was pushed'),
+        )
+        marks = {t['id']: t.get('approval') for t in self.omi.tasks()}
+        self.r.add(
+            'approve',
+            '-',
+            'the task list marks them approval=pending (the app shows them only under "Waiting for your OK")',
+            all(marks.get(t) == 'pending' for t in self.tasks.values()),
+            json.dumps({k: marks.get(v) for k, v in list(self.tasks.items())[:2]}),
+        )
+
+        # ---- the user approves: tasks (one edited), declines one (and undoes it once), the day ----
+        cake_id = self.tasks['Order the birthday cake']
+        for description, task_id in self.tasks.items():
+            if description == 'Ask about the school trip':
+                continue
+            body = {'description': 'Order the birthday cake (chocolate)'} if task_id == cake_id else {}
+            self.omi.call('POST', f'/v1/approvals/tasks/{task_id}/approve', body)
+        self.expected[cake_id] = 'Order the birthday cake (chocolate)'
+        trip = self.tasks.pop('Ask about the school trip')
+        self.omi.call('POST', f'/v1/approvals/tasks/{trip}/decline', {})
+        undone = self.omi.call('POST', f'/v1/approvals/tasks/{trip}/decline', {'declined': False})
+        self.r.add('approve', '-', 'a decline can be undone (the task waits again)', (undone.get('task') or {}).get('approval') == 'pending')
+        self.omi.call('POST', f'/v1/approvals/tasks/{trip}/decline', {})
+        approved_day = self.omi.call('POST', f'/v1/users/day-reviews/{date_str}/approve')
+        self.r.add('approve', '-', 'Approve finalizes the draft day', approved_day.get('status') == 'finalized', approved_day.get('status'))
+        # Calendar check: every heard event but Mia's (approved with edits further down).
+        mia = self.conversations[0]
+        for conversation in self.conversations:
+            for idx, _ in enumerate(conversation['events']):
+                if conversation is mia:
+                    continue
+                self.omi.call('POST', '/v1/family-calendar/events', {'conversation_id': conversation['id'], 'event_idx': idx})
+        self.sync()
 
         # Tasks
         def task_pushed(description: str):
             def check():
+                task_id = self.tasks[description]
                 due = next(d for c in self.conversations for t, d in c['tasks'] if t == description)
-                obj = self.todo_of(self.tasks[description])
+                obj = self.todo_of(task_id)
                 if obj is None:
                     return False, 'no VTODO'
                 ok = (
-                    unescape(obj.value('SUMMARY')) == description
+                    unescape(obj.value('SUMMARY')) == self.expected[task_id]
                     and obj.when('DUE') == due
                     and obj.value('STATUS') == 'NEEDS-ACTION'
                 )
@@ -690,7 +773,13 @@ class Demo:
             return check
 
         for description in self.tasks:
-            self.guard('task', 'send', f'VTODO for "{description}"', task_pushed(description))
+            self.guard('task', 'send', f'approved -> VTODO for "{self.expected[self.tasks[description]]}"', task_pushed(description))
+        self.guard(
+            'approve',
+            'send',
+            'a declined task stays off the server',
+            lambda: ((obj := self.todo_of(trip)) is None, 'absent' if obj is None else 'declined task pushed'),
+        )
 
         # Events and the day summary
         for conversation in self.conversations:
@@ -698,6 +787,8 @@ class Demo:
 
                 def check(conversation=conversation, idx=idx, event=event):
                     obj = self.event_of(conversation['id'], idx)
+                    if conversation is mia:
+                        return obj is None, 'not approved yet: absent' if obj is None else 'pushed without approval'
                     if obj is None:
                         return False, 'no VEVENT'
                     start = datetime.fromisoformat(event['start'])
@@ -705,17 +796,36 @@ class Demo:
                     ok = unescape(obj.value('SUMMARY')) == event['title'] and obj.when('DTSTART') == start and obj.when('DTEND') == end
                     return ok, f"SUMMARY={unescape(obj.value('SUMMARY'))!r} DTSTART={obj.value('DTSTART')} DTEND={obj.value('DTEND')}"
 
-                self.guard('event', 'send', f'VEVENT for "{event["title"]}"', check)
+                label = 'still waiting: no VEVENT' if conversation is mia else 'approved -> VEVENT'
+                self.guard('event', 'send', f'{label} for "{event["title"]}"', check)
 
         def day_summary():
-            obj = self.events().get(f'omi-day-{date_str}@omi-local')
+            obj = self.day_of(date_str)
             if obj is None:
                 return False, 'no all-day VEVENT'
             params, value = obj.props['DTSTART']
             ok = 'VALUE=DATE' in params and value == self.day.strftime('%Y%m%d') and 'grandma' in unescape(obj.value('DESCRIPTION'))
-            return ok, f"SUMMARY={unescape(obj.value('SUMMARY'))!r} DTSTART{params}:{value}"
+            return ok, f"UID=omi-day-{self.tag}-{date_str} SUMMARY={unescape(obj.value('SUMMARY'))!r}"
 
-        self.guard('day', 'send', 'day summary as an all-day VEVENT', day_summary)
+        self.guard('day', 'send', 'approved day summary as an all-day VEVENT (owner-scoped UID)', day_summary)
+
+        # Reopening the approved day takes its summary off until it is approved again.
+        self.omi.call('POST', f'/v1/users/day-reviews/{date_str}/reopen')
+        self.sync()
+        self.guard(
+            'day',
+            'send',
+            'reopen takes the summary off the calendar',
+            lambda: ((obj := self.day_of(date_str)) is None, 'gone' if obj is None else 'still on the server'),
+        )
+        again = self.omi.call('POST', f'/v1/users/day-reviews/{date_str}/approve')
+        self.sync()
+        self.guard(
+            'day',
+            'send',
+            '... and approving the draft again puts it back',
+            lambda: (again.get('status') == 'finalized' and self.day_of(date_str) is not None, again.get('status')),
+        )
 
         # Edits in Omi reach the server.
         cleats = self.tasks['Buy new soccer cleats for Leo']
@@ -755,12 +865,15 @@ class Demo:
         cake = self.conversations[2]
         fc = self.omi.call('GET', '/v1/family-calendar')
         pending = {(e['conversation_id'], e['event_idx']) for e in fc.get('pending') or []}
+        approved_ones = {(e['conversation_id'], e['event_idx']) for e in fc.get('recent') or [] if e.get('approved')}
         self.r.add(
             'family',
             '-',
-            'family calendar lists the heard events for review',
-            (fc.get('configured') or not self.args.allglance_url) and (mia['id'], 0) in pending and (cake['id'], 1) in pending,
-            f"configured={fc.get('configured')} pending={len(pending)}",
+            'the Calendar check lists Mia\'s event as waiting and the approved ones as reviewed',
+            (fc.get('configured') or not self.args.allglance_url)
+            and (mia['id'], 0) in pending
+            and (cake['id'], 1) in approved_ones,
+            f"configured={fc.get('configured')} pending={len(pending)} approved={len(approved_ones)}",
         )
         moved = at(self.today + timedelta(days=2), 16, 15)
         if not self.args.allglance_url:
@@ -825,7 +938,7 @@ class Demo:
         self.r.add(
             'task',
             'send',
-            'a new task reaches the server by itself (scheduler, no Sync now)',
+            'a task made in the app counts as approved and reaches the server by itself (no Sync now)',
             obj is not None,
             f'after {waited:.0f}s' if obj else f'not there after {waited:.0f}s',
         )
@@ -840,7 +953,7 @@ class Demo:
         wrap_id = self.tasks["Wrap grandma's present"]
 
         # 1. Tick a task off in Tasks.org.
-        cake = todos[f'omi-task-{cake_id}@omi-local']
+        cake = todos[f'omi-task-{self.tag}-{cake_id}@omi-local']
         self.phone.edit(cake, {'STATUS': 'COMPLETED', 'PERCENT-COMPLETE': '100', 'COMPLETED': ical_utc(datetime.now(timezone.utc))})
         self.sync()
         self.guard(
@@ -851,7 +964,7 @@ class Demo:
         )
 
         # 2. Rename and re-date a task (Tasks.org writes DUE with the phone's TZID).
-        wrap = self.todos()[f'omi-task-{wrap_id}@omi-local']
+        wrap = self.todos()[f'omi-task-{self.tag}-{wrap_id}@omi-local']
         phone_due = at(self.today + timedelta(days=5), 7, 30)
         self.phone.edit(
             wrap,
@@ -874,7 +987,7 @@ class Demo:
         self.guard('task', 'receive', 'due date changed on the phone (TZID) -> due_at in Omi', redated)
 
         # 3. Delete a task on the phone.
-        cleats = self.todos()[f'omi-task-{cleats_id}@omi-local']
+        cleats = self.todos()[f'omi-task-{self.tag}-{cleats_id}@omi-local']
         self.phone.delete(cleats.href)
         self.sync()
         self.guard(
@@ -930,7 +1043,7 @@ class Demo:
             )
 
         # 5. Conflict: both sides edit the same task before a sync.
-        conflict = self.todos()[f'omi-task-{wrap_id}@omi-local']
+        conflict = self.todos()[f'omi-task-{self.tag}-{wrap_id}@omi-local']
         self.phone.edit(conflict, {'SUMMARY': 'Phone title'})
         time.sleep(1.1)
         self.omi.call('PATCH', f'/v1/action-items/{wrap_id}', {'description': 'Omi title'})
@@ -1047,12 +1160,150 @@ class Demo:
             f'after {waited:.0f}s' if reopened else f'still completed after {waited:.0f}s',
         )
 
+    # ---- a second person on the same CalDAV account, and auto-approve ------------------------
+    def second_person(self) -> None:
+        """Bob uses the same Omi server, so the same CalDAV login. He gets his own calendar and
+        task list, his summary for the same date does not touch Alice's, approve works without a
+        family-calendar gateway, and auto-approve is off until he turns it on."""
+        if not self.args.seed_cmd:
+            return
+        date_str = self.day.isoformat()
+        name = f'caldav-demo-bob-{secrets.token_hex(3)}'
+        password = secrets.token_urlsafe(12)
+        bob_uid = seed(self.args.seed_cmd, {'op': 'account', 'username': name, 'password': password})['uid']
+        bob = Omi(self.args.backend)
+        bob.login(name, password)
+        bob_tag = owner_tag(bob_uid)
+        self.r.add('people', '-', f'second Omi user {name} on the same server', True)
+        start = at(self.today + timedelta(days=6), 10, 0)
+        (cid,) = seed(
+            self.args.seed_cmd,
+            {
+                'op': 'conversations',
+                'uid': bob_uid,
+                'conversations': [
+                    {
+                        'title': 'Bike repair',
+                        'overview': 'Bob talked about getting the bike fixed.',
+                        'started_at': at(self.day, 9, 0).isoformat(),
+                        'starred': True,
+                        'transcript': ['The bike shop can take it next week.'],
+                        'events': [{'title': 'Bike shop appointment', 'start': start.isoformat(), 'duration': 30}],
+                    }
+                ],
+            },
+        )['ids']
+        (bob_task,) = seed(
+            self.args.seed_cmd,
+            {
+                'op': 'tasks',
+                'uid': bob_uid,
+                'tasks': [{'description': 'Pump up the bike tyres', 'conversation_id': cid,
+                           'created_at': at(self.day, 9, 5).isoformat()}],
+            },
+        )['ids']
+        bob.call('POST', f'/v1/users/day-reviews/{date_str}/bundle')
+        bob.call('POST', f'/v1/users/day-reviews/{date_str}/corrections', {'type': 'paragraph', 'text': "Bob's day: the bike."})
+        bob.call('POST', f'/v1/users/day-reviews/{date_str}/approve')
+        no_gateway = bob.call('POST', '/v1/family-calendar/events', {'conversation_id': cid, 'event_idx': 0})
+        self.r.add(
+            'people',
+            '-',
+            'approve works without a family-calendar gateway (means: add to my CalDAV calendar)',
+            bool(no_gateway.get('ok')) and (no_gateway.get('event') or {}).get('approved') is True,
+            no_gateway.get('error') or '',
+        )
+        bob_report = bob.call('POST', '/v1/caldav/sync')
+        self.r.add('people', '-', "Bob's sync reports no errors", bool(bob_report.get('ok')), json.dumps(bob_report)[:200])
+        bob_settings = bob.call('GET', '/v1/caldav/settings')
+        found = self.phone.collections()
+        bob_cal = (found.get(f'Omi – {name}') or {}).get('href') or ''
+        bob_tasks = (found.get(f'Omi Tasks – {name}') or {}).get('href') or ''
+        self.r.add(
+            'people',
+            'send',
+            'each person gets their own calendar and task list on the shared account',
+            bool(bob_cal and bob_tasks) and bob_cal != self.events_href and bob_tasks != self.tasks_href,
+            f'alice={self.events_href} bob={bob_cal} (stored: {bob_settings.get("calendar_href")})',
+        )
+
+        def no_collision():
+            alice_day = self.events().get(f'omi-day-{self.tag}-{date_str}@omi-local')
+            bob_day = self.phone.objects(bob_cal, 'VEVENT').get(f'omi-day-{bob_tag}-{date_str}@omi-local')
+            ok = (
+                alice_day is not None
+                and bob_day is not None
+                and 'grandma' in unescape(alice_day.value('DESCRIPTION'))
+                and 'bike' in unescape(bob_day.value('DESCRIPTION'))
+                and 'grandma' not in unescape(bob_day.value('DESCRIPTION'))
+            )
+            return ok, f'alice: {alice_day and alice_day.href} bob: {bob_day and bob_day.href}'
+
+        self.guard('people', 'send', 'same-date day summaries of two people do not overwrite each other', no_collision)
+        self.guard(
+            'people',
+            'send',
+            "Bob's approved event is on his calendar (no gateway)",
+            lambda: (
+                (obj := self.phone.objects(bob_cal, 'VEVENT').get(f'omi-event-{bob_tag}-{cid}-0@omi-local')) is not None,
+                obj.href if obj else 'missing',
+            ),
+        )
+        listing = bob.call('GET', '/v1/caldav/collections')
+        alice_listed = next((c for c in listing.get('collections') or [] if c.get('href', '').rstrip('/').endswith(self.events_href.rstrip('/'))), {})
+        self.r.add(
+            'people',
+            '-',
+            "GET /v1/caldav/collections marks Alice's calendar as used by her",
+            self.username in (alice_listed.get('used_by') or []),
+            json.dumps(alice_listed)[:200],
+        )
+
+        # Auto-approve: off by default; the hourly job does nothing for him.
+        settings = bob.call('GET', '/v1/approvals/settings')
+        self.r.add('auto', '-', 'auto-approve is off by default', settings.get('auto_approve') is False, json.dumps(settings))
+        outcome = seed(self.args.seed_cmd, {'op': 'auto_approve', 'uid': bob_uid})
+        bob.call('POST', '/v1/caldav/sync')
+        on_server = lambda: self.phone.objects(bob_tasks, 'VTODO').get(f'omi-task-{bob_tag}-{bob_task}@omi-local')  # noqa: E731
+        self.r.add(
+            'auto',
+            'send',
+            "with auto-approve off, yesterday's waiting task stays off the server",
+            outcome == {} and on_server() is None,
+            json.dumps(outcome),
+        )
+        bob.call('PUT', '/v1/approvals/settings', {'auto_approve': True, 'time': '00:00'})
+        outcome = seed(self.args.seed_cmd, {'op': 'auto_approve', 'uid': bob_uid})
+        bob.call('POST', '/v1/caldav/sync')
+        self.r.add(
+            'auto',
+            'send',
+            'auto-approve on, past its time: the waiting task is approved and synced',
+            bob_task in (outcome.get('tasks') or []) and on_server() is not None,
+            json.dumps(outcome),
+        )
+
+        # The picker: a new task list of his own, made from the app; the next sync moves there.
+        made = bob.call('POST', '/v1/caldav/collections', {'name': f"Bob's list {secrets.token_hex(2)}", 'kind': 'tasks'})
+        bob.call('POST', '/v1/caldav/sync')
+        new_href = (made.get('collection') or {}).get('href') or ''
+        self.r.add(
+            'people',
+            'send',
+            'Create new… (POST /v1/caldav/collections) picks the new list; tasks follow, none deleted in Omi',
+            bool(made.get('ok'))
+            and bool(self.phone.objects(urllib.parse.urlparse(new_href).path, 'VTODO').get(f'omi-task-{bob_tag}-{bob_task}@omi-local'))
+            and bob.task(bob_task) is not None,
+            new_href,
+        )
+
     def run(self) -> int:
         try:
             if self.setup():
                 self.seed_day()
                 self.send()
                 self.receive()
+                self.second_person()
         except SystemExit as stop:
             self.r.add('demo', '-', 'stopped early', False, str(stop))
         except Exception as error:  # noqa: BLE001
