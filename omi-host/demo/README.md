@@ -108,3 +108,44 @@ until its owner approves it.
 - Extracted events are pushed once approved in the Calendar check (with or without
   dayGLANCE); a declined one is taken off. Events pushed before approvals existed are
   kept and marked approved.
+
+# Connections demo: what Omi sends to the wiki, Odysseus, Hermes, Studio, Coinpile and Orb
+
+`integrations_demo.sh` starts the same kind of stack as `caldav_demo.sh` (Redis, the
+Firestore + Auth emulators, the backend with the container's environment, the in-process
+scheduler, local login) on its own ports, plus:
+
+* the **real LLMWIKI MCP bridge handler** (`wiki_bridge_server.cjs`: the plugin's own
+  `serveFamilyMcp` from `Wizard815/LLM-will-remember-this`, over the in-memory two-person vault
+  its tests use, `scripts/family-harness.cjs`), read back through a `/__vault` window;
+* recording stand-ins for Hermes, Odysseus, Studio, Coinpile and Orb (`agents_stub.py`), each
+  answering the way that service's code does (paths in its header). The Studio stand-in signs
+  and posts its `chat.run.completed` webhook back to Omi like Studio's dispatcher.
+
+They listen on this machine's LAN address, never loopback (Omi refuses loopback targets), which
+the script allows with `OMI_WEBHOOK_ALLOWED_PRIVATE_NETWORKS=<ip>/32` as an operator would; the
+backend runs under omi-host's egress guard in block mode. The outbound queue works every 3 s and
+an approved day waits 6 s instead of Approve all's 10-minute Undo window, so a run takes about
+two minutes.
+
+```
+LLMWIKI_REPO=/path/to/LLM-will-remember-this omi-host/demo/integrations_demo.sh
+```
+
+Ports default to 8100, 8185, 9199, 6490, 4510 (stack) and 27223, 8742, 7100, 8748, 8180, 3100
+(wiki, Hermes, Odysseus, Studio, Coinpile, Orb); `OMI_DEMO_<NAME>_PORT` moves any of them and
+`OMI_DEMO_LAN_IP` picks the address.
+
+| | What it does | Checked at |
+|---|---|---|
+| settings | every connection set through `PUT /v1/integrations/outbound`, then Test connection | tokens never echoed (`has_token`); each probe reaches its service |
+| gate | the night job's summary **draft**, then Approve all + Undo inside the window | nothing in the wiki vault, no Orb log line |
+| wiki | the day approved; reopened and approved again | `people/wizard/raw/sources/<date> - Omi day review.md`, then `... (revised 1).md`; the receipt on the day review |
+| wiki | Send to wiki on one conversation, again, and a revised copy | the vault file equals the preview; "already sent"; `(revised 1)` |
+| hermes | Send to agent: a job | `POST /v1/runs` with exactly the preview, its question in `GET /v1/approvals`, Allow once relayed with the `request_id`, the output stored |
+| odysseus | Send to agent: a simple ask | `POST /api/session` (endpoint, model), `POST /api/chat`, the answer stored |
+| studio | Send to agent: a coding job | `POST /api/studio/orb/work`; the signed webhook completes the job; an unsigned one gets 401 |
+| coinpile | Send to Coinpile: a note and a transaction | `write_note`, `record_transaction` with exactly the fields; Coinpile's "asks first" answer |
+| egress | the backend's interpreter | the guard is on (block), a public address is refused, no LAN call was |
+
+Last run here (this branch): 35 passed, 0 failed.

@@ -202,3 +202,11 @@ async def test_conversation_created_webhook_skips_the_wiki_it_now_sends_to(monke
 
     await webhooks.conversation_created_webhook('u1', Conv())
     assert posted == []
+
+
+def test_connections_routes_are_mounted_before_the_app_key_route():
+    """/v1/integrations/{app_key} (routers/integrations.py) would otherwise read "outbound" as an app key."""
+    import app_roles
+
+    order = [m.module for m in app_roles.ROUTER_MOUNTS]
+    assert order.index('integrations_outbound') < order.index('integrations')
