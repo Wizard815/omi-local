@@ -17,6 +17,9 @@ object back. What it does, by "op":
   tasks         action items as conversation extraction writes them: waiting for the
                 user's OK (utils/task_approval.mark_extracted), created at the given time
                 -> {"ids": [...]}
+  legacy_sync   one sync of a user with the CalDAV sync code from BEFORE per-person lists and
+                approvals (its source is passed in, taken from origin/main by the driver), to
+                build the state an existing install has -> the old code's report
   auto_approve  what the hourly scheduler runs for one user: their auto-approve, if it is
                 on and due (utils/auto_approve.run_for_user) -> the outcome
 
@@ -134,6 +137,15 @@ def tasks(spec):
     return {'ids': ids}
 
 
+def legacy_sync(spec):
+    import types
+
+    module = types.ModuleType('omi_demo_legacy_caldav_sync')
+    sys.modules[module.__name__] = module
+    exec(compile(spec['source'], 'legacy_caldav_sync.py', 'exec'), module.__dict__)
+    return module.run_for_user(spec['uid']) or {}
+
+
 def auto_approve(spec):
     from utils import auto_approve as job
 
@@ -148,6 +160,7 @@ def main():
         'allglance': allglance,
         'tasks': tasks,
         'auto_approve': auto_approve,
+        'legacy_sync': legacy_sync,
     }
     result = ops[spec['op']](spec)
     # Last line of stdout is the answer (the backend's imports may log above it).
