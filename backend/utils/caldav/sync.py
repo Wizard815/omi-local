@@ -959,6 +959,25 @@ def remember_approved_event(uid: str, conversation_id: str) -> None:
         pass
 
 
+WITHDRAWN_EVENTS_KEY = 'caldav:withdrawn-events:'
+
+
+def withdraw_event(uid: str, conversation_id: str, event_idx: int) -> None:
+    """An approval was taken back (Approve all's Undo): the event waits again and comes off the
+    calendar, instead of counting as one pushed before approvals existed. Never raises."""
+    try:
+        redis_db.r.sadd(WITHDRAWN_EVENTS_KEY + uid, f'event:{conversation_id}-{event_idx}')
+    except Exception:  # noqa: BLE001 — without the memo the event stays on the calendar (as approved)
+        pass
+
+
+def _withdrawn_events(uid: str) -> Set[str]:
+    try:
+        return {_text(v) for v in (redis_db.r.smembers(WITHDRAWN_EVENTS_KEY + uid) or [])}
+    except Exception:  # noqa: BLE001
+        return set()
+
+
 def _approved_event_conversations(uid: str) -> List[str]:
     try:
         raw = redis_db.r.zrevrange(APPROVED_EVENTS_KEY + uid, 0, MAX_APPROVED_CONVERSATIONS - 1) or []
@@ -1017,6 +1036,7 @@ def push_conversation_events(
     if not ids:
         return
     rows = conversations_db.get_conversations_by_id_without_photos(uid, ids, include_discarded=True)
+    withdrawn = _withdrawn_events(uid)
     wanted: Set[str] = set()
     settled: Set[str] = set()  # conversations whose pushed events are judged here (the rest stay untouched)
     found: Set[str] = set()
@@ -1041,8 +1061,8 @@ def push_conversation_events(
             if event.get('declined'):
                 continue  # the user said no (family calendar, or deleted on the phone)
             if not event_approved(event):
-                if key not in pushed_keys:
-                    continue  # waiting for the user's OK in the Calendar check
+                if key not in pushed_keys or key in withdrawn:
+                    continue  # waiting for the user's OK in the Calendar check (again, after an Undo)
                 # Pushed before approvals existed: it is on the user's phones already. Keep it,
                 # and record the approval so it survives a change of calendar.
                 _apply_to_conversation_event(uid, key, _mark_approved)
