@@ -52,6 +52,9 @@ RUN pip install --no-cache-dir \
     numpy soundfile python-multipart
 
 COPY local_audio_service.py entrypoint-audio.sh /app/
+# Local-only egress guard (see egress-guard/sitecustomize.py); OMI_EGRESS_GUARD comes from compose.
+COPY egress-guard/sitecustomize.py /app/egress-guard/sitecustomize.py
+ENV PYTHONPATH=/app/egress-guard
 RUN chmod +x /app/entrypoint-audio.sh
 
 # Voices + HF model cache + the whisper.cpp ggml model cache live on the shared
