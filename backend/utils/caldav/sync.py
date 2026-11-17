@@ -66,7 +66,6 @@ stores the report or the error on the settings document.
 from __future__ import annotations
 
 import hashlib
-import json
 import logging
 import os
 import re
@@ -84,6 +83,19 @@ import database.device_calendar as device_calendar_db
 import database.redis_db as redis_db
 from utils.caldav import ical
 from utils.caldav.client import CalDavClient, CalDavError, Calendar, object_href
+from utils.caldav.owners import (
+    DEFAULT_CALENDAR_NAME,
+    DEFAULT_TASKS_NAME,
+    Scope,
+    others_on,
+    owner_label,
+    owner_tag,
+    parent_summary,
+    parse_owned,
+    personal_names,
+    register_collections,
+    scope_for,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -92,9 +104,8 @@ EVENT_PUSH_WINDOW_DAYS = 14
 EVENT_PULL_PAST_DAYS = 7
 EVENT_PULL_FUTURE_DAYS = 30
 MAX_TASKS = 500
-# The collections every user shared before per-person ones (kept for the users already on them).
-DEFAULT_CALENDAR_NAME = 'Omi'
-DEFAULT_TASKS_NAME = 'Omi Tasks'
+# DEFAULT_CALENDAR_NAME / DEFAULT_TASKS_NAME (utils/caldav/owners.py): the collections every user
+# shared before per-person ones, kept for the users already on them.
 MODES = ('list', 'parent')
 
 
@@ -161,135 +172,6 @@ def effective_settings(uid: str) -> Optional[Dict[str, Any]]:
     if stored:
         default.update({k: stored[k] for k in settings_db.USER_CHOICES if k in stored})
     return default
-
-
-# ---- whose objects these are --------------------------------------------------------------
-
-
-def owner_tag(uid: str) -> str:
-    """The owner part of every UID Omi writes: 'u' + 8 hex. The 'u' keeps it apart from the
-    old unscoped UIDs, whose ids start with a digit (dates) or a hex digit (conversation ids)."""
-    return 'u' + hashlib.sha256(uid.encode('utf-8')).hexdigest()[:8]
-
-
-_SCOPED = re.compile(r'^(u[0-9a-f]{8})-(.+)$')
-
-
-def parse_owned(prefix: str, uid_value: str, tag: str) -> Tuple[str, Optional[str]]:
-    """('mine', rest) for this owner's UID or an old unscoped one, ('foreign', None) for another
-    Omi user's, ('none', None) for one Omi did not write with this prefix."""
-    if not uid_value.startswith(prefix):
-        return 'none', None
-    rest = uid_value[len(prefix) :].split('@', 1)[0]
-    match = _SCOPED.match(rest)
-    if match is None:
-        return 'mine', rest  # unscoped (written before owners): ids are unique, the store decides
-    if match.group(1) != tag:
-        return 'foreign', None
-    return 'mine', match.group(2)
-
-
-def owner_label(uid: str) -> str:
-    """How the user is called in collection names: their name, else the local part of their
-    email (a self-hosted login), else a short id."""
-    try:
-        from database.auth import get_user_from_uid, get_user_full_name
-
-        name = (get_user_full_name(uid) or '').strip()
-        if name:
-            return name
-        user = get_user_from_uid(uid) or {}
-        email = str(user.get('email') or '')
-        if email:
-            return email.split('@', 1)[0]
-    except Exception:  # noqa: BLE001 — a name is cosmetic; the id still tells users apart
-        pass
-    return uid[:8]
-
-
-def personal_names(label: str) -> Tuple[str, str]:
-    """(calendar, task list) names a user gets when they have not picked any."""
-    return f'{DEFAULT_CALENDAR_NAME} – {label}', f'{DEFAULT_TASKS_NAME} – {label}'
-
-
-def parent_summary(label: str) -> str:
-    return f"{label}'s tasks"
-
-
-@dataclass
-class Scope:
-    """Whose objects a sync writes and reads: the owner tag, whether this user still uses the
-    old unscoped task/event UIDs (migrated, same collections), and the parent task in parent mode."""
-
-    tag: str
-    legacy: bool = False
-    parent_uid: str = ''
-    parent_summary: str = ''
-    shared_tasks: bool = False  # another Omi user syncs into the same task list
-
-    def task_uid(self, task_id: str) -> str:
-        if self.legacy:
-            return f'{ical.TASK_UID_PREFIX}{task_id}{ical.UID_DOMAIN}'
-        return f'{ical.TASK_UID_PREFIX}{self.tag}-{task_id}{ical.UID_DOMAIN}'
-
-    def event_uid(self, prefix: str, key: str) -> str:
-        if self.legacy:
-            return f'{prefix}{key}{ical.UID_DOMAIN}'
-        return f'{prefix}{self.tag}-{key}{ical.UID_DOMAIN}'
-
-    def day_uid(self, date_str: str) -> str:
-        # Day UIDs collided between users (one per date), so they are scoped for everyone.
-        return f'{ical.DAY_UID_PREFIX}{self.tag}-{date_str}{ical.UID_DOMAIN}'
-
-
-def scope_for(uid: str) -> Scope:
-    return Scope(tag=owner_tag(uid))
-
-
-# ---- who uses which collection (one CalDAV account, several Omi users) ---------------------
-
-REGISTRY_KEY = 'caldav:collection-users'
-
-
-def collection_users(href: str) -> Dict[str, str]:
-    """{omi uid: label} of the users whose sync is bound to this collection (Redis memo)."""
-    raw = _hget(REGISTRY_KEY, href)
-    if not raw:
-        return {}
-    try:
-        value = json.loads(raw)
-    except ValueError:
-        return {}
-    return {str(k): str(v) for k, v in value.items()} if isinstance(value, dict) else {}
-
-
-def register_collections(uid: str, label: str, hrefs: List[str]) -> None:
-    """Remember that ``uid`` syncs into ``hrefs`` (and no longer into any other collection)."""
-    wanted = {h for h in hrefs if h}
-    for href, raw in _hgetall(REGISTRY_KEY).items():
-        try:
-            users = json.loads(raw)
-        except ValueError:
-            users = {}
-        if not isinstance(users, dict):
-            users = {}
-        if href in wanted:
-            continue
-        if uid in users:
-            users.pop(uid, None)
-            if users:
-                _hset(REGISTRY_KEY, href, json.dumps(users, sort_keys=True))
-            else:
-                _hdel(REGISTRY_KEY, href)
-    for href in wanted:
-        users = collection_users(href)
-        if users.get(uid) != label:
-            users[uid] = label
-            _hset(REGISTRY_KEY, href, json.dumps(users, sort_keys=True))
-
-
-def others_on(uid: str, href: str) -> Dict[str, str]:
-    return {k: v for k, v in collection_users(href).items() if k != uid}
 
 
 # ---- change-triggered sync ------------------------------------------------------------------

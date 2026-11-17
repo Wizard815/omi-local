@@ -7,7 +7,7 @@ import pytest
 
 import database.caldav_settings as settings_db
 from utils.caldav import ical
-from utils.caldav import sync
+from utils.caldav import owners, sync
 from utils.caldav.client import CalDavError, Calendar
 
 NOW = datetime(2026, 10, 27, 12, 0, tzinfo=timezone.utc)
@@ -710,7 +710,9 @@ def test_two_users_on_one_account_get_their_own_collections_and_same_date_summar
     # the same day summary (same date) exists twice, under each owner's UID, in each one's calendar
     assert day_href(CAL, '2026-10-26') in objects
     assert f'{HOME}omi-bob/omi-day-{bob}-2026-10-26@omi-local.ics' in objects
-    assert sync.collection_users(CAL) == {'u1': 'Alice'} and sync.collection_users(HOME + 'omi-bob/') == {'u2': 'Bob'}
+    assert owners.collection_users(CAL) == {'u1': 'Alice'} and owners.collection_users(HOME + 'omi-bob/') == {
+        'u2': 'Bob'
+    }
 
 
 def test_two_users_who_pick_the_same_calendar_still_do_not_overwrite_each_other(world, server):

@@ -23,6 +23,9 @@ from datetime import datetime
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 import database.action_items as action_items_db
+from utils.executors import postprocess_executor, submit_with_context
+from utils.notification_dispatch import dispatch_action_item_reminder
+from utils.task_sync import auto_sync_action_items_batch
 
 logger = logging.getLogger(__name__)
 
@@ -92,13 +95,10 @@ def _load(uid: str, task_id: str) -> Dict[str, Any]:
 
 def _deliver(uid: str, item: Dict[str, Any]) -> None:
     """What the extraction held back: the reminder and the task integration's copy."""
-    from utils.notifications import send_action_item_data_message
-    from utils.task_sync import auto_sync_action_items_batch
-
     due_at = item.get('due_at')
     if due_at and not item.get('completed'):
         try:
-            send_action_item_data_message(
+            dispatch_action_item_reminder(
                 user_id=uid,
                 action_item_id=item['id'],
                 description=item.get('description', ''),
@@ -135,8 +135,6 @@ def approve(
     current = action_items_db.get_action_item(uid, task_id) or {**item, **update}
     current['id'] = task_id
     if deliver and not was_approved:
-        from utils.executors import postprocess_executor, submit_with_context
-
         submit_with_context(postprocess_executor, _deliver, uid, current)
     return current
 

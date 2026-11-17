@@ -47,9 +47,7 @@ def store(monkeypatch):
         'get_action_items',
         lambda uid, completed=None, limit=None, **k: [dict(t) for t in tasks.values() if not t.get('completed')],
     )
-    import utils.executors as executors
-
-    monkeypatch.setattr(executors, 'submit_with_context', lambda pool, fn, *a: delivered.append((fn.__name__, *a)))
+    monkeypatch.setattr(task_approval, 'submit_with_context', lambda pool, fn, *a: delivered.append((fn.__name__, *a)))
     return tasks, delivered
 
 
