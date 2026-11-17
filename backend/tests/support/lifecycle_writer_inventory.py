@@ -3586,9 +3586,25 @@ FIELD_SITES = {
         (
             'get_daily_summaries',
             'status',
-            "status; literal aliases=[('status', ('no_recordings', 'not_generated', " "'pending'))]",
+            "status; literal aliases=[('status', ('no_recordings', 'not_generated', 'pending'))]",
             ('date', 'generated_at', 'status', 'timezone'),
-        )
+        ),
+        (
+            'get_day_review',
+            'status',
+            "'draft' if review.get('draft') else 'finalized'",
+            (
+                'generated_at',
+                'generation_count',
+                'kept_conversation_ids',
+                'rolled_up_conversation_ids',
+                'sections',
+                'status',
+                'tags',
+                'text',
+                'title',
+            ),
+        ),
     ],
     'utils/mcp_server/oauth.py': [('mcp_authorize_consent', 'status', 'str(exc)', ('code', 'retryable', 'status'))],
     'utils/mcp_server/registry.py': [
@@ -4442,12 +4458,34 @@ FIELD_SITES = {
     'utils/caldav/client.py': [('CalDavError.__init__', 'status', 'status', ('status',))],
     # omi-local: utils/caldav/ical.py
     'utils/caldav/ical.py': [('parse_components', 'status', 'value.strip().upper()', ('status',))],
-    # omi-local: utils/day_review_service.py
+    # omi-local: utils/day_review_service.py (day review draft/finalized status, not a conversation's)
     'utils/day_review_service.py': [
         (
             'finalize',
             'status',
-            "'finalized'",
+            "FINALIZED; literal aliases=[('FINALIZED', ('finalized',))]",
+            (
+                'approved_at',
+                'corrections',
+                'created_at',
+                'dropped_conversation_ids',
+                'generated_at',
+                'generation_count',
+                'kept_conversation_ids',
+                'merged_groups',
+                'rolled_up_conversation_ids',
+                'sections',
+                'status',
+                'summary_text',
+                'time_zone',
+                'title',
+                'updated_at',
+            ),
+        ),
+        (
+            'prepare_draft',
+            'status',
+            "DRAFT; literal aliases=[('DRAFT', ('draft',))]",
             (
                 'corrections',
                 'created_at',
@@ -4464,7 +4502,19 @@ FIELD_SITES = {
                 'title',
                 'updated_at',
             ),
-        )
+        ),
+        (
+            'present',
+            'status',
+            "FINALIZED; literal aliases=[('FINALIZED', ('finalized',))]",
+            ('draft', 'final_text', 'sections', 'status', 'tags'),
+        ),
+        (
+            'reopen',
+            'status',
+            "DRAFT; literal aliases=[('DRAFT', ('draft',))]",
+            ('merged_groups', 'status', 'updated_at'),
+        ),
     ],
 }
 

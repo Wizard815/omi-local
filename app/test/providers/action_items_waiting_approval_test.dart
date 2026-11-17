@@ -25,7 +25,7 @@ void main() {
         DateTime? dueStartDate,
         DateTime? dueEndDate,
       }) async =>
-          ActionItemsResponse(actionItems: [
+          const ActionItemsResponse(actionItems: [
         ActionItemWithMetadata(id: 'old', description: 'From before approvals', completed: false),
         ActionItemWithMetadata(id: 'ok', description: 'Approved', completed: false, approval: 'approved'),
         ActionItemWithMetadata(id: 'wait', description: 'Heard, waiting', completed: false, approval: 'pending'),
