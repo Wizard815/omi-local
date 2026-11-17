@@ -9,7 +9,14 @@ import 'package:omi/ui/ui.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 
 class WaitingTasksSection extends StatelessWidget {
-  const WaitingTasksSection({super.key, required this.controller, this.only, this.showEmpty = false});
+  const WaitingTasksSection({
+    super.key,
+    required this.controller,
+    this.only,
+    this.showEmpty = false,
+    this.showHeader = true,
+    this.padding = const EdgeInsets.all(OmiSpacing.md),
+  });
 
   final WaitingApprovalController? controller;
 
@@ -18,6 +25,10 @@ class WaitingTasksSection extends StatelessWidget {
 
   /// Say "nothing waiting" instead of collapsing when there is nothing.
   final bool showEmpty;
+
+  /// The section title; off where the page title already says it.
+  final bool showHeader;
+  final EdgeInsetsGeometry padding;
 
   @override
   Widget build(BuildContext context) {
@@ -31,11 +42,18 @@ class WaitingTasksSection extends StatelessWidget {
         if (tasks.isEmpty && !showEmpty) return const SizedBox.shrink();
         return Padding(
           key: const ValueKey('waiting_tasks'),
-          padding: const EdgeInsets.all(OmiSpacing.md),
+          padding: padding,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              OmiSectionHeader(l10n.approvalWaitingTitle, subtitle: l10n.approvalWaitingSubtitle),
+              if (showHeader)
+                OmiSectionHeader(l10n.approvalWaitingTitle, subtitle: l10n.approvalWaitingSubtitle)
+              else
+                Padding(
+                  padding: const EdgeInsets.only(bottom: OmiSpacing.xs),
+                  child: Text(l10n.approvalWaitingSubtitle,
+                      style: OmiType.subhead.copyWith(color: OmiColors.textSecondary)),
+                ),
               if (tasks.isEmpty)
                 Text(l10n.approvalNothingWaiting, style: OmiType.subhead.copyWith(color: OmiColors.textSecondary)),
               for (final task in tasks) _WaitingTaskRow(controller: state, task: task),

@@ -4762,7 +4762,7 @@
     "conversationsFilterTagClear": "All conversations",
     "conversationsNoTagsYet": "No tags yet. They appear here once your conversations carry some.",
     "caldavSettingsTitle": "Calendar & tasks (CalDAV)",
-    "caldavSettingsIntro": "Your tasks, day summaries and conversation events sync with a CalDAV server every hour, and the calendar comes back into Omi. The server bundled with your stack is used until you set your own.",
+    "caldavSettingsIntro": "Your approved tasks, day summaries and calendar events sync with a CalDAV server within seconds of a change, and the calendar comes back into Omi. The server bundled with your stack is used until you set your own.",
     "caldavServerUrl": "Server URL",
     "caldavUsername": "User name",
     "caldavPassword": "Password",

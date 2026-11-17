@@ -929,7 +929,13 @@ class _DayReviewPageState extends State<DayReviewPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         OmiSectionHeader(l10n.dayReviewFromThisDay),
-        if (day != null) WaitingTasksSection(controller: _waiting, only: (c) => c.tasksOf(day)),
+        if (day != null)
+          WaitingTasksSection(
+            controller: _waiting,
+            only: (c) => c.tasksOf(day),
+            showHeader: false,
+            padding: const EdgeInsets.only(bottom: OmiSpacing.sm),
+          ),
         OmiSettingsGroup(
           children: [
             if (day != null)
