@@ -217,6 +217,7 @@ def take_back(uid: str, conversation_id: str, event_idx: int) -> Optional[bool]:
         return False
     event.approved = False
     _save(uid, conversation_id, events)
+    caldav_sync.withdraw_event(uid, conversation_id, event_idx)
     _caldav_changed(uid, conversation_id)
     return True
 
