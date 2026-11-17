@@ -257,7 +257,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
     _applyReview(result);
     if (!result.ok || !mounted) return;
     final undo = edit.revertOn(review);
-    OmiFeedback.undo(context, context.l10n.dayReviewTextSaved, onUndo: () async {
+    OmiFeedback.undo(context, context.l10n.dayReviewTextSaved, icon: Icons.edit_outlined, onUndo: () async {
       _applyReview(await widget.api.editText(
         widget.date,
         title: undo.title,

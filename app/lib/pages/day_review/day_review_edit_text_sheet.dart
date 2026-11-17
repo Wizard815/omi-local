@@ -136,6 +136,8 @@ class _DayReviewEditTextSheetState extends State<DayReviewEditTextSheet> {
           children: [
             Flexible(
               child: SingleChildScrollView(
+                // Room for the first field's floating label.
+                padding: const EdgeInsets.only(top: OmiSpacing.xs),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [

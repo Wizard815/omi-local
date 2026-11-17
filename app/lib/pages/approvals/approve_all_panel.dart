@@ -54,7 +54,7 @@ void showApprovalBatchFeedback(
   final message = batch.failedCount > 0
       ? '${l10n.approvalBatchApproved(items)}. ${l10n.approvalBatchSomeStillWait(batch.failedCount)}'
       : l10n.approvalBatchApproved(items);
-  OmiFeedback.undo(context, message, onUndo: () async {
+  OmiFeedback.undo(context, message, icon: Icons.done_all_rounded, onUndo: () async {
     await controller.undoBatch(batch);
     onChanged?.call();
   });
@@ -234,6 +234,7 @@ class _ApprovalChecklistState extends State<ApprovalChecklist> {
             ),
             const SizedBox(width: OmiSpacing.sm),
             Expanded(
+              flex: 2,
               child: OmiButton(
                 key: const Key('approval_pick_approve'),
                 label: l10n.approvalApproveSelected(chosen.count),
