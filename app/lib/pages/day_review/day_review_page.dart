@@ -566,7 +566,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
     if (onTap == null) return tile;
     return InkWell(
       key: Key('day_review_open_${c.id}'),
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: OmiRadius.mdAll,
       onTap: onTap,
       child: tile,
     );
