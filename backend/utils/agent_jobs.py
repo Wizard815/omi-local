@@ -116,7 +116,7 @@ def _conversation_block(uid: str, conversation_id: str, zone: Any, include_trans
     if items:
         lines += ['Action items:'] + [f'- {a.description}' for a in items] + ['']
     if include_transcript:
-        transcript = day_review_service._transcript(conversation).strip()  # noqa: SLF001 — the review's own reader
+        transcript = day_review_service.transcript_text(conversation).strip()
         if transcript:
             lines += ['Transcript:', transcript, '']
     return title, '\n'.join(lines).strip()
