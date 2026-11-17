@@ -2,6 +2,7 @@
 /// from the generated wire DTOs (schema/gen/self_hosted_wire.g.dart).
 library;
 
+import 'package:omi/backend/schema/connections.dart';
 import 'package:omi/backend/schema/gen/self_hosted_wire.g.dart' as wire;
 
 enum DayReviewCorrectionType { paragraph, highlight, redaction }
@@ -106,6 +107,9 @@ class DayReview {
   /// When the user last edited the text by hand; a rewrite asks before replacing it.
   final DateTime? editedByUserAt;
 
+  /// Where the approved summary was sent (Connections: the wiki, Orb), or when it will be.
+  final List<OutboundReceipt> outboundReceipts;
+
   const DayReview({
     required this.date,
     required this.title,
@@ -122,6 +126,7 @@ class DayReview {
     this.generationCount = 0,
     this.isDraft = false,
     this.editedByUserAt,
+    this.outboundReceipts = const [],
   });
 
   bool get editedByUser => editedByUserAt != null;
@@ -152,6 +157,7 @@ class DayReview {
         isDraft: g.draft,
         editedByUserAt: g.editedByUserAt?.toLocal(),
         generationCount: g.generationCount,
+        outboundReceipts: (g.outboundReceipts ?? const []).map(OutboundReceipt.fromGenerated).toList(),
       );
 }
 
