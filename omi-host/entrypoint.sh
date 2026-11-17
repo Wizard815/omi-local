@@ -11,6 +11,26 @@ STATE=/data
 mkdir -p "$STATE/logs" "$STATE/redis" "$STATE/firebase-export"
 export PATH="/app/backend/.venv/bin:$PATH"
 
+# ---- Local only ----
+# Every Python process below loads omi-host/egress-guard/sitecustomize.py: it
+# refuses (block) or reports (log) any connection that isn't loopback or the LAN,
+# and writes each attempt to $STATE/logs/egress.jsonl. OMI_EGRESS_ALLOW opens a
+# destination on purpose (e.g. api.openai.com when you add your own key).
+# The network rules in omi-host/NETWORK.md cover what Python can't see.
+export OMI_EGRESS_GUARD="${OMI_EGRESS_GUARD:-block}"
+export OMI_EGRESS_LOG="${OMI_EGRESS_LOG:-$STATE/logs/egress.jsonl}"
+export PYTHONPATH="/app/omi-host/egress-guard${PYTHONPATH:+:$PYTHONPATH}"
+# Libraries that phone home or fetch models/vocabularies on their own.
+export TIKTOKEN_CACHE_DIR="${TIKTOKEN_CACHE_DIR:-/app/tiktoken-cache}"   # baked into the image
+export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_HUB_DISABLE_TELEMETRY=1
+export LANGCHAIN_TRACING_V2=false LANGSMITH_TRACING=false
+export ANONYMIZED_TELEMETRY=False DO_NOT_TRACK=1
+export NO_UPDATE_NOTIFIER=1                                              # firebase-tools' npm update check
+# google-auth probes the GCE metadata server when it finds no credentials.
+export GCE_METADATA_HOST=127.0.0.1:9 GCE_METADATA_IP=127.0.0.1:9
+# Screen-activity search embeds with Gemini unless told not to.
+export SCREEN_ACTIVITY_VECTORS_DISABLED_UIDS="${SCREEN_ACTIVITY_VECTORS_DISABLED_UIDS:-*}"
+
 echo "=== Omi local host container ==="
 echo "provider mode: ${PROVIDER_MODE:-offline}"
 
@@ -200,7 +220,8 @@ export PUBLIC_URL="${PUBLIC_URL:-http://0.0.0.0:8000}"
 
 if [ "${PROVIDER_MODE:-offline}" = "offline" ]; then
   export OPENAI_API_KEY="${OPENAI_API_KEY:-sk-omi-local-harness-offline-openai-not-real}"
-  export GEMINI_API_KEY="${GEMINI_API_KEY:-omi-local-harness-offline-gemini-not-real}"
+  # No placeholder Gemini key: with none set, the backend takes its local paths
+  # (embeddings through OPENAI_BASE_URL) instead of calling Google with a fake key.
   export ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-omi-local-harness-offline-anthropic-not-real}"
   # Audio stays fully local unless you add cloud STT keys or move it with
   # OMI_AUDIO_URL: audio-env.sh, sourced below, does the routing.

@@ -50,7 +50,20 @@ COPY omi-host/audio-env.sh /app/omi-host/audio-env.sh
 COPY omi-host/auth-env.sh /app/omi-host/auth-env.sh
 COPY omi-host/caldav-env.sh /app/omi-host/caldav-env.sh
 COPY omi-host/maintenance.sh /app/omi-host/maintenance.sh
+# Local-only egress guard, loaded by every Python process (entrypoint.sh sets PYTHONPATH).
+COPY omi-host/egress-guard/sitecustomize.py /app/omi-host/egress-guard/sitecustomize.py
 RUN chmod +x /entrypoint.sh
+
+# Files the stack would otherwise download at run time, fetched once here so a
+# running container never needs the internet:
+# - tiktoken's vocabularies (token counting in chat; without them chat fails offline)
+# - the Firestore emulator jar and the Emulator UI (firebase-tools fetches them
+#   on the first `emulators:start` of every new container)
+ENV TIKTOKEN_CACHE_DIR=/app/tiktoken-cache
+RUN mkdir -p "$TIKTOKEN_CACHE_DIR" \
+ && /app/backend/.venv/bin/python -c "import tiktoken; [tiktoken.get_encoding(e) for e in ('cl100k_base', 'o200k_base')]" \
+ && firebase setup:emulators:firestore \
+ && firebase setup:emulators:ui
 
 ENV PATH="/app/backend/.venv/bin:$PATH"
 EXPOSE 8000 8085 5232
