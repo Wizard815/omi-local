@@ -603,10 +603,34 @@ export interface AppleHealthSyncResponse {
   synced_at: string;
 }
 
+export interface ApprovalEventRef {
+  conversation_id: string;
+  event_idx: number;
+}
+
 export interface ApprovalSettings {
   auto_approve?: boolean;
   operator_disabled?: boolean;
   time?: string;
+}
+
+export interface ApproveBatchRequest {
+  all_waiting?: boolean;
+  date?: string | null;
+  day_dates?: Array<string>;
+  events?: Array<ApprovalEventRef>;
+  task_ids?: Array<string>;
+}
+
+export interface ApproveBatchResponse {
+  day_count?: number;
+  day_dates?: Array<string>;
+  event_count?: number;
+  events?: Array<ApprovalEventRef>;
+  failed_day_dates?: Array<string>;
+  failed_event_count?: number;
+  task_count?: number;
+  task_ids?: Array<string>;
 }
 
 export interface ApproveFamilyCalendarEventRequest {
@@ -2291,6 +2315,7 @@ export interface DayReview {
   date: string;
   draft?: boolean;
   dropped_conversation_ids?: Array<string>;
+  edited_by_user_at?: string | null;
   final_text?: string;
   generated_at?: string | null;
   generation_count?: number;
@@ -2355,6 +2380,12 @@ export interface DayReviewSection {
   tags?: Array<string>;
   text?: string;
   title?: string;
+}
+
+export interface DayReviewSectionTextEdit {
+  id: string;
+  text?: string | null;
+  title?: string | null;
 }
 
 export interface DayReviewsListResponse {
@@ -2744,6 +2775,12 @@ export interface Edit {
   other?: string;
   reason: string;
   target: string;
+}
+
+export interface EditDayReviewTextRequest {
+  sections?: Array<DayReviewSectionTextEdit> | null;
+  summary_text?: string | null;
+  title?: string | null;
 }
 
 export interface EditReceiptBlock {
@@ -6624,6 +6661,19 @@ export interface UnapprovedPublicAppResponse {
   [key: string]: unknown;
 }
 
+export interface UndoApproveBatchRequest {
+  day_dates?: Array<string>;
+  events?: Array<ApprovalEventRef>;
+  task_ids?: Array<string>;
+}
+
+export interface UndoApproveBatchResponse {
+  day_count?: number;
+  event_count?: number;
+  kept_count?: number;
+  task_count?: number;
+}
+
 export interface UndoChatReceiptResponse {
   block: EditReceiptBlock;
   status: "undone" | "already_undone" | "unavailable";
@@ -6931,6 +6981,7 @@ export interface WaitingForApprovalResponse {
   auto_approve_time?: string;
   draft_dates?: Array<string>;
   event_count?: number;
+  events?: Array<FamilyCalendarEvent>;
   task_count?: number;
   tasks?: Array<ActionItemResponse>;
   today?: string;
@@ -7181,7 +7232,10 @@ export interface OmiApiSchemas {
   "AppThumbnailUploadResponse": AppThumbnailUploadResponse;
   "AppleHealthSyncData": AppleHealthSyncData;
   "AppleHealthSyncResponse": AppleHealthSyncResponse;
+  "ApprovalEventRef": ApprovalEventRef;
   "ApprovalSettings": ApprovalSettings;
+  "ApproveBatchRequest": ApproveBatchRequest;
+  "ApproveBatchResponse": ApproveBatchResponse;
   "ApproveFamilyCalendarEventRequest": ApproveFamilyCalendarEventRequest;
   "ApproveTaskRequest": ApproveTaskRequest;
   "ArtifactDescriptor": ArtifactDescriptor;
@@ -7409,6 +7463,7 @@ export interface OmiApiSchemas {
   "DayReviewDayResponse": DayReviewDayResponse;
   "DayReviewMergeGroup": DayReviewMergeGroup;
   "DayReviewSection": DayReviewSection;
+  "DayReviewSectionTextEdit": DayReviewSectionTextEdit;
   "DayReviewsListResponse": DayReviewsListResponse;
   "DecisionDebugProjection": DecisionDebugProjection;
   "DecisionRecord": DecisionRecord;
@@ -7458,6 +7513,7 @@ export interface OmiApiSchemas {
   "DreamRunRequest": DreamRunRequest;
   "DreamRunsResponse": DreamRunsResponse;
   "Edit": Edit;
+  "EditDayReviewTextRequest": EditDayReviewTextRequest;
   "EditReceiptBlock": EditReceiptBlock;
   "EntitiesResponse": EntitiesResponse;
   "EntityCorrection": EntityCorrection;
@@ -7975,6 +8031,8 @@ export interface OmiApiSchemas {
   "TtsVoiceCatalog": TtsVoiceCatalog;
   "TtsVoiceSettings": TtsVoiceSettings;
   "UnapprovedPublicAppResponse": UnapprovedPublicAppResponse;
+  "UndoApproveBatchRequest": UndoApproveBatchRequest;
+  "UndoApproveBatchResponse": UndoApproveBatchResponse;
   "UndoChatReceiptResponse": UndoChatReceiptResponse;
   "UpdateAIUserProfileRequest": UpdateAIUserProfileRequest;
   "UpdateActionItemDescriptionRequest": UpdateActionItemDescriptionRequest;
@@ -8456,6 +8514,26 @@ export interface OmiApiPaths {
       operationId: "get_waiting_for_approval_v1_approvals_get";
       responses: {
         "200": WaitingForApprovalResponse;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/approvals/batch": {
+    post: {
+      operationId: "approve_batch_v1_approvals_batch_post";
+      responses: {
+        "200": ApproveBatchResponse;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/approvals/batch/undo": {
+    post: {
+      operationId: "undo_approve_batch_v1_approvals_batch_undo_post";
+      responses: {
+        "200": UndoApproveBatchResponse;
         "401": void;
         "422": HTTPValidationError;
       };
@@ -12484,6 +12562,16 @@ export interface OmiApiPaths {
       };
     };
   };
+  "/v1/users/day-reviews/{date}/text": {
+    put: {
+      operationId: "edit_day_review_text_v1_users_day_reviews__date__text_put";
+      responses: {
+        "200": DayReview;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
   "/v1/users/delete-account": {
     delete: {
       operationId: "delete_account_v1_users_delete_account_delete";
@@ -14757,6 +14845,48 @@ export async function get_waiting_for_approval_v1_approvals_get(header: { author
       ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
       ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
     },
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function approve_batch_v1_approvals_batch_post(header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, body: ApproveBatchRequest, init?: OmiApiClientInit): Promise<ApproveBatchResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/approvals/batch`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "POST",
+    headers: {
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function undo_approve_batch_v1_approvals_batch_undo_post(header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, body: UndoApproveBatchRequest, init?: OmiApiClientInit): Promise<UndoApproveBatchResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/approvals/batch/undo`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "POST",
+    headers: {
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
   });
   if (!_res.ok) throw new OmiApiError(_res.status, _res);
   return _res.status === 204 ? (undefined as any) : await _res.json();
@@ -22424,10 +22554,13 @@ export async function get_day_review_v1_users_day_reviews__date__get(path: { dat
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
-export async function approve_day_review_v1_users_day_reviews__date__approve_post(path: { date: string }, header: { X_App_Platform?: string, authorization?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<DayReview> {
+export async function approve_day_review_v1_users_day_reviews__date__approve_post(path: { date: string }, query: { replace_edits?: boolean }, header: { X_App_Platform?: string, authorization?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<DayReview> {
   const _base = init?.baseURL ?? "";
   const _path = `/v1/users/day-reviews/${path.date}/approve`;
-  const _search = "";
+  const _params = query ? Object.entries(query)
+    .filter(([, v]) => v !== undefined && v !== null)
+    .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`).join('&') : '';
+  const _search = _params ? `?${_params}` : "";
   const _res = await fetch(`${_base}${_path}${_search}`, {
     method: "POST",
     headers: {
@@ -22502,10 +22635,13 @@ export async function delete_day_review_correction_v1_users_day_reviews__date__c
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
-export async function finalize_day_review_v1_users_day_reviews__date__finalize_post(path: { date: string }, header: { X_App_Platform?: string, authorization?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, body: FinalizeDayReviewRequest, init?: OmiApiClientInit): Promise<DayReview> {
+export async function finalize_day_review_v1_users_day_reviews__date__finalize_post(path: { date: string }, query: { replace_edits?: boolean }, header: { X_App_Platform?: string, authorization?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, body: FinalizeDayReviewRequest, init?: OmiApiClientInit): Promise<DayReview> {
   const _base = init?.baseURL ?? "";
   const _path = `/v1/users/day-reviews/${path.date}/finalize`;
-  const _search = "";
+  const _params = query ? Object.entries(query)
+    .filter(([, v]) => v !== undefined && v !== null)
+    .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`).join('&') : '';
+  const _search = _params ? `?${_params}` : "";
   const _res = await fetch(`${_base}${_path}${_search}`, {
     method: "POST",
     headers: {
@@ -22523,10 +22659,13 @@ export async function finalize_day_review_v1_users_day_reviews__date__finalize_p
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
-export async function regenerate_day_review_v1_users_day_reviews__date__regenerate_post(path: { date: string }, header: { X_App_Platform?: string, authorization?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<DayReview> {
+export async function regenerate_day_review_v1_users_day_reviews__date__regenerate_post(path: { date: string }, query: { replace_edits?: boolean }, header: { X_App_Platform?: string, authorization?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<DayReview> {
   const _base = init?.baseURL ?? "";
   const _path = `/v1/users/day-reviews/${path.date}/regenerate`;
-  const _search = "";
+  const _params = query ? Object.entries(query)
+    .filter(([, v]) => v !== undefined && v !== null)
+    .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`).join('&') : '';
+  const _search = _params ? `?${_params}` : "";
   const _res = await fetch(`${_base}${_path}${_search}`, {
     method: "POST",
     headers: {
@@ -22567,6 +22706,27 @@ export async function favorite_day_review_section_v1_users_day_reviews__date__se
   const _search = "";
   const _res = await fetch(`${_base}${_path}${_search}`, {
     method: "POST",
+    headers: {
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function edit_day_review_text_v1_users_day_reviews__date__text_put(path: { date: string }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, body: EditDayReviewTextRequest, init?: OmiApiClientInit): Promise<DayReview> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/users/day-reviews/${path.date}/text`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "PUT",
     headers: {
       ...(body ? { 'Content-Type': 'application/json' } : {}),
       ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
@@ -25522,4 +25682,4 @@ export async function get_speech_profile_v4_speech_profile_get(header: { authori
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
-// Total: 583 client methods generated.
+// Total: 586 client methods generated.

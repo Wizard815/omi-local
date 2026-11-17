@@ -153,6 +153,50 @@ def decline(uid: str, task_id: str, declined: bool = True) -> Dict[str, Any]:
     return {**item, FIELD: target, 'id': task_id}
 
 
+def approve_many(uid: str, task_ids: Sequence[str]) -> List[str]:
+    """Approve all: the user's yes to each of these waiting tasks, as if tapped one by one.
+    Returns the ids it approved (one that is gone, or no longer waiting, is skipped)."""
+    done: List[str] = []
+    for task_id in dict.fromkeys(task_ids):
+        try:
+            if not is_waiting(_load(uid, task_id)):
+                continue
+            approve(uid, task_id)
+        except TaskApprovalError:
+            continue
+        done.append(task_id)
+    return done
+
+
+def take_back(uid: str, task_id: str) -> bool:
+    """Undo an approval (Approve all's Undo): the task waits again, so the CalDAV sync takes it off
+    the user's task list, and its reminder is called off. False when there is nothing to undo
+    (gone, or not approved). A task app's copy made at approval (Todoist, ALLGlance...) stays:
+    those integrations have no recall."""
+    try:
+        item = _load(uid, task_id)
+    except TaskApprovalError:
+        return False
+    if not is_approved(item):
+        return False
+    action_items_db.update_action_item(uid, task_id, {FIELD: PENDING})
+    due_at = item.get('due_at')
+    if due_at and not item.get('completed'):
+        try:
+            dispatch_action_item_reminder(
+                user_id=uid,
+                action_item_id=task_id,
+                description=item.get('description', ''),
+                due_at=due_at.isoformat() if isinstance(due_at, datetime) else str(due_at),
+                completed=False,
+                status=item.get('status'),
+                deleted=True,
+            )
+        except Exception as error:  # noqa: BLE001 — the undo stands; the phone's reminder is a bonus
+            logger.warning('task_approval: reminder recall failed uid=%s %s', uid, type(error).__name__)
+    return True
+
+
 def waiting(uid: str, *, limit: int = WAITING_LIMIT) -> List[Dict[str, Any]]:
     """The open tasks waiting for the user's OK, oldest first."""
     items = action_items_db.get_action_items(uid, completed=False, limit=limit)

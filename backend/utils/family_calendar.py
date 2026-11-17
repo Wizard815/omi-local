@@ -205,6 +205,22 @@ def decline(uid: str, conversation_id: str, event_idx: int, declined: bool = Tru
     return _present(conversation, event_idx, events[event_idx], _zone(uid))
 
 
+def take_back(uid: str, conversation_id: str, event_idx: int) -> Optional[bool]:
+    """Undo an approval (Approve all's Undo): the event waits again, and the CalDAV sync takes it
+    off the user's calendar. False when it cannot be taken back here (it is already on the family
+    calendar, and the gateway has no delete); None when it is not approved (nothing to undo)."""
+    _, events = _load(uid, conversation_id, event_idx)
+    event = events[event_idx]
+    if event.declined or not (event.approved or event.created):
+        return None
+    if event.created:
+        return False
+    event.approved = False
+    _save(uid, conversation_id, events)
+    _caldav_changed(uid, conversation_id)
+    return True
+
+
 def gateway_start(start_utc: datetime, zone) -> str:
     """What dayGLANCE's create takes: the local wall-clock start, minute precision."""
     return start_utc.astimezone(zone).strftime('%Y-%m-%d %H:%M')
