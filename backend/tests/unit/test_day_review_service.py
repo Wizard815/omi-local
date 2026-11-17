@@ -377,3 +377,18 @@ def test_sorting_a_draft_differently_rewrites_it_with_its_corrections_on_approva
     assert 'We also walked the dog.' in llm.prompts[-1]  # the draft's corrections are ground truth
     assert review['corrections'][0]['applied_at'] is not None
     assert review['rolled_up_conversation_ids'] == ['lunch'] and convs['call']['discarded']
+
+
+def test_an_everything_kept_day_keeps_its_paragraph_through_approve_and_reopen(world):
+    """All starred: no summary is written, the user's paragraph is the day's text. Approving
+    keeps it, and reopening turns it back into a draft instead of losing it."""
+    convs, reviews, llm, submitted = world
+    for cid in ('lunch', 'call', 'held-a', 'held-b', 'held-c'):
+        convs[cid]['starred'] = True
+    service.prepare_draft('u1', DAY)
+    service.add_correction('u1', DAY, {'type': 'paragraph', 'text': 'A quiet day at home.'})
+    approved = service.approve('u1', DAY)
+    assert approved['final_text'] == 'A quiet day at home.' and llm.prompts == []
+    service.reopen('u1', DAY)
+    assert reviews[DAY]['status'] == 'draft' and reviews[DAY]['corrections']
+    assert service.approve('u1', DAY)['final_text'] == 'A quiet day at home.'

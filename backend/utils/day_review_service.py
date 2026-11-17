@@ -451,7 +451,7 @@ def finalize(
         'title': title,
         'summary_text': body,
         'sections': sections,
-        'corrections': corrections if body else [],
+        'corrections': corrections,
         'kept_conversation_ids': [c.id for c in keep],
         'rolled_up_conversation_ids': [c.id for c in rolled],
         'merged_groups': [{'conversation_ids': list(g)} for g in merge_groups],
@@ -711,7 +711,7 @@ def reopen(uid: str, date_str: str) -> Tuple[int, int]:
         lifecycle.restore_discarded(uid, conversation_id)
         conversations_db.update_conversation(uid, conversation_id, {DAY_REVIEW_DATE_FIELD: None})
         restored += 1
-    if review.get('summary_text'):
+    if review.get('summary_text') or review.get('corrections'):
         draft = {**review, 'status': DRAFT, 'merged_groups': [], 'updated_at': datetime.now(timezone.utc)}
         draft.pop('approved_at', None)
         day_reviews_db.set_day_review(uid, date_str, draft)
