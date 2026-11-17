@@ -93,7 +93,6 @@ class _AppDetailPageState extends State<AppDetailPage> with WidgetsBindingObserv
   bool _paymentCheckInFlight = false;
   bool _purchaseCompleted = false;
   int _paymentCheckGeneration = 0;
-  int _markdownLoadGeneration = 0;
   @override
   late App app;
   final ScrollController _scrollController = ScrollController();
@@ -110,7 +109,6 @@ class _AppDetailPageState extends State<AppDetailPage> with WidgetsBindingObserv
   void _loadSetupInstructionsMarkdown() {
     // Upstream fetched these instructions (and their images) from Omi's GitHub. This
     // self-hosted build fetches nothing from the cloud: the setup link still opens below.
-    _markdownLoadGeneration++;
   }
 
   @override
@@ -248,7 +246,6 @@ class _AppDetailPageState extends State<AppDetailPage> with WidgetsBindingObserv
     _resetSetup();
     if (!app.worksExternally()) {
       _setupCheckGeneration++;
-      _markdownLoadGeneration++;
       return;
     }
     checkSetupCompleted();
