@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import 'package:omi/backend/http/api/connections.dart';
 import 'package:omi/backend/schema/connections.dart';
+import 'package:omi/pages/connections/connections_page.dart' show connectionProblem;
 import 'package:omi/ui/ui.dart';
 import 'package:omi/utils/alerts/app_snackbar.dart';
 import 'package:omi/utils/l10n_extensions.dart';
@@ -35,7 +36,7 @@ class _AgentJobsPageState extends State<AgentJobsPage> {
     if (!mounted) return;
     setState(() {
       _jobs = result.value ?? _jobs ?? const [];
-      _error = result.ok ? null : (result.error ?? context.l10n.agentJobsLoadFailed);
+      _error = result.ok ? null : connectionProblem(context, result, context.l10n.agentJobsLoadFailed);
     });
   }
 
@@ -90,7 +91,7 @@ class _AgentJobCardState extends State<AgentJobCard> {
     if (!mounted) return;
     setState(() => _busy = false);
     if (!result.ok) {
-      AppSnackbar.showSnackbarError(result.error ?? context.l10n.agentJobsAnswerFailed);
+      AppSnackbar.showSnackbarError(connectionProblem(context, result, context.l10n.agentJobsAnswerFailed));
     }
     await widget.onChanged();
   }

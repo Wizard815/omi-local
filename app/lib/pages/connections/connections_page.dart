@@ -8,6 +8,11 @@ import 'package:omi/utils/alerts/app_snackbar.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 import 'package:omi/utils/other/temp.dart';
 
+/// What to say when a Connections call failed: "set it up" for a connection that is off or has no
+/// address or token (409), else [fallback]. Never the server's own text.
+String connectionProblem(BuildContext context, ConnectionResult<Object?> result, String fallback) =>
+    result.notReady ? context.l10n.connectionsNotReady : fallback;
+
 /// Studio agents a job can go to (Studio's ORB_WORK_AGENTS).
 const studioAgents = ['ekko-agent', 'hermes', 'claude-code', 'codex', 'pi', 'grok', 'opencode'];
 
@@ -70,7 +75,7 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
     if (!mounted) return;
     setState(() {
       _state = result.value ?? _state;
-      _error = result.ok ? null : (result.error ?? context.l10n.connectionsLoadFailed);
+      _error = result.ok ? null : connectionProblem(context, result, context.l10n.connectionsLoadFailed);
     });
     if (result.value != null) _resetFields(result.value!);
   }
@@ -86,7 +91,7 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
     if (result.value != null) {
       _resetFields(result.value!);
     } else {
-      AppSnackbar.showSnackbarError(result.error ?? context.l10n.connectionsSaveFailed);
+      AppSnackbar.showSnackbarError(connectionProblem(context, result, context.l10n.connectionsSaveFailed));
     }
   }
 
@@ -111,7 +116,7 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
       _busy = false;
       final value = result.value;
       _tests[target] = value == null
-          ? (ok: false, text: result.error ?? l10n.connectionsTestFailed)
+          ? (ok: false, text: connectionProblem(context, result, l10n.connectionsTestFailed))
           : (ok: value.ok, text: value.ok ? l10n.connectionsTestOk(value.detail) : value.error);
     });
   }
