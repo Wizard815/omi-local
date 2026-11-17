@@ -41,6 +41,8 @@ SCHEMA_GROUPS = {
             'PendingDayReviewsResponse',
             'ReopenDayReviewResponse',
             'FavoriteDayReviewSectionRequest',
+            'DayReviewSectionTextEdit',
+            'EditDayReviewTextRequest',
             # Conversation tags and the per-user tag catalog.
             'SetConversationTagsRequest',
             'ConversationTagCount',

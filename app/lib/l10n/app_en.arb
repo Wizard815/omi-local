@@ -20148,5 +20148,124 @@
     "caldavWhatToSync": "What to sync",
     "@caldavWhatToSync": {
         "description": "Section header for the sync switches"
+    },
+    "approvalApproveAll": "Approve all ({count})",
+    "@approvalApproveAll": {
+        "description": "Button: approve every waiting item at once",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "approvalApproveAllFromDay": "Approve all from this day ({count})",
+    "@approvalApproveAllFromDay": {
+        "description": "Day review: approve every waiting item of this day",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "approvalHoldToChoose": "Hold to choose what to approve",
+    "@approvalHoldToChoose": {
+        "description": "Hint under Approve all: long-press opens a checklist"
+    },
+    "approvalChoose": "Choose…",
+    "@approvalChoose": {
+        "description": "Opens the checklist to pick what to approve (accessible alternative to long-press)"
+    },
+    "approvalApproveSelected": "Approve selected ({count})",
+    "@approvalApproveSelected": {
+        "description": "Approves the ticked items",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "approvalSelectHint": "Untick what should keep waiting.",
+    "@approvalSelectHint": {
+        "description": "Checklist hint"
+    },
+    "approvalCountSummaries": "{count, plural, =1{1 day summary} other{{count} day summaries}}",
+    "@approvalCountSummaries": {
+        "description": "Count of day summary drafts",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "approvalBatchApproved": "Approved {items}",
+    "@approvalBatchApproved": {
+        "description": "Toast after Approve all; items is a list like '2 tasks and 1 event'",
+        "placeholders": {
+            "items": {
+                "type": "String"
+            }
+        }
+    },
+    "approvalBatchNothing": "Nothing was waiting any more.",
+    "@approvalBatchNothing": {
+        "description": "Toast when Approve all found nothing to approve"
+    },
+    "approvalBatchSomeStillWait": "{count, plural, =1{1 item could not be approved and still waits} other{{count} items could not be approved and still wait}}",
+    "@approvalBatchSomeStillWait": {
+        "description": "Toast when part of a batch failed",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "approvalSummaryItem": "Day summary · {date}",
+    "@approvalSummaryItem": {
+        "description": "Checklist row for a day summary draft",
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "dayReviewEditText": "Edit text",
+    "@dayReviewEditText": {
+        "description": "Action: edit the day summary text directly"
+    },
+    "dayReviewEditTitleField": "Title",
+    "@dayReviewEditTitleField": {
+        "description": "Field label: the summary's title"
+    },
+    "dayReviewEditHeadingField": "Heading",
+    "@dayReviewEditHeadingField": {
+        "description": "Field label: a section's heading"
+    },
+    "dayReviewEditSummaryField": "Text",
+    "@dayReviewEditSummaryField": {
+        "description": "Field label: the summary's text"
+    },
+    "dayReviewTextSaved": "Summary saved",
+    "@dayReviewTextSaved": {
+        "description": "Toast after saving edited text"
+    },
+    "dayReviewEditedByYou": "Edited by you",
+    "@dayReviewEditedByYou": {
+        "description": "Note on a summary the user edited by hand"
+    },
+    "dayReviewRewriteEditsTitle": "Rewrite the summary?",
+    "@dayReviewRewriteEditsTitle": {
+        "description": "Confirm title before a rewrite replaces hand edits"
+    },
+    "dayReviewRewriteEditsBody": "Rewrite will replace your edits — continue?",
+    "@dayReviewRewriteEditsBody": {
+        "description": "Confirm body"
+    },
+    "dayReviewRewriteEditsAction": "Rewrite",
+    "@dayReviewRewriteEditsAction": {
+        "description": "Confirm action"
+    },
+    "dayReviewApproveRewriteBody": "New conversations came in since you edited this summary. Approving rewrites it, which will replace your edits — continue?",
+    "@dayReviewApproveRewriteBody": {
+        "description": "Confirm body when approving needs a rewrite"
     }
 }

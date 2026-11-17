@@ -208,3 +208,162 @@ def test_approve_and_decline_routes(client, store):
         'error': 'This task is already approved; delete it instead',
     }
     assert http.post('/v1/approvals/tasks/nope/approve', json={}).status_code == 404
+
+
+# ---- Approve all / Approve selected, and its Undo -------------------------------------------------
+
+
+from models.family_calendar import FamilyCalendarEvent  # noqa: E402
+from utils.caldav import sync as caldav_sync  # noqa: E402
+
+
+def _event(cid, idx, heard_at):
+    return FamilyCalendarEvent(
+        conversation_id=cid, event_idx=idx, title=f'{cid}#{idx}', start=NOW + timedelta(days=2), heard_at=heard_at
+    )
+
+
+@pytest.fixture
+def batch(monkeypatch, store):
+    """Tasks from ``store``; heard events and day drafts as small in-memory fakes; one CalDAV mark counter."""
+    tasks, delivered = store
+    events = {
+        ('c-yesterday', 0): {'approved': False, 'heard_at': NOW - timedelta(days=1), 'created': False},
+        ('c-today', 0): {'approved': False, 'heard_at': NOW - timedelta(hours=2), 'created': False},
+    }
+    days = {'2026-11-16': 'draft'}
+    marked = []
+
+    def pending(uid):
+        return [_event(c, i, e['heard_at']) for (c, i), e in events.items() if not e['approved']], []
+
+    async def approve_event(uid, cid, idx, **_):
+        events[(cid, idx)]['approved'] = True
+        caldav_sync.mark_dirty(uid)
+
+    def take_back_event(uid, cid, idx):
+        event = events[(cid, idx)]
+        if not event['approved']:
+            return None
+        if event['created']:
+            return False
+        event['approved'] = False
+        caldav_sync.mark_dirty(uid)
+        return True
+
+    def approve_day(uid, d):
+        if days.get(d) != 'draft':
+            raise auto_approve.day_review_service.DayReviewError(409, 'This day is already approved')
+        days[d] = 'approved'
+        caldav_sync.mark_dirty(uid)
+
+    def undo_day(uid, d):
+        days[d] = 'draft'
+        caldav_sync.mark_dirty(uid)
+
+    async def inline(executor, fn, *args, **kwargs):
+        return fn(*args, **kwargs)
+
+    monkeypatch.setattr(auto_approve, 'run_blocking', inline)
+    monkeypatch.setattr(auto_approve.family_calendar, 'pending', pending)
+    monkeypatch.setattr(auto_approve.family_calendar, 'approve', approve_event)
+    monkeypatch.setattr(auto_approve.family_calendar, 'take_back', take_back_event)
+    monkeypatch.setattr(
+        auto_approve.day_review_service,
+        'pending_dates',
+        lambda uid, days=7: {
+            'today': '2026-11-17',
+            'pending_dates': [],
+            'draft_dates': sorted(d for d, s in DAYS.items() if s == 'draft'),
+        },
+    )
+    DAYS = days
+    monkeypatch.setattr(auto_approve.day_review_service, 'approve', approve_day)
+    monkeypatch.setattr(auto_approve.day_review_service, 'undo_approval', undo_day)
+    monkeypatch.setattr(auto_approve.notification_db, 'get_user_time_zone', lambda uid: 'UTC')
+    monkeypatch.setattr(caldav_sync.redis_db.r, 'sadd', lambda key, uid: marked.append(uid), raising=False)
+    return tasks, events, days, marked, delivered
+
+
+def _run(coro):
+    import asyncio
+
+    return asyncio.run(coro)
+
+
+def test_approve_all_takes_every_waiting_task_event_and_summary_with_one_caldav_mark(batch):
+    tasks, events, days, marked, delivered = batch
+    out = _run(auto_approve.approve_batch('u1', all_waiting=True))
+    assert out['task_ids'] == ['heard', 'today'] and out['task_count'] == 2
+    assert [(e['conversation_id'], e['event_idx']) for e in out['events']] == [('c-yesterday', 0), ('c-today', 0)]
+    assert out['day_dates'] == ['2026-11-16'] and out['day_count'] == 1
+    assert tasks['heard']['approval'] == tasks['today']['approval'] == 'approved'
+    assert days['2026-11-16'] == 'approved' and all(e['approved'] for e in events.values())
+    assert marked == ['u1']  # one mark for the batch, not one per item
+    assert len(delivered) == 2  # each task delivered once, as a tap on Approve would
+    # idempotent: nothing waits any more
+    again = _run(auto_approve.approve_batch('u1', all_waiting=True))
+    assert again['task_count'] == again['event_count'] == again['day_count'] == 0 and len(delivered) == 2
+
+
+def test_approve_selected_leaves_out_what_the_user_unticked(batch):
+    tasks, events, days, marked, _ = batch
+    out = _run(
+        auto_approve.approve_batch(
+            'u1', task_ids=['today', 'old'], events=[('c-today', 0), ('c-gone', 3)], day_dates=[]
+        )
+    )
+    # 'old' was never waiting (made by the user) and c-gone is not a waiting event: both skipped
+    assert out['task_ids'] == ['today'] and [e['conversation_id'] for e in out['events']] == ['c-today']
+    assert out['day_dates'] == [] and days['2026-11-16'] == 'draft'  # the summary was unticked
+    assert tasks['heard']['approval'] == 'pending' and not events[('c-yesterday', 0)]['approved']
+
+
+def test_approve_all_of_one_day_is_scoped_to_that_local_day(batch):
+    tasks, events, days, marked, _ = batch
+    out = _run(auto_approve.approve_batch('u1', all_waiting=True, date_str='2026-11-16'))
+    assert out['task_ids'] == ['heard'] and [e['conversation_id'] for e in out['events']] == ['c-yesterday']
+    assert out['day_dates'] == ['2026-11-16']
+    assert tasks['today']['approval'] == 'pending' and not events[('c-today', 0)]['approved']
+
+
+def test_undo_takes_back_exactly_the_batch(batch):
+    tasks, events, days, marked, _ = batch
+    tasks['manual'] = {'id': 'manual', 'description': 'Mine', 'completed': False, 'approval': 'approved'}
+    out = _run(auto_approve.approve_batch('u1', all_waiting=True))
+    events[('c-today', 0)]['created'] = True  # it went to the family calendar: no recall there
+    marked.clear()
+    undone = auto_approve.undo_batch(
+        'u1', out['task_ids'], [(e['conversation_id'], e['event_idx']) for e in out['events']], out['day_dates']
+    )
+    assert undone == {'task_count': 2, 'event_count': 1, 'day_count': 1, 'kept_count': 1}
+    assert tasks['heard']['approval'] == tasks['today']['approval'] == 'pending'
+    assert tasks['manual']['approval'] == 'approved'  # not in the batch: untouched
+    assert days['2026-11-16'] == 'draft' and not events[('c-yesterday', 0)]['approved']
+    assert marked == ['u1']
+    # undoing twice changes nothing more
+    assert auto_approve.undo_batch('u1', out['task_ids'], [], [])['task_count'] == 0
+
+
+def test_take_back_calls_the_reminder_off(store, monkeypatch):
+    tasks, _ = store
+    recalled = []
+    monkeypatch.setattr(task_approval, 'dispatch_action_item_reminder', lambda **kw: recalled.append(kw))
+    task_approval.approve('u1', 'heard')
+    assert task_approval.take_back('u1', 'heard') and tasks['heard']['approval'] == 'pending'
+    assert recalled and recalled[0]['deleted'] is True
+    assert not task_approval.take_back('u1', 'heard')  # waiting already
+
+
+def test_batch_routes(client, batch):
+    http, _ = client
+    body = http.post('/v1/approvals/batch', json={'all_waiting': True, 'date': '2026-11-16'}).json()
+    assert body['task_ids'] == ['heard'] and body['day_dates'] == ['2026-11-16']
+    undone = http.post(
+        '/v1/approvals/batch/undo',
+        json={'task_ids': body['task_ids'], 'events': body['events'], 'day_dates': body['day_dates']},
+    ).json()
+    assert undone == {'task_count': 1, 'event_count': 1, 'day_count': 1, 'kept_count': 0}
+    assert http.post('/v1/approvals/batch', json={'day_dates': ['16-11-2026']}).status_code == 422
+    waiting = http.get('/v1/approvals')
+    assert waiting.status_code == 200

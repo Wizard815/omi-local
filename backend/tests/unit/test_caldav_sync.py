@@ -123,6 +123,12 @@ class _Redis:
         z = self.h.get(key, {})
         return sorted(z, key=lambda m: -z[m])
 
+    def sadd(self, key, member):
+        self.h.setdefault(key, set()).add(member)
+
+    def smembers(self, key):
+        return set(self.h.get(key, set()))
+
 
 @pytest.fixture
 def world(monkeypatch):
@@ -863,6 +869,23 @@ def test_an_extracted_event_waits_for_approval_and_one_pushed_before_approvals_i
     _sync(settings, client)
     assert event_href(CAL, 'c1-1') in objects
     assert WORLD['conversations'][0]['structured']['events'][1]['approved'] is True
+
+
+def test_an_approval_taken_back_by_undo_comes_off_and_is_not_kept_as_a_pre_approval_event(world, server):
+    settings, tasks, created, redis, stored = world
+    client, objects = server
+    events = WORLD['conversations'][0]['structured']['events']
+    events[0]['approved'] = True
+    _sync(settings, client)
+    assert event_href(CAL, 'c1-0') in objects
+    events[0]['approved'] = False  # Approve all's Undo (family_calendar.take_back)
+    sync.withdraw_event('u1', 'c1', 0)
+    _sync(settings, client)
+    assert event_href(CAL, 'c1-0') not in objects
+    assert events[0]['approved'] is False, 'it waits again, not re-marked approved'
+    events[0]['approved'] = True  # approved again later: back on the calendar
+    _sync(settings, client)
+    assert event_href(CAL, 'c1-0') in objects
 
 
 def test_an_event_approved_before_its_day_is_reviewed_is_pushed(world, server):
