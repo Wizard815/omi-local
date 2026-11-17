@@ -20,6 +20,9 @@ class FamilyCalendarEvent {
   final String? externalId;
   final bool declined;
 
+  /// The user said yes: on their CalDAV calendar once synced (with or without dayGLANCE).
+  final bool approved;
+
   const FamilyCalendarEvent({
     required this.conversationId,
     required this.eventIdx,
@@ -33,6 +36,7 @@ class FamilyCalendarEvent {
     this.calendar,
     this.externalId,
     this.declined = false,
+    this.approved = false,
   });
 
   String get key => '$conversationId:$eventIdx';
@@ -52,6 +56,7 @@ class FamilyCalendarEvent {
         calendar: g.calendar,
         externalId: g.externalId,
         declined: g.declined,
+        approved: g.approved,
       );
 }
 
@@ -68,6 +73,10 @@ class FamilyCalendarMember {
 
 class FamilyCalendar {
   final bool configured;
+
+  /// Approved events also go to the user's CalDAV calendar (Settings, Calendar sync). With no family
+  /// calendar gateway, that is what approving means.
+  final bool caldav;
   final String label;
 
   /// The household; empty when the gateway could not be read.
@@ -81,6 +90,7 @@ class FamilyCalendar {
 
   const FamilyCalendar({
     required this.configured,
+    this.caldav = false,
     required this.label,
     this.members = const [],
     this.ownerId,
@@ -91,6 +101,7 @@ class FamilyCalendar {
 
   factory FamilyCalendar.fromGenerated(wire.GeneratedFamilyCalendarResponse g) => FamilyCalendar(
         configured: g.configured,
+        caldav: g.caldav,
         label: g.label,
         members: (g.members ?? const []).map(FamilyCalendarMember.fromGenerated).toList(),
         ownerId: g.ownerId,

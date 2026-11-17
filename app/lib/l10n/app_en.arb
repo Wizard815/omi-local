@@ -19815,5 +19815,338 @@
     "dayReviewCorrectionRemoved": "Correction removed",
     "@dayReviewCorrectionRemoved": {
         "description": "Undo toast after removing a correction from a day summary"
+    },
+    "approvalApprove": "Approve",
+    "@approvalApprove": {
+        "description": "Button: approve a task Omi heard"
+    },
+    "approvalApproveDay": "Approve the day",
+    "@approvalApproveDay": {
+        "description": "Button on a day summary draft: finalize it and send it to the calendar"
+    },
+    "approvalApproving": "Approving the day…",
+    "@approvalApproving": {
+        "description": "Busy overlay while a day is approved"
+    },
+    "approvalAutoOffFooter": "Nothing goes to your calendar, task list or reminders until you approve it. Auto-approve is off.",
+    "@approvalAutoOffFooter": {
+        "description": "Footer under the approval settings when auto-approve is off"
+    },
+    "approvalAutoOnFooter": "Every day at {time}, what still waits from past days is approved as if you had tapped Approve.",
+    "@approvalAutoOnFooter": {
+        "description": "Footer when auto-approve is on",
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    },
+    "approvalAutoSubtitle": "Tasks, calendar events and day summaries of past days",
+    "@approvalAutoSubtitle": {
+        "description": "Subtitle of the auto-approve switch"
+    },
+    "approvalAutoTime": "Every day at",
+    "@approvalAutoTime": {
+        "description": "Row: the local time auto-approve runs"
+    },
+    "approvalAutoTitle": "Auto-approve",
+    "@approvalAutoTitle": {
+        "description": "Switch: approve waiting items automatically at a set time"
+    },
+    "approvalBannerBody": "Nothing is on your calendar until you approve it",
+    "@approvalBannerBody": {
+        "description": "Second line of the banner when items wait for approval"
+    },
+    "approvalCalendarIntroCaldav": "Check the dates Omi heard. Approve adds an event to your calendar at the next sync; nothing goes there before.",
+    "@approvalCalendarIntroCaldav": {
+        "description": "Intro of the Calendar check when there is no family calendar, only CalDAV"
+    },
+    "approvalCountEvents": "{count, plural, =1{1 event} other{{count} events}}",
+    "@approvalCountEvents": {
+        "description": "Count of calendar events waiting",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "approvalCountTasks": "{count, plural, =1{1 task} other{{count} tasks}}",
+    "@approvalCountTasks": {
+        "description": "Count of tasks waiting",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "approvalDayApproved": "Day approved. Its summary goes to your calendar.",
+    "@approvalDayApproved": {
+        "description": "Toast after approving a day"
+    },
+    "approvalDaySummary": "the summary for {date}",
+    "@approvalDaySummary": {
+        "description": "Part of the waiting line: a day summary draft",
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "approvalDecline": "Decline",
+    "@approvalDecline": {
+        "description": "Button: decline a task Omi heard"
+    },
+    "approvalDraftNotice": "Draft: written for you to check. Nothing is sorted and nothing is on your calendar until you approve it.",
+    "@approvalDraftNotice": {
+        "description": "Notice on a day summary draft"
+    },
+    "approvalDraftRowBody": "Summary draft waiting for your OK",
+    "@approvalDraftRowBody": {
+        "description": "Row subtitle for a day summary draft"
+    },
+    "approvalDraftSortAction": "Sort by hand instead",
+    "@approvalDraftSortAction": {
+        "description": "Menu/confirm: discard the draft and sort the day by hand"
+    },
+    "approvalDraftSortBody": "The draft is discarded and the day's conversations wait to be sorted. Nothing was sent anywhere.",
+    "@approvalDraftSortBody": {
+        "description": "Confirm body for discarding a draft"
+    },
+    "approvalDraftSortTitle": "Discard the draft?",
+    "@approvalDraftSortTitle": {
+        "description": "Confirm title for discarding a draft"
+    },
+    "approvalDue": "Due {date}",
+    "@approvalDue": {
+        "description": "Due date of a waiting task",
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "approvalEditApprove": "Edit & approve",
+    "@approvalEditApprove": {
+        "description": "Button: edit a task's text, then approve it"
+    },
+    "approvalEditTitle": "Edit the task",
+    "@approvalEditTitle": {
+        "description": "Title of the sheet that edits a task before approving it"
+    },
+    "approvalEventApproved": "approved",
+    "@approvalEventApproved": {
+        "description": "Status of an approved calendar event in the reviewed list"
+    },
+    "approvalFailed": "That did not work. Try again.",
+    "@approvalFailed": {
+        "description": "Error toast for approve/decline"
+    },
+    "approvalHeader": "Approval",
+    "@approvalHeader": {
+        "description": "Settings section header for approvals"
+    },
+    "approvalListAnd": "{items} and {last}",
+    "@approvalListAnd": {
+        "description": "Joins the last item of a list",
+        "placeholders": {
+            "items": {
+                "type": "String"
+            },
+            "last": {
+                "type": "String"
+            }
+        }
+    },
+    "approvalNothingWaiting": "Nothing is waiting for your OK.",
+    "@approvalNothingWaiting": {
+        "description": "Empty state of the waiting section"
+    },
+    "approvalOff": "Off",
+    "@approvalOff": {
+        "description": "Value: auto-approve is off"
+    },
+    "approvalOperatorDisabled": "Auto-approve is turned off on this server.",
+    "@approvalOperatorDisabled": {
+        "description": "Footer when the operator disabled auto-approve"
+    },
+    "approvalPageTitle": "Waiting for your OK",
+    "@approvalPageTitle": {
+        "description": "Title of the page listing what waits for approval"
+    },
+    "approvalReopenBody": "The conversations come back to sort, and the summary comes off your calendar until you approve the day again.",
+    "@approvalReopenBody": {
+        "description": "Confirm body for reopening an approved day"
+    },
+    "approvalTakeOff": "Take off",
+    "@approvalTakeOff": {
+        "description": "Button: take an approved event back off the calendar"
+    },
+    "approvalTaskApproved": "Approved. It goes to your task list.",
+    "@approvalTaskApproved": {
+        "description": "Toast after approving a task"
+    },
+    "approvalTaskDeclined": "Declined",
+    "@approvalTaskDeclined": {
+        "description": "Undo toast after declining a task"
+    },
+    "approvalWaitingLine": "{items} waiting for your OK",
+    "@approvalWaitingLine": {
+        "description": "Banner line: what waits for approval",
+        "placeholders": {
+            "items": {
+                "type": "String"
+            }
+        }
+    },
+    "approvalWaitingSubtitle": "Omi heard these. They reach your task list and reminders only once you approve them.",
+    "@approvalWaitingSubtitle": {
+        "description": "Subtitle of the waiting tasks section"
+    },
+    "approvalWaitingTitle": "Waiting for your OK",
+    "@approvalWaitingTitle": {
+        "description": "Header of the waiting tasks section"
+    },
+    "approvalYesterdaysSummary": "yesterday's summary",
+    "@approvalYesterdaysSummary": {
+        "description": "Part of the waiting line: yesterday's day summary draft"
+    },
+    "caldavCollectionChosen": "Saved. The next sync goes there.",
+    "@caldavCollectionChosen": {
+        "description": "Toast after picking a calendar or task list"
+    },
+    "caldavCollectionCreated": "Created {name}",
+    "@caldavCollectionCreated": {
+        "description": "Toast after creating a calendar or task list",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "caldavCollectionNameHint": "Name",
+    "@caldavCollectionNameHint": {
+        "description": "Hint for a new calendar or task list name"
+    },
+    "caldavCreateNew": "Create new…",
+    "@caldavCreateNew": {
+        "description": "Picker row: create a new calendar or task list"
+    },
+    "caldavLastReport": "{sent, plural, =0{No tasks} =1{1 task} other{{sent} tasks}} and {events, plural, =0{no events} =1{1 event} other{{events} events}} sent, {received} received",
+    "@caldavLastReport": {
+        "description": "Last sync report line",
+        "placeholders": {
+            "sent": {
+                "type": "int"
+            },
+            "events": {
+                "type": "int"
+            },
+            "received": {
+                "type": "int"
+            }
+        }
+    },
+    "caldavMineHeader": "Where your things go",
+    "@caldavMineHeader": {
+        "description": "Section header: this user's calendar and task list"
+    },
+    "caldavMineSharedHint": "Everyone on this Omi server shares one CalDAV account. Pick a calendar and a task list of your own so your days and tasks stay apart.",
+    "@caldavMineSharedHint": {
+        "description": "Explains the shared account"
+    },
+    "caldavMyCalendar": "My calendar",
+    "@caldavMyCalendar": {
+        "description": "Row: the calendar day summaries and events go to"
+    },
+    "caldavMyTaskList": "My task list",
+    "@caldavMyTaskList": {
+        "description": "Row: the task list tasks go to"
+    },
+    "caldavNewCalendar": "New calendar",
+    "@caldavNewCalendar": {
+        "description": "Title: create a calendar"
+    },
+    "caldavNewTaskList": "New task list",
+    "@caldavNewTaskList": {
+        "description": "Title: create a task list"
+    },
+    "caldavOwnServer": "Use another server",
+    "@caldavOwnServer": {
+        "description": "Expandable: enter your own CalDAV server"
+    },
+    "caldavOwnServerHint": "Nextcloud, Baïkal, iCloud and other CalDAV servers",
+    "@caldavOwnServerHint": {
+        "description": "Subtitle of the own-server section"
+    },
+    "caldavPickerFooter": "\"Used by\" names other people on this Omi server whose sync uses it. Your things stay apart even there.",
+    "@caldavPickerFooter": {
+        "description": "Footer of the calendar/task list picker"
+    },
+    "caldavServerAccount": "Server: {url} · Account: {account}",
+    "@caldavServerAccount": {
+        "description": "Status: CalDAV server and account",
+        "placeholders": {
+            "url": {
+                "type": "String"
+            },
+            "account": {
+                "type": "String"
+            }
+        }
+    },
+    "caldavSharedAccount": "This account is shared by everyone on this Omi server.",
+    "@caldavSharedAccount": {
+        "description": "Status: shared bundled account"
+    },
+    "caldavTaskModeFooter": "In a shared list, your tasks hang under one task named after you; tasks made on a phone under it are imported as yours.",
+    "@caldavTaskModeFooter": {
+        "description": "Footer of the task mode picker"
+    },
+    "caldavTaskModeList": "My own task list",
+    "@caldavTaskModeList": {
+        "description": "Task mode: tasks in my own list"
+    },
+    "caldavTaskModeListBody": "Your tasks are to-dos in the list you picked.",
+    "@caldavTaskModeListBody": {
+        "description": "Explains the own-list mode"
+    },
+    "caldavTaskModeParent": "Under one task in a shared list",
+    "@caldavTaskModeParent": {
+        "description": "Task mode: subtasks of a parent task"
+    },
+    "caldavTaskModeParentBody": "Your tasks are subtasks of \"{name}\" in the list you picked.",
+    "@caldavTaskModeParentBody": {
+        "description": "Explains the parent mode",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "caldavTaskModeParentShort": "Under \"{name}\"",
+    "@caldavTaskModeParentShort": {
+        "description": "Value of the task mode row in parent mode",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "caldavTaskModeTitle": "Tasks go",
+    "@caldavTaskModeTitle": {
+        "description": "Row/sheet: how tasks are placed in the task list"
+    },
+    "caldavUsedBy": "Used by {names}",
+    "@caldavUsedBy": {
+        "description": "Picker subtitle: other people using this collection",
+        "placeholders": {
+            "names": {
+                "type": "String"
+            }
+        }
+    },
+    "caldavWhatToSync": "What to sync",
+    "@caldavWhatToSync": {
+        "description": "Section header for the sync switches"
     }
 }

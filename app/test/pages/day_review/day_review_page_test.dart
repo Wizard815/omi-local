@@ -11,6 +11,8 @@ import 'package:omi/backend/schema/day_review.dart';
 import 'package:omi/l10n/app_localizations.dart';
 import 'package:omi/pages/day_review/day_review_page.dart';
 
+import '../approvals/fake_approvals.dart';
+
 const _date = '2026-11-15';
 
 DayReviewConversation _clip(String id, String title, {bool starred = false}) => DayReviewConversation(
@@ -26,8 +28,9 @@ DayReviewConversation _clip(String id, String title, {bool starred = false}) => 
 
 const _summary = 'Mia had swim at four.\n\nYou booked the pediatrician for Thursday.';
 
-DayReview _review(List<DayReviewCorrection> corrections) => DayReview(
+DayReview _review(List<DayReviewCorrection> corrections, {String status = 'finalized'}) => DayReview(
       date: _date,
+      status: status,
       title: 'Swim, a doctor and dinner',
       summaryText: _summary,
       finalText: _summary,
@@ -40,7 +43,16 @@ class _FakeApi extends DayReviewApi {
   _FakeApi({this.review});
 
   DayReview? review;
+  int approvals = 0;
   final finalized = <({List<String> keep, List<List<String>> groups, List<String> drop})>[];
+
+  @override
+  Future<DayReviewResult<DayReview>> approve(String date) async {
+    approvals++;
+    review = _review(review!.corrections);
+    return DayReviewResult.ok(review!);
+  }
+
   final added = <Map<String, Object?>>[];
   final deleted = <String>[];
 
@@ -94,14 +106,14 @@ class _FakeApi extends DayReviewApi {
   }
 }
 
-Future<void> _open(WidgetTester tester, _FakeApi api) async {
+Future<void> _open(WidgetTester tester, _FakeApi api, {FakeApprovals? approvals}) async {
   tester.view.physicalSize = const Size(390 * 3, 844 * 3);
   tester.view.devicePixelRatio = 3;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(MaterialApp(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
-    home: DayReviewPage(date: _date, api: api),
+    home: DayReviewPage(date: _date, api: api, approvals: approvals ?? FakeApprovals()),
   ));
   await tester.pumpAndSettle();
 }
@@ -189,5 +201,30 @@ void main() {
     expect(tasks, findsOneWidget);
     expect(find.byKey(const Key('day_review_calendar')), findsOneWidget);
     expect(find.text('From this day'), findsOneWidget);
+  });
+
+  testWidgets('a draft says nothing is sent yet, and Approve finalizes it', (tester) async {
+    final api = _FakeApi(review: _review(const [], status: 'draft'));
+    await _open(tester, api);
+    expect(find.byKey(const Key('day_review_draft_notice')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('day_review_approve')));
+    await tester.pumpAndSettle();
+    expect(api.approvals, 1);
+    expect(find.byKey(const Key('day_review_draft_notice')), findsNothing);
+    expect(find.byKey(const Key('day_review_approve')), findsNothing);
+  });
+
+  testWidgets("the day's tasks Omi heard wait for approval in From this day", (tester) async {
+    final approvals = FakeApprovals(tasks: [
+      waitingTask('t1', 'Call the pediatrician back', created: DateTime(2026, 11, 15, 10)),
+      waitingTask('t2', 'A task from another day', created: DateTime(2026, 11, 12, 10)),
+    ]);
+    await _open(tester, _FakeApi(review: _review(const [])), approvals: approvals);
+    final approve = find.byKey(const ValueKey('approve_task_t1'));
+    await tester.scrollUntilVisible(approve, 200, scrollable: find.byType(Scrollable).first);
+    expect(find.text('A task from another day'), findsNothing);
+    await tester.tap(approve);
+    await tester.pumpAndSettle();
+    expect(approvals.approved.single.id, 't1');
   });
 }

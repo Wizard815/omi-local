@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 
 import 'package:omi/backend/http/api_result.dart';
 import 'package:omi/backend/http/api/action_items.dart';
+import 'package:omi/backend/http/api/approvals.dart';
 import 'package:omi/backend/schema/action_item.dart';
 import 'package:omi/env/env.dart';
 import 'package:omi/l10n/app_localizations.dart';
 import 'package:omi/pages/action_items/widgets/action_item_form_sheet.dart';
 import 'package:omi/pages/action_items/widgets/task_row_parts.dart';
+import 'package:omi/pages/day_review/day_review_text_sheet.dart';
+import 'package:omi/providers/waiting_approval_controller.dart';
 import 'package:omi/pages/conversations/day_conversations_page.dart' show dayDateBounds;
 import 'package:omi/ui/ui.dart';
 import 'package:omi/utils/l10n_extensions.dart';
@@ -21,11 +24,14 @@ typedef DayTasksFetcher = Future<ApiResult<ActionItemsResponse>> Function({
 });
 
 class DayTasksPage extends StatefulWidget {
-  const DayTasksPage({super.key, required this.date, this.fetchTasks, this.api});
+  const DayTasksPage({super.key, required this.date, this.fetchTasks, this.api, this.approvals = const ApprovalsApi()});
 
   final DateTime date;
   final DayTasksFetcher? fetchTasks;
   final ActionItemsApi? api;
+
+  /// omi-local: the day's tasks Omi heard wait for the user's OK here too.
+  final ApprovalsApi approvals;
 
   @override
   State<DayTasksPage> createState() => _DayTasksPageState();
@@ -195,15 +201,18 @@ class _DayTasksPageState extends State<DayTasksPage> {
     if (_failed || (_truncated && _tasks.isEmpty)) {
       return _scrollable(OmiErrorState(message: l10n.somethingWentWrong, onRetry: _loadDay));
     }
-    if (_tasks.isEmpty) {
+    final waiting = _tasks.where((t) => t.approval == 'pending').toList();
+    final tasks = _tasks.where((t) => !isAwaitingApproval(t)).toList();
+    if (tasks.isEmpty && waiting.isEmpty) {
       return _scrollable(OmiEmptyState(icon: Icons.check_circle_outline, title: l10n.noTasksOnDate(dates.date(_day))));
     }
-    final extra = _refreshFailed ? 1 : 0;
+    final extra = (_refreshFailed ? 1 : 0) + (waiting.isEmpty ? 0 : 1);
     return ListView.builder(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom + OmiSpacing.xl),
-      itemCount: _tasks.length + 1 + extra,
+      itemCount: tasks.length + 1 + extra,
       itemBuilder: (context, index) {
+        if (waiting.isNotEmpty && index == (_refreshFailed ? 1 : 0)) return _waitingBlock(context, l10n, waiting);
         if (_refreshFailed && index == 0) {
           return Padding(
             padding: const EdgeInsets.all(OmiSpacing.md),
@@ -214,8 +223,8 @@ class _DayTasksPageState extends State<DayTasksPage> {
           );
         }
         index -= extra;
-        if (index == _tasks.length) return _buildFooter(context, l10n);
-        final task = _tasks[index];
+        if (index == tasks.length) return _buildFooter(context, l10n);
+        final task = tasks[index];
         return Semantics(
           button: true,
           child: InkWell(
@@ -240,6 +249,85 @@ class _DayTasksPageState extends State<DayTasksPage> {
           ),
         );
       },
+    );
+  }
+
+  final Set<String> _answering = {};
+
+  Future<void> _answer(ActionItemWithMetadata task, {required bool approve, bool edit = false}) async {
+    final l10n = context.l10n;
+    String? text;
+    if (edit) {
+      text = await showDayReviewTextSheet(context,
+          title: l10n.approvalEditTitle, initialText: task.description, minLines: 2);
+      if (text == null || !mounted) return;
+    }
+    setState(() => _answering.add(task.id));
+    final result = approve
+        ? await widget.approvals.approveTask(task.id, description: text)
+        : await widget.approvals.declineTask(task.id);
+    if (!mounted) return;
+    setState(() => _answering.remove(task.id));
+    if (result is! ApiSuccess) {
+      OmiFeedback.error(context, l10n.approvalFailed);
+      return;
+    }
+    if (approve) {
+      OmiFeedback.confirm(context, l10n.approvalTaskApproved);
+    } else {
+      OmiFeedback.undo(context, l10n.approvalTaskDeclined, onUndo: () async {
+        await widget.approvals.declineTask(task.id, declined: false);
+        if (mounted) unawaited(_loadDay());
+      });
+    }
+    unawaited(_loadDay());
+  }
+
+  Widget _waitingBlock(BuildContext context, AppLocalizations l10n, List<ActionItemWithMetadata> waiting) {
+    return Padding(
+      key: const ValueKey('day_tasks_waiting'),
+      padding: const EdgeInsets.fromLTRB(OmiSpacing.md, OmiSpacing.sm, OmiSpacing.md, OmiSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          OmiSectionHeader(l10n.approvalWaitingTitle, subtitle: l10n.approvalWaitingSubtitle),
+          for (final task in waiting)
+            Padding(
+              key: ValueKey('day_waiting_${task.id}'),
+              padding: const EdgeInsets.symmetric(vertical: OmiSpacing.xs),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(task.description, style: OmiType.callout.copyWith(color: OmiColors.textPrimary)),
+                  Wrap(
+                    spacing: OmiSpacing.sm,
+                    children: [
+                      OmiButton.secondary(
+                        key: ValueKey('day_approve_${task.id}'),
+                        label: l10n.approvalApprove,
+                        size: OmiButtonSize.compact,
+                        isLoading: _answering.contains(task.id),
+                        onPressed: _answering.contains(task.id) ? null : () => _answer(task, approve: true),
+                      ),
+                      OmiButton.tertiary(
+                        label: l10n.approvalEditApprove,
+                        size: OmiButtonSize.compact,
+                        onPressed: _answering.contains(task.id) ? null : () => _answer(task, approve: true, edit: true),
+                      ),
+                      OmiButton.tertiary(
+                        key: ValueKey('day_decline_${task.id}'),
+                        label: l10n.approvalDecline,
+                        size: OmiButtonSize.compact,
+                        onPressed: _answering.contains(task.id) ? null : () => _answer(task, approve: false),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          Divider(color: OmiColors.border),
+        ],
+      ),
     );
   }
 

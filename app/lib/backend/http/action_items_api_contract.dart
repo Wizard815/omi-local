@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:omi/backend/http/api/action_items.dart';
+import 'package:omi/backend/http/api/approvals.dart';
 import 'package:omi/backend/http/api/task_suggestions.dart';
 import 'package:omi/env/env.dart';
 import 'package:omi/providers/action_items_provider.dart';
@@ -19,6 +20,7 @@ ActionItemsProvider createProductionActionItemsProvider({ApiSend? send}) {
   return ActionItemsProvider(
     actionItemsApi: ActionItemsApi(baseUrl: baseUrl, send: send),
     taskSuggestionsApi: TaskSuggestionsApi(baseUrl: baseUrl, send: send),
+    approvalsApi: ApprovalsApi(baseUrl: baseUrl, send: send),
   );
 }
 

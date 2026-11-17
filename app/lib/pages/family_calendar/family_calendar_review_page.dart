@@ -202,7 +202,7 @@ class _FamilyCalendarReviewPageState extends State<FamilyCalendarReviewPage> {
       body = const OmiLoadingState();
     } else if (calendar == null) {
       body = OmiErrorState(message: l10n.familyCalendarFailed(_loadError ?? ''), onRetry: _load);
-    } else if (!calendar.configured) {
+    } else if (!calendar.configured && !calendar.caldav) {
       body = OmiEmptyState(
         icon: Icons.family_restroom_outlined,
         title: l10n.familyCalendarNotConfiguredTitle,
@@ -215,21 +215,22 @@ class _FamilyCalendarReviewPageState extends State<FamilyCalendarReviewPage> {
           padding: const EdgeInsets.fromLTRB(OmiSpacing.md, OmiSpacing.xs, OmiSpacing.md, OmiSpacing.xxl),
           children: [
             Text(
-              l10n.familyCalendarIntro,
+              calendar.configured ? l10n.familyCalendarIntro : l10n.approvalCalendarIntroCaldav,
               style: OmiType.footnote.copyWith(color: OmiColors.textSecondary, height: 1.4),
             ),
             const SizedBox(height: OmiSpacing.sm),
-            OmiSettingsGroup(
-              children: [
-                OmiSettingsRow(
-                  key: const Key('family_calendar_owner'),
-                  leading: const Icon(Icons.person_outline),
-                  title: l10n.familyCalendarAddingAsTitle,
-                  value: calendar.ownerId == null ? l10n.familyCalendarWholeFamily : calendar.ownerName,
-                  onTap: () => _pickOwner(calendar),
-                ),
-              ],
-            ),
+            if (calendar.configured)
+              OmiSettingsGroup(
+                children: [
+                  OmiSettingsRow(
+                    key: const Key('family_calendar_owner'),
+                    leading: const Icon(Icons.person_outline),
+                    title: l10n.familyCalendarAddingAsTitle,
+                    value: calendar.ownerId == null ? l10n.familyCalendarWholeFamily : calendar.ownerName,
+                    onTap: () => _pickOwner(calendar),
+                  ),
+                ],
+              ),
             const SizedBox(height: OmiSpacing.md),
             if (calendar.pending.isEmpty)
               Padding(
@@ -394,9 +395,9 @@ class _FamilyCalendarReviewPageState extends State<FamilyCalendarReviewPage> {
       child: Row(
         children: [
           Icon(
-            event.created ? Icons.event_available_outlined : Icons.event_busy_outlined,
+            event.created || event.approved ? Icons.event_available_outlined : Icons.event_busy_outlined,
             size: 18,
-            color: event.created ? OmiColors.success : OmiColors.textTertiary,
+            color: event.created || event.approved ? OmiColors.success : OmiColors.textTertiary,
           ),
           const SizedBox(width: OmiSpacing.sm),
           Expanded(
@@ -405,7 +406,7 @@ class _FamilyCalendarReviewPageState extends State<FamilyCalendarReviewPage> {
               children: [
                 Text(event.title, style: OmiType.subhead, maxLines: 1, overflow: TextOverflow.ellipsis),
                 Text(
-                  '${dates.dayHeader(event.start)}, ${dates.time(event.start)} · ${event.created ? l10n.familyCalendarOnCalendar : l10n.familyCalendarDeclined}',
+                  '${dates.dayHeader(event.start)}, ${dates.time(event.start)} · ${event.created ? l10n.familyCalendarOnCalendar : event.approved ? l10n.approvalEventApproved : l10n.familyCalendarDeclined}',
                   style: OmiType.caption.copyWith(color: OmiColors.textTertiary),
                 ),
               ],
@@ -419,6 +420,15 @@ class _FamilyCalendarReviewPageState extends State<FamilyCalendarReviewPage> {
               size: OmiButtonSize.compact,
               isLoading: _busy.contains(event.key),
               onPressed: _busy.contains(event.key) ? null : () => _setDeclined(event, false),
+            ),
+          // An approval is not final either: taking it off removes it from the CalDAV calendar.
+          if (event.approved && !event.declined)
+            OmiButton.tertiary(
+              key: Key('family_calendar_take_off_${event.key}'),
+              label: l10n.approvalTakeOff,
+              size: OmiButtonSize.compact,
+              isLoading: _busy.contains(event.key),
+              onPressed: _busy.contains(event.key) ? null : () => _decline(event),
             ),
         ],
       ),

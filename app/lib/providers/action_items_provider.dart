@@ -4,6 +4,7 @@ import 'package:omi/utils/platform/platform_manager.dart';
 import 'package:flutter/material.dart';
 
 import 'package:omi/backend/http/api/action_items.dart' as api;
+import 'package:omi/backend/http/api/approvals.dart';
 import 'package:omi/backend/http/api/task_suggestions.dart';
 import 'package:omi/backend/http/api_fallback.dart';
 import 'package:omi/backend/http/api_presentation.dart';
@@ -23,6 +24,7 @@ import 'package:omi/utils/platform/platform_service.dart';
 import 'package:omi/utils/analytics/product_telemetry.dart';
 import 'package:omi/ui/feedback/omi_feedback.dart';
 import 'package:omi/providers/task_suggestions_controller.dart';
+import 'package:omi/providers/waiting_approval_controller.dart';
 
 typedef ActionItemsFetcher = Future<ActionItemsResponse?> Function({
   int limit,
@@ -59,6 +61,7 @@ class ActionItemsProvider extends ChangeNotifier {
     UpdateDueDateRequest? updateDueDateRequest,
     api.ActionItemsApi? actionItemsApi,
     TaskSuggestionsApi? taskSuggestionsApi,
+    ApprovalsApi? approvalsApi,
     AutomaticAppleRemindersExport? automaticAppleRemindersExport,
     Future<ExportResult> Function(ActionItemWithMetadata, TaskIntegrationApp)? exportActionItem,
   })  : _getActionItems = getActionItems ?? api.tryGetActionItems,
@@ -74,10 +77,17 @@ class ActionItemsProvider extends ChangeNotifier {
         ? null
         : TaskSuggestionsController(api: taskSuggestionsApi, onTaskSaved: receiveSavedTask);
     suggestions?.addListener(notifyListeners);
+    waiting = approvalsApi == null
+        ? null
+        : WaitingApprovalController(api: approvalsApi, onApproved: () => forceRefreshActionItems());
+    waiting?.addListener(notifyListeners);
     unawaited(_preload());
   }
 
   late final TaskSuggestionsController? suggestions;
+
+  /// omi-local: tasks Omi extracted that wait for the user's OK (shown only in their own section).
+  late final WaitingApprovalController? waiting;
 
   final ActionItemsFetcher _getActionItems;
   final DeleteActionItemRequest _deleteActionItemRequest;
@@ -392,11 +402,11 @@ class ActionItemsProvider extends ChangeNotifier {
       );
       onTyped?.call(typed);
       return switch (typed) {
-        ApiSuccess(:final data) => data,
+        ApiSuccess(:final data) => _withoutWaiting(data),
         ApiFailure() => null,
       };
     }
-    return _getActionItems(
+    final legacy = await _getActionItems(
       limit: limit,
       offset: offset,
       completed: completed,
@@ -405,6 +415,18 @@ class ActionItemsProvider extends ChangeNotifier {
       endDate: endDate,
       dueStartDate: dueStartDate,
       dueEndDate: dueEndDate,
+    );
+    return legacy == null ? null : _withoutWaiting(legacy);
+  }
+
+  /// omi-local: a task waiting for the user's OK (or declined) is not a task yet: it stays out of
+  /// the list, Home and reminders, and shows only in the "Waiting for your OK" section.
+  static ActionItemsResponse _withoutWaiting(ActionItemsResponse response) {
+    if (!response.actionItems.any(isAwaitingApproval)) return response;
+    return ActionItemsResponse(
+      actionItems: response.actionItems.where((item) => !isAwaitingApproval(item)).toList(),
+      hasMore: response.hasMore,
+      truncated: response.truncated,
     );
   }
 
@@ -1215,7 +1237,11 @@ class ActionItemsProvider extends ChangeNotifier {
   Future<void> forceRefreshActionItems() async {
     _refreshDebounceTimer?.cancel();
     _lastRefreshTime = DateTime.now();
-    await Future.wait([_fetchNewActionItems(), if (suggestions != null) suggestions!.load()]);
+    await Future.wait([
+      _fetchNewActionItems(),
+      if (suggestions != null) suggestions!.load(),
+      if (waiting != null) waiting!.load(),
+    ]);
   }
 
   Future<void> _fetchNewActionItems() async {
@@ -1327,6 +1353,7 @@ class ActionItemsProvider extends ChangeNotifier {
     _pendingSortUpdates.clear();
     _pendingIndentUpdates.clear();
     suggestions?.reset();
+    waiting?.reset();
     notifyListeners();
   }
 
@@ -1523,6 +1550,8 @@ class ActionItemsProvider extends ChangeNotifier {
     _disposed = true;
     suggestions?.removeListener(notifyListeners);
     suggestions?.dispose();
+    waiting?.removeListener(notifyListeners);
+    waiting?.dispose();
     _refreshDebounceTimer?.cancel();
     _sortDebounce?.cancel();
     _indentDebounce?.cancel();

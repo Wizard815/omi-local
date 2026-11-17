@@ -68,6 +68,9 @@ class TaskDeliveryFixture {
         });
       case '/v1/candidates/control':
         return response({'account_generation': generation});
+      case '/v1/approvals':
+        // omi-local: nothing extracted waits for approval in this fixture.
+        return response({'tasks': [], 'task_count': 0, 'event_count': 0, 'draft_dates': [], 'today': '2026-10-20'});
       case '/v1/candidates/from-conversation':
         if (expectedSummaryIndex != null && jsonDecode(request.body)['action_item_index'] != expectedSummaryIndex) {
           return response({}, 409);
