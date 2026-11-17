@@ -153,7 +153,7 @@ def conversation_markdown(uid: str, conversation_id: str, *, include_transcript:
         lines += [f"- [{'x' if getattr(a, 'completed', False) else ' '}] {a.description}" for a in items]
         lines.append('')
     if include_transcript:
-        transcript = day_review_service._transcript(conversation).strip()  # noqa: SLF001 — same text the review reads
+        transcript = day_review_service.transcript_text(conversation).strip()
         if transcript:
             lines += ['## Transcript', '', transcript, '']
     base = f'Conversation - {title} ({conversation.id[:8]})'

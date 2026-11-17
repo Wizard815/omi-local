@@ -13,10 +13,12 @@ import database.integrations_out as outbound_db
 from database.redis_db import get_user_webhook_db
 from models.users import WebhookType
 from models.integrations_out import (
+    CoinpileAccount,
     CoinpileAccountsResponse,
     CoinpileSendRequest,
     CoinpileSendResponse,
     OutboundIntegrationsResponse,
+    OutboundReceipt,
     OutboundPreviewResponse,
     OutboundTestResponse,
     SendConversationRequest,
@@ -129,7 +131,9 @@ async def send_conversation(
     if already:
         return SendConversationResponse(ok=False, already_sent=True, error='Already sent to the wiki')
     assert receipt is not None
-    return SendConversationResponse(ok=not receipt.get('error'), receipt=receipt, error=receipt.get('error') or '')
+    return SendConversationResponse(
+        ok=not receipt.get('error'), receipt=OutboundReceipt.model_validate(receipt), error=receipt.get('error') or ''
+    )
 
 
 # ---- Send to Coinpile ------------------------------------------------------------------------
@@ -141,7 +145,8 @@ async def send_conversation(
 async def coinpile_accounts(uid: str = Depends(auth.get_current_user_uid)):
     """The user's Coinpile accounts, for a transaction (Coinpile's read-only list_accounts)."""
     try:
-        return CoinpileAccountsResponse(accounts=await mcp_targets.coinpile_accounts(uid))
+        rows = await mcp_targets.coinpile_accounts(uid)
+        return CoinpileAccountsResponse(accounts=[CoinpileAccount(**row) for row in rows])
     except (mcp_targets.TargetNotReady, OutboundError) as error:
         return CoinpileAccountsResponse(error=getattr(error, 'message', str(error)))
 
@@ -157,7 +162,9 @@ async def coinpile_draft(
         draft = await run_blocking(db_executor, mcp_targets.coinpile_draft, uid, conversation_id, task_id)
     except mcp_targets.TargetNotReady as error:
         raise _not_ready(error)
-    return CoinpileSendRequest(kind='note', conversation_id=conversation_id, task_id=task_id, **draft)
+    return CoinpileSendRequest(
+        kind='note', conversation_id=conversation_id, task_id=task_id, title=draft['title'], body=draft['body']
+    )
 
 
 @router.post('/v1/integrations/coinpile/send', tags=['integrations-outbound'], response_model=CoinpileSendResponse)

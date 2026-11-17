@@ -220,6 +220,11 @@ def _transcript(conversation: Conversation) -> str:
         )
 
 
+def transcript_text(conversation: Conversation) -> str:
+    """A conversation's transcript as the review reads it (also what a Connection sends, when asked)."""
+    return _transcript(conversation)
+
+
 def _material_item(conversation: Conversation, ref: str = '') -> MaterialItem:
     structured = conversation.structured
     return MaterialItem(

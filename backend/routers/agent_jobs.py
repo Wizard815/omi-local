@@ -6,6 +6,8 @@ Send; ``POST /v1/agent-jobs`` then sends that text. Studio reports results on th
 webhook ``POST /v1/integrations/studio/events``.
 """
 
+from typing import NoReturn
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 
@@ -27,7 +29,7 @@ from utils.other import endpoints as auth
 router = APIRouter()
 
 
-def _raise(error: agent_jobs.AgentJobError):
+def _raise(error: agent_jobs.AgentJobError) -> NoReturn:
     raise HTTPException(status_code=error.status_code, detail=error.message)
 
 
