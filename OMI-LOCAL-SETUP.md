@@ -62,6 +62,13 @@ The Omi app is architecturally a **Firebase-Auth + backend-API** client. To run 
 | **Text-to-speech (Omi's spoken replies)** | ✅ Fully local | `omi-audio`'s Piper TTS, wired via `TTS_LOCAL_BASE_URL` in `routers/tts.py`. (Cloud ElevenLabs stays available if you set `ELEVENLABS_API_KEY`.) |
 | **AI chat / memory extraction / summaries** | ✅ Fully local (option 1 below) | The backend calls both an OpenAI-compatible API (`gpt-5.6-luna` / `gpt-5-nano`) and the Anthropic Messages API (`claude-sonnet-4-6`, the main agentic chat). Both are routed to your llama.cpp — the Anthropic side via `omi-host/local_llm_adapter.py`, an Anthropic→OpenAI translator. |
 
+### Local only, enforced
+
+Nothing in the stack may reach the internet while it runs. An egress guard in every Python
+process refuses and logs any non-LAN destination, and a host firewall (`omi-host/egress-firewall.sh`,
+applied by the run script) drops the rest. How to check it, how to let something out on purpose, and
+the audit behind it: [`omi-host/NETWORK.md`](omi-host/NETWORK.md).
+
 ### AI options (set when starting the host stack)
 
 1. **Fully local (your MI50 llama.cpp)** — start llama.cpp with an OpenAI server and pass it in:

@@ -14,6 +14,8 @@
 !omi-host/audio-env.sh
 !omi-host/auth-env.sh
 !omi-host/maintenance.sh
+!omi-host/caldav-env.sh
+!omi-host/egress-guard/
 # Not needed at runtime: tests and evals (145M+), scratch audio (_temp, hundreds
 # of MB), tool venvs, caches, docs.
 backend/tests/
