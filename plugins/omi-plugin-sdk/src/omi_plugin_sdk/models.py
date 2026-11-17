@@ -138,6 +138,9 @@ class Event(BaseModel):
     calendar: Optional[str] = Field(default=None, description="Calendar the event was added to, once approved")
     external_id: Optional[str] = Field(default=None, description='Id in that calendar (e.g. "dayglance:12")')
     declined: bool = Field(default=False, description="Reviewed and not added anywhere")
+    # omi-local: the user approved it in the Calendar check, so the CalDAV sync may put it on their
+    # calendar (with or without the family calendar gateway).
+    approved: bool = Field(default=False, description="Approved by the user (goes to their CalDAV calendar)")
 
     def as_dict_cleaned_dates(self):
         event_dict = self.dict()

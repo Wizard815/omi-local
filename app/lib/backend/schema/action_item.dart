@@ -44,6 +44,7 @@ extension ActionItemWithMetadataCopyWith on wire.GeneratedActionItemResponse {
     String? recurrenceParentId,
     String? supersededBy,
     String? taskId,
+    String? approval,
   }) {
     return wire.GeneratedActionItemResponse(
       id: id ?? this.id,
@@ -73,6 +74,7 @@ extension ActionItemWithMetadataCopyWith on wire.GeneratedActionItemResponse {
       recurrenceParentId: recurrenceParentId ?? this.recurrenceParentId,
       supersededBy: supersededBy ?? this.supersededBy,
       taskId: taskId ?? this.taskId,
+      approval: approval ?? this.approval,
     );
   }
 }

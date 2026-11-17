@@ -38,13 +38,18 @@ DayReviewResult<T> _decode<T>(dynamic response, T Function(Map<String, dynamic>)
   }
 }
 
-Future<({String today, List<String> pendingDates})?> getPendingDayReviews({int days = 7}) async {
+Future<({String today, List<String> pendingDates, List<String> draftDates})?> getPendingDayReviews(
+    {int days = 7}) async {
   final response = await makeApiCall(url: '${_base()}/pending?days=$days', headers: {}, method: 'GET', body: '');
   final result = _decode(
     response,
     (json) {
       final g = wire.GeneratedPendingDayReviewsResponse.fromJson(json);
-      return (today: g.today, pendingDates: g.pendingDates ?? const <String>[]);
+      return (
+        today: g.today,
+        pendingDates: g.pendingDates ?? const <String>[],
+        draftDates: g.draftDates ?? const <String>[],
+      );
     },
     'getPendingDayReviews',
   );
@@ -52,7 +57,8 @@ Future<({String today, List<String> pendingDates})?> getPendingDayReviews({int d
 }
 
 Future<List<DayReview>> listDayReviews({int limit = 30}) async {
-  final response = await makeApiCall(url: '${_base()}?limit=$limit', headers: {}, method: 'GET', body: '');
+  final response =
+      await makeApiCall(url: '${_base()}?limit=$limit&include_drafts=true', headers: {}, method: 'GET', body: '');
   final result = _decode(
     response,
     (json) =>
@@ -63,7 +69,7 @@ Future<List<DayReview>> listDayReviews({int limit = 30}) async {
 }
 
 Future<DayReviewResult<DayReviewDay>> getDayReviewDay(String date) async {
-  final response = await makeApiCall(url: '${_base()}/$date', headers: {}, method: 'GET', body: '');
+  final response = await makeApiCall(url: '${_base()}/$date?include_drafts=true', headers: {}, method: 'GET', body: '');
   return _decode(
     response,
     (json) => DayReviewDay.fromGenerated(wire.GeneratedDayReviewDayResponse.fromJson(json)),
@@ -91,6 +97,13 @@ Future<DayReviewResult<DayReview>> finalizeDayReview(
   );
   return _decode(
       response, (json) => DayReview.fromGenerated(wire.GeneratedDayReview.fromJson(json)), 'finalizeDayReview');
+}
+
+/// Approve the day's draft: finalize with its split and text; only then does its summary go to the calendar.
+Future<DayReviewResult<DayReview>> approveDayReview(String date) async {
+  final response = await makeApiCall(url: '${_base()}/$date/approve', headers: {}, method: 'POST', body: '');
+  return _decode(
+      response, (json) => DayReview.fromGenerated(wire.GeneratedDayReview.fromJson(json)), 'approveDayReview');
 }
 
 /// Pull a section's conversations back out as starred conversations ([favorited] = true) or fold them back in.
@@ -163,6 +176,8 @@ class DayReviewApi {
     List<String> drop = const [],
   }) =>
       finalizeDayReview(date, keep, mergeGroups: mergeGroups, dropConversationIds: drop);
+
+  Future<DayReviewResult<DayReview>> approve(String date) => approveDayReview(date);
 
   Future<DayReviewResult<DayReview>> favoriteSection(String date, String sectionId, bool favorited) =>
       favoriteDayReviewSection(date, sectionId, favorited);

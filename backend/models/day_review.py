@@ -63,6 +63,11 @@ class DayReviewSection(BaseModel):
 class DayReview(BaseModel):
     date: str
     status: Literal['finalized'] = 'finalized'
+    draft: bool = Field(
+        default=False,
+        description='Written for the user to review: nothing sorted or sent to a calendar until approved. '
+        'Released clients never see a draft unless they ask (include_drafts=true).',
+    )
     title: str = ''
     summary_text: str = Field(default='', description='Model-written summary; correction offsets index this')
     final_text: str = Field(
@@ -84,6 +89,7 @@ class DayReview(BaseModel):
     updated_at: Optional[datetime] = None
     generated_at: Optional[datetime] = None
     generation_count: int = 0
+    approved_at: Optional[datetime] = Field(default=None, description='When the user approved the day')
 
 
 class DayReviewConversation(BaseModel):
@@ -150,7 +156,13 @@ class DayReviewsListResponse(BaseModel):
 
 class PendingDayReviewsResponse(BaseModel):
     today: str
-    pending_dates: List[str] = Field(default_factory=list, description='Recent local dates with unsorted conversations')
+    pending_dates: List[str] = Field(
+        default_factory=list,
+        description='Recent local dates with unsorted conversations or a draft waiting for approval',
+    )
+    draft_dates: List[str] = Field(
+        default_factory=list, description='Of those, the dates with a summary draft ready to review'
+    )
 
 
 class ReopenDayReviewResponse(BaseModel):
@@ -172,6 +184,7 @@ class McpDayReviewSection(BaseModel):
 
 
 class McpDayReview(BaseModel):
+    status: str = Field(default='finalized', description="'draft' while it waits for the user's OK")
     title: str = ''
     text: str = ''
     tags: List[str] = Field(default_factory=list)

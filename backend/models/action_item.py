@@ -269,6 +269,9 @@ class ActionItemResponse(BaseModel):
     export_date: Optional[datetime] = None
     export_platform: Optional[str] = None
     apple_reminder_id: Optional[str] = None
+    # omi-local: 'pending' while an extracted task waits for the user's OK, 'declined' after a
+    # no; absent (null) = approved, as every task from before approvals is.
+    approval: Optional[str] = None
 
     @model_validator(mode="before")
     @classmethod

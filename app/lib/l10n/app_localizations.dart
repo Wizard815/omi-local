@@ -27762,7 +27762,7 @@ abstract class AppLocalizations {
   /// Intro paragraph of the CalDAV settings page
   ///
   /// In en, this message translates to:
-  /// **'Your tasks, day summaries and conversation events sync with a CalDAV server every hour, and the calendar comes back into Omi. The server bundled with your stack is used until you set your own.'**
+  /// **'Your approved tasks, day summaries and calendar events sync with a CalDAV server within seconds of a change, and the calendar comes back into Omi. The server bundled with your stack is used until you set your own.'**
   String get caldavSettingsIntro;
 
   /// Text field label
@@ -28130,6 +28130,390 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Correction removed'**
   String get dayReviewCorrectionRemoved;
+
+  /// Button: approve a task Omi heard
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get approvalApprove;
+
+  /// Button on a day summary draft: finalize it and send it to the calendar
+  ///
+  /// In en, this message translates to:
+  /// **'Approve the day'**
+  String get approvalApproveDay;
+
+  /// Busy overlay while a day is approved
+  ///
+  /// In en, this message translates to:
+  /// **'Approving the day…'**
+  String get approvalApproving;
+
+  /// Footer under the approval settings when auto-approve is off
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing goes to your calendar, task list or reminders until you approve it. Auto-approve is off.'**
+  String get approvalAutoOffFooter;
+
+  /// Footer when auto-approve is on
+  ///
+  /// In en, this message translates to:
+  /// **'Every day at {time}, what still waits from past days is approved as if you had tapped Approve.'**
+  String approvalAutoOnFooter(String time);
+
+  /// Subtitle of the auto-approve switch
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks, calendar events and day summaries of past days'**
+  String get approvalAutoSubtitle;
+
+  /// Row: the local time auto-approve runs
+  ///
+  /// In en, this message translates to:
+  /// **'Every day at'**
+  String get approvalAutoTime;
+
+  /// Switch: approve waiting items automatically at a set time
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-approve'**
+  String get approvalAutoTitle;
+
+  /// Second line of the banner when items wait for approval
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is on your calendar until you approve it'**
+  String get approvalBannerBody;
+
+  /// Intro of the Calendar check when there is no family calendar, only CalDAV
+  ///
+  /// In en, this message translates to:
+  /// **'Check the dates Omi heard. Approve adds an event to your calendar at the next sync; nothing goes there before.'**
+  String get approvalCalendarIntroCaldav;
+
+  /// Count of calendar events waiting
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 event} other{{count} events}}'**
+  String approvalCountEvents(int count);
+
+  /// Count of tasks waiting
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 task} other{{count} tasks}}'**
+  String approvalCountTasks(int count);
+
+  /// Toast after approving a day
+  ///
+  /// In en, this message translates to:
+  /// **'Day approved. Its summary goes to your calendar.'**
+  String get approvalDayApproved;
+
+  /// Part of the waiting line: a day summary draft
+  ///
+  /// In en, this message translates to:
+  /// **'the summary for {date}'**
+  String approvalDaySummary(String date);
+
+  /// Button: decline a task Omi heard
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get approvalDecline;
+
+  /// Notice on a day summary draft
+  ///
+  /// In en, this message translates to:
+  /// **'Draft: written for you to check. Nothing is sorted and nothing is on your calendar until you approve it.'**
+  String get approvalDraftNotice;
+
+  /// Row subtitle for a day summary draft
+  ///
+  /// In en, this message translates to:
+  /// **'Summary draft waiting for your OK'**
+  String get approvalDraftRowBody;
+
+  /// Menu/confirm: discard the draft and sort the day by hand
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by hand instead'**
+  String get approvalDraftSortAction;
+
+  /// Confirm body for discarding a draft
+  ///
+  /// In en, this message translates to:
+  /// **'The draft is discarded and the day\'s conversations wait to be sorted. Nothing was sent anywhere.'**
+  String get approvalDraftSortBody;
+
+  /// Confirm title for discarding a draft
+  ///
+  /// In en, this message translates to:
+  /// **'Discard the draft?'**
+  String get approvalDraftSortTitle;
+
+  /// Due date of a waiting task
+  ///
+  /// In en, this message translates to:
+  /// **'Due {date}'**
+  String approvalDue(String date);
+
+  /// Button: edit a task's text, then approve it
+  ///
+  /// In en, this message translates to:
+  /// **'Edit & approve'**
+  String get approvalEditApprove;
+
+  /// Title of the sheet that edits a task before approving it
+  ///
+  /// In en, this message translates to:
+  /// **'Edit the task'**
+  String get approvalEditTitle;
+
+  /// Status of an approved calendar event in the reviewed list
+  ///
+  /// In en, this message translates to:
+  /// **'approved'**
+  String get approvalEventApproved;
+
+  /// Error toast for approve/decline
+  ///
+  /// In en, this message translates to:
+  /// **'That did not work. Try again.'**
+  String get approvalFailed;
+
+  /// Settings section header for approvals
+  ///
+  /// In en, this message translates to:
+  /// **'Approval'**
+  String get approvalHeader;
+
+  /// Joins the last item of a list
+  ///
+  /// In en, this message translates to:
+  /// **'{items} and {last}'**
+  String approvalListAnd(String items, String last);
+
+  /// Empty state of the waiting section
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is waiting for your OK.'**
+  String get approvalNothingWaiting;
+
+  /// Value: auto-approve is off
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get approvalOff;
+
+  /// Footer when the operator disabled auto-approve
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-approve is turned off on this server.'**
+  String get approvalOperatorDisabled;
+
+  /// Title of the page listing what waits for approval
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for your OK'**
+  String get approvalPageTitle;
+
+  /// Confirm body for reopening an approved day
+  ///
+  /// In en, this message translates to:
+  /// **'The conversations come back to sort, and the summary comes off your calendar until you approve the day again.'**
+  String get approvalReopenBody;
+
+  /// Button: take an approved event back off the calendar
+  ///
+  /// In en, this message translates to:
+  /// **'Take off'**
+  String get approvalTakeOff;
+
+  /// Toast after approving a task
+  ///
+  /// In en, this message translates to:
+  /// **'Approved. It goes to your task list.'**
+  String get approvalTaskApproved;
+
+  /// Undo toast after declining a task
+  ///
+  /// In en, this message translates to:
+  /// **'Declined'**
+  String get approvalTaskDeclined;
+
+  /// Banner line: what waits for approval
+  ///
+  /// In en, this message translates to:
+  /// **'{items} waiting for your OK'**
+  String approvalWaitingLine(String items);
+
+  /// Subtitle of the waiting tasks section
+  ///
+  /// In en, this message translates to:
+  /// **'Omi heard these. They reach your task list and reminders only once you approve them.'**
+  String get approvalWaitingSubtitle;
+
+  /// Header of the waiting tasks section
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for your OK'**
+  String get approvalWaitingTitle;
+
+  /// Part of the waiting line: yesterday's day summary draft
+  ///
+  /// In en, this message translates to:
+  /// **'yesterday\'s summary'**
+  String get approvalYesterdaysSummary;
+
+  /// Toast after picking a calendar or task list
+  ///
+  /// In en, this message translates to:
+  /// **'Saved. The next sync goes there.'**
+  String get caldavCollectionChosen;
+
+  /// Toast after creating a calendar or task list
+  ///
+  /// In en, this message translates to:
+  /// **'Created {name}'**
+  String caldavCollectionCreated(String name);
+
+  /// Hint for a new calendar or task list name
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get caldavCollectionNameHint;
+
+  /// Picker row: create a new calendar or task list
+  ///
+  /// In en, this message translates to:
+  /// **'Create new…'**
+  String get caldavCreateNew;
+
+  /// Last sync report line
+  ///
+  /// In en, this message translates to:
+  /// **'{sent, plural, =0{No tasks} =1{1 task} other{{sent} tasks}} and {events, plural, =0{no events} =1{1 event} other{{events} events}} sent, {received} received'**
+  String caldavLastReport(int sent, int events, int received);
+
+  /// Section header: this user's calendar and task list
+  ///
+  /// In en, this message translates to:
+  /// **'Where your things go'**
+  String get caldavMineHeader;
+
+  /// Explains the shared account
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone on this Omi server shares one CalDAV account. Pick a calendar and a task list of your own so your days and tasks stay apart.'**
+  String get caldavMineSharedHint;
+
+  /// Row: the calendar day summaries and events go to
+  ///
+  /// In en, this message translates to:
+  /// **'My calendar'**
+  String get caldavMyCalendar;
+
+  /// Row: the task list tasks go to
+  ///
+  /// In en, this message translates to:
+  /// **'My task list'**
+  String get caldavMyTaskList;
+
+  /// Title: create a calendar
+  ///
+  /// In en, this message translates to:
+  /// **'New calendar'**
+  String get caldavNewCalendar;
+
+  /// Title: create a task list
+  ///
+  /// In en, this message translates to:
+  /// **'New task list'**
+  String get caldavNewTaskList;
+
+  /// Expandable: enter your own CalDAV server
+  ///
+  /// In en, this message translates to:
+  /// **'Use another server'**
+  String get caldavOwnServer;
+
+  /// Subtitle of the own-server section
+  ///
+  /// In en, this message translates to:
+  /// **'Nextcloud, Baïkal, iCloud and other CalDAV servers'**
+  String get caldavOwnServerHint;
+
+  /// Footer of the calendar/task list picker
+  ///
+  /// In en, this message translates to:
+  /// **'\"Used by\" names other people on this Omi server whose sync uses it. Your things stay apart even there.'**
+  String get caldavPickerFooter;
+
+  /// Status: CalDAV server and account
+  ///
+  /// In en, this message translates to:
+  /// **'Server: {url} · Account: {account}'**
+  String caldavServerAccount(String url, String account);
+
+  /// Status: shared bundled account
+  ///
+  /// In en, this message translates to:
+  /// **'This account is shared by everyone on this Omi server.'**
+  String get caldavSharedAccount;
+
+  /// Footer of the task mode picker
+  ///
+  /// In en, this message translates to:
+  /// **'In a shared list, your tasks hang under one task named after you; tasks made on a phone under it are imported as yours.'**
+  String get caldavTaskModeFooter;
+
+  /// Task mode: tasks in my own list
+  ///
+  /// In en, this message translates to:
+  /// **'My own task list'**
+  String get caldavTaskModeList;
+
+  /// Explains the own-list mode
+  ///
+  /// In en, this message translates to:
+  /// **'Your tasks are to-dos in the list you picked.'**
+  String get caldavTaskModeListBody;
+
+  /// Task mode: subtasks of a parent task
+  ///
+  /// In en, this message translates to:
+  /// **'Under one task in a shared list'**
+  String get caldavTaskModeParent;
+
+  /// Explains the parent mode
+  ///
+  /// In en, this message translates to:
+  /// **'Your tasks are subtasks of \"{name}\" in the list you picked.'**
+  String caldavTaskModeParentBody(String name);
+
+  /// Value of the task mode row in parent mode
+  ///
+  /// In en, this message translates to:
+  /// **'Under \"{name}\"'**
+  String caldavTaskModeParentShort(String name);
+
+  /// Row/sheet: how tasks are placed in the task list
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks go'**
+  String get caldavTaskModeTitle;
+
+  /// Picker subtitle: other people using this collection
+  ///
+  /// In en, this message translates to:
+  /// **'Used by {names}'**
+  String caldavUsedBy(String names);
+
+  /// Section header for the sync switches
+  ///
+  /// In en, this message translates to:
+  /// **'What to sync'**
+  String get caldavWhatToSync;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

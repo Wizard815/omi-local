@@ -251,6 +251,7 @@ from utils.retrieval.rag import retrieve_rag_conversation_context
 from utils.webhooks import conversation_created_webhook
 from utils.notifications import send_action_item_data_message, sync_action_item_reminder
 from utils.task_sync import auto_sync_action_items_batch
+from utils import task_approval
 from utils.task_intelligence import conversation_capture
 from utils.conversations.action_item_refresh import preserve as preserve_refresh_tasks
 from utils.conversations.action_item_extraction import action_items_for_write, filter_extracted_items
@@ -2015,6 +2016,9 @@ def _write_action_items(uid: str, conversation: Conversation, trigger: Optional[
         uid, conversation, now, conversation_capture.canonical_conversation_fields
     )
 
+    # omi-local: extracted tasks wait for the user's OK (utils/task_approval.py). The refresh
+    # path creates only new rows from these dicts and keeps existing rows as they are.
+    task_approval.mark_extracted(action_items_data)
     if preserve_refresh_tasks(uid, conversation, action_items_data, trigger, upsert_action_item_vectors_batch):
         return
     if not action_items_data:
@@ -2023,6 +2027,8 @@ def _write_action_items(uid: str, conversation: Conversation, trigger: Optional[
     old_items = action_items_db.get_action_items_by_conversation(uid, conversation.id)
     # A task that survives re-extraction keeps its id and export marker (no re-send).
     identity = plan_replacement(conversation.id, action_items_data, old_items, trigger)
+    # ...and the user's answer about it (approved stays approved, declined stays declined).
+    task_approval.mark_extracted(identity.items, identity.document_ids, old_items)
     old_ids = [item['id'] for item in old_items]
     if old_ids:
         delete_action_item_vectors_batch(uid, old_ids)
@@ -2074,6 +2080,8 @@ def _write_action_items(uid: str, conversation: Conversation, trigger: Optional[
         )
         saved_items = []
     for action_item in saved_items:
+        if not task_approval.deliverable(action_item):
+            continue  # no reminder before the user approved it; approving sends it
         if identity.reconcile_kept_reminder(uid, action_item['id'], action_item, sync_action_item_reminder):
             continue
         if action_item.get('due_at'):
@@ -2090,7 +2098,9 @@ def _write_action_items(uid: str, conversation: Conversation, trigger: Optional[
     created_items = [{"id": aid, **data} for aid, data in zip(action_item_ids, identity.items)]
 
     def _run_auto_sync():
-        asyncio.run(auto_sync_action_items_batch(uid, identity.deliverable(created_items)))
+        # Only approved tasks reach a task integration; approving delivers the rest.
+        ready = [item for item in identity.deliverable(created_items) if task_approval.deliverable(item)]
+        asyncio.run(auto_sync_action_items_batch(uid, ready))
 
     if not identity.deliver_after_persist:
         submit_with_context(postprocess_executor, _run_auto_sync)

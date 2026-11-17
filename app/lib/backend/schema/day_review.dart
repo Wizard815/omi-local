@@ -99,6 +99,10 @@ class DayReview {
   final DateTime? generatedAt;
   final int generationCount;
 
+  /// Written for the user to review (overnight, or "Summarize for me"); nothing sorted or sent to a
+  /// calendar until approved. The server says so only when asked (`include_drafts=true`).
+  final bool isDraft;
+
   const DayReview({
     required this.date,
     required this.title,
@@ -113,6 +117,7 @@ class DayReview {
     this.droppedConversationIds = const [],
     this.generatedAt,
     this.generationCount = 0,
+    this.isDraft = false,
   });
 
   /// Corrections the summary text does not reflect yet: unapplied paragraphs and
@@ -138,6 +143,7 @@ class DayReview {
         mergedGroups: (g.mergedGroups ?? const []).map((group) => group.conversationIds ?? const <String>[]).toList(),
         droppedConversationIds: g.droppedConversationIds ?? const [],
         generatedAt: g.generatedAt?.toLocal(),
+        isDraft: g.draft,
         generationCount: g.generationCount,
       );
 }

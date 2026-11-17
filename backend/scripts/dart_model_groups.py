@@ -258,6 +258,13 @@ SCHEMA_GROUPS = {
             'Folder',
             'FolderMutationResponse',
             'BulkMoveConversationsResponse',
+            # omi-local: tasks waiting for the user's OK, and auto-approve (routers/approvals.py).
+            'ApprovalSettings',
+            'UpdateApprovalSettingsRequest',
+            'WaitingForApprovalResponse',
+            'ApproveTaskRequest',
+            'DeclineTaskRequest',
+            'TaskApprovalResponse',
         ),
     },
     'task_intelligence': {

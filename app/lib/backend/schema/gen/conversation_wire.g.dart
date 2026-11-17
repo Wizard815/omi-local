@@ -355,6 +355,7 @@ class GeneratedPluginResult {
 }
 
 class GeneratedEvent {
+  final bool approved;
   final String? calendar;
   final bool created;
   final bool declined;
@@ -365,6 +366,7 @@ class GeneratedEvent {
   final String title;
 
   const GeneratedEvent({
+    this.approved = false,
     this.calendar,
     this.created = false,
     this.declined = false,
@@ -377,6 +379,7 @@ class GeneratedEvent {
 
   factory GeneratedEvent.fromJson(Map<String, dynamic> json) {
     return GeneratedEvent(
+      approved: _required(_readFieldValue<bool>(_readField(json, const ["approved"]), "approved", _readBool, requiredField: false, nullable: false, defaultValue: false), "approved"),
       calendar: _readFieldValue<String>(_readField(json, const ["calendar"]), "calendar", _readString, requiredField: false, nullable: true),
       created: _required(_readFieldValue<bool>(_readField(json, const ["created"]), "created", _readBool, requiredField: false, nullable: false, defaultValue: false), "created"),
       declined: _required(_readFieldValue<bool>(_readField(json, const ["declined"]), "declined", _readBool, requiredField: false, nullable: false, defaultValue: false), "declined"),
@@ -390,6 +393,7 @@ class GeneratedEvent {
 
   Map<String, dynamic> toJson() {
     return {
+      'approved': approved,
       'calendar': calendar,
       'created': created,
       'declined': declined,

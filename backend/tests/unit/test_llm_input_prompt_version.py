@@ -67,6 +67,8 @@ PINNED: dict[str, dict[str, str]] = {
         'notes-4': '018b0f5c72af37d0ccb23f8a492ebfd88d8f8c28d30024042ad7ce0114efddc8',
         # omi-local: models/structured.py's Event carries the fork's calendar review fields.
         'notes-4-omi-local': 'c8cc7773ec00bf4314ad913a66ec272abb98b23384482986ba07236d5539d555',
+        # omi-local: + Event.approved (the Calendar check's yes; the extractor always resets it).
+        'notes-4-omi-local-2': 'dd721e82806627ebfa4f2cc45a82613b5a4c00e06808766f78ea3ffe2704cc58',
     },
     'l1': {'l1-1': '0ad51076315481003b05af2a90ce18797539846e35f4970680dff906c00b7d70'},
 }

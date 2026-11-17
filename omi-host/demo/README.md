@@ -7,9 +7,14 @@ show up in Omi. It prints a PASS/FAIL table and exits 1 on any FAIL.
 
 | | What it does | Checked with |
 |---|---|---|
-| send | action items created, edited, completed, deleted through `/v1/action-items` | the VTODOs in `Omi Tasks`: SUMMARY, DUE, STATUS, gone after delete |
-| send | a day reviewed (`/v1/users/day-reviews/{date}/finalize` + a paragraph) | the all-day `omi-day-<date>` VEVENT in `Omi` |
-| send | the events heard in conversations; one approved with edits, one declined (`/v1/family-calendar/events`, `.../decline`) | `omi-event-<conversation>-<n>` VEVENTs: SUMMARY, DTSTART, DTEND; the declined one gone |
+| approve | heard tasks, heard events and the day's summary draft before any approval | none of them on the server; `GET /v1/approvals` counts them; tasks carry `approval=pending` |
+| approve | tasks approved (one edited) or declined (undone once), the day approved (`/day-reviews/{date}/approve`), reopened and approved again | the approved ones on the server, the declined one not, the summary off while reopened |
+| send | action items edited, completed, deleted through `/v1/action-items` | the VTODOs in the user's own `Omi Tasks – <name>`: SUMMARY, DUE, STATUS, gone after delete |
+| send | the approved day | the all-day `omi-day-<owner>-<date>` VEVENT in the user's own `Omi – <name>` |
+| send | the events heard in conversations, approved in the Calendar check; one approved with edits, one declined (`/v1/family-calendar/events`, `.../decline`) | `omi-event-<owner>-<conversation>-<n>` VEVENTs: SUMMARY, DTSTART, DTEND; the waiting and declined ones absent |
+| people | a second Omi user on the same server and CalDAV account, same date | their own calendar and task list; both day summaries on the server, neither overwritten; approve without a gateway; the collections API names who uses what; "Create new…" moves the tasks without deleting any |
+| auto | auto-approve off (default), then on at 00:00, run as the hourly job runs it | the waiting task stays off, then is approved and synced |
+| legacy | two people synced first with the pre-change sync code (`--legacy-ref`, default `origin/main`), both into the shared `Omi`/`Omi Tasks`; then the new code; then one of them makes lists of her own (Create new…) | they stay on the shared lists with their old UIDs, nothing duplicated or deleted; the shared `omi-day-<date>` becomes one summary each; her task, event and summary move (not copy) to her new lists; nothing of the other person's is touched |
 | send | a task created with no "Sync now" | it reaches the server through the scheduler's change pass (~20 s) |
 | receive | the phone completes, renames, re-dates (TZID), deletes a task; creates one and completes it | `GET /v1/action-items/{id}`; no duplicate VTODO on the phone |
 | receive | the phone creates, moves, renames, deletes an event | `GET /v1/device-calendar/events` |
@@ -46,6 +51,8 @@ Ports default to 8000, 8085, 9099, 5232, 6390, 4410 and 8791; `OMI_DEMO_<NAME>_P
 moves any of them (see the script's header). It takes about four minutes, most of it
 the two scheduler checks.
 
+Last run here (this branch): 75 passed, 0 failed, 0 gaps, 2 info.
+
 ## Run it against the Docker stack
 
 Run the driver from a machine that reaches the stack (the backend on :8000, Radicale on
@@ -81,9 +88,12 @@ DAVx5 → add account → "Login with URL and user name":
 - password: `docker exec omi-local cat /data/secrets/caldav_password` (or your
   `CALDAV_PASSWORD`)
 
-Turn on `Omi` (calendar) and `Omi Tasks` (tasks; open them in Tasks.org or jtx Board).
-The backend creates both on its first sync. Everyone using the stack shares this one
-account and these two lists.
+Every Omi user on the stack shares this one account, but each gets a calendar and a
+task list of their own, `Omi – <name>` and `Omi Tasks – <name>`, made on their first sync
+(pick others, or make new ones, in the app: Settings, Calendar sync). Turn on yours (open
+the task list in Tasks.org or jtx Board). Someone who synced before per-person lists
+existed keeps the shared `Omi` and `Omi Tasks`. Nothing Omi heard reaches these lists
+until its owner approves it.
 
 ## What does not come back (by design or not yet)
 
@@ -93,5 +103,6 @@ account and these two lists.
   cannot clear it); any other new due date is taken.
 - Phone-side edits of an extracted event change the conversation's event, not an event
   already approved into the family calendar (dayGLANCE).
-- Extracted events are pushed once their day is bundled, reviewed or not; the family
-  calendar's approve only decides what goes to dayGLANCE. A declined one is taken off.
+- Extracted events are pushed once approved in the Calendar check (with or without
+  dayGLANCE); a declined one is taken off. Events pushed before approvals existed are
+  kept and marked approved.
