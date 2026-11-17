@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 
 from models.action_item import ActionItemResponse
 from models.family_calendar import FamilyCalendarEvent
+from models.integrations_out import AgentJob
 
 
 class ApprovalSettings(BaseModel):
@@ -38,6 +39,11 @@ class WaitingForApprovalResponse(BaseModel):
     today: str = ''
     auto_approve: bool = False
     auto_approve_time: str = ''
+    agent_jobs: List[AgentJob] = Field(
+        default_factory=list,
+        description='Agent jobs whose agent asks before it goes on (Hermes: answer here; Studio: in Studio). '
+        'Never auto-approved and never part of Approve all',
+    )
 
 
 class ApproveTaskRequest(BaseModel):

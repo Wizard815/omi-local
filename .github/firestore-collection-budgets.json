@@ -89,6 +89,16 @@
       "basis": "planning-bound",
       "source": "The local scheduler streams the whole collection every 15 s (5,760 ticks/day); each document is read once per tick while it is open. An approved day waits 10 minutes (40 ticks) then costs ~4 reads to send; an agent job is followed for at most a few hours (Hermes poll 1 read + job doc 1 per tick). Planning envelope: a self-hosted household stack with <=30 open items at a time = 172,800 stream reads/day plus sends. Runs only where OMI_LOCAL_SCHEDULER=1 (omi-host), against the bundled Firestore emulator; never in upstream Cloud Run.",
       "reviewed": "2026-11-17"
+    },
+    {
+      "collection": "agent_jobs",
+      "owner": "omi-local Send to agent (backend/utils/agent_jobs.py)",
+      "unit": "one agent job a user sent (Odysseus ask, Hermes run, Studio chat), from Send to its end",
+      "reads_per_unit_budget": 6000,
+      "reads_per_day_budget": 200000,
+      "basis": "planning-bound",
+      "source": "users/{uid}/agent_jobs/{id}: one point read per 15 s queue tick while the job is open (outbound_work job:<uid>:<id> drives it), capped at 24 h (5,760 ticks) and usually minutes; plus a few reads per state change and the job list page (<=50 per open). Envelope: a household stack with <=30 jobs/day each open <=1 h = 7,200 reads, far under the day budget; the cap covers a stuck 24 h job per member. Self-hosted only (OMI_LOCAL_SCHEDULER=1, Firestore emulator).",
+      "reviewed": "2026-11-17"
     }
   ],
   "dynamic": [

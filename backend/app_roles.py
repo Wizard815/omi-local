@@ -38,6 +38,7 @@ from routers import (
     dashboard,
     approvals,
     integrations_outbound,
+    agent_jobs,
     caldav,
     day_reviews,
     family_calendar,
@@ -287,6 +288,7 @@ ROUTER_MOUNTS: tuple[Mount, ...] = (
     Mount(family_calendar),  # omi-local
     Mount(approvals),  # omi-local: tasks waiting for the user's OK, auto-approve
     Mount(integrations_outbound),  # omi-local: Connections (wiki, Hermes, Odysseus, Studio, Coinpile, Orb)
+    Mount(agent_jobs),  # omi-local: Send to agent (Odysseus, Hermes, Studio) and Studio's signed webhook
     Mount(search),
     Mount(knowledge_graph),
     Mount(goals),
