@@ -27,6 +27,9 @@ services:
       - "${BIND_IP:-0.0.0.0}:${CALDAV_PORT:-5232}:5232"
     environment:
       PROVIDER_MODE: ${PROVIDER_MODE:-offline}
+      # Local only (egress-guard/sitecustomize.py): block | log | off, and what to let out on purpose.
+      OMI_EGRESS_GUARD: ${OMI_EGRESS_GUARD:-block}
+      OMI_EGRESS_ALLOW: ${OMI_EGRESS_ALLOW:-}
       # Point Omi at the merge proxy — it auto-discovers models from ALL backends
       OPENAI_BASE_URL: http://omi-proxy:4000/v1
       OPENAI_API_KEY: ${OPENAI_API_KEY:-local}
@@ -200,6 +203,8 @@ services:
       MODEL_ALLOW: ${MODEL_ALLOW:-}
       MODEL_CACHE_TTL: "60"
       MERGE_PORT: "4000"
+      OMI_EGRESS_GUARD: ${OMI_EGRESS_GUARD:-block}
+      OMI_EGRESS_ALLOW: ${OMI_EGRESS_ALLOW:-}
       # Shared Redis — allowlist syncs between dashboard and proxy. Redis runs
       # inside omi-local (entrypoint.sh, 0.0.0.0:6380, not published to the
       # host) — there is no separate "redis" service in this stack, so the old
@@ -227,6 +232,10 @@ services:
       - "127.0.0.1:8790:8790"
     environment:
       PORT: "8790"
+      OMI_EGRESS_GUARD: ${OMI_EGRESS_GUARD:-block}
+      # A first start with OMI_ASR_ENGINE=fasterwhisper downloads its model: OMI_EGRESS_ALLOW=huggingface.co
+      OMI_EGRESS_ALLOW: ${OMI_EGRESS_ALLOW:-}
+      HF_HUB_DISABLE_TELEMETRY: "1"
       OMI_ASR_ENGINE: ${OMI_ASR_ENGINE:-whispercpp}
       WHISPER_MODEL: ${WHISPER_MODEL:-large-v3-turbo}
       WHISPER_CPP_MODELS_DIR: /data/whispercpp/models

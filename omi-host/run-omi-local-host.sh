@@ -178,6 +178,18 @@ if [ -n "$AUDIO_HEALTH_URL" ]; then
   }
 fi
 
+# 5. Local only: the containers may reach the LAN, never the internet. After the
+# health checks on purpose, so a first start can still fetch the speech model.
+# OMI_EGRESS_FIREWALL=0 skips it (e.g. when you use OpenRouter or a cloud key).
+if [ "${OMI_EGRESS_FIREWALL:-1}" = "1" ]; then
+  echo "=== Locking the containers to the LAN (egress-firewall.sh) ==="
+  if [ "$(id -u)" = "0" ] && command -v iptables >/dev/null 2>&1; then
+    bash "$HERE/egress-firewall.sh" || echo "WARNING: egress firewall not applied; see above" >&2
+  else
+    echo "WARNING: not root or no iptables here; run as root on the host: bash $HERE/egress-firewall.sh" >&2
+  fi
+fi
+
 echo
 echo "=== DONE ==="
 echo "Dashboard:     http://${BIND_IP}:8000/  (model picker shows ALL backends)"
@@ -187,7 +199,9 @@ echo "Audio:         ${AUDIO_HEALTH_URL:-off (cloud STT only)} (STT + diarizatio
 echo "Logs:          docker logs -f omi-local | docker logs -f omi-proxy | docker logs -f omi-audio"
 echo "Stop:          cd $HERE && docker compose down"
 echo
-echo "Startup example with OpenRouter:"
+echo "Local only:    container traffic is limited to the LAN; attempts are logged in /data/logs/egress.jsonl"
+echo "               (docker exec omi-local tail /data/logs/egress.jsonl) and as 'omi-egress-drop' in dmesg."
+echo "Cloud on purpose (OpenRouter): OMI_EGRESS_FIREWALL=0 OMI_EGRESS_ALLOW=openrouter.ai \\"
 echo "  LLAMA_HOST=172.19.0.4 OPENROUTER_API_KEY=sk-or-... bash run-omi-local-host.sh"
 echo
 echo "Phone setup:"
