@@ -94,6 +94,15 @@ CALDAV_DIRTY_SECONDS = 20.0
 OUTBOUND_SECONDS = 15.0
 
 
+def outbound_seconds() -> float:
+    """OMI_OUTBOUND_TICK_SECONDS: how often the outbound queue is worked (default 15 s, at least 2)."""
+    raw = os.getenv('OMI_OUTBOUND_TICK_SECONDS', '').strip()
+    try:
+        return max(2.0, float(raw)) if raw else OUTBOUND_SECONDS
+    except ValueError:
+        return OUTBOUND_SECONDS
+
+
 async def run_local_scheduler() -> None:
     from utils.allglance import tick as allglance_tick
     from utils.caldav.sync import dirty_tick as caldav_dirty_tick
@@ -115,13 +124,14 @@ async def run_local_scheduler() -> None:
                 logger.exception('local_scheduler step %s failed', getattr(step, '__name__', step))
 
     full = caldav_sync_seconds()
+    outbound = outbound_seconds()
     logger.info(
         'local_scheduler started: recap, day-bundle and allglance jobs every hour at :%02d; '
         'caldav full sync every %ds, changed users every %ds; outbound queue every %ds',
         TICK_MINUTE,
         int(full),
         int(CALDAV_DIRTY_SECONDS),
-        int(OUTBOUND_SECONDS),
+        int(outbound),
     )
     # CalDAV runs on its own clocks: a full pass for every active member every CALDAV_SYNC_SECONDS,
     # and a short pass for members whose tasks or day summary just changed.
@@ -129,5 +139,5 @@ async def run_local_scheduler() -> None:
         run_hourly(job),
         run_every(full, caldav_tick),
         run_every(CALDAV_DIRTY_SECONDS, caldav_dirty_tick),
-        run_every(OUTBOUND_SECONDS, outbound_tick),
+        run_every(outbound, outbound_tick),
     )
