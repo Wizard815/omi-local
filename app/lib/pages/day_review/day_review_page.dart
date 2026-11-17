@@ -9,6 +9,7 @@ import 'package:omi/backend/schema/day_review.dart';
 import 'package:omi/pages/approvals/waiting_tasks_section.dart';
 import 'package:omi/providers/waiting_approval_controller.dart';
 import 'package:omi/pages/action_items/day_tasks_page.dart';
+import 'package:omi/pages/day_review/day_review_edit_text_sheet.dart';
 import 'package:omi/pages/day_review/day_review_text_sheet.dart';
 import 'package:omi/pages/family_calendar/family_calendar_review_page.dart';
 import 'package:omi/ui/ui.dart';
@@ -25,7 +26,8 @@ import 'package:omi/utils/other/temp.dart';
 /// clips arrive unprocessed (transcript only) and only what you keep or merge
 /// gets the full treatment.
 /// After: the summary reads like a doc you can correct — select text to attach
-/// a correction or redact it, add whole paragraphs, then "Apply corrections".
+/// a correction or redact it, add whole paragraphs, then "Apply corrections" — or
+/// "Edit text" to change the title and each section's words directly (with Undo).
 /// "From this day" links to the day's tasks and the calendar check, so the
 /// tasks and events Omi heard are reviewed in the same pass.
 class DayReviewPage extends StatefulWidget {
@@ -219,25 +221,75 @@ class _DayReviewPageState extends State<DayReviewPage> {
     });
   }
 
+  /// A rewrite replaces what the user typed by hand, so it asks first when there is any.
+  Future<bool> _confirmReplaceEdits({String? message}) {
+    final l10n = context.l10n;
+    return showOmiConfirm(
+      context,
+      title: l10n.dayReviewRewriteEditsTitle,
+      message: message ?? l10n.dayReviewRewriteEditsBody,
+      confirmLabel: l10n.dayReviewRewriteEditsAction,
+      destructive: true,
+    );
+  }
+
   Future<void> _regenerate() async {
+    final edited = _day?.review?.editedByUser ?? false;
+    if (edited && !await _confirmReplaceEdits()) return;
+    if (!mounted) return;
     await _busy(context.l10n.dayReviewApplying, () async {
-      _applyReview(await widget.api.regenerate(widget.date));
+      _applyReview(await widget.api.regenerate(widget.date, replaceEdits: edited));
+    });
+  }
+
+  /// "Edit text": the user's own words for the title and each section; Undo puts the previous back.
+  Future<void> _editText() async {
+    final review = _day?.review;
+    if (review == null) return;
+    final edit = await showDayReviewEditTextSheet(context, review);
+    if (edit == null || !mounted) return;
+    final result = await widget.api.editText(
+      widget.date,
+      title: edit.title,
+      sections: edit.sections,
+      summaryText: edit.summaryText,
+    );
+    _applyReview(result);
+    if (!result.ok || !mounted) return;
+    final undo = edit.revertOn(review);
+    OmiFeedback.undo(context, context.l10n.dayReviewTextSaved, onUndo: () async {
+      _applyReview(await widget.api.editText(
+        widget.date,
+        title: undo.title,
+        sections: undo.sections,
+        summaryText: undo.summaryText,
+      ));
     });
   }
 
   /// The user's OK on a draft: the day is finalized as the draft says (no new model call unless the
   /// day changed), and only now does its summary go to the calendar.
-  Future<void> _approve() async {
+  Future<void> _approve({bool replaceEdits = false}) async {
     final l10n = context.l10n;
+    DayReviewResult<DayReview>? result;
     await _busy(l10n.approvalApproving, () async {
-      final result = await widget.api.approve(widget.date);
-      if (!result.ok) {
-        if (mounted) AppSnackbar.showSnackbarError(result.error ?? l10n.dayReviewActionFailed);
-        return;
-      }
-      if (mounted) OmiFeedback.confirm(context, l10n.approvalDayApproved);
-      await _load();
+      result = await widget.api.approve(widget.date, replaceEdits: replaceEdits);
     });
+    final outcome = result;
+    if (outcome == null || !mounted) return;
+    if (!outcome.ok && outcome.statusCode == 409 && !replaceEdits && (_day?.review?.editedByUser ?? false)) {
+      // The day changed since the user edited the draft: approving means rewriting it.
+      if (await _confirmReplaceEdits(message: l10n.dayReviewApproveRewriteBody) && mounted) {
+        await _approve(replaceEdits: true);
+      }
+      return;
+    }
+    if (!outcome.ok) {
+      AppSnackbar.showSnackbarError(outcome.error ?? l10n.dayReviewActionFailed);
+      return;
+    }
+    OmiFeedback.confirm(context, l10n.approvalDayApproved);
+    await _busy(l10n.approvalApproving, _load);
   }
 
   Future<void> _reopen() async {
@@ -348,8 +400,11 @@ class _DayReviewPageState extends State<DayReviewPage> {
             PopupMenuButton<String>(
               onSelected: (value) {
                 if (value == 'reopen') _reopen();
+                if (value == 'edit_text') _editText();
               },
               itemBuilder: (_) => [
+                if (review.summaryText.isNotEmpty)
+                  PopupMenuItem(value: 'edit_text', child: Text(l10n.dayReviewEditText)),
                 PopupMenuItem(
                   value: 'reopen',
                   child: Text(review.isDraft ? l10n.approvalDraftSortAction : l10n.dayReviewReopenAction),
@@ -932,7 +987,8 @@ class _DayReviewPageState extends State<DayReviewPage> {
         if (day != null)
           WaitingTasksSection(
             controller: _waiting,
-            only: (c) => c.tasksOf(day),
+            day: day,
+            onChanged: _load,
             showHeader: false,
             padding: const EdgeInsets.only(bottom: OmiSpacing.sm),
           ),
@@ -1011,6 +1067,25 @@ class _DayReviewPageState extends State<DayReviewPage> {
               if (paragraphs.isNotEmpty) ...[
                 const SizedBox(height: OmiSpacing.xxs),
                 Text(l10n.dayReviewEditHint, style: OmiType.caption.copyWith(color: OmiColors.textSecondary)),
+                Row(
+                  children: [
+                    if (review.editedByUser)
+                      Text(l10n.dayReviewEditedByYou,
+                          key: const Key('day_review_edited_note'),
+                          style: OmiType.caption.copyWith(color: OmiColors.textSecondary)),
+                    const Spacer(),
+                    OmiButton.tertiary(
+                      key: const Key('day_review_edit_text'),
+                      label: l10n.dayReviewEditText,
+                      icon: Icons.edit_outlined,
+                      size: OmiButtonSize.compact,
+                      // Not awaited: the button would spin for as long as the sheet is open.
+                      onPressed: () {
+                        _editText();
+                      },
+                    ),
+                  ],
+                ),
               ],
               if (review.isDraft) ...[
                 const SizedBox(height: OmiSpacing.sm),
@@ -1086,7 +1161,10 @@ class _DayReviewPageState extends State<DayReviewPage> {
                           ? OmiButton.secondary(
                               key: const Key('day_review_apply'),
                               label: l10n.dayReviewApplyButton(review.pendingCorrectionCount),
-                              onPressed: _regenerate,
+                              // Not awaited: a confirmation may open first; the page shows its own progress.
+                              onPressed: () {
+                                _regenerate();
+                              },
                             )
                           : ElevatedButton(
                               style: ElevatedButton.styleFrom(
@@ -1106,7 +1184,9 @@ class _DayReviewPageState extends State<DayReviewPage> {
                         key: const Key('day_review_approve'),
                         label: l10n.approvalApproveDay,
                         icon: Icons.check_rounded,
-                        onPressed: _approve,
+                        onPressed: () {
+                          _approve();
+                        },
                       ),
                     ),
                 ],

@@ -1,8 +1,10 @@
 // omi-local: "Waiting for your OK" — tasks Omi heard in conversations. Nothing here reaches the
 // user's calendar app, reminders or task apps until it is approved; a decline can be undone.
+// Approve all (approve_all_panel.dart) sits on top: everything waiting at once, or a checklist.
 import 'package:flutter/material.dart';
 
 import 'package:omi/backend/schema/action_item.dart';
+import 'package:omi/pages/approvals/approve_all_panel.dart';
 import 'package:omi/pages/day_review/day_review_text_sheet.dart';
 import 'package:omi/providers/waiting_approval_controller.dart';
 import 'package:omi/ui/ui.dart';
@@ -12,7 +14,8 @@ class WaitingTasksSection extends StatelessWidget {
   const WaitingTasksSection({
     super.key,
     required this.controller,
-    this.only,
+    this.day,
+    this.onChanged,
     this.showEmpty = false,
     this.showHeader = true,
     this.padding = const EdgeInsets.all(OmiSpacing.md),
@@ -20,8 +23,11 @@ class WaitingTasksSection extends StatelessWidget {
 
   final WaitingApprovalController? controller;
 
-  /// Show these tasks only (the day review's "From this day"); null = every waiting task.
-  final List<ActionItemWithMetadata> Function(WaitingApprovalController)? only;
+  /// Only what is of this local day (the day review's "From this day"); null = everything waiting.
+  final DateTime? day;
+
+  /// After Approve all / Approve selected or its Undo.
+  final VoidCallback? onChanged;
 
   /// Say "nothing waiting" instead of collapsing when there is nothing.
   final bool showEmpty;
@@ -37,9 +43,10 @@ class WaitingTasksSection extends StatelessWidget {
     return ListenableBuilder(
       listenable: state,
       builder: (context, _) {
-        final tasks = only == null ? state.tasks : only!(state);
+        final tasks = day == null ? state.tasks : state.tasksOf(day!);
+        final scope = ApprovalScope(state, day: day);
         final l10n = context.l10n;
-        if (tasks.isEmpty && !showEmpty) return const SizedBox.shrink();
+        if (scope.items.isEmpty && !showEmpty) return const SizedBox.shrink();
         return Padding(
           key: const ValueKey('waiting_tasks'),
           padding: padding,
@@ -54,9 +61,16 @@ class WaitingTasksSection extends StatelessWidget {
                   child: Text(l10n.approvalWaitingSubtitle,
                       style: OmiType.subhead.copyWith(color: OmiColors.textSecondary)),
                 ),
-              if (tasks.isEmpty)
+              if (scope.items.isEmpty)
                 Text(l10n.approvalNothingWaiting, style: OmiType.subhead.copyWith(color: OmiColors.textSecondary)),
-              for (final task in tasks) _WaitingTaskRow(controller: state, task: task),
+              ApproveAllPanel(
+                scope: scope,
+                onChanged: onChanged,
+                taskRows: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [for (final task in tasks) _WaitingTaskRow(controller: state, task: task)],
+                ),
+              ),
             ],
           ),
         );
