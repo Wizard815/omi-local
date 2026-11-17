@@ -141,6 +141,24 @@ services:
       # two-way task sync. Worked example: examples/allglance/README.md.
       ALLGLANCE_URL: ${ALLGLANCE_URL:-}
       ALLGLANCE_TOKEN: ${ALLGLANCE_TOKEN:-}
+      # Connections (the app's Settings > Connections): where Omi may send a user's things.
+      # Each is off until that user turns it on, and only approved days or explicit sends
+      # leave. These are household defaults; a user's own address/token in the app wins.
+      # LAN addresses must also be listed in OMI_WEBHOOK_ALLOWED_PRIVATE_NETWORKS.
+      # Worked example: examples/integrations/README.md.
+      LLMWIKI_URL: ${LLMWIKI_URL:-}
+      HERMES_API_URL: ${HERMES_API_URL:-}
+      HERMES_API_KEY: ${HERMES_API_KEY:-}
+      ODYSSEUS_URL: ${ODYSSEUS_URL:-}
+      ODYSSEUS_API_TOKEN: ${ODYSSEUS_API_TOKEN:-}
+      STUDIO_URL: ${STUDIO_URL:-}
+      STUDIO_WEBHOOK_SECRET: ${STUDIO_WEBHOOK_SECRET:-}
+      COINPILE_URL: ${COINPILE_URL:-}
+      ORB_URL: ${ORB_URL:-}
+      # An approved day summary waits this long before it leaves (Approve all's Undo is 10 minutes).
+      OMI_OUTBOUND_DAY_DELAY_SECONDS: ${OMI_OUTBOUND_DAY_DELAY_SECONDS:-600}
+      # Private LAN addresses Omi may call (webhooks and Connections), comma-separated IPs/CIDRs.
+      OMI_WEBHOOK_ALLOWED_PRIVATE_NETWORKS: ${OMI_WEBHOOK_ALLOWED_PRIVATE_NETWORKS:-}
       # Hourly daily-recap job, run in-process (no Cloud Scheduler here). The
       # recap is generated at each user's chosen local hour (default 22:00) —
       # set 0 to disable.
