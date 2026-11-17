@@ -12,18 +12,32 @@ Future<String?> showDayReviewTextSheet(
   required String title,
   String? hint,
   String? quote,
+  String initialText = '',
+  int minLines = 3,
 }) {
   return showOmiEditSheet<String>(
     context: context,
-    builder: (_) => DayReviewTextSheet(title: title, hint: hint, quote: quote),
+    builder: (_) =>
+        DayReviewTextSheet(title: title, hint: hint, quote: quote, initialText: initialText, minLines: minLines),
   );
 }
 
 class DayReviewTextSheet extends StatefulWidget {
-  const DayReviewTextSheet({super.key, required this.title, this.hint, this.quote});
+  const DayReviewTextSheet({
+    super.key,
+    required this.title,
+    this.hint,
+    this.quote,
+    this.initialText = '',
+    this.minLines = 3,
+  });
 
   final String title;
   final String? hint;
+
+  /// Prefilled text (e.g. a suggested name); the sheet counts as edited only once it differs.
+  final String initialText;
+  final int minLines;
 
   /// The selected summary text this correction is about, shown above the field.
   final String? quote;
@@ -33,7 +47,7 @@ class DayReviewTextSheet extends StatefulWidget {
 }
 
 class _DayReviewTextSheetState extends State<DayReviewTextSheet> {
-  final TextEditingController _controller = TextEditingController();
+  late final TextEditingController _controller = TextEditingController(text: widget.initialText);
 
   @override
   void dispose() {
@@ -48,7 +62,7 @@ class _DayReviewTextSheetState extends State<DayReviewTextSheet> {
     final l10n = context.l10n;
     return OmiEditSheet(
       title: widget.title,
-      isDirty: _text.isNotEmpty,
+      isDirty: _text.isNotEmpty && _text != widget.initialText.trim(),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -67,8 +81,8 @@ class _DayReviewTextSheetState extends State<DayReviewTextSheet> {
             key: const Key('day_review_text_field'),
             controller: _controller,
             autofocus: true,
-            minLines: 3,
-            maxLines: 8,
+            minLines: widget.minLines,
+            maxLines: widget.minLines > 1 ? 8 : 1,
             style: OmiType.body,
             decoration: InputDecoration(
               hintText: widget.hint,

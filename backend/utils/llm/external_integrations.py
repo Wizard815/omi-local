@@ -246,6 +246,7 @@ def get_message_structure(
         if event.duration > 180:
             event.duration = 180
         event.created = False
+        event.approved = False  # omi-local: only the user approves an event (Calendar check)
 
     # Set created_at for action items if not already set
     for action_item in response.action_items or []:

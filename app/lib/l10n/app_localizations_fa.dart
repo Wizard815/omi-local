@@ -15870,7 +15870,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get caldavSettingsIntro =>
-      'Your tasks, day summaries and conversation events sync with a CalDAV server every hour, and the calendar comes back into Omi. The server bundled with your stack is used until you set your own.';
+      'Your approved tasks, day summaries and calendar events sync with a CalDAV server within seconds of a change, and the calendar comes back into Omi. The server bundled with your stack is used until you set your own.';
 
   @override
   String get caldavServerUrl => 'Server URL';
@@ -16124,4 +16124,257 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get dayReviewCorrectionRemoved => 'اصلاحیه حذف شد';
+
+  @override
+  String get approvalApprove => 'Approve';
+
+  @override
+  String get approvalApproveDay => 'Approve the day';
+
+  @override
+  String get approvalApproving => 'Approving the day…';
+
+  @override
+  String get approvalAutoOffFooter =>
+      'Nothing goes to your calendar, task list or reminders until you approve it. Auto-approve is off.';
+
+  @override
+  String approvalAutoOnFooter(String time) {
+    return 'Every day at $time, what still waits from past days is approved as if you had tapped Approve.';
+  }
+
+  @override
+  String get approvalAutoSubtitle => 'Tasks, calendar events and day summaries of past days';
+
+  @override
+  String get approvalAutoTime => 'Every day at';
+
+  @override
+  String get approvalAutoTitle => 'Auto-approve';
+
+  @override
+  String get approvalBannerBody => 'Nothing is on your calendar until you approve it';
+
+  @override
+  String get approvalCalendarIntroCaldav =>
+      'Check the dates Omi heard. Approve adds an event to your calendar at the next sync; nothing goes there before.';
+
+  @override
+  String approvalCountEvents(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count events',
+      one: '1 event',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String approvalCountTasks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks',
+      one: '1 task',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get approvalDayApproved => 'Day approved. Its summary goes to your calendar.';
+
+  @override
+  String approvalDaySummary(String date) {
+    return 'the summary for $date';
+  }
+
+  @override
+  String get approvalDecline => 'Decline';
+
+  @override
+  String get approvalDraftNotice =>
+      'Draft: written for you to check. Nothing is sorted and nothing is on your calendar until you approve it.';
+
+  @override
+  String get approvalDraftRowBody => 'Summary draft waiting for your OK';
+
+  @override
+  String get approvalDraftSortAction => 'Sort by hand instead';
+
+  @override
+  String get approvalDraftSortBody =>
+      'The draft is discarded and the day\'s conversations wait to be sorted. Nothing was sent anywhere.';
+
+  @override
+  String get approvalDraftSortTitle => 'Discard the draft?';
+
+  @override
+  String approvalDue(String date) {
+    return 'Due $date';
+  }
+
+  @override
+  String get approvalEditApprove => 'Edit & approve';
+
+  @override
+  String get approvalEditTitle => 'Edit the task';
+
+  @override
+  String get approvalEventApproved => 'approved';
+
+  @override
+  String get approvalFailed => 'That did not work. Try again.';
+
+  @override
+  String get approvalHeader => 'Approval';
+
+  @override
+  String approvalListAnd(String items, String last) {
+    return '$items and $last';
+  }
+
+  @override
+  String get approvalNothingWaiting => 'Nothing is waiting for your OK.';
+
+  @override
+  String get approvalOff => 'Off';
+
+  @override
+  String get approvalOperatorDisabled => 'Auto-approve is turned off on this server.';
+
+  @override
+  String get approvalPageTitle => 'Waiting for your OK';
+
+  @override
+  String get approvalReopenBody =>
+      'The conversations come back to sort, and the summary comes off your calendar until you approve the day again.';
+
+  @override
+  String get approvalTakeOff => 'Take off';
+
+  @override
+  String get approvalTaskApproved => 'Approved. It goes to your task list.';
+
+  @override
+  String get approvalTaskDeclined => 'Declined';
+
+  @override
+  String approvalWaitingLine(String items) {
+    return '$items waiting for your OK';
+  }
+
+  @override
+  String get approvalWaitingSubtitle =>
+      'Omi heard these. They reach your task list and reminders only once you approve them.';
+
+  @override
+  String get approvalWaitingTitle => 'Waiting for your OK';
+
+  @override
+  String get approvalYesterdaysSummary => 'yesterday\'s summary';
+
+  @override
+  String get caldavCollectionChosen => 'Saved. The next sync goes there.';
+
+  @override
+  String caldavCollectionCreated(String name) {
+    return 'Created $name';
+  }
+
+  @override
+  String get caldavCollectionNameHint => 'Name';
+
+  @override
+  String get caldavCreateNew => 'Create new…';
+
+  @override
+  String caldavLastReport(int sent, int events, int received) {
+    String _temp0 = intl.Intl.pluralLogic(
+      sent,
+      locale: localeName,
+      other: '$sent tasks',
+      one: '1 task',
+      zero: 'No tasks',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      events,
+      locale: localeName,
+      other: '$events events',
+      one: '1 event',
+      zero: 'no events',
+    );
+    return '$_temp0 and $_temp1 sent, $received received';
+  }
+
+  @override
+  String get caldavMineHeader => 'Where your things go';
+
+  @override
+  String get caldavMineSharedHint =>
+      'Everyone on this Omi server shares one CalDAV account. Pick a calendar and a task list of your own so your days and tasks stay apart.';
+
+  @override
+  String get caldavMyCalendar => 'My calendar';
+
+  @override
+  String get caldavMyTaskList => 'My task list';
+
+  @override
+  String get caldavNewCalendar => 'New calendar';
+
+  @override
+  String get caldavNewTaskList => 'New task list';
+
+  @override
+  String get caldavOwnServer => 'Use another server';
+
+  @override
+  String get caldavOwnServerHint => 'Nextcloud, Baïkal, iCloud and other CalDAV servers';
+
+  @override
+  String get caldavPickerFooter =>
+      '\"Used by\" names other people on this Omi server whose sync uses it. Your things stay apart even there.';
+
+  @override
+  String caldavServerAccount(String url, String account) {
+    return 'Server: $url · Account: $account';
+  }
+
+  @override
+  String get caldavSharedAccount => 'This account is shared by everyone on this Omi server.';
+
+  @override
+  String get caldavTaskModeFooter =>
+      'In a shared list, your tasks hang under one task named after you; tasks made on a phone under it are imported as yours.';
+
+  @override
+  String get caldavTaskModeList => 'My own task list';
+
+  @override
+  String get caldavTaskModeListBody => 'Your tasks are to-dos in the list you picked.';
+
+  @override
+  String get caldavTaskModeParent => 'Under one task in a shared list';
+
+  @override
+  String caldavTaskModeParentBody(String name) {
+    return 'Your tasks are subtasks of \"$name\" in the list you picked.';
+  }
+
+  @override
+  String caldavTaskModeParentShort(String name) {
+    return 'Under \"$name\"';
+  }
+
+  @override
+  String get caldavTaskModeTitle => 'Tasks go';
+
+  @override
+  String caldavUsedBy(String names) {
+    return 'Used by $names';
+  }
+
+  @override
+  String get caldavWhatToSync => 'What to sync';
 }

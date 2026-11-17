@@ -38,15 +38,26 @@ def get_pending_day_reviews(days: int = Query(7, ge=1, le=31), uid: str = Depend
 
 
 @router.get('/v1/users/day-reviews', tags=['day-reviews'], response_model=DayReviewsListResponse)
-def list_day_reviews(limit: int = Query(30, ge=1, le=100), uid: str = Depends(auth.get_current_user_uid)):
-    return {'reviews': service.list_reviews(uid, limit=limit)}
+def list_day_reviews(
+    limit: int = Query(30, ge=1, le=100),
+    include_drafts: bool = Query(False, description='Also list summary drafts waiting for approval (`draft: true`)'),
+    uid: str = Depends(auth.get_current_user_uid),
+):
+    return {'reviews': service.list_reviews(uid, limit=limit, include_drafts=include_drafts)}
 
 
 @router.get('/v1/users/day-reviews/{date}', tags=['day-reviews'], response_model=DayReviewDayResponse)
-def get_day_review(date: str = _DATE, uid: str = Depends(auth.get_current_user_uid)):
+def get_day_review(
+    date: str = _DATE,
+    include_drafts: bool = Query(
+        False,
+        description='Return a summary draft as the review (`draft: true`); without it a draft day reads as unsorted',
+    ),
+    uid: str = Depends(auth.get_current_user_uid),
+):
     """The day's conversations (to sort) and its review, if it has one."""
     try:
-        return service.get_day(uid, date)
+        return service.get_day(uid, date, include_drafts=include_drafts)
     except service.DayReviewError as e:
         _raise(e)
 
@@ -78,10 +89,26 @@ def bundle_day(
     uid: str = Depends(auth.get_current_user_uid),
     x_app_platform: Optional[str] = Header(None, alias='X-App-Platform'),
 ):
-    """Hands-off review: starred conversations stay, every other one is rolled into one sectioned day summary."""
+    """Hands-off review as a draft: starred conversations would stay, every other one is written into one
+    sectioned day summary. Nothing is sorted or sent to a calendar until the day is approved."""
     enforce_chat_quota(uid, platform=x_app_platform)
     try:
         return service.bundle(uid, date)
+    except service.DayReviewError as e:
+        _raise(e)
+
+
+@router.post('/v1/users/day-reviews/{date}/approve', tags=['day-reviews'], response_model=DayReview)
+def approve_day_review(
+    date: str = _DATE,
+    uid: str = Depends(auth.get_current_user_uid),
+    x_app_platform: Optional[str] = Header(None, alias='X-App-Platform'),
+):
+    """Approve the day's draft: finalize with its split and text (no new model call unless the day changed).
+    Only an approved day's summary goes to the user's calendar."""
+    enforce_chat_quota(uid, platform=x_app_platform)
+    try:
+        return service.approve(uid, date)
     except service.DayReviewError as e:
         _raise(e)
 
@@ -138,7 +165,8 @@ def regenerate_day_review(
 
 @router.post('/v1/users/day-reviews/{date}/reopen', tags=['day-reviews'], response_model=ReopenDayReviewResponse)
 def reopen_day_review(date: str = _DATE, uid: str = Depends(auth.get_current_user_uid)):
-    """Undo the review: rolled-up and dropped conversations come back, the summary is deleted. Merges stay."""
+    """Undo the approval: rolled-up and dropped conversations come back and the summary becomes a draft again
+    (off the calendar until re-approved). Reopening a draft discards it. Merges stay."""
     try:
         restored, merged = service.reopen(uid, date)
         return {'status': 'ok', 'restored_count': restored, 'merged_count': merged}

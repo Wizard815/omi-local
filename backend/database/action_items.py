@@ -367,6 +367,7 @@ ACTION_ITEMS_LIST_SELECT_FIELDS = (
     'export_platform',
     'apple_reminder_id',
     'sync_requested',
+    'approval',  # omi-local: 'pending' / 'declined' until the user approves (utils/task_approval.py)
 )
 
 

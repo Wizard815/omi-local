@@ -16,7 +16,9 @@
         "app/lib/pages/conversations/widgets/goals_widget.dart",
         "backend/routers/action_items.py",
         "backend/utils/open_loops/service.py",
-        "backend/utils/retrieval/tool_services/action_items.py"
+        "backend/utils/retrieval/tool_services/action_items.py",
+        "backend/routers/approvals.py",
+        "backend/utils/task_approval.py"
       ],
       "test_adapter": "direct_command_contract",
       "writer_anchors": [
@@ -63,6 +65,11 @@
         {
           "path": "backend/utils/retrieval/tool_services/action_items.py",
           "symbol": "action_items_db.create_action_items_batch",
+          "discover": true
+        },
+        {
+          "path": "backend/utils/task_approval.py",
+          "symbol": "action_items_db.update_action_item",
           "discover": true
         }
       ]

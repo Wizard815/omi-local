@@ -14,6 +14,14 @@ object back. What it does, by "op":
                 (title, overview, structured events) -> {"ids": [...]}
   allglance     the user's "allglance" task integration pointing at a gateway URL, which
                 the family calendar writes through (not made the default task integration)
+  tasks         action items as conversation extraction writes them: waiting for the
+                user's OK (utils/task_approval.mark_extracted), created at the given time
+                -> {"ids": [...]}
+  legacy_sync   one sync of a user with the CalDAV sync code from BEFORE per-person lists and
+                approvals (its source is passed in, taken from origin/main by the driver), to
+                build the state an existing install has -> the old code's report
+  auto_approve  what the hourly scheduler runs for one user: their auto-approve, if it is
+                on and due (utils/auto_approve.run_for_user) -> the outcome
 
 There is no local LLM in the demo, so conversations are seeded with their extraction
 results instead of being processed; everything after this goes through the HTTP API.
@@ -92,6 +100,7 @@ def conversations(spec):
             ],
             status='completed',
             language='en',
+            starred=bool(item.get('starred')),
         )
         conversations_db.upsert_conversation_with_lifecycle(spec['uid'], conversation.model_dump())
         ids.append(cid)
@@ -109,9 +118,51 @@ def allglance(spec):
     return {'ok': True}
 
 
+def tasks(spec):
+    import database.action_items as action_items_db
+    from utils import task_approval
+
+    ids = []
+    for item in spec['tasks']:
+        data = {
+            'description': item['description'],
+            'due_at': datetime.fromisoformat(item['due_at']) if item.get('due_at') else None,
+            'conversation_id': item.get('conversation_id'),
+            'created_at': datetime.fromisoformat(item['created_at']) if item.get('created_at') else None,
+            'completed': False,
+        }
+        rows = [{k: v for k, v in data.items() if v is not None}]
+        task_approval.mark_extracted(rows)  # what _write_action_items does before writing
+        ids.append(action_items_db.create_action_item(spec['uid'], rows[0]))
+    return {'ids': ids}
+
+
+def legacy_sync(spec):
+    import types
+
+    module = types.ModuleType('omi_demo_legacy_caldav_sync')
+    sys.modules[module.__name__] = module
+    exec(compile(spec['source'], 'legacy_caldav_sync.py', 'exec'), module.__dict__)
+    return module.run_for_user(spec['uid']) or {}
+
+
+def auto_approve(spec):
+    from utils import auto_approve as job
+
+    return job.run_for_user(spec['uid']) or {}
+
+
 def main():
     spec = json.loads(os.environ['OMI_DEMO_SEED'])
-    result = {'account': account, 'conversations': conversations, 'allglance': allglance}[spec['op']](spec)
+    ops = {
+        'account': account,
+        'conversations': conversations,
+        'allglance': allglance,
+        'tasks': tasks,
+        'auto_approve': auto_approve,
+        'legacy_sync': legacy_sync,
+    }
+    result = ops[spec['op']](spec)
     # Last line of stdout is the answer (the backend's imports may log above it).
     print('\n' + json.dumps(result, default=str))
 

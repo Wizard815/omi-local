@@ -23,6 +23,9 @@ os.environ.setdefault('MEMORY_ENABLED', 'on')
 # The episode composer schedules background threads on close/finalize; tests that exercise it
 # enable it explicitly (tests/unit/test_episode_composer.py), so other episode tests stay hermetic.
 os.environ.setdefault('EPISODE_COMPOSER', 'off')
+# omi-local holds extracted tasks for the user's OK (utils/task_approval.py). The task delivery
+# and extraction tests exercise the operator's approval-off path; the approval tests turn it on.
+os.environ.setdefault('OMI_TASK_APPROVAL', 'off')
 
 # Some unit tests exercise canonical-memory LLM call paths. Provide a fake key
 # so client construction remains hermetic when those tests invoke it.

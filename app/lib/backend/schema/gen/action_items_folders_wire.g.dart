@@ -64,6 +64,7 @@ class GeneratedEvidenceRef {
 
 class GeneratedActionItemResponse {
   final String? appleReminderId;
+  final String? approval;
   final bool completed;
   final DateTime? completedAt;
   final String? conversationId;
@@ -96,6 +97,7 @@ class GeneratedActionItemResponse {
 
   const GeneratedActionItemResponse({
     this.appleReminderId,
+    this.approval,
     required this.completed,
     this.completedAt,
     this.conversationId,
@@ -130,6 +132,7 @@ class GeneratedActionItemResponse {
   factory GeneratedActionItemResponse.fromJson(Map<String, dynamic> json) {
     return GeneratedActionItemResponse(
       appleReminderId: _readFieldValue<String>(_readField(json, const ["apple_reminder_id"]), "apple_reminder_id", _readString, requiredField: false, nullable: true),
+      approval: _readFieldValue<String>(_readField(json, const ["approval"]), "approval", _readString, requiredField: false, nullable: true),
       completed: _required(_readFieldValue<bool>(_readField(json, const ["completed"]), "completed", _readBool, requiredField: true, nullable: false), "completed"),
       completedAt: _readFieldValue<DateTime>(_readField(json, const ["completed_at"]), "completed_at", _readDateTime, requiredField: false, nullable: true),
       conversationId: _readFieldValue<String>(_readField(json, const ["conversation_id"]), "conversation_id", _readString, requiredField: false, nullable: true),
@@ -165,6 +168,7 @@ class GeneratedActionItemResponse {
   Map<String, dynamic> toJson() {
     return {
       'apple_reminder_id': appleReminderId,
+      'approval': approval,
       'completed': completed,
       'completed_at': completedAt?.toUtc().toIso8601String(),
       'conversation_id': conversationId,
@@ -934,6 +938,174 @@ class GeneratedBulkMoveConversationsResponse {
     return {
       'moved_count': movedCount,
       'status': status,
+    };
+  }
+}
+
+class GeneratedApprovalSettings {
+  final bool autoApprove;
+  final bool operatorDisabled;
+  final String time;
+
+  const GeneratedApprovalSettings({
+    this.autoApprove = false,
+    this.operatorDisabled = false,
+    this.time = "21:00",
+  });
+
+  factory GeneratedApprovalSettings.fromJson(Map<String, dynamic> json) {
+    return GeneratedApprovalSettings(
+      autoApprove: _required(_readFieldValue<bool>(_readField(json, const ["auto_approve"]), "auto_approve", _readBool, requiredField: false, nullable: false, defaultValue: false), "auto_approve"),
+      operatorDisabled: _required(_readFieldValue<bool>(_readField(json, const ["operator_disabled"]), "operator_disabled", _readBool, requiredField: false, nullable: false, defaultValue: false), "operator_disabled"),
+      time: _required(_readFieldValue<String>(_readField(json, const ["time"]), "time", _readString, requiredField: false, nullable: false, defaultValue: "21:00"), "time"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'auto_approve': autoApprove,
+      'operator_disabled': operatorDisabled,
+      'time': time,
+    };
+  }
+}
+
+class GeneratedUpdateApprovalSettingsRequest {
+  final bool? autoApprove;
+  final String? time;
+
+  const GeneratedUpdateApprovalSettingsRequest({
+    this.autoApprove,
+    this.time,
+  });
+
+  factory GeneratedUpdateApprovalSettingsRequest.fromJson(Map<String, dynamic> json) {
+    return GeneratedUpdateApprovalSettingsRequest(
+      autoApprove: _readFieldValue<bool>(_readField(json, const ["auto_approve"]), "auto_approve", _readBool, requiredField: false, nullable: true),
+      time: _readFieldValue<String>(_readField(json, const ["time"]), "time", _readString, requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'auto_approve': autoApprove,
+      'time': time,
+    };
+  }
+}
+
+class GeneratedWaitingForApprovalResponse {
+  final bool autoApprove;
+  final String autoApproveTime;
+  final List<String>? draftDates;
+  final int eventCount;
+  final int taskCount;
+  final List<GeneratedActionItemResponse>? tasks;
+  final String today;
+
+  const GeneratedWaitingForApprovalResponse({
+    this.autoApprove = false,
+    this.autoApproveTime = "",
+    this.draftDates,
+    this.eventCount = 0,
+    this.taskCount = 0,
+    this.tasks,
+    this.today = "",
+  });
+
+  factory GeneratedWaitingForApprovalResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedWaitingForApprovalResponse(
+      autoApprove: _required(_readFieldValue<bool>(_readField(json, const ["auto_approve"]), "auto_approve", _readBool, requiredField: false, nullable: false, defaultValue: false), "auto_approve"),
+      autoApproveTime: _required(_readFieldValue<String>(_readField(json, const ["auto_approve_time"]), "auto_approve_time", _readString, requiredField: false, nullable: false, defaultValue: ""), "auto_approve_time"),
+      draftDates: _readFieldValue<List<String>>(_readField(json, const ["draft_dates"]), "draft_dates", _readStringList, requiredField: false, nullable: true),
+      eventCount: _required(_readFieldValue<int>(_readField(json, const ["event_count"]), "event_count", _readInt, requiredField: false, nullable: false, defaultValue: 0), "event_count"),
+      taskCount: _required(_readFieldValue<int>(_readField(json, const ["task_count"]), "task_count", _readInt, requiredField: false, nullable: false, defaultValue: 0), "task_count"),
+      tasks: _readFieldValue<List<GeneratedActionItemResponse>>(_readField(json, const ["tasks"]), "tasks", (value) => _readObjectList(value, GeneratedActionItemResponse.fromJson), requiredField: false, nullable: true),
+      today: _required(_readFieldValue<String>(_readField(json, const ["today"]), "today", _readString, requiredField: false, nullable: false, defaultValue: ""), "today"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'auto_approve': autoApprove,
+      'auto_approve_time': autoApproveTime,
+      'draft_dates': draftDates,
+      'event_count': eventCount,
+      'task_count': taskCount,
+      'tasks': tasks?.map((value) => value.toJson()).toList(),
+      'today': today,
+    };
+  }
+}
+
+class GeneratedApproveTaskRequest {
+  final String? description;
+  final DateTime? dueAt;
+
+  const GeneratedApproveTaskRequest({
+    this.description,
+    this.dueAt,
+  });
+
+  factory GeneratedApproveTaskRequest.fromJson(Map<String, dynamic> json) {
+    return GeneratedApproveTaskRequest(
+      description: _readFieldValue<String>(_readField(json, const ["description"]), "description", _readString, requiredField: false, nullable: true),
+      dueAt: _readFieldValue<DateTime>(_readField(json, const ["due_at"]), "due_at", _readDateTime, requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'description': description,
+      'due_at': dueAt?.toUtc().toIso8601String(),
+    };
+  }
+}
+
+class GeneratedDeclineTaskRequest {
+  final bool declined;
+
+  const GeneratedDeclineTaskRequest({
+    this.declined = true,
+  });
+
+  factory GeneratedDeclineTaskRequest.fromJson(Map<String, dynamic> json) {
+    return GeneratedDeclineTaskRequest(
+      declined: _required(_readFieldValue<bool>(_readField(json, const ["declined"]), "declined", _readBool, requiredField: false, nullable: false, defaultValue: true), "declined"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'declined': declined,
+    };
+  }
+}
+
+class GeneratedTaskApprovalResponse {
+  final String error;
+  final bool ok;
+  final GeneratedActionItemResponse? task;
+
+  const GeneratedTaskApprovalResponse({
+    this.error = "",
+    required this.ok,
+    this.task,
+  });
+
+  factory GeneratedTaskApprovalResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedTaskApprovalResponse(
+      error: _required(_readFieldValue<String>(_readField(json, const ["error"]), "error", _readString, requiredField: false, nullable: false, defaultValue: ""), "error"),
+      ok: _required(_readFieldValue<bool>(_readField(json, const ["ok"]), "ok", _readBool, requiredField: true, nullable: false), "ok"),
+      task: _readFieldValue<GeneratedActionItemResponse>(_readField(json, const ["task"]), "task", (value) => _readObject(value, GeneratedActionItemResponse.fromJson), requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'error': error,
+      'ok': ok,
+      'task': task?.toJson(),
     };
   }
 }

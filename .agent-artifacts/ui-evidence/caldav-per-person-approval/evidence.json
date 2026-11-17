@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "images": [
+    {
+      "file": "001-mobile-android-calendar-sync-mine.png",
+      "platform": "mobile-android",
+      "description": "Settings, Calendar sync on the shared bundled account: server and account, last sync report, My calendar / My task list / Tasks go, Approval (auto-approve off)",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "002-mobile-android-calendar-sync-task-list-picker.png",
+      "platform": "mobile-android",
+      "description": "My task list picker: the server's task lists, Bob's marked \"Used by Bob\", Create new… at the end",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "003-mobile-android-calendar-sync-create-new.png",
+      "platform": "mobile-android",
+      "description": "Create new…: the name is prefilled with the user's (\"Omi Tasks – Alice\")",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "004-mobile-android-calendar-sync-task-mode.png",
+      "platform": "mobile-android",
+      "description": "Tasks go: own list, or under one task named after the user in a shared list",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "005-mobile-android-calendar-sync-parent-mode.png",
+      "platform": "mobile-android",
+      "description": "Parent mode chosen in the shared Family list: Under \"Alice's tasks\"",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "006-mobile-android-calendar-sync-auto-approve-on.png",
+      "platform": "mobile-android",
+      "description": "Auto-approve turned on: the daily time row (21:00) and the footer explaining it",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "007-mobile-android-waiting-for-your-ok.png",
+      "platform": "mobile-android",
+      "description": "Waiting for your OK: three heard tasks with Approve / Edit & approve / Decline, yesterday's summary draft, 2 events, Auto-approve Off",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "008-mobile-android-waiting-task-approved.png",
+      "platform": "mobile-android",
+      "description": "After Approve: the task leaves the list",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "009-mobile-android-waiting-task-declined-undo.png",
+      "platform": "mobile-android",
+      "description": "After Decline: an Undo toast",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "010-mobile-android-day-review-draft.png",
+      "platform": "mobile-android",
+      "description": "A day summary draft: the draft notice and Approve the day at the bottom",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "011-mobile-android-day-review-draft-waiting-tasks.png",
+      "platform": "mobile-android",
+      "description": "From this day: the day's heard tasks wait for approval inline",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "012-mobile-android-banner-waiting-line.png",
+      "platform": "mobile-android",
+      "description": "Conversations banner: \"3 tasks, 2 events and yesterday's summary waiting for your OK\"",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "013-mobile-android-calendar-check-no-gateway.png",
+      "platform": "mobile-android",
+      "description": "Calendar check without dayGLANCE: Add to calendar means my CalDAV calendar; an approved event can be taken off",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    }
+  ]
+}

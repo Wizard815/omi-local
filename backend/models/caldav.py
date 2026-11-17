@@ -1,9 +1,11 @@
 """API shapes for the CalDAV integration (routers/caldav.py)."""
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
+
+CalDavTaskMode = Literal['list', 'parent']
 
 
 class CalDavSettingsResponse(BaseModel):
@@ -21,6 +23,18 @@ class CalDavSettingsResponse(BaseModel):
     push_conversation_events: bool = True
     push_conversations: bool = False
     pull_events: bool = True
+    task_mode: CalDavTaskMode = Field(
+        default='list',
+        description="'list': my tasks are to-dos in my task list; 'parent': subtasks of one task named after me "
+        'in a task list shared with others on the server',
+    )
+    owner_label: str = Field(default='', description='How the user is named in their collections and parent task')
+    suggested_calendar_name: str = Field(default='', description='Name for a new calendar of their own')
+    suggested_tasks_name: str = Field(default='', description='Name for a new task list of their own')
+    parent_task_name: str = Field(default='', description="The parent to-do in parent mode (\"<name>'s tasks\")")
+    shared_account: bool = Field(
+        default=False, description='The bundled server: every Omi user on this server shares one CalDAV login'
+    )
     last_sync_at: Optional[datetime] = None
     last_error: str = ''
     last_report: Dict[str, Any] = Field(default_factory=dict)
@@ -39,12 +53,44 @@ class UpdateCalDavSettingsRequest(BaseModel):
     push_conversation_events: Optional[bool] = None
     push_conversations: Optional[bool] = None
     pull_events: Optional[bool] = None
+    task_mode: Optional[CalDavTaskMode] = None
 
 
 class CalDavCalendar(BaseModel):
     href: str
     name: str = ''
     components: List[str] = Field(default_factory=list)
+
+
+class CalDavCollection(BaseModel):
+    href: str
+    name: str = ''
+    components: List[str] = Field(default_factory=list, description='VEVENT (calendar), VTODO (task list)')
+    used_by: List[str] = Field(
+        default_factory=list, description='Other people on this Omi server whose sync uses it (known from their syncs)'
+    )
+    mine: List[str] = Field(
+        default_factory=list, description="'calendar' and/or 'tasks' when it is this user's chosen one"
+    )
+
+
+class CalDavCollectionsResponse(BaseModel):
+    ok: bool
+    collections: List[CalDavCollection] = Field(default_factory=list)
+    error: str = ''
+
+
+class CreateCalDavCollectionRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    kind: Literal['calendar', 'tasks']
+    select: bool = Field(default=True, description='Make it my calendar / task list right away')
+
+
+class CalDavCollectionResponse(BaseModel):
+    ok: bool
+    collection: Optional[CalDavCollection] = None
+    settings: Optional[CalDavSettingsResponse] = None
+    error: str = ''
 
 
 class CalDavTestResponse(BaseModel):
@@ -60,6 +106,8 @@ class CalDavSyncResponse(BaseModel):
     tasks_imported: int = 0
     events_pushed: int = 0
     events_pulled: int = 0
+    tasks_removed: int = 0
+    events_removed: int = 0
     errors: List[str] = Field(default_factory=list)
     notes: List[str] = Field(default_factory=list, description='What the sync left out on purpose (tasks-only server)')
     error: str = ''

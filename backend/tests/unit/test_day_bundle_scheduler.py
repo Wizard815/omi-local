@@ -58,7 +58,8 @@ def stack(monkeypatch):
         bundled.append((uid, date_str))
         return {}
 
-    monkeypatch.setattr(service, 'bundle', bundle)
+    monkeypatch.setattr(service, 'prepare_draft', bundle)
+    monkeypatch.setattr(scheduler.auto_approve, 'run_for_user', lambda uid, now=None: {})
     return redis, bundled
 
 
@@ -67,19 +68,49 @@ def test_run_once_bundles_due_days_for_every_active_user_and_backs_off_failures(
     users = lambda: ['broken', 'u1']  # noqa: E731
     now = datetime(2026, 10, 22, 4, 0)
     out = {uid: scheduler.bundle_user(uid, now=now) for uid in users()}
-    assert out == {'broken': {'2026-10-21': 'error:502'}, 'u1': {'2026-10-21': 'bundled'}}
+    assert out == {'broken': {'2026-10-21': 'error:502'}, 'u1': {'2026-10-21': 'drafted'}}
     assert bundled == [('u1', '2026-10-21')]
     # the failed day is not retried until the backoff key expires
     assert scheduler.bundle_user('broken', now=now) == {'2026-10-21': 'backoff'}
     assert scheduler.run_once(users=users, now=now) == {
         'broken': {'2026-10-21': 'backoff'},
-        'u1': {'2026-10-21': 'bundled'},
+        'u1': {'2026-10-21': 'drafted'},
     }
 
 
 def test_run_once_is_a_no_op_when_auto_is_off(stack, monkeypatch):
+    redis, bundled = stack
     monkeypatch.setenv('OMI_DAY_BUNDLE_AUTO', 'off')
-    assert scheduler.run_once(users=lambda: ['u1']) == {}
+    assert scheduler.run_once(users=lambda: ['u1']) == {} and bundled == []
+
+
+def test_a_day_with_a_draft_waits_for_the_user_and_is_never_approved_by_the_job(stack, monkeypatch):
+    """The overnight job only writes drafts: a day that has one is left for the user."""
+    redis, bundled = stack
+    monkeypatch.setattr(
+        service,
+        'pending_dates',
+        lambda uid, days=7: {
+            'today': '2026-10-22',
+            'pending_dates': ['2026-10-20', '2026-10-21'],
+            'draft_dates': ['2026-10-20'],
+        },
+    )
+    approved = []
+    monkeypatch.setattr(service, 'approve', lambda uid, d: approved.append(d))
+    out = scheduler.run_once(users=lambda: ['u1'], now=datetime(2026, 10, 22, 4, 0))
+    assert out == {'u1': {'2026-10-21': 'drafted'}} and bundled == [('u1', '2026-10-21')] and approved == []
+
+
+def test_the_tick_runs_each_users_auto_approve(stack, monkeypatch):
+    redis, bundled = stack
+    monkeypatch.setattr(
+        scheduler.auto_approve,
+        'run_for_user',
+        lambda uid, now=None: {'tasks': ['t1'], 'events': [], 'days': ['2026-10-21']} if uid == 'u2' else {},
+    )
+    out = scheduler.run_once(users=lambda: ['u2'], now=datetime(2026, 10, 22, 4, 0))
+    assert out['u2']['auto_approved'] == 'tasks=1 events=0 days=1'
 
 
 def test_bundle_user_looks_back_lookback_days_past_days_not_counting_today(monkeypatch):
@@ -92,10 +123,10 @@ def test_bundle_user_looks_back_lookback_days_past_days_not_counting_today(monke
 
     bundled = []
     monkeypatch.setattr(service, 'pending_dates', pending_dates)
-    monkeypatch.setattr(service, 'bundle', lambda uid, date_str: bundled.append(date_str))
+    monkeypatch.setattr(service, 'prepare_draft', lambda uid, date_str: bundled.append(date_str))
     monkeypatch.setattr(scheduler.notification_db, 'get_user_time_zone', lambda uid: None)
     monkeypatch.setattr(scheduler.redis_db, 'r', _Redis())
     monkeypatch.setenv('OMI_DAY_BUNDLE_HOUR', '3')
     out = scheduler.bundle_user('u1', now=datetime(2026, 11, 6, 9, 0))
     assert asked['days'] == scheduler.LOOKBACK_DAYS + 1
-    assert out == {'2026-10-30': 'bundled'} and bundled == ['2026-10-30']
+    assert out == {'2026-10-30': 'drafted'} and bundled == ['2026-10-30']

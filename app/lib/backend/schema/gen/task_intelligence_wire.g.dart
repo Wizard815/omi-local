@@ -92,6 +92,7 @@ class GeneratedEvidenceRef {
 
 class GeneratedActionItemResponse {
   final String? appleReminderId;
+  final String? approval;
   final bool completed;
   final DateTime? completedAt;
   final String? conversationId;
@@ -124,6 +125,7 @@ class GeneratedActionItemResponse {
 
   const GeneratedActionItemResponse({
     this.appleReminderId,
+    this.approval,
     required this.completed,
     this.completedAt,
     this.conversationId,
@@ -158,6 +160,7 @@ class GeneratedActionItemResponse {
   factory GeneratedActionItemResponse.fromJson(Map<String, dynamic> json) {
     return GeneratedActionItemResponse(
       appleReminderId: _readFieldValue<String>(_readField(json, const ["apple_reminder_id"]), "apple_reminder_id", _readString, requiredField: false, nullable: true),
+      approval: _readFieldValue<String>(_readField(json, const ["approval"]), "approval", _readString, requiredField: false, nullable: true),
       completed: _required(_readFieldValue<bool>(_readField(json, const ["completed"]), "completed", _readBool, requiredField: true, nullable: false), "completed"),
       completedAt: _readFieldValue<DateTime>(_readField(json, const ["completed_at"]), "completed_at", _readDateTime, requiredField: false, nullable: true),
       conversationId: _readFieldValue<String>(_readField(json, const ["conversation_id"]), "conversation_id", _readString, requiredField: false, nullable: true),
@@ -193,6 +196,7 @@ class GeneratedActionItemResponse {
   Map<String, dynamic> toJson() {
     return {
       'apple_reminder_id': appleReminderId,
+      'approval': approval,
       'completed': completed,
       'completed_at': completedAt?.toUtc().toIso8601String(),
       'conversation_id': conversationId,

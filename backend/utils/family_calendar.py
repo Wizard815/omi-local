@@ -11,6 +11,10 @@ Where it writes: POST {gateway}/api/allglance/tasks with source "dayglance" and 
 ("YYYY-MM-DD HH:MM" in the user's time zone), the gateway's REST mirror of
 allglance_create_task. The gateway's URL and token are the user's "allglance" task
 integration, which utils/allglance.py seeds from ALLGLANCE_URL / ALLGLANCE_TOKEN.
+
+Approving also marks the event ``approved``: the CalDAV sync (utils/caldav/sync.py) puts
+only approved events on the user's calendar. Without a gateway, approve still works and
+means just that ("add it to my calendar"); declining takes it off again.
 """
 
 from __future__ import annotations
@@ -27,6 +31,7 @@ import database.notifications as notifications_db
 import database.users as users_db
 from models.family_calendar import FamilyCalendarEvent
 from models.structured import Event
+from utils.caldav import sync as caldav_sync
 
 logger = logging.getLogger(__name__)
 
@@ -121,6 +126,7 @@ def _present(conversation: Dict[str, Any], idx: int, event: Event, zone) -> Fami
         calendar=event.calendar,
         external_id=event.external_id,
         declined=bool(event.declined),
+        approved=bool(event.approved or event.created) and not event.declined,
     )
 
 
@@ -159,7 +165,7 @@ def pending(
             continue
         for idx, event in enumerate(_events_of(conversation)):
             shown = _present(conversation, idx, event, zone)
-            if shown.created or shown.declined:
+            if shown.created or shown.declined or shown.approved:
                 recent.append(shown)
             elif conversation_id is not None or shown.start >= now - PAST_GRACE:
                 waiting.append(shown)
@@ -182,11 +188,20 @@ def _save(uid: str, conversation_id: str, events: List[Event]) -> None:
     conversations_db.update_conversation_events(uid, conversation_id, [e.model_dump() for e in events])
 
 
+def _caldav_changed(uid: str, conversation_id: str) -> None:
+    """The user's CalDAV calendar follows within seconds (utils/caldav/sync.py)."""
+    caldav_sync.remember_approved_event(uid, conversation_id)
+    caldav_sync.mark_dirty(uid)
+
+
 def decline(uid: str, conversation_id: str, event_idx: int, declined: bool = True) -> FamilyCalendarEvent:
-    """Remember "no" for one heard event, or take that back (``declined=False``: it waits again)."""
+    """Remember "no" for one heard event, or take that back (``declined=False``: it waits again).
+    Either way it is no longer approved, so the CalDAV sync takes it off the user's calendar."""
     conversation, events = _load(uid, conversation_id, event_idx)
     events[event_idx].declined = declined
+    events[event_idx].approved = False
     _save(uid, conversation_id, events)
+    _caldav_changed(uid, conversation_id)
     return _present(conversation, event_idx, events[event_idx], _zone(uid))
 
 
@@ -205,14 +220,17 @@ def _prepare(
     start: Optional[datetime],
     duration: Optional[int],
 ) -> Dict[str, Any]:
-    """The blocking half before the gateway call: load, apply the corrections, build the body."""
+    """The blocking half before the gateway call: load, apply the corrections, build the body.
+    Without a gateway the approval is recorded here and the result is final ('done')."""
     target = integration(uid)
-    if target is None:
-        raise RuntimeError('No family calendar: set ALLGLANCE_URL / ALLGLANCE_TOKEN or the ALLGlance task integration')
     conversation, events = _load(uid, conversation_id, event_idx)
     event = events[event_idx]
     zone = _zone(uid)
     if event.created and event.calendar == CALENDAR:
+        if not event.approved:
+            event.approved = True
+            _save(uid, conversation_id, events)
+            _caldav_changed(uid, conversation_id)
         return {'done': _present(conversation, event_idx, event, zone)}
     if title is not None and title.strip():
         event.title = title.strip()
@@ -225,6 +243,16 @@ def _prepare(
     start_utc = _as_utc(event.start, zone)
     if start_utc is None:
         raise RuntimeError('The event has no usable start time')
+    if target is None:
+        # No family calendar: the approval is the whole answer (the user's CalDAV calendar
+        # gets it on the next sync).
+        event.start = start_utc
+        event.approved = True
+        event.declined = False
+        _save(uid, conversation_id, events)
+        _caldav_changed(uid, conversation_id)
+        logger.info('family_calendar: uid=%s conversation=%s event=%s approved', uid, conversation_id, event_idx)
+        return {'done': _present(conversation, event_idx, event, zone)}
     body: Dict[str, Any] = {
         'title': event.title,
         'source': 'dayglance',
@@ -254,11 +282,13 @@ def _record(
     task = payload.get('task') or {}
     event.created = True
     event.declined = False
+    event.approved = True
     event.calendar = CALENDAR
     external = task.get('id')
     event.external_id = f"{payload.get('source') or 'dayglance'}:{external}" if external is not None else None
     event.start = prepared['start_utc']
     _save(uid, conversation_id, prepared['events'])
+    _caldav_changed(uid, conversation_id)
     logger.info(
         'family_calendar: uid=%s conversation=%s event=%s added as %s',
         uid,
@@ -280,9 +310,10 @@ async def approve(
     duration: Optional[int] = None,
     client: Optional[httpx.AsyncClient] = None,
 ) -> FamilyCalendarEvent:
-    """Write one reviewed event to the family calendar, with the user's corrections, and remember it.
+    """Approve one reviewed event, with the user's corrections: written to the family calendar
+    when there is one, and marked approved for the user's CalDAV calendar either way.
 
-    Raises LookupError (no such event), RuntimeError (no family calendar, or the gateway said no).
+    Raises LookupError (no such event), RuntimeError (no start time, or the gateway said no).
     The Firestore work runs on the db executor; only the gateway call is awaited here."""
     from utils.executors import db_executor, run_blocking
 

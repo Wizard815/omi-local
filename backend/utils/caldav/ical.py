@@ -21,6 +21,7 @@ PRODID = '-//omi-local//CalDAV sync//EN'
 TASK_UID_PREFIX = 'omi-task-'
 DAY_UID_PREFIX = 'omi-day-'
 CONVERSATION_EVENT_UID_PREFIX = 'omi-event-'
+PARENT_UID_PREFIX = 'omi-parent-'
 UID_DOMAIN = '@omi-local'
 
 
@@ -142,11 +143,15 @@ def render_todo(
     categories: Sequence[str] = (),
     priority: Optional[int] = None,
     stamp: Optional[datetime] = None,
+    parent_uid: str = '',
 ) -> str:
     now = stamp or datetime.now(timezone.utc)
     lines = [f'UID:{uid}', f'DTSTAMP:{utc_stamp(now)}', f'SUMMARY:{escape_text(summary)}']
     if description:
         lines.append(f'DESCRIPTION:{escape_text(description)}')
+    if parent_uid:
+        # RFC 5545 RELATED-TO (RFC 9253 RELTYPE): Tasks.org, DAVx5 and Thunderbird show it as a subtask.
+        lines.append(f'RELATED-TO;RELTYPE=PARENT:{parent_uid}')
     if created:
         lines.append(f'CREATED:{utc_stamp(created)}')
     lines.append(f'LAST-MODIFIED:{utc_stamp(last_modified or now)}')
@@ -212,6 +217,7 @@ class Component:
     completed_at: Optional[datetime] = None
     last_modified: Optional[datetime] = None
     categories: List[str] = field(default_factory=list)
+    parent_uid: str = ''  # RELATED-TO with RELTYPE=PARENT (the default RELTYPE)
     props: Dict[str, str] = field(default_factory=dict)
 
     @property
@@ -270,6 +276,10 @@ def parse_components(text: str) -> List[Component]:
             current.completed_at = parse_stamp(value, params)
         elif name == 'LAST-MODIFIED':
             current.last_modified = parse_stamp(value)
+        elif name == 'RELATED-TO':
+            reltype = re.search(r';RELTYPE=([^;:]*)', params or '', re.IGNORECASE)
+            if reltype is None or reltype.group(1).strip().upper() == 'PARENT':
+                current.parent_uid = value.strip()
         elif name == 'CATEGORIES':
             current.categories = [unescape_text(c).strip() for c in re.split(r'(?<!\\),', value) if c.strip()]
     return out
