@@ -3,6 +3,8 @@
 // "Waiting for your OK" page, a day summary draft with its Approve button, the banner that says what
 // waits, and the Calendar check without a family-calendar gateway. Synthetic data: Alice and Bob
 // share the bundled Radicale account; yesterday left three heard tasks, two heard dates and a draft.
+// Also: Approve all (a tap approves everything, with Undo; holding it opens a checklist) and the day
+// summary's Edit text.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -90,7 +92,28 @@ Map<String, Object?> _task(String id, String text, {DateTime? due}) => {
       if (due != null) 'due_at': _utc(due),
     };
 
-Map<String, Object?> _waiting({bool autoApprove = false, List<String>? keep}) {
+Map<String, Object?> _event(String cid, String title, DateTime start, {bool approved = false}) => {
+      'conversation_id': cid,
+      'event_idx': 0,
+      'conversation_title': title,
+      'title': title,
+      'description': '',
+      'start': _utc(start),
+      'duration': 45,
+      'heard_at': _utc(DateTime(_yesterday.year, _yesterday.month, _yesterday.day, 12)),
+      'created': false,
+      'calendar': null,
+      'external_id': null,
+      'declined': false,
+      'approved': approved,
+    };
+
+final _heardEvents = [
+  _event('e1', 'Mia dentist check-up', _at(2, 15)),
+  _event('e2', 'Leo soccer practice', _at(3, 17, 30)),
+];
+
+Map<String, Object?> _waiting({bool autoApprove = false, List<String>? keep, bool events = true, bool draft = true}) {
   final tasks = [
     _task('t1', "Call Dr. Weber's office to confirm Mia's check-up", due: _at(0, 10)),
     _task('t2', 'Order the birthday cake', due: _at(2, 12)),
@@ -99,8 +122,9 @@ Map<String, Object?> _waiting({bool autoApprove = false, List<String>? keep}) {
   return {
     'tasks': tasks,
     'task_count': tasks.length,
-    'event_count': 2,
-    'draft_dates': [_date],
+    'event_count': events ? 2 : 0,
+    'events': events ? _heardEvents : <Object?>[],
+    'draft_dates': [if (draft) _date],
     'today': _key(_now),
     'auto_approve': autoApprove,
     'auto_approve_time': '21:00',
@@ -277,4 +301,180 @@ final approvalScenarios = <AuditScenario>[
       await a.shot('Open the Calendar check (no dayGLANCE here)', step: 'top');
     },
   ),
+  AuditScenario(
+    id: 'approve-all-waiting',
+    title: 'Approve all: one tap approves everything waiting (Undo); holding it opens a checklist',
+    page: 'lib/pages/approvals/approve_all_panel.dart (ApproveAllPanel on ApprovalsPage)',
+    state: 'Three heard tasks, two heard dates and yesterday\'s summary draft wait',
+    run: (a) async {
+      a.server.jsonRoutes['GET /v1/approvals'] = _waiting();
+      await a.pump(const ApprovalsPage());
+      await a.settle();
+      await a.shot('Open Waiting for your OK: Approve all (6), "Hold to choose", Choose…', step: 'top');
+      await a.longPress(find.byKey(const Key('approve_all')));
+      await a.shot('Hold Approve all: every task, event and the summary draft, all ticked', step: 'choose');
+      await a.tap(find.byKey(ValueKey('approval_pick_day_$_date')));
+      await a.shot('Untick the summary: Approve selected (5); the summary keeps waiting', step: 'summary-unticked');
+      a.server.jsonRoutes['POST /v1/approvals/batch'] = {
+        'task_ids': ['t1', 't2', 't3'],
+        'events': [
+          {'conversation_id': 'e1', 'event_idx': 0},
+          {'conversation_id': 'e2', 'event_idx': 0},
+        ],
+        'day_dates': <Object?>[],
+        'task_count': 3,
+        'event_count': 2,
+        'day_count': 0,
+        'failed_event_count': 0,
+        'failed_day_dates': <Object?>[],
+      };
+      a.server.jsonRoutes['GET /v1/approvals'] = _waiting(keep: const [], events: false);
+      await a.tap(find.byKey(const Key('approval_pick_approve')));
+      await a.shot('Approve selected: tasks and events approved, Undo; the summary still waits', step: 'selected');
+    },
+  ),
+  AuditScenario(
+    id: 'approve-all-tap-undo',
+    title: 'Approve all with one tap: everything approved, Undo takes it back',
+    page: 'lib/pages/approvals/approve_all_panel.dart (ApproveAllPanel on ApprovalsPage)',
+    state: 'Three heard tasks, two heard dates and yesterday\'s summary draft wait',
+    run: (a) async {
+      a.server.jsonRoutes['GET /v1/approvals'] = _waiting();
+      await a.pump(const ApprovalsPage());
+      await a.settle();
+      a.server.jsonRoutes['POST /v1/approvals/batch'] = {
+        'task_ids': ['t1', 't2', 't3'],
+        'events': [
+          {'conversation_id': 'e1', 'event_idx': 0},
+          {'conversation_id': 'e2', 'event_idx': 0},
+        ],
+        'day_dates': [_date],
+        'task_count': 3,
+        'event_count': 2,
+        'day_count': 1,
+        'failed_event_count': 0,
+        'failed_day_dates': <Object?>[],
+      };
+      a.server.jsonRoutes['GET /v1/approvals'] = _waiting(keep: const [], events: false, draft: false);
+      await a.tap(find.byKey(const Key('approve_all')));
+      await a.shot('Tap Approve all: no question, everything approved; the toast offers Undo', step: 'approved');
+    },
+  ),
+  AuditScenario(
+    id: 'day-review-edit-text',
+    title: 'Edit text: the day summary\'s title and sections edited directly, with Undo',
+    page: 'lib/pages/day_review/day_review_edit_text_sheet.dart (DayReviewEditTextSheet on DayReviewPage)',
+    state: 'Yesterday is approved; its summary has three sections',
+    run: (a) async {
+      a.server.jsonRoutes['GET /v1/users/day-reviews/$_date'] = _dayReview(draft: false);
+      a.server.jsonRoutes['GET /v1/approvals'] = _waiting(keep: const [], events: false, draft: false);
+      await a.pump(DayReviewPage(date: _date));
+      await a.settle();
+      await a.shot('Open yesterday: Edit text under the title', step: 'top');
+      await a.tap(find.byKey(const Key('day_review_edit_text')));
+      await a.shot('Edit text: the title and each section, Save / Cancel', step: 'sheet');
+      await a.enterText(find.byKey(const Key('day_review_edit_title')), "Grandma turns 80");
+      await a.enterText(find.byKey(const Key('day_review_edit_text_s1')),
+          "Mia's check-up is on Thursday at three. I call Dr. Weber's office at nine.");
+      await a.shot('Typed: the edit sheet guards against a stray close', step: 'typed');
+      a.server.jsonRoutes['PUT /v1/users/day-reviews/$_date/text'] = (_dayReview(
+        draft: false,
+        title: 'Grandma turns 80',
+        first: "Mia's check-up is on Thursday at three. I call Dr. Weber's office at nine.",
+        edited: true,
+      )['review'])!;
+      await a.tap(find.byKey(const Key('day_review_edit_save')));
+      await a.shot('Saved: the new text, "Edited by you", and Undo in the toast', step: 'saved');
+    },
+  ),
+  AuditScenario(
+    id: 'day-review-approve-all-from-day',
+    title: 'From this day: Approve all from this day, including the day\'s summary draft',
+    page: 'lib/pages/day_review/day_review_page.dart (DayReviewPage, From this day)',
+    state: 'Yesterday\'s draft; two of its tasks and its two heard dates wait',
+    run: (a) async {
+      a.server.jsonRoutes['GET /v1/users/day-reviews/$_date'] = _dayReview(draft: true);
+      a.server.jsonRoutes['GET /v1/approvals'] = _waiting(keep: ['t1', 't2']);
+      await a.pump(DayReviewPage(date: _date));
+      await a.settle();
+      await a.tester
+          .scrollUntilVisible(find.byKey(const Key('approve_all')), 300, scrollable: find.byType(Scrollable).first);
+      await a.tester.ensureVisible(find.byKey(const Key('approve_all')));
+      await a.settle();
+      await a.shot('From this day: Approve all from this day (5) — tasks, dates and this summary',
+          step: 'from-this-day');
+    },
+  ),
 ];
+
+Map<String, Object?> _dayReview({required bool draft, String? title, String? first, bool edited = false}) {
+  final sections = [
+    (
+      's1',
+      ['f1'],
+      "Mia's dentist",
+      first ?? "Mia's check-up is on Thursday at three; someone calls Dr. Weber's office in the morning."
+    ),
+    ('s2', ['f2'], "Leo's practice", "Leo's practice moved to Thursday evening and he needs new cleats."),
+    ('s3', ['f3'], "Grandma's 80th", "Grandma's 80th is on Saturday at Luigi's; the cake is picked up at four."),
+  ];
+  final text = sections.map((s) => s.$4).join('\n\n');
+  return {
+    'date': _date,
+    'review': {
+      'date': _date,
+      'status': 'finalized',
+      'draft': draft,
+      'title': title ?? 'A dentist, a practice and grandma\'s 80th',
+      'summary_text': text,
+      'final_text': text,
+      'corrections': <Object?>[],
+      'sections': [
+        for (final (id, ids, heading, body) in sections)
+          {
+            'id': id,
+            'conversation_ids': ids,
+            'title': heading,
+            'text': body,
+            'tags': ['family'],
+            'favorited': false
+          }
+      ],
+      'tags': ['family'],
+      'kept_conversation_ids': <Object?>[],
+      'rolled_up_conversation_ids': ['f1', 'f2', 'f3'],
+      'merged_groups': <Object?>[],
+      'dropped_conversation_ids': <Object?>[],
+      'generated_at': _utc(DateTime(_now.year, _now.month, _now.day, 3, 2)),
+      'generation_count': 1,
+      if (!draft) 'approved_at': _utc(DateTime(_now.year, _now.month, _now.day, 7, 30)),
+      if (edited) 'edited_by_user_at': _utc(DateTime(_now.year, _now.month, _now.day, 8, 15)),
+    },
+    'conversations': [
+      for (final (id, h, title) in [
+        ('f1', 8, "Mia's dentist appointment"),
+        ('f2', 12, "Leo's soccer season"),
+        ('f3', 18, "Grandma's 80th birthday"),
+      ])
+        {
+          'id': id,
+          'title': title,
+          'emoji': '',
+          'overview': '',
+          'started_at': _utc(DateTime(_yesterday.year, _yesterday.month, _yesterday.day, h)),
+          'finished_at': _utc(DateTime(_yesterday.year, _yesterday.month, _yesterday.day, h, 12)),
+          'starred': false,
+          'tags': ['family'],
+          'rolled_up': true,
+          'dropped': false,
+          'held': false,
+          'hold_rule': '',
+          'transcript_snippet': '',
+          'word_count': 120,
+        }
+    ],
+    'processing_count': 0,
+    'dropped_auto_count': 0,
+    'hold_enabled': false,
+  };
+}
