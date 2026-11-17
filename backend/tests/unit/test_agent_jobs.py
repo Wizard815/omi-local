@@ -57,9 +57,7 @@ def env(monkeypatch):
     monkeypatch.setattr(notification_db, 'get_user_time_zone', lambda uid: 'UTC')
     monkeypatch.setattr(outbound_http, '_target', lambda url: (url, {'headers': {}, 'extensions': {}}))
     pushed = []
-    monkeypatch.setattr(
-        agent_jobs, 'send_notification', lambda uid, title, body, data=None: pushed.append((title, body))
-    )
+    monkeypatch.setattr(agent_jobs, 'dispatch_agent_job', lambda uid, title, body, job_id: pushed.append((title, body)))
     kicked = []
 
     def no_background(coro, name):
