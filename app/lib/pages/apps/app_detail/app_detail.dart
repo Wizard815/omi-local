@@ -108,24 +108,9 @@ class _AppDetailPageState extends State<AppDetailPage> with WidgetsBindingObserv
   }
 
   void _loadSetupInstructionsMarkdown() {
-    final generation = ++_markdownLoadGeneration;
-    final path = app.externalIntegration?.setupInstructionsFilePath;
-    if (path == null || path.isEmpty || !path.contains('raw.githubusercontent.com')) {
-      return;
-    }
-
-    final appId = app.id;
-    getAppMarkdown(path).then((value) {
-      if (!mounted) return;
-      if (generation != _markdownLoadGeneration) return;
-      if (app.externalIntegration?.setupInstructionsFilePath != path) return;
-
-      value = value.replaceAll(
-        '](assets/',
-        '](https://raw.githubusercontent.com/BasedHardware/Omi/main/plugins/instructions/$appId/assets/',
-      );
-      setState(() => instructionsMarkdown = value);
-    });
+    // Upstream fetched these instructions (and their images) from Omi's GitHub. This
+    // self-hosted build fetches nothing from the cloud: the setup link still opens below.
+    _markdownLoadGeneration++;
   }
 
   @override
