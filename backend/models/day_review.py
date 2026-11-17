@@ -90,6 +90,10 @@ class DayReview(BaseModel):
     generated_at: Optional[datetime] = None
     generation_count: int = 0
     approved_at: Optional[datetime] = Field(default=None, description='When the user approved the day')
+    edited_by_user_at: Optional[datetime] = Field(
+        default=None,
+        description='When the user last edited the text by hand; a rewrite asks before replacing it (then clears it)',
+    )
 
 
 class DayReviewConversation(BaseModel):
@@ -148,6 +152,50 @@ class FinalizeDayReviewRequest(BaseModel):
 
 class FavoriteDayReviewSectionRequest(BaseModel):
     favorited: bool = True
+
+
+# The user's own text for the summary (PUT /day-reviews/{date}/text). Limits sit well above what
+# the model writes (a day is a few thousand characters) and below a Firestore document's 1 MiB.
+DAY_REVIEW_TITLE_MAX = 200
+DAY_REVIEW_SECTION_TITLE_MAX = 200
+DAY_REVIEW_SECTION_TEXT_MAX = 20000
+DAY_REVIEW_TEXT_MAX = 60000
+
+
+class DayReviewSectionTextEdit(BaseModel):
+    id: str = Field(max_length=64, description="The section's id")
+    title: Optional[str] = Field(default=None, max_length=DAY_REVIEW_SECTION_TITLE_MAX, description='Omitted keeps it')
+    text: Optional[str] = Field(
+        default=None, max_length=DAY_REVIEW_SECTION_TEXT_MAX, description='Omitted keeps it; cannot be blank'
+    )
+
+
+class EditDayReviewTextRequest(BaseModel):
+    title: Optional[str] = Field(default=None, max_length=DAY_REVIEW_TITLE_MAX, description='Omitted keeps it')
+    sections: Optional[List[DayReviewSectionTextEdit]] = Field(
+        default=None, max_length=100, description="Changed sections; summary_text becomes the sections' text"
+    )
+    summary_text: Optional[str] = Field(
+        default=None,
+        max_length=DAY_REVIEW_TEXT_MAX,
+        description='The whole text, only for a summary without sections (written before sections existed)',
+    )
+
+    @model_validator(mode='after')
+    def _something_to_change(self):
+        if self.title is None and self.sections is None and self.summary_text is None:
+            raise ValueError('Nothing to change: send title, sections or summary_text')
+        if self.title is not None and not self.title.strip():
+            raise ValueError('The title cannot be empty')
+        ids = [s.id for s in self.sections or []]
+        if len(set(ids)) != len(ids):
+            raise ValueError('A section is listed more than once')
+        for section in self.sections or []:
+            if section.text is not None and not section.text.strip():
+                raise ValueError('A section cannot be empty')
+        if self.summary_text is not None and not self.summary_text.strip():
+            raise ValueError('The summary cannot be empty')
+        return self
 
 
 class DayReviewsListResponse(BaseModel):

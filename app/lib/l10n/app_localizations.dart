@@ -28514,6 +28514,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'What to sync'**
   String get caldavWhatToSync;
+
+  /// Button: approve every waiting item at once
+  ///
+  /// In en, this message translates to:
+  /// **'Approve all ({count})'**
+  String approvalApproveAll(int count);
+
+  /// Day review: approve every waiting item of this day
+  ///
+  /// In en, this message translates to:
+  /// **'Approve all from this day ({count})'**
+  String approvalApproveAllFromDay(int count);
+
+  /// Hint under Approve all: long-press opens a checklist
+  ///
+  /// In en, this message translates to:
+  /// **'Hold to choose what to approve'**
+  String get approvalHoldToChoose;
+
+  /// Opens the checklist to pick what to approve (accessible alternative to long-press)
+  ///
+  /// In en, this message translates to:
+  /// **'Choose…'**
+  String get approvalChoose;
+
+  /// Approves the ticked items
+  ///
+  /// In en, this message translates to:
+  /// **'Approve selected ({count})'**
+  String approvalApproveSelected(int count);
+
+  /// Checklist hint
+  ///
+  /// In en, this message translates to:
+  /// **'Untick what should keep waiting.'**
+  String get approvalSelectHint;
+
+  /// Count of day summary drafts
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day summary} other{{count} day summaries}}'**
+  String approvalCountSummaries(int count);
+
+  /// Toast after Approve all; items is a list like '2 tasks and 1 event'
+  ///
+  /// In en, this message translates to:
+  /// **'Approved {items}'**
+  String approvalBatchApproved(String items);
+
+  /// Toast when Approve all found nothing to approve
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing was waiting any more.'**
+  String get approvalBatchNothing;
+
+  /// Toast when part of a batch failed
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item could not be approved and still waits} other{{count} items could not be approved and still wait}}'**
+  String approvalBatchSomeStillWait(int count);
+
+  /// Checklist row for a day summary draft
+  ///
+  /// In en, this message translates to:
+  /// **'Day summary · {date}'**
+  String approvalSummaryItem(String date);
+
+  /// Action: edit the day summary text directly
+  ///
+  /// In en, this message translates to:
+  /// **'Edit text'**
+  String get dayReviewEditText;
+
+  /// Field label: the summary's title
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get dayReviewEditTitleField;
+
+  /// Field label: a section's heading
+  ///
+  /// In en, this message translates to:
+  /// **'Heading'**
+  String get dayReviewEditHeadingField;
+
+  /// Field label: the summary's text
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get dayReviewEditSummaryField;
+
+  /// Toast after saving edited text
+  ///
+  /// In en, this message translates to:
+  /// **'Summary saved'**
+  String get dayReviewTextSaved;
+
+  /// Note on a summary the user edited by hand
+  ///
+  /// In en, this message translates to:
+  /// **'Edited by you'**
+  String get dayReviewEditedByYou;
+
+  /// Confirm title before a rewrite replaces hand edits
+  ///
+  /// In en, this message translates to:
+  /// **'Rewrite the summary?'**
+  String get dayReviewRewriteEditsTitle;
+
+  /// Confirm body
+  ///
+  /// In en, this message translates to:
+  /// **'Rewrite will replace your edits — continue?'**
+  String get dayReviewRewriteEditsBody;
+
+  /// Confirm action
+  ///
+  /// In en, this message translates to:
+  /// **'Rewrite'**
+  String get dayReviewRewriteEditsAction;
+
+  /// Confirm body when approving needs a rewrite
+  ///
+  /// In en, this message translates to:
+  /// **'New conversations came in since you edited this summary. Approving rewrites it, which will replace your edits — continue?'**
+  String get dayReviewApproveRewriteBody;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
