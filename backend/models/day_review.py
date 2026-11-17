@@ -3,6 +3,7 @@
 from datetime import datetime
 from typing import List, Literal, Optional
 
+from models.integrations_out import OutboundReceipt
 from pydantic import BaseModel, Field, model_validator
 
 DayReviewCorrectionType = Literal['paragraph', 'highlight', 'redaction']
@@ -93,6 +94,10 @@ class DayReview(BaseModel):
     edited_by_user_at: Optional[datetime] = Field(
         default=None,
         description='When the user last edited the text by hand; a rewrite asks before replacing it (then clears it)',
+    )
+    outbound_receipts: List[OutboundReceipt] = Field(
+        default_factory=list,
+        description='Where the approved summary was sent (Connections: the wiki, Orb), or when it will be',
     )
 
 

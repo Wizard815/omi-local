@@ -142,6 +142,9 @@ class OutboundReceipt(BaseModel):
     revision: int = Field(default=0, description='0 for the first copy, n for the n-th revised copy')
     detail: str = Field(default='', description="What the target answered, e.g. the wiki file's path")
     error: str = Field(default='', description='Why it was not sent (then sent_at is empty)')
+    scheduled_at: Optional[datetime] = Field(
+        default=None, description='Not sent yet: it leaves then, if the approval still stands (Undo stops it)'
+    )
 
 
 class SendConversationRequest(BaseModel):

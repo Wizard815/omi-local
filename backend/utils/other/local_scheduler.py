@@ -90,6 +90,8 @@ def caldav_sync_seconds() -> float:
 
 
 CALDAV_DIRTY_SECONDS = 20.0
+# The outbound queue (Connections: approved days to the wiki and Orb, agent jobs to follow).
+OUTBOUND_SECONDS = 15.0
 
 
 async def run_local_scheduler() -> None:
@@ -97,6 +99,7 @@ async def run_local_scheduler() -> None:
     from utils.caldav.sync import dirty_tick as caldav_dirty_tick
     from utils.caldav.sync import tick as caldav_tick
     from utils.day_bundle_scheduler import tick as day_bundle_tick
+    from utils.outbound_worker import tick as outbound_tick
     from utils.other.notifications import start_cron_job
 
     async def job() -> None:
@@ -114,10 +117,11 @@ async def run_local_scheduler() -> None:
     full = caldav_sync_seconds()
     logger.info(
         'local_scheduler started: recap, day-bundle and allglance jobs every hour at :%02d; '
-        'caldav full sync every %ds, changed users every %ds',
+        'caldav full sync every %ds, changed users every %ds; outbound queue every %ds',
         TICK_MINUTE,
         int(full),
         int(CALDAV_DIRTY_SECONDS),
+        int(OUTBOUND_SECONDS),
     )
     # CalDAV runs on its own clocks: a full pass for every active member every CALDAV_SYNC_SECONDS,
     # and a short pass for members whose tasks or day summary just changed.
@@ -125,4 +129,5 @@ async def run_local_scheduler() -> None:
         run_hourly(job),
         run_every(full, caldav_tick),
         run_every(CALDAV_DIRTY_SECONDS, caldav_dirty_tick),
+        run_every(OUTBOUND_SECONDS, outbound_tick),
     )

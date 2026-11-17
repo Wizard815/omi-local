@@ -23,7 +23,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import database.approval_settings as approval_db
 import database.notifications as notification_db
-from utils import day_review_service, family_calendar, task_approval
+from utils import day_review_service, family_calendar, outbound_dispatch, task_approval
 from utils.caldav import sync as caldav_sync
 from utils.executors import db_executor, run_blocking
 
@@ -79,7 +79,8 @@ def approve_past_days(uid: str, today: str) -> List[str]:
         if date_str >= today:
             continue
         try:
-            day_review_service.approve(uid, date_str)
+            # Auto-approved: a Connection sends it only where the user allowed that (outbound_dispatch).
+            day_review_service.approve(uid, date_str, approved_by=outbound_dispatch.APPROVED_BY_AUTO)
         except day_review_service.DayReviewError as error:
             logger.warning('auto_approve: day %s %s: %s', uid, date_str, error.message)
             continue
