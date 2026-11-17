@@ -37,6 +37,7 @@ from routers import (
     chat_receipts,
     dashboard,
     approvals,
+    integrations_outbound,
     caldav,
     day_reviews,
     family_calendar,
@@ -285,6 +286,7 @@ ROUTER_MOUNTS: tuple[Mount, ...] = (
     Mount(caldav),  # omi-local
     Mount(family_calendar),  # omi-local
     Mount(approvals),  # omi-local: tasks waiting for the user's OK, auto-approve
+    Mount(integrations_outbound),  # omi-local: Connections (wiki, Hermes, Odysseus, Studio, Coinpile, Orb)
     Mount(search),
     Mount(knowledge_graph),
     Mount(goals),
