@@ -50,10 +50,14 @@ class _DayReviewBannerState extends State<DayReviewBanner> {
       Logger.debug('Day review banner lookup failed: ${e.runtimeType}');
       return null;
     });
-    final waiting = await widget.approvals.waiting().catchError((Object e) {
+    ApiResult<WaitingForApproval> waiting;
+    try {
+      waiting = await widget.approvals.waiting();
+    } catch (e) {
+      // Optional too: a failed lookup shows the plain day nudge (or nothing).
       Logger.debug('Approval banner lookup failed: ${e.runtimeType}');
-      return const ApiFailure<WaitingForApproval>(ApiProblem(ApiProblemKind.transport));
-    });
+      waiting = const ApiFailure(ApiProblem(ApiProblemKind.transport));
+    }
     if (!mounted) return;
     setState(() {
       if (pending != null) {
