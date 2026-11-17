@@ -16955,4 +16955,8 @@ class AppLocalizationsTe extends AppLocalizations {
   String sendToWikiWhere(String destination) {
     return 'Goes to $destination';
   }
+
+  @override
+  String get connectionsNotReady =>
+      'This connection is off or has no address or token. Set it up in Settings > Connections.';
 }

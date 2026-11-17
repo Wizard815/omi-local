@@ -29396,6 +29396,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Goes to {destination}'**
   String sendToWikiWhere(String destination);
+
+  /// No description provided for @connectionsNotReady.
+  ///
+  /// In en, this message translates to:
+  /// **'This connection is off or has no address or token. Set it up in Settings > Connections.'**
+  String get connectionsNotReady;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

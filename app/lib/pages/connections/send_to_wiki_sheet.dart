@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import 'package:omi/backend/http/api/connections.dart';
 import 'package:omi/backend/schema/connections.dart';
+import 'package:omi/pages/connections/connections_page.dart' show connectionProblem;
 import 'package:omi/ui/ui.dart';
 import 'package:omi/utils/alerts/app_snackbar.dart';
 import 'package:omi/utils/l10n_extensions.dart';
@@ -48,7 +49,7 @@ class _SendToWikiSheetState extends State<SendToWikiSheet> {
     setState(() {
       _busy = false;
       _preview = result.value;
-      _error = result.ok ? null : (result.error ?? context.l10n.sendToWikiFailed);
+      _error = result.ok ? null : connectionProblem(context, result, context.l10n.sendToWikiFailed);
     });
   }
 
@@ -64,7 +65,9 @@ class _SendToWikiSheetState extends State<SendToWikiSheet> {
     }
     setState(() {
       _busy = false;
-      _error = value?.error.isNotEmpty == true ? value!.error : (result.error ?? context.l10n.sendToWikiFailed);
+      _error = value?.error.isNotEmpty == true
+          ? value!.error
+          : connectionProblem(context, result, context.l10n.sendToWikiFailed);
     });
   }
 

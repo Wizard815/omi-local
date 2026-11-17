@@ -66,7 +66,12 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
   }
 
   Future<void> _loadAsking() async {
-    final result = await widget.connections.listAgentJobs();
+    final ConnectionResult<List<AgentJob>> result;
+    try {
+      result = await widget.connections.listAgentJobs();
+    } catch (_) {
+      return; // The agents' questions are an extra section; tasks and drafts stand without it.
+    }
     if (!mounted || result.value == null) return;
     setState(() => _asking = result.value!.where((j) => j.waiting).toList());
   }

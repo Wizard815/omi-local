@@ -1,39 +1,25 @@
 import 'dart:convert';
 
-import 'package:omi/backend/http/shared.dart';
+import 'package:omi/backend/http/api_result.dart';
 import 'package:omi/backend/schema/connections.dart';
-import 'package:omi/backend/schema/gen/misc_wire.g.dart' as misc;
 import 'package:omi/backend/schema/gen/self_hosted_wire.g.dart' as wire;
 import 'package:omi/env/env.dart';
-import 'package:omi/utils/logger.dart';
 
-/// A Connections call's value, or the server's message (e.g. "Hermes is off ... (Settings > Connections)").
+/// A Connections call's value, or why it failed (the typed [ApiProblem], never the server's text).
+/// A 409 means the connection is off or has no address or token (Settings > Connections).
 class ConnectionResult<T> {
   final T? value;
-  final String? error;
-  final int? statusCode;
+  final ApiProblem? problem;
 
-  const ConnectionResult.ok(T this.value)
-      : error = null,
-        statusCode = null;
+  const ConnectionResult.ok(T this.value) : problem = null;
 
-  const ConnectionResult.failed(this.error, {this.statusCode}) : value = null;
+  const ConnectionResult.failed(this.problem) : value = null;
 
   bool get ok => value != null;
-}
+  int? get statusCode => problem?.statusCode;
 
-ConnectionResult<T> _decode<T>(dynamic response, T Function(Map<String, dynamic>) parse, String label) {
-  if (response == null) return const ConnectionResult.failed(null);
-  final body = utf8.decode(response.bodyBytes);
-  final int status = response.statusCode;
-  if (status == 200) return ConnectionResult.ok(parse(jsonDecode(body) as Map<String, dynamic>));
-  Logger.debug('$label failed: $status');
-  try {
-    final detail = misc.GeneratedErrorResponse.fromJson(jsonDecode(body) as Map<String, dynamic>).detail;
-    return ConnectionResult.failed(detail is String ? detail : null, statusCode: status);
-  } catch (_) {
-    return ConnectionResult.failed(null, statusCode: status);
-  }
+  /// The target is off or not set up (the server answered 409).
+  bool get notReady => problem?.statusCode == 409;
 }
 
 Future<ConnectionResult<T>> _call<T>(
@@ -41,21 +27,20 @@ Future<ConnectionResult<T>> _call<T>(
   String path,
   T Function(Map<String, dynamic>) parse, {
   Object? body,
-  String label = 'connections',
 }) async {
-  try {
-    final response = await makeApiCall(
+  final result = await executeApi<T>(
+    request: ApiRequest(
       url: '${Env.apiBaseUrl}$path',
-      headers: body == null ? {} : {'Content-Type': 'application/json'},
       method: method,
+      headers: body == null ? const {} : const {'Content-Type': 'application/json'},
       body: body == null ? '' : jsonEncode(body),
-    );
-    return _decode(response, parse, label);
-  } catch (error) {
-    // Not signed in yet, offline, or an unreadable answer: the page shows "could not load".
-    Logger.debug('$label failed: ${error.runtimeType}');
-    return const ConnectionResult.failed(null);
-  }
+    ),
+    decode: (text) => parse(jsonDecode(text) as Map<String, dynamic>),
+  );
+  return switch (result) {
+    ApiSuccess<T>(:final data) => ConnectionResult.ok(data),
+    ApiFailure<T>(:final problem) => ConnectionResult.failed(problem),
+  };
 }
 
 ConnectionsState _state(Map<String, dynamic> json) =>
@@ -65,12 +50,11 @@ ConnectionsState _state(Map<String, dynamic> json) =>
 class ConnectionsApi {
   const ConnectionsApi();
 
-  Future<ConnectionResult<ConnectionsState>> load() =>
-      _call('GET', 'v1/integrations/outbound', _state, label: 'getOutbound');
+  Future<ConnectionResult<ConnectionsState>> load() => _call('GET', 'v1/integrations/outbound', _state);
 
   /// [changes] are the API's own keys for one target; `token` '' clears the stored token.
   Future<ConnectionResult<ConnectionsState>> update(String target, Map<String, Object?> changes) =>
-      _call('PUT', 'v1/integrations/outbound', _state, body: {target: changes}, label: 'updateOutbound');
+      _call('PUT', 'v1/integrations/outbound', _state, body: {target: changes});
 
   Future<ConnectionResult<({bool ok, String error, String detail})>> test(String target) => _call(
         'POST',
@@ -79,14 +63,12 @@ class ConnectionsApi {
           final g = wire.GeneratedOutboundTestResponse.fromJson(json);
           return (ok: g.ok, error: g.error, detail: g.detail);
         },
-        label: 'testOutbound',
       );
 
   Future<ConnectionResult<OutboundPreview>> previewConversation(String conversationId) => _call(
         'GET',
         'v1/conversations/$conversationId/send/preview?target=wiki',
         (json) => OutboundPreview.fromGenerated(wire.GeneratedOutboundPreviewResponse.fromJson(json)),
-        label: 'previewSend',
       );
 
   /// Returns (ok, alreadySent, receipt, error).
@@ -107,7 +89,6 @@ class ConnectionsApi {
           );
         },
         body: {'target': 'wiki', 'revised': revised},
-        label: 'sendConversation',
       );
 
   Future<ConnectionResult<AgentJobPreview>> previewAgentJob(
@@ -128,7 +109,6 @@ class ConnectionsApi {
           'include_transcript': includeTranscript,
           ...context.toJson(),
         },
-        label: 'previewAgentJob',
       );
 
   Future<ConnectionResult<AgentJob>> createAgentJob(
@@ -156,7 +136,6 @@ class ConnectionsApi {
           'attach_result': attachResult,
           ...context.toJson(),
         },
-        label: 'createAgentJob',
       );
 
   Future<ConnectionResult<List<AgentJob>>> listAgentJobs() => _call(
@@ -164,7 +143,6 @@ class ConnectionsApi {
         'v1/agent-jobs',
         (json) =>
             (wire.GeneratedAgentJobsResponse.fromJson(json).jobs ?? const []).map(AgentJob.fromGenerated).toList(),
-        label: 'listAgentJobs',
       );
 
   Future<ConnectionResult<AgentJob>> answerAgentJob(String jobId, String choice) => _call(
@@ -176,7 +154,6 @@ class ConnectionsApi {
           return AgentJob.fromGenerated(job);
         },
         body: {'choice': choice},
-        label: 'answerAgentJob',
       );
 
   Future<ConnectionResult<({String title, String body})>> coinpileDraft({String? conversationId, String? taskId}) {
@@ -191,7 +168,6 @@ class ConnectionsApi {
         final g = wire.GeneratedCoinpileSendRequest.fromJson(json);
         return (title: g.title, body: g.body);
       },
-      label: 'coinpileDraft',
     );
   }
 
@@ -208,7 +184,6 @@ class ConnectionsApi {
             error: g.error,
           );
         },
-        label: 'coinpileAccounts',
       );
 
   Future<ConnectionResult<({bool ok, String answer, String error})>> coinpileSend(Map<String, Object?> request) =>
@@ -220,6 +195,5 @@ class ConnectionsApi {
           return (ok: g.ok, answer: g.answer, error: g.error);
         },
         body: request,
-        label: 'coinpileSend',
       );
 }

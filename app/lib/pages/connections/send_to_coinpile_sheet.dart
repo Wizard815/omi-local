@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:omi/backend/http/api/connections.dart';
 import 'package:omi/backend/schema/connections.dart';
+import 'package:omi/pages/connections/connections_page.dart' show connectionProblem;
 import 'package:omi/ui/ui.dart';
 import 'package:omi/utils/alerts/app_snackbar.dart';
 import 'package:omi/utils/l10n_extensions.dart';
@@ -66,7 +67,7 @@ class _SendToCoinpileSheetState extends State<SendToCoinpileSheet> {
         _title.text = draft.value!.title;
         _body.text = draft.value!.body;
       } else {
-        _error = draft.error;
+        _error = connectionProblem(context, draft, context.l10n.sendToCoinpileFailed);
       }
     });
   }
@@ -77,8 +78,8 @@ class _SendToCoinpileSheetState extends State<SendToCoinpileSheet> {
     if (!mounted) return;
     setState(() {
       _accounts = result.value?.accounts ?? const [];
-      final problem = result.value?.error ?? result.error;
-      if (problem != null && problem.isNotEmpty) _error = problem;
+      final problem = result.value?.error ?? connectionProblem(context, result, context.l10n.sendToCoinpileFailed);
+      if (problem.isNotEmpty) _error = problem;
     });
   }
 
@@ -114,7 +115,9 @@ class _SendToCoinpileSheetState extends State<SendToCoinpileSheet> {
     }
     setState(() {
       _busy = false;
-      _error = value?.error.isNotEmpty == true ? value!.error : (result.error ?? l10n.sendToCoinpileFailed);
+      _error = value?.error.isNotEmpty == true
+          ? value!.error
+          : connectionProblem(context, result, l10n.sendToCoinpileFailed);
     });
   }
 

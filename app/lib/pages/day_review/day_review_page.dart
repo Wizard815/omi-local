@@ -96,7 +96,12 @@ class _DayReviewPageState extends State<DayReviewPage> {
   }
 
   Future<void> _loadConnections() async {
-    final result = await widget.connections.load();
+    final ConnectionResult<ConnectionsState> result;
+    try {
+      result = await widget.connections.load();
+    } catch (_) {
+      return; // Only decides whether kept clips offer Send to wiki; the review works without it.
+    }
     if (!mounted || result.value == null) return;
     final wiki = result.value!['wiki'];
     setState(() => _offerWikiSend = wiki.ready && wiki.text('send_kept_conversations') == 'ask');

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:omi/backend/http/api/connections.dart';
 import 'package:omi/backend/schema/connections.dart';
 import 'package:omi/pages/connections/agent_jobs_page.dart';
-import 'package:omi/pages/connections/connections_page.dart' show studioAgents;
+import 'package:omi/pages/connections/connections_page.dart' show connectionProblem, studioAgents;
 import 'package:omi/ui/ui.dart';
 import 'package:omi/utils/alerts/app_snackbar.dart';
 import 'package:omi/utils/l10n_extensions.dart';
@@ -97,7 +97,7 @@ class _SendToAgentSheetState extends State<SendToAgentSheet> {
       _busy = false;
       _preview = result.value;
       _previewKey = result.ok ? key : null;
-      _error = result.ok ? null : (result.error ?? context.l10n.sendToAgentPreviewFailed);
+      _error = result.ok ? null : connectionProblem(context, result, context.l10n.sendToAgentPreviewFailed);
     });
   }
 
@@ -119,7 +119,9 @@ class _SendToAgentSheetState extends State<SendToAgentSheet> {
     if (job == null || job.status == 'failed') {
       setState(() {
         _busy = false;
-        _error = job?.error.isNotEmpty == true ? job!.error : (result.error ?? context.l10n.sendToAgentFailed);
+        _error = job?.error.isNotEmpty == true
+            ? job!.error
+            : connectionProblem(context, result, context.l10n.sendToAgentFailed);
       });
       return;
     }
