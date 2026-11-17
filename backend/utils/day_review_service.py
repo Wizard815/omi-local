@@ -276,6 +276,10 @@ def present(review: Dict[str, Any]) -> Dict[str, Any]:
         )
     return {
         **review,
+        # The API keeps status 'finalized' (all a released app decodes) and says draft-ness in
+        # `draft`; the stored document keeps status 'draft' until the day is approved.
+        'status': FINALIZED,
+        'draft': is_draft(review),
         'sections': sections,
         'tags': sorted({t for row in sections for t in (row.get('tags') or [])}),
         'final_text': compose_final_text(review.get('summary_text') or '', corrections),
@@ -309,12 +313,16 @@ def _apply_section_tags(uid: str, conversations: Sequence[Conversation], section
                     logging.getLogger(__name__).warning('day review: tagging %s failed: %s', cid, type(error).__name__)
 
 
-def get_day(uid: str, date_str: str) -> Dict[str, Any]:
+def get_day(uid: str, date_str: str, *, include_drafts: bool = True) -> Dict[str, Any]:
+    """The day and its review. ``include_drafts=False`` (what a released app gets) shows a draft
+    day as not reviewed yet: the app offers sorting, and its finalize approves the day."""
     day = parse_date(date_str)
     tz_name = notification_db.get_user_time_zone(uid)
     day_bundle_users_db.mark_active(uid)
     loaded = load_day(uid, day, tz_name)
     review = day_reviews_db.get_day_review(uid, date_str)
+    if review and is_draft(review) and not include_drafts:
+        review = None
 
     def row(conversation: Conversation, *, rolled_up: bool = False, dropped: bool = False) -> Dict[str, Any]:
         structured = conversation.structured
@@ -752,5 +760,6 @@ def pending_dates(uid: str, days: int = 7) -> Dict[str, Any]:
     }
 
 
-def list_reviews(uid: str, limit: int = 30) -> List[Dict[str, Any]]:
-    return [present(r) for r in day_reviews_db.list_day_reviews(uid, limit=limit)]
+def list_reviews(uid: str, limit: int = 30, *, include_drafts: bool = True) -> List[Dict[str, Any]]:
+    reviews = day_reviews_db.list_day_reviews(uid, limit=limit)
+    return [present(r) for r in reviews if include_drafts or not is_draft(r)]

@@ -174,7 +174,8 @@ final approvalScenarios = <AuditScenario>[
         'date': _date,
         'review': {
           'date': _date,
-          'status': 'draft',
+          'status': 'finalized',
+          'draft': true,
           'title': 'A dentist, a practice and grandma\'s 80th',
           'summary_text': text,
           'final_text': text,

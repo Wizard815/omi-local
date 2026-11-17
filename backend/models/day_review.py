@@ -62,9 +62,11 @@ class DayReviewSection(BaseModel):
 
 class DayReview(BaseModel):
     date: str
-    status: Literal['finalized', 'draft'] = Field(
-        default='finalized',
-        description="'draft': written for the user to review, nothing sorted or sent to a calendar yet",
+    status: Literal['finalized'] = 'finalized'
+    draft: bool = Field(
+        default=False,
+        description='Written for the user to review: nothing sorted or sent to a calendar until approved. '
+        'Released clients never see a draft unless they ask (include_drafts=true).',
     )
     title: str = ''
     summary_text: str = Field(default='', description='Model-written summary; correction offsets index this')

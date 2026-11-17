@@ -14707,6 +14707,12 @@
             "title": "Date",
             "type": "string"
           },
+          "draft": {
+            "default": false,
+            "description": "Written for the user to review: nothing sorted or sent to a calendar until approved. Released clients never see a draft unless they ask (include_drafts=true).",
+            "title": "Draft",
+            "type": "boolean"
+          },
           "dropped_conversation_ids": {
             "description": "Dropped as noise (hidden)",
             "items": {
@@ -14769,12 +14775,8 @@
             "type": "array"
           },
           "status": {
+            "const": "finalized",
             "default": "finalized",
-            "description": "'draft': written for the user to review, nothing sorted or sent to a calendar yet",
-            "enum": [
-              "finalized",
-              "draft"
-            ],
             "title": "Status",
             "type": "string"
           },
@@ -81752,6 +81754,18 @@
             }
           },
           {
+            "description": "Also list summary drafts waiting for approval (`draft: true`)",
+            "in": "query",
+            "name": "include_drafts",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Also list summary drafts waiting for approval (`draft: true`)",
+              "title": "Include Drafts",
+              "type": "boolean"
+            }
+          },
+          {
             "in": "header",
             "name": "authorization",
             "required": false,
@@ -81929,6 +81943,18 @@
               "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
               "title": "Date",
               "type": "string"
+            }
+          },
+          {
+            "description": "Return a summary draft as the review (`draft: true`); without it a draft day reads as unsorted",
+            "in": "query",
+            "name": "include_drafts",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Return a summary draft as the review (`draft: true`); without it a draft day reads as unsorted",
+              "title": "Include Drafts",
+              "type": "boolean"
             }
           },
           {

@@ -590,7 +590,7 @@ def get_day_review(
     compact_review = None
     if review:
         compact_review = {
-            'status': review.get('status') or 'finalized',
+            'status': 'draft' if review.get('draft') else 'finalized',
             'title': review.get('title') or '',
             'text': review.get('final_text') or '',
             'tags': list(review.get('tags') or []),

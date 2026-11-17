@@ -38,15 +38,26 @@ def get_pending_day_reviews(days: int = Query(7, ge=1, le=31), uid: str = Depend
 
 
 @router.get('/v1/users/day-reviews', tags=['day-reviews'], response_model=DayReviewsListResponse)
-def list_day_reviews(limit: int = Query(30, ge=1, le=100), uid: str = Depends(auth.get_current_user_uid)):
-    return {'reviews': service.list_reviews(uid, limit=limit)}
+def list_day_reviews(
+    limit: int = Query(30, ge=1, le=100),
+    include_drafts: bool = Query(False, description='Also list summary drafts waiting for approval (`draft: true`)'),
+    uid: str = Depends(auth.get_current_user_uid),
+):
+    return {'reviews': service.list_reviews(uid, limit=limit, include_drafts=include_drafts)}
 
 
 @router.get('/v1/users/day-reviews/{date}', tags=['day-reviews'], response_model=DayReviewDayResponse)
-def get_day_review(date: str = _DATE, uid: str = Depends(auth.get_current_user_uid)):
+def get_day_review(
+    date: str = _DATE,
+    include_drafts: bool = Query(
+        False,
+        description='Return a summary draft as the review (`draft: true`); without it a draft day reads as unsorted',
+    ),
+    uid: str = Depends(auth.get_current_user_uid),
+):
     """The day's conversations (to sort) and its review, if it has one."""
     try:
-        return service.get_day(uid, date)
+        return service.get_day(uid, date, include_drafts=include_drafts)
     except service.DayReviewError as e:
         _raise(e)
 

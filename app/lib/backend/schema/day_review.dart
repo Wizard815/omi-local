@@ -99,9 +99,9 @@ class DayReview {
   final DateTime? generatedAt;
   final int generationCount;
 
-  /// 'draft': written for the user to review (overnight, or "Summarize for me"); nothing sorted or
-  /// sent to a calendar yet. 'finalized': approved.
-  final String status;
+  /// Written for the user to review (overnight, or "Summarize for me"); nothing sorted or sent to a
+  /// calendar until approved. The server says so only when asked (`include_drafts=true`).
+  final bool isDraft;
 
   const DayReview({
     required this.date,
@@ -117,10 +117,8 @@ class DayReview {
     this.droppedConversationIds = const [],
     this.generatedAt,
     this.generationCount = 0,
-    this.status = 'finalized',
+    this.isDraft = false,
   });
-
-  bool get isDraft => status == 'draft';
 
   /// Corrections the summary text does not reflect yet: unapplied paragraphs and
   /// highlights, plus redactions added since the last generation (until then
@@ -145,7 +143,7 @@ class DayReview {
         mergedGroups: (g.mergedGroups ?? const []).map((group) => group.conversationIds ?? const <String>[]).toList(),
         droppedConversationIds: g.droppedConversationIds ?? const [],
         generatedAt: g.generatedAt?.toLocal(),
-        status: g.status,
+        isDraft: g.draft,
         generationCount: g.generationCount,
       );
 }
