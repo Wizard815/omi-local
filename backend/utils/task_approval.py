@@ -23,7 +23,6 @@ from datetime import datetime
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 import database.action_items as action_items_db
-from utils.executors import postprocess_executor, submit_with_context
 from utils.notification_dispatch import dispatch_action_item_reminder
 from utils.task_sync import auto_sync_action_items_batch
 
@@ -135,7 +134,10 @@ def approve(
     current = action_items_db.get_action_item(uid, task_id) or {**item, **update}
     current['id'] = task_id
     if deliver and not was_approved:
-        submit_with_context(postprocess_executor, _deliver, uid, current)
+        # Inside the call, not a detached submit: a restart right after the user's yes would
+        # otherwise lose the reminder and the task app's copy, with nothing to redo them (the
+        # task is approved by then, so it is never delivered again).
+        _deliver(uid, current)
     return current
 
 
