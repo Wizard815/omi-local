@@ -582,3 +582,59 @@ def test_undo_of_an_approval_is_only_for_a_fresh_approval_from_a_draft(bundled):
     service.finalize('u1', DAY, ['budget'])
     with pytest.raises(service.DayReviewError):
         service.undo_approval('u1', DAY)
+
+
+@pytest.fixture
+def outbound(monkeypatch):
+    calls = {'kept': [], 'days': []}
+    monkeypatch.setattr(
+        service.outbound_dispatch, 'conversations_kept', lambda uid, ids, **k: calls['kept'].append(list(ids)) or []
+    )
+    monkeypatch.setattr(
+        service.outbound_dispatch,
+        'day_approved',
+        lambda uid, d, review, by='user', **k: calls['days'].append((d, by)) or [],
+    )
+    return calls
+
+
+def test_keep_one_clip_of_a_draft_only_plans_it(bundled, outbound, marks):
+    convs, reviews, llm, submitted, tagged = bundled
+    service.bundle('u1', DAY)
+    review = service.keep_conversation('u1', DAY, 'lunch', True)
+    assert review['draft'] is True
+    assert 'lunch' in review['kept_conversation_ids'] and 'lunch' not in review['rolled_up_conversation_ids']
+    assert convs['lunch']['starred'] and not convs['lunch']['discarded']
+    assert review['sections'][1]['favorited'] is True  # the Lunch section's only clip is kept
+    assert outbound['kept'] == [] and marks == []  # a draft sends nothing and pushes nothing
+    # Approving keeps it (starred after the draft was written).
+    approved = service.approve('u1', DAY)
+    assert 'lunch' in approved['kept_conversation_ids'] and not convs['lunch']['discarded']
+    assert outbound['days'] == [(DAY, 'user')]
+
+
+def test_keep_one_clip_of_an_approved_day_brings_it_back_and_folds_it_in_again(bundled, outbound, marks):
+    convs, reviews, llm, submitted, tagged = bundled
+    service.bundle('u1', DAY)
+    service.approve('u1', DAY)
+    submitted.clear()
+    assert convs['held-a']['discarded']
+    review = service.keep_conversation('u1', DAY, 'held-a', True)
+    assert not convs['held-a']['discarded'] and convs['held-a']['starred']
+    assert submitted == [('_enrich_held', 'u1', 'held-a')]  # the hold kept it raw: process it now
+    assert review['sections'][0]['favorited'] is False  # held-b of the same section is still rolled up
+    assert review['final_text'].startswith('You talked shop over coffee.')  # the text is not rewritten
+    assert outbound['kept'] == [['held-a']] and marks
+    review = service.keep_conversation('u1', DAY, 'held-b', True)
+    assert review['sections'][0]['favorited'] is True
+    review = service.keep_conversation('u1', DAY, 'held-a', False)
+    assert convs['held-a']['discarded'] and not convs['held-a']['starred']
+    assert 'held-a' in review['rolled_up_conversation_ids'] and review['sections'][0]['favorited'] is False
+    assert service.keep_conversation('u1', DAY, 'held-a', False)['rolled_up_conversation_ids'].count('held-a') == 1
+
+
+def test_keep_refuses_a_clip_that_is_not_in_the_summary(bundled, outbound):
+    service.bundle('u1', DAY)
+    with pytest.raises(service.DayReviewError) as e:
+        service.keep_conversation('u1', DAY, 'auto-discarded', True)
+    assert e.value.status_code == 404

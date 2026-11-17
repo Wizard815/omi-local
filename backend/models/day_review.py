@@ -155,6 +155,12 @@ class FinalizeDayReviewRequest(BaseModel):
         return self
 
 
+class KeepDayReviewConversationRequest(BaseModel):
+    kept: bool = Field(
+        default=True, description='Pull this clip out of the summary as a starred conversation (false folds it back)'
+    )
+
+
 class FavoriteDayReviewSectionRequest(BaseModel):
     favorited: bool = True
 

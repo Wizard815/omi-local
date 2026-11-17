@@ -708,6 +708,60 @@ def favorite_section(uid: str, date_str: str, section_id: str, favorited: bool) 
     return present(review)
 
 
+def keep_conversation(uid: str, date_str: str, conversation_id: str, kept: bool) -> Dict[str, Any]:
+    """Pull one clip out of the day's summary as a starred conversation (``kept``), or fold it back
+    in. On a draft this only plans it (star or unstar); on an approved day the clip comes back
+    (restored, starred, processed if the hold kept it raw) or goes back into the summary
+    (unstarred, discarded). The summary text stays as it is either way. A section whose clips
+    are all kept reads as favorited."""
+    review = _require_review(uid, date_str)
+    kept_ids = list(review.get('kept_conversation_ids') or [])
+    rolled_ids = list(review.get('rolled_up_conversation_ids') or [])
+    if conversation_id not in kept_ids and conversation_id not in rolled_ids:
+        raise DayReviewError(404, 'Not a conversation of this day\'s summary')
+    if (conversation_id in kept_ids) == kept:
+        return present(review)
+    if not conversations_db.get_conversation(uid, conversation_id):
+        raise DayReviewError(404, 'Conversation not found')
+    if is_draft(review):
+        conversations_db.set_conversation_starred(uid, conversation_id, kept)
+    elif kept:
+        lifecycle.restore_discarded(uid, conversation_id)
+        conversations_db.update_conversation(uid, conversation_id, {DAY_REVIEW_DATE_FIELD: None})
+        conversations_db.set_conversation_starred(uid, conversation_id, True)
+        _submit(_enrich_held, uid, conversation_id)
+    else:
+        conversations_db.set_conversation_starred(uid, conversation_id, False)
+        conversations_db.update_conversation(uid, conversation_id, {DAY_REVIEW_DATE_FIELD: date_str})
+        lifecycle.discard(uid, conversation_id)
+    if kept:
+        rolled_ids = [c for c in rolled_ids if c != conversation_id]
+        kept_ids.append(conversation_id)
+    else:
+        kept_ids = [c for c in kept_ids if c != conversation_id]
+        rolled_ids.append(conversation_id)
+    sections = list(review.get('sections') or [])
+    for section in sections:
+        ids = list(section.get('conversation_ids') or [])
+        if conversation_id in ids:
+            section['favorited'] = all(c in kept_ids for c in ids)
+    review.update(
+        {
+            'sections': sections,
+            'kept_conversation_ids': kept_ids,
+            'rolled_up_conversation_ids': rolled_ids,
+            'updated_at': datetime.now(timezone.utc),
+        }
+    )
+    day_reviews_db.set_day_review(uid, date_str, review)
+    if not is_draft(review):
+        caldav_sync.mark_dirty(uid)
+        if kept:
+            # "Send when I keep a clip": the wiki gets it once it is processed (outbound_dispatch).
+            outbound_dispatch.conversations_kept(uid, [conversation_id])
+    return present(review)
+
+
 def _require_review(uid: str, date_str: str) -> Dict[str, Any]:
     parse_date(date_str)
     review = day_reviews_db.get_day_review(uid, date_str)
