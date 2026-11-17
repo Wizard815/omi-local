@@ -1,0 +1,4 @@
+{
+  "kind": "none",
+  "reason": "Analyzer ratchet cleanup: an unused field in the app detail page and two test files. No behavior or UI change."
+}
