@@ -47,7 +47,7 @@ import database.outbound_work as work_db
 from models.conversation import Conversation
 from utils import day_review_service, integrations_out
 from utils.executors import db_executor, run_blocking, start_background_task
-from utils.notifications import send_notification
+from utils.notification_dispatch import dispatch_agent_job
 from utils.outbound_http import OutboundError, error_text, request_ok
 
 logger = logging.getLogger(__name__)
@@ -298,9 +298,7 @@ async def _set(uid: str, job_id: str, **fields: Any) -> None:
 
 def _notify(uid: str, title: str, body: str, job_id: str) -> None:
     try:
-        send_notification(
-            uid, title, body[:240], data={'type': 'agent_job', 'job_id': job_id, 'navigate_to': '/agent-jobs'}
-        )
+        dispatch_agent_job(uid, title, body[:240], job_id)
     except Exception as error:  # noqa: BLE001 — no push configured is fine; the job page shows it
         logger.info('agent_jobs: push for %s not sent: %s', job_id, type(error).__name__)
 
