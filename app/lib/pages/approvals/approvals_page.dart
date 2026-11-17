@@ -87,7 +87,7 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
                     style: OmiType.subhead.copyWith(color: OmiColors.textSecondary),
                   ),
                 ),
-                WaitingTasksSection(controller: _controller, showEmpty: true),
+                WaitingTasksSection(controller: _controller, showEmpty: true, showHeader: false),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: OmiSpacing.md),
                   child: OmiSettingsGroup(

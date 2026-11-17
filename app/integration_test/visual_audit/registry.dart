@@ -4,6 +4,7 @@ import 'package:omi/ui/ui.dart';
 
 import 'fakes.dart';
 import 'harness.dart';
+import 'scenarios/approvals.dart';
 import 'scenarios/apps.dart';
 import 'scenarios/auth.dart';
 import 'scenarios/capture.dart';
@@ -43,6 +44,7 @@ final auditSuite = AuditSuite(
     ...dayReviewScenarios,
     ...dayReviewFamilyScenarios,
     ...familyCalendarScenarios,
+    ...approvalScenarios,
     ...offlineProcessingScenarios,
     ...speakerLabelScenarios,
     ...reviewScenarios,

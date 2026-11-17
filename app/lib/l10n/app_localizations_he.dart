@@ -15760,7 +15760,7 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get caldavSettingsIntro =>
-      'Your tasks, day summaries and conversation events sync with a CalDAV server every hour, and the calendar comes back into Omi. The server bundled with your stack is used until you set your own.';
+      'Your approved tasks, day summaries and calendar events sync with a CalDAV server within seconds of a change, and the calendar comes back into Omi. The server bundled with your stack is used until you set your own.';
 
   @override
   String get caldavServerUrl => 'Server URL';
