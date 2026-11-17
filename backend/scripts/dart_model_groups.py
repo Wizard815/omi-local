@@ -272,6 +272,10 @@ SCHEMA_GROUPS = {
             'ApproveBatchResponse',
             'UndoApproveBatchRequest',
             'UndoApproveBatchResponse',
+            # Agent jobs whose agent asks before it goes on (Send to agent, omi-local).
+            'AgentJobSection',
+            'AgentJobApproval',
+            'AgentJob',
         ),
     },
     'task_intelligence': {

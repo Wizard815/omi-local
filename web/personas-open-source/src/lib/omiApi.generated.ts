@@ -234,6 +234,66 @@ export interface AdviceResponse {
   advice: string;
 }
 
+export interface AgentJob {
+  agent_id?: string;
+  approval?: AgentJobApproval | null;
+  attach_result?: boolean;
+  conversation_ids?: Array<string>;
+  created_at?: string | null;
+  error?: string;
+  external_id?: string;
+  finished_at?: string | null;
+  id: string;
+  prompt?: string;
+  result?: string;
+  section?: AgentJobSection | null;
+  status?: "queued" | "running" | "waiting_for_approval" | "completed" | "failed" | "cancelled";
+  target: "odysseus" | "hermes" | "studio";
+  task_id?: string | null;
+  title?: string;
+  updated_at?: string | null;
+}
+
+export interface AgentJobApproval {
+  choices?: Array<string>;
+  command?: string;
+  description?: string;
+  request_id?: string;
+}
+
+export interface AgentJobPreviewRequest {
+  agent_id?: "ekko-agent" | "hermes" | "claude-code" | "codex" | "pi" | "grok" | "opencode" | null;
+  conversation_ids?: Array<string>;
+  include_transcript?: boolean;
+  prompt?: string;
+  section?: AgentJobSection | null;
+  target: "odysseus" | "hermes" | "studio";
+  task_id?: string | null;
+}
+
+export interface AgentJobPreviewResponse {
+  content?: string;
+  destination?: string;
+  suggested_target?: "odysseus" | "hermes" | "studio";
+  target: string;
+  title?: string;
+}
+
+export interface AgentJobResponse {
+  error?: string;
+  job?: AgentJob | null;
+  ok: boolean;
+}
+
+export interface AgentJobSection {
+  date: string;
+  section_id: string;
+}
+
+export interface AgentJobsResponse {
+  jobs?: Array<AgentJob>;
+}
+
 export interface AgentProposalAnswer {
   decision: "accept" | "dismiss";
 }
@@ -278,6 +338,10 @@ export interface AnnouncementDeleteResponse {
 }
 
 export type AnnouncementType = "changelog" | "feature" | "announcement";
+
+export interface AnswerAgentApprovalRequest {
+  choice: "once" | "deny";
+}
 
 export interface App {
   approved?: boolean;
@@ -1585,6 +1649,48 @@ export interface ClientProcessing {
   transcript_sha256: string;
 }
 
+export interface CoinpileAccount {
+  id: string;
+  name?: string;
+  type?: string;
+}
+
+export interface CoinpileAccountsResponse {
+  accounts?: Array<CoinpileAccount>;
+  error?: string;
+}
+
+export interface CoinpileOutboundSettings {
+  enabled?: boolean;
+  has_token?: boolean;
+  last_check_at?: string | null;
+  last_check_error?: string;
+  last_check_ok?: boolean | null;
+  own_url?: string;
+  token_from_env?: boolean;
+  url?: string;
+  url_from_env?: boolean;
+}
+
+export interface CoinpileSendRequest {
+  account_id?: string | null;
+  amount?: number | null;
+  body?: string;
+  category?: string | null;
+  conversation_id?: string | null;
+  date?: string | null;
+  description?: string | null;
+  kind?: "note" | "transaction";
+  task_id?: string | null;
+  title?: string;
+}
+
+export interface CoinpileSendResponse {
+  answer?: string;
+  error?: string;
+  ok: boolean;
+}
+
 export interface ColdStartSequence {
   sequence_id: string;
   step: number;
@@ -2024,6 +2130,18 @@ export interface CreateActionItemRequest {
   due_at?: string | null;
 }
 
+export interface CreateAgentJobRequest {
+  agent_id?: "ekko-agent" | "hermes" | "claude-code" | "codex" | "pi" | "grok" | "opencode" | null;
+  attach_result?: boolean;
+  conversation_ids?: Array<string>;
+  include_transcript?: boolean;
+  prompt?: string;
+  section?: AgentJobSection | null;
+  target: "odysseus" | "hermes" | "studio";
+  task_id?: string | null;
+  title?: string;
+}
+
 export interface CreateAnnouncementRequest {
   active?: boolean;
   app_version?: string | null;
@@ -2321,6 +2439,7 @@ export interface DayReview {
   generation_count?: number;
   kept_conversation_ids?: Array<string>;
   merged_groups?: Array<DayReviewMergeGroup>;
+  outbound_receipts?: Array<OutboundReceipt>;
   rolled_up_conversation_ids?: Array<string>;
   sections?: Array<DayReviewSection>;
   status?: "finalized";
@@ -3542,6 +3661,18 @@ export interface HeldAudioSummary {
   state?: "paused" | "recovering";
 }
 
+export interface HermesOutboundSettings {
+  enabled?: boolean;
+  has_token?: boolean;
+  last_check_at?: string | null;
+  last_check_error?: string;
+  last_check_ok?: boolean | null;
+  own_url?: string;
+  token_from_env?: boolean;
+  url?: string;
+  url_from_env?: boolean;
+}
+
 export interface HiddenNoiseCountsResponse {
   days: Array<HiddenNoiseDayCount>;
   end_date: string;
@@ -3666,6 +3797,10 @@ export interface InterventionRecord {
 }
 
 export type InterventionSurface = "suggested" | "what_matters_now";
+
+export interface KeepDayReviewConversationRequest {
+  kept?: boolean;
+}
 
 export interface KnowledgeGraphResponse {
   edge_count?: number;
@@ -4330,6 +4465,21 @@ export interface OAuthUrlResponse {
   auth_url: string;
 }
 
+export interface OdysseusOutboundSettings {
+  enabled?: boolean;
+  endpoint_id?: string;
+  has_token?: boolean;
+  last_check_at?: string | null;
+  last_check_error?: string;
+  last_check_ok?: boolean | null;
+  model?: string;
+  own_url?: string;
+  session_id?: string;
+  token_from_env?: boolean;
+  url?: string;
+  url_from_env?: boolean;
+}
+
 export type OfflineQueueInstruction = "none" | "drain" | "quarantine";
 
 export interface OnboardingStateResponse {
@@ -4392,6 +4542,55 @@ export interface OpenLoopSnapshot {
 }
 
 export type OpenLoopStatus = "open" | "blocked" | "awaiting_user" | "awaiting_external";
+
+export interface OrbOutboundSettings {
+  enabled?: boolean;
+  has_token?: boolean;
+  last_check_at?: string | null;
+  last_check_error?: string;
+  last_check_ok?: boolean | null;
+  log_day_approvals?: boolean;
+  own_url?: string;
+  project?: string;
+  require_manual_approval?: boolean;
+  token_from_env?: boolean;
+  url?: string;
+  url_from_env?: boolean;
+}
+
+export interface OutboundIntegrationsResponse {
+  coinpile?: CoinpileOutboundSettings;
+  conversation_webhook_to_wiki?: boolean;
+  hermes?: HermesOutboundSettings;
+  odysseus?: OdysseusOutboundSettings;
+  orb?: OrbOutboundSettings;
+  studio?: StudioOutboundSettings;
+  wiki?: WikiOutboundSettings;
+}
+
+export interface OutboundPreviewResponse {
+  content?: string;
+  destination?: string;
+  receipts?: Array<OutboundReceipt>;
+  target: string;
+  title?: string;
+}
+
+export interface OutboundReceipt {
+  detail?: string;
+  error?: string;
+  revision?: number;
+  scheduled_at?: string | null;
+  sent_at?: string | null;
+  target: string;
+  title?: string;
+}
+
+export interface OutboundTestResponse {
+  detail?: string;
+  error?: string;
+  ok: boolean;
+}
 
 export interface OutcomeCreate {
   attribution_chain_id: string;
@@ -5496,6 +5695,18 @@ export interface SeenRequest {
   ids?: Array<string>;
 }
 
+export interface SendConversationRequest {
+  revised?: boolean;
+  target?: "wiki";
+}
+
+export interface SendConversationResponse {
+  already_sent?: boolean;
+  error?: string;
+  ok: boolean;
+  receipt?: OutboundReceipt | null;
+}
+
 export interface SendMessageRequest {
   context?: PageContext | null;
   device_tools?: Array<string> | null;
@@ -6080,6 +6291,22 @@ export interface Structured {
 
 export interface SttAvailabilityResponse {
   available: boolean;
+}
+
+export interface StudioOutboundSettings {
+  default_agent?: "ekko-agent" | "hermes" | "claude-code" | "codex" | "pi" | "grok" | "opencode";
+  enabled?: boolean;
+  has_token?: boolean;
+  has_webhook_secret?: boolean;
+  last_check_at?: string | null;
+  last_check_error?: string;
+  last_check_ok?: boolean | null;
+  own_url?: string;
+  token_from_env?: boolean;
+  url?: string;
+  url_from_env?: boolean;
+  webhook_path?: string;
+  workspace?: string;
 }
 
 export type SubjectAttribution = "user" | "third_party" | "unknown" | "legacy_assumed";
@@ -6783,14 +7010,67 @@ export interface UpdateNotificationSettingsRequest {
   frequency?: number | null;
 }
 
+export interface UpdateOdysseusOutbound {
+  enabled?: boolean | null;
+  endpoint_id?: string | null;
+  model?: string | null;
+  session_id?: string | null;
+  token?: string | null;
+  url?: string | null;
+}
+
+export interface UpdateOrbOutbound {
+  enabled?: boolean | null;
+  log_day_approvals?: boolean | null;
+  project?: string | null;
+  require_manual_approval?: boolean | null;
+  token?: string | null;
+  url?: string | null;
+}
+
+export interface UpdateOutboundIntegrationsRequest {
+  coinpile?: UpdateOutboundTarget | null;
+  hermes?: UpdateOutboundTarget | null;
+  odysseus?: UpdateOdysseusOutbound | null;
+  orb?: UpdateOrbOutbound | null;
+  studio?: UpdateStudioOutbound | null;
+  wiki?: UpdateWikiOutbound | null;
+}
+
+export interface UpdateOutboundTarget {
+  enabled?: boolean | null;
+  token?: string | null;
+  url?: string | null;
+}
+
 export interface UpdateSegmentTextRequest {
   segment_id: string;
   text: string;
 }
 
+export interface UpdateStudioOutbound {
+  default_agent?: "ekko-agent" | "hermes" | "claude-code" | "codex" | "pi" | "grok" | "opencode" | null;
+  enabled?: boolean | null;
+  token?: string | null;
+  url?: string | null;
+  webhook_secret?: string | null;
+  workspace?: string | null;
+}
+
 export interface UpdateSummaryRequest {
   app_id?: string | null;
   content: string;
+}
+
+export interface UpdateWikiOutbound {
+  enabled?: boolean | null;
+  include_transcript?: boolean | null;
+  person?: string | null;
+  require_manual_approval?: boolean | null;
+  send_day_reviews?: boolean | null;
+  send_kept_conversations?: "off" | "ask" | "on_keep" | null;
+  token?: string | null;
+  url?: string | null;
 }
 
 export interface UpgradeSubscriptionRequest {
@@ -6977,6 +7257,7 @@ export interface VoiceProfileSettingsUpdate {
 export type VoiceReadiness = "ready" | "saved_sample_awaiting_embedding" | "not_learned" | "unknown";
 
 export interface WaitingForApprovalResponse {
+  agent_jobs?: Array<AgentJob>;
   auto_approve?: boolean;
   auto_approve_time?: string;
   draft_dates?: Array<string>;
@@ -7001,6 +7282,23 @@ export interface WhatMattersNowProjection {
   output_version: string;
   recommendations: Array<Recommendation>;
   schema_version?: 1;
+}
+
+export interface WikiOutboundSettings {
+  enabled?: boolean;
+  has_token?: boolean;
+  include_transcript?: boolean;
+  last_check_at?: string | null;
+  last_check_error?: string;
+  last_check_ok?: boolean | null;
+  own_url?: string;
+  person?: string;
+  require_manual_approval?: boolean;
+  send_day_reviews?: boolean;
+  send_kept_conversations?: "off" | "ask" | "on_keep";
+  token_from_env?: boolean;
+  url?: string;
+  url_from_env?: boolean;
 }
 
 export interface WorkIntentReceipt {
@@ -7191,6 +7489,13 @@ export interface OmiApiSchemas {
   "AdmitResult": AdmitResult;
   "AdviceAssistantSettings": AdviceAssistantSettings;
   "AdviceResponse": AdviceResponse;
+  "AgentJob": AgentJob;
+  "AgentJobApproval": AgentJobApproval;
+  "AgentJobPreviewRequest": AgentJobPreviewRequest;
+  "AgentJobPreviewResponse": AgentJobPreviewResponse;
+  "AgentJobResponse": AgentJobResponse;
+  "AgentJobSection": AgentJobSection;
+  "AgentJobsResponse": AgentJobsResponse;
   "AgentProposalAnswer": AgentProposalAnswer;
   "AgentProposalItem": AgentProposalItem;
   "AgentToolSchema": AgentToolSchema;
@@ -7198,6 +7503,7 @@ export interface OmiApiSchemas {
   "Announcement": Announcement;
   "AnnouncementDeleteResponse": AnnouncementDeleteResponse;
   "AnnouncementType": AnnouncementType;
+  "AnswerAgentApprovalRequest": AnswerAgentApprovalRequest;
   "App": App;
   "AppApiKeyResponse": AppApiKeyResponse;
   "AppBaseModel": AppBaseModel;
@@ -7372,6 +7678,11 @@ export interface OmiApiSchemas {
   "ClientFlag": ClientFlag;
   "ClientFlagsResponse": ClientFlagsResponse;
   "ClientProcessing": ClientProcessing;
+  "CoinpileAccount": CoinpileAccount;
+  "CoinpileAccountsResponse": CoinpileAccountsResponse;
+  "CoinpileOutboundSettings": CoinpileOutboundSettings;
+  "CoinpileSendRequest": CoinpileSendRequest;
+  "CoinpileSendResponse": CoinpileSendResponse;
   "ColdStartSequence": ColdStartSequence;
   "ColdStartSequenceTerminalReceipt": ColdStartSequenceTerminalReceipt;
   "ConnectorAccess": ConnectorAccess;
@@ -7422,6 +7733,7 @@ export interface OmiApiSchemas {
   "ConversationVisibility": ConversationVisibility;
   "ConversationsCountResponse": ConversationsCountResponse;
   "CreateActionItemRequest": CreateActionItemRequest;
+  "CreateAgentJobRequest": CreateAgentJobRequest;
   "CreateAnnouncementRequest": CreateAnnouncementRequest;
   "CreateCalDavCollectionRequest": CreateCalDavCollectionRequest;
   "CreateChatSessionRequest": CreateChatSessionRequest;
@@ -7609,6 +7921,7 @@ export interface OmiApiSchemas {
   "HasSpeechProfileResponse": HasSpeechProfileResponse;
   "HeldAudioRecording": HeldAudioRecording;
   "HeldAudioSummary": HeldAudioSummary;
+  "HermesOutboundSettings": HermesOutboundSettings;
   "HiddenNoiseCountsResponse": HiddenNoiseCountsResponse;
   "HiddenNoiseDayCount": HiddenNoiseDayCount;
   "HomeFeedCard": HomeFeedCard;
@@ -7627,6 +7940,7 @@ export interface OmiApiSchemas {
   "InterventionCreate": InterventionCreate;
   "InterventionRecord": InterventionRecord;
   "InterventionSurface": InterventionSurface;
+  "KeepDayReviewConversationRequest": KeepDayReviewConversationRequest;
   "KnowledgeGraphResponse": KnowledgeGraphResponse;
   "LearnedMemoryRef": LearnedMemoryRef;
   "LedgerWriteReason": LedgerWriteReason;
@@ -7716,6 +8030,7 @@ export interface OmiApiSchemas {
   "NoteEvidenceRef": NoteEvidenceRef;
   "NotificationSettingsResponse": NotificationSettingsResponse;
   "OAuthUrlResponse": OAuthUrlResponse;
+  "OdysseusOutboundSettings": OdysseusOutboundSettings;
   "OfflineQueueInstruction": OfflineQueueInstruction;
   "OnboardingStateResponse": OnboardingStateResponse;
   "OnboardingStateUpdate": OnboardingStateUpdate;
@@ -7727,6 +8042,11 @@ export interface OmiApiSchemas {
   "OpenLoopKind": OpenLoopKind;
   "OpenLoopSnapshot": OpenLoopSnapshot;
   "OpenLoopStatus": OpenLoopStatus;
+  "OrbOutboundSettings": OrbOutboundSettings;
+  "OutboundIntegrationsResponse": OutboundIntegrationsResponse;
+  "OutboundPreviewResponse": OutboundPreviewResponse;
+  "OutboundReceipt": OutboundReceipt;
+  "OutboundTestResponse": OutboundTestResponse;
   "OutcomeCreate": OutcomeCreate;
   "OutcomeRecord": OutcomeRecord;
   "OverageInfoResponse": OverageInfoResponse;
@@ -7870,6 +8190,8 @@ export interface OmiApiSchemas {
   "SearchedMemory": SearchedMemory;
   "Section": Section;
   "SeenRequest": SeenRequest;
+  "SendConversationRequest": SendConversationRequest;
+  "SendConversationResponse": SendConversationResponse;
   "SendMessageRequest": SendMessageRequest;
   "SendShareEmailRequest": SendShareEmailRequest;
   "SendShareEmailResponse": SendShareEmailResponse;
@@ -7951,6 +8273,7 @@ export interface OmiApiSchemas {
   "StripeSupportedCountryResponse": StripeSupportedCountryResponse;
   "Structured": Structured;
   "SttAvailabilityResponse": SttAvailabilityResponse;
+  "StudioOutboundSettings": StudioOutboundSettings;
   "SubjectAttribution": SubjectAttribution;
   "Subscription": Subscription;
   "SubscriptionPlan": SubscriptionPlan;
@@ -8047,8 +8370,14 @@ export interface OmiApiSchemas {
   "UpdateGoalRequest": UpdateGoalRequest;
   "UpdateMemoryRequest": UpdateMemoryRequest;
   "UpdateNotificationSettingsRequest": UpdateNotificationSettingsRequest;
+  "UpdateOdysseusOutbound": UpdateOdysseusOutbound;
+  "UpdateOrbOutbound": UpdateOrbOutbound;
+  "UpdateOutboundIntegrationsRequest": UpdateOutboundIntegrationsRequest;
+  "UpdateOutboundTarget": UpdateOutboundTarget;
   "UpdateSegmentTextRequest": UpdateSegmentTextRequest;
+  "UpdateStudioOutbound": UpdateStudioOutbound;
   "UpdateSummaryRequest": UpdateSummaryRequest;
+  "UpdateWikiOutbound": UpdateWikiOutbound;
   "UpgradeSubscriptionRequest": UpgradeSubscriptionRequest;
   "UsageHistoryPoint": UsageHistoryPoint;
   "UsagePeriod": UsagePeriod;
@@ -8076,6 +8405,7 @@ export interface OmiApiSchemas {
   "WebSearchAssistantSettings": WebSearchAssistantSettings;
   "WebhookType": WebhookType;
   "WhatMattersNowProjection": WhatMattersNowProjection;
+  "WikiOutboundSettings": WikiOutboundSettings;
   "WorkIntentReceipt": WorkIntentReceipt;
   "Workstream": Workstream;
   "WorkstreamCreateCandidate": WorkstreamCreateCandidate;
@@ -8281,6 +8611,55 @@ export interface OmiApiPaths {
         "200": ActionItemResponse;
         "401": void;
         "404": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/agent-jobs": {
+    get: {
+      operationId: "list_agent_jobs_v1_agent_jobs_get";
+      responses: {
+        "200": AgentJobsResponse;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+    post: {
+      operationId: "create_agent_job_v1_agent_jobs_post";
+      responses: {
+        "200": AgentJobResponse;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/agent-jobs/preview": {
+    post: {
+      operationId: "preview_agent_job_v1_agent_jobs_preview_post";
+      responses: {
+        "200": AgentJobPreviewResponse;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/agent-jobs/{job_id}": {
+    get: {
+      operationId: "get_agent_job_v1_agent_jobs__job_id__get";
+      responses: {
+        "200": AgentJob;
+        "401": void;
+        "404": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/agent-jobs/{job_id}/approval": {
+    post: {
+      operationId: "answer_agent_job_approval_v1_agent_jobs__job_id__approval_post";
+      responses: {
+        "200": AgentJobResponse;
+        "401": void;
         "422": HTTPValidationError;
       };
     };
@@ -9729,6 +10108,27 @@ export interface OmiApiPaths {
       };
     };
   };
+  "/v1/conversations/{conversation_id}/send": {
+    post: {
+      operationId: "send_conversation_v1_conversations__conversation_id__send_post";
+      responses: {
+        "200": SendConversationResponse;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/conversations/{conversation_id}/send/preview": {
+    get: {
+      operationId: "preview_send_conversation_v1_conversations__conversation_id__send_preview_get";
+      responses: {
+        "200": OutboundPreviewResponse;
+        "401": void;
+        "404": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
   "/v1/conversations/{conversation_id}/share-email": {
     post: {
       operationId: "send_conversation_share_email_v1_conversations__conversation_id__share_email_post";
@@ -10869,11 +11269,69 @@ export interface OmiApiPaths {
       };
     };
   };
+  "/v1/integrations/coinpile/accounts": {
+    get: {
+      operationId: "coinpile_accounts_v1_integrations_coinpile_accounts_get";
+      responses: {
+        "200": CoinpileAccountsResponse;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/integrations/coinpile/draft": {
+    get: {
+      operationId: "coinpile_draft_v1_integrations_coinpile_draft_get";
+      responses: {
+        "200": CoinpileSendRequest;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/integrations/coinpile/send": {
+    post: {
+      operationId: "coinpile_send_v1_integrations_coinpile_send_post";
+      responses: {
+        "200": CoinpileSendResponse;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
   "/v1/integrations/notification": {
     post: {
       operationId: "send_app_notification_to_user_v1_integrations_notification_post";
       responses: {
         "200": IntegrationNotificationResponse;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/integrations/outbound": {
+    get: {
+      operationId: "get_outbound_integrations_v1_integrations_outbound_get";
+      responses: {
+        "200": OutboundIntegrationsResponse;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+    put: {
+      operationId: "update_outbound_integrations_v1_integrations_outbound_put";
+      responses: {
+        "200": OutboundIntegrationsResponse;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/integrations/outbound/{target}/test": {
+    post: {
+      operationId: "test_outbound_integration_v1_integrations_outbound__target__test_post";
+      responses: {
+        "200": OutboundTestResponse;
         "401": void;
         "422": HTTPValidationError;
       };
@@ -12494,6 +12952,16 @@ export interface OmiApiPaths {
   "/v1/users/day-reviews/{date}/bundle": {
     post: {
       operationId: "bundle_day_v1_users_day_reviews__date__bundle_post";
+      responses: {
+        "200": DayReview;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/users/day-reviews/{date}/conversations/{conversation_id}/keep": {
+    post: {
+      operationId: "keep_day_review_conversation_v1_users_day_reviews__date__conversations__conversation_id__keep_post";
       responses: {
         "200": DayReview;
         "401": void;
@@ -14397,6 +14865,110 @@ export async function toggle_action_item_completion_v1_action_items__action_item
       ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
       ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
     },
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function list_agent_jobs_v1_agent_jobs_get(query: { limit?: number }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<AgentJobsResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/agent-jobs`;
+  const _params = query ? Object.entries(query)
+    .filter(([, v]) => v !== undefined && v !== null)
+    .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`).join('&') : '';
+  const _search = _params ? `?${_params}` : "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "GET",
+    headers: {
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function create_agent_job_v1_agent_jobs_post(header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, body: CreateAgentJobRequest, init?: OmiApiClientInit): Promise<AgentJobResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/agent-jobs`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "POST",
+    headers: {
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function preview_agent_job_v1_agent_jobs_preview_post(header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, body: AgentJobPreviewRequest, init?: OmiApiClientInit): Promise<AgentJobPreviewResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/agent-jobs/preview`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "POST",
+    headers: {
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function get_agent_job_v1_agent_jobs__job_id__get(path: { job_id: string }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<AgentJob> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/agent-jobs/${path.job_id}`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "GET",
+    headers: {
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function answer_agent_job_approval_v1_agent_jobs__job_id__approval_post(path: { job_id: string }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, body: AnswerAgentApprovalRequest, init?: OmiApiClientInit): Promise<AgentJobResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/agent-jobs/${path.job_id}/approval`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "POST",
+    headers: {
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
   });
   if (!_res.ok) throw new OmiApiError(_res.status, _res);
   return _res.status === 204 ? (undefined as any) : await _res.json();
@@ -17261,6 +17833,49 @@ export async function set_assignee_conversation_segment_v1_conversations__conver
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
+export async function send_conversation_v1_conversations__conversation_id__send_post(path: { conversation_id: string }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, body: SendConversationRequest, init?: OmiApiClientInit): Promise<SendConversationResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/conversations/${path.conversation_id}/send`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "POST",
+    headers: {
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function preview_send_conversation_v1_conversations__conversation_id__send_preview_get(path: { conversation_id: string }, query: { target?: string }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<OutboundPreviewResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/conversations/${path.conversation_id}/send/preview`;
+  const _params = query ? Object.entries(query)
+    .filter(([, v]) => v !== undefined && v !== null)
+    .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`).join('&') : '';
+  const _search = _params ? `?${_params}` : "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "GET",
+    headers: {
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
 export async function send_conversation_share_email_v1_conversations__conversation_id__share_email_post(path: { conversation_id: string }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, body: SendShareEmailRequest, init?: OmiApiClientInit): Promise<SendShareEmailResponse> {
   const _base = init?.baseURL ?? "";
   const _path = `/v1/conversations/${path.conversation_id}/share-email`;
@@ -19484,6 +20099,68 @@ export async function sync_apple_health_data_v1_integrations_apple_health_sync_p
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
+export async function coinpile_accounts_v1_integrations_coinpile_accounts_get(header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<CoinpileAccountsResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/integrations/coinpile/accounts`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "GET",
+    headers: {
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function coinpile_draft_v1_integrations_coinpile_draft_get(query: { conversation_id?: string, task_id?: string }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<CoinpileSendRequest> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/integrations/coinpile/draft`;
+  const _params = query ? Object.entries(query)
+    .filter(([, v]) => v !== undefined && v !== null)
+    .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`).join('&') : '';
+  const _search = _params ? `?${_params}` : "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "GET",
+    headers: {
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function coinpile_send_v1_integrations_coinpile_send_post(header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, body: CoinpileSendRequest, init?: OmiApiClientInit): Promise<CoinpileSendResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/integrations/coinpile/send`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "POST",
+    headers: {
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
 export async function send_app_notification_to_user_v1_integrations_notification_post(header: { authorization?: string | null }, body: Record<string, unknown>, init?: OmiApiClientInit): Promise<IntegrationNotificationResponse> {
   const _base = init?.baseURL ?? "";
   const _path = `/v1/integrations/notification`;
@@ -19497,6 +20174,65 @@ export async function send_app_notification_to_user_v1_integrations_notification
       ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
     },
     body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function get_outbound_integrations_v1_integrations_outbound_get(header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<OutboundIntegrationsResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/integrations/outbound`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "GET",
+    headers: {
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function update_outbound_integrations_v1_integrations_outbound_put(header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, body: UpdateOutboundIntegrationsRequest, init?: OmiApiClientInit): Promise<OutboundIntegrationsResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/integrations/outbound`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "PUT",
+    headers: {
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function test_outbound_integration_v1_integrations_outbound__target__test_post(path: { target: string }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<OutboundTestResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/integrations/outbound/${path.target}/test`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "POST",
+    headers: {
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
   });
   if (!_res.ok) throw new OmiApiError(_res.status, _res);
   return _res.status === 204 ? (undefined as any) : await _res.json();
@@ -22595,6 +23331,27 @@ export async function bundle_day_v1_users_day_reviews__date__bundle_post(path: {
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
+export async function keep_day_review_conversation_v1_users_day_reviews__date__conversations__conversation_id__keep_post(path: { conversation_id: string, date: string }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, body: KeepDayReviewConversationRequest, init?: OmiApiClientInit): Promise<DayReview> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/users/day-reviews/${path.date}/conversations/${path.conversation_id}/keep`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "POST",
+    headers: {
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
 export async function add_day_review_correction_v1_users_day_reviews__date__corrections_post(path: { date: string }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, body: CreateDayReviewCorrectionRequest, init?: OmiApiClientInit): Promise<DayReview> {
   const _base = init?.baseURL ?? "";
   const _path = `/v1/users/day-reviews/${path.date}/corrections`;
@@ -25682,4 +26439,4 @@ export async function get_speech_profile_v4_speech_profile_get(header: { authori
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
-// Total: 586 client methods generated.
+// Total: 600 client methods generated.
