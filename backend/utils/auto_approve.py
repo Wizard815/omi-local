@@ -23,7 +23,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import database.approval_settings as approval_db
 import database.notifications as notification_db
-from utils import day_review_service, family_calendar, task_approval
+from utils import agent_jobs, day_review_service, family_calendar, outbound_dispatch, task_approval
 from utils.caldav import sync as caldav_sync
 from utils.executors import db_executor, run_blocking
 
@@ -79,7 +79,8 @@ def approve_past_days(uid: str, today: str) -> List[str]:
         if date_str >= today:
             continue
         try:
-            day_review_service.approve(uid, date_str)
+            # Auto-approved: a Connection sends it only where the user allowed that (outbound_dispatch).
+            day_review_service.approve(uid, date_str, approved_by=outbound_dispatch.APPROVED_BY_AUTO)
         except day_review_service.DayReviewError as error:
             logger.warning('auto_approve: day %s %s: %s', uid, date_str, error.message)
             continue
@@ -118,7 +119,13 @@ def waiting_summary(uid: str) -> Dict[str, Any]:
     events, _ = family_calendar.pending(uid)
     days = day_review_service.pending_dates(uid, days=7)
     settings = approval_db.get_settings(uid)
+    try:
+        asking = agent_jobs.waiting(uid)
+    except Exception as error:  # noqa: BLE001 — the banner stands without the agents' questions
+        logger.warning('waiting_summary: agent jobs unreadable for %s: %s', uid, type(error).__name__)
+        asking = []
     return {
+        'agent_jobs': asking,
         'tasks': tasks,
         'task_count': len(tasks),
         'event_count': len(events),

@@ -207,6 +207,7 @@ class GeneratedDayReview {
   final int generationCount;
   final List<String>? keptConversationIds;
   final List<GeneratedDayReviewMergeGroup>? mergedGroups;
+  final List<GeneratedOutboundReceipt>? outboundReceipts;
   final List<String>? rolledUpConversationIds;
   final List<GeneratedDayReviewSection>? sections;
   final String status;
@@ -229,6 +230,7 @@ class GeneratedDayReview {
     this.generationCount = 0,
     this.keptConversationIds,
     this.mergedGroups,
+    this.outboundReceipts,
     this.rolledUpConversationIds,
     this.sections,
     this.status = "finalized",
@@ -253,6 +255,7 @@ class GeneratedDayReview {
       generationCount: _required(_readFieldValue<int>(_readField(json, const ["generation_count"]), "generation_count", _readInt, requiredField: false, nullable: false, defaultValue: 0), "generation_count"),
       keptConversationIds: _readFieldValue<List<String>>(_readField(json, const ["kept_conversation_ids"]), "kept_conversation_ids", _readStringList, requiredField: false, nullable: true),
       mergedGroups: _readFieldValue<List<GeneratedDayReviewMergeGroup>>(_readField(json, const ["merged_groups"]), "merged_groups", (value) => _readObjectList(value, GeneratedDayReviewMergeGroup.fromJson), requiredField: false, nullable: true),
+      outboundReceipts: _readFieldValue<List<GeneratedOutboundReceipt>>(_readField(json, const ["outbound_receipts"]), "outbound_receipts", (value) => _readObjectList(value, GeneratedOutboundReceipt.fromJson), requiredField: false, nullable: true),
       rolledUpConversationIds: _readFieldValue<List<String>>(_readField(json, const ["rolled_up_conversation_ids"]), "rolled_up_conversation_ids", _readStringList, requiredField: false, nullable: true),
       sections: _readFieldValue<List<GeneratedDayReviewSection>>(_readField(json, const ["sections"]), "sections", (value) => _readObjectList(value, GeneratedDayReviewSection.fromJson), requiredField: false, nullable: true),
       status: _required(_readFieldValue<String>(_readField(json, const ["status"]), "status", _readString, requiredField: false, nullable: false, defaultValue: "finalized"), "status"),
@@ -278,6 +281,7 @@ class GeneratedDayReview {
       'generation_count': generationCount,
       'kept_conversation_ids': keptConversationIds,
       'merged_groups': mergedGroups?.map((value) => value.toJson()).toList(),
+      'outbound_receipts': outboundReceipts?.map((value) => value.toJson()).toList(),
       'rolled_up_conversation_ids': rolledUpConversationIds,
       'sections': sections?.map((value) => value.toJson()).toList(),
       'status': status,
@@ -1286,6 +1290,1318 @@ class GeneratedFamilyCalendarEventResponse {
       'error': error,
       'event': event?.toJson(),
       'ok': ok,
+    };
+  }
+}
+
+class GeneratedKeepDayReviewConversationRequest {
+  final bool kept;
+
+  const GeneratedKeepDayReviewConversationRequest({
+    this.kept = true,
+  });
+
+  factory GeneratedKeepDayReviewConversationRequest.fromJson(Map<String, dynamic> json) {
+    return GeneratedKeepDayReviewConversationRequest(
+      kept: _required(_readFieldValue<bool>(_readField(json, const ["kept"]), "kept", _readBool, requiredField: false, nullable: false, defaultValue: true), "kept"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'kept': kept,
+    };
+  }
+}
+
+class GeneratedOutboundReceipt {
+  final String detail;
+  final String error;
+  final int revision;
+  final DateTime? scheduledAt;
+  final DateTime? sentAt;
+  final String target;
+  final String title;
+
+  const GeneratedOutboundReceipt({
+    this.detail = "",
+    this.error = "",
+    this.revision = 0,
+    this.scheduledAt,
+    this.sentAt,
+    required this.target,
+    this.title = "",
+  });
+
+  factory GeneratedOutboundReceipt.fromJson(Map<String, dynamic> json) {
+    return GeneratedOutboundReceipt(
+      detail: _required(_readFieldValue<String>(_readField(json, const ["detail"]), "detail", _readString, requiredField: false, nullable: false, defaultValue: ""), "detail"),
+      error: _required(_readFieldValue<String>(_readField(json, const ["error"]), "error", _readString, requiredField: false, nullable: false, defaultValue: ""), "error"),
+      revision: _required(_readFieldValue<int>(_readField(json, const ["revision"]), "revision", _readInt, requiredField: false, nullable: false, defaultValue: 0), "revision"),
+      scheduledAt: _readFieldValue<DateTime>(_readField(json, const ["scheduled_at"]), "scheduled_at", _readDateTime, requiredField: false, nullable: true),
+      sentAt: _readFieldValue<DateTime>(_readField(json, const ["sent_at"]), "sent_at", _readDateTime, requiredField: false, nullable: true),
+      target: _required(_readFieldValue<String>(_readField(json, const ["target"]), "target", _readString, requiredField: true, nullable: false), "target"),
+      title: _required(_readFieldValue<String>(_readField(json, const ["title"]), "title", _readString, requiredField: false, nullable: false, defaultValue: ""), "title"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'detail': detail,
+      'error': error,
+      'revision': revision,
+      'scheduled_at': scheduledAt?.toUtc().toIso8601String(),
+      'sent_at': sentAt?.toUtc().toIso8601String(),
+      'target': target,
+      'title': title,
+    };
+  }
+}
+
+class GeneratedWikiOutboundSettings {
+  final bool enabled;
+  final bool hasToken;
+  final bool includeTranscript;
+  final DateTime? lastCheckAt;
+  final String lastCheckError;
+  final bool? lastCheckOk;
+  final String ownUrl;
+  final String person;
+  final bool requireManualApproval;
+  final bool sendDayReviews;
+  final String sendKeptConversations;
+  final bool tokenFromEnv;
+  final String url;
+  final bool urlFromEnv;
+
+  const GeneratedWikiOutboundSettings({
+    this.enabled = false,
+    this.hasToken = false,
+    this.includeTranscript = false,
+    this.lastCheckAt,
+    this.lastCheckError = "",
+    this.lastCheckOk,
+    this.ownUrl = "",
+    this.person = "",
+    this.requireManualApproval = true,
+    this.sendDayReviews = true,
+    this.sendKeptConversations = "off",
+    this.tokenFromEnv = false,
+    this.url = "",
+    this.urlFromEnv = false,
+  });
+
+  factory GeneratedWikiOutboundSettings.fromJson(Map<String, dynamic> json) {
+    return GeneratedWikiOutboundSettings(
+      enabled: _required(_readFieldValue<bool>(_readField(json, const ["enabled"]), "enabled", _readBool, requiredField: false, nullable: false, defaultValue: false), "enabled"),
+      hasToken: _required(_readFieldValue<bool>(_readField(json, const ["has_token"]), "has_token", _readBool, requiredField: false, nullable: false, defaultValue: false), "has_token"),
+      includeTranscript: _required(_readFieldValue<bool>(_readField(json, const ["include_transcript"]), "include_transcript", _readBool, requiredField: false, nullable: false, defaultValue: false), "include_transcript"),
+      lastCheckAt: _readFieldValue<DateTime>(_readField(json, const ["last_check_at"]), "last_check_at", _readDateTime, requiredField: false, nullable: true),
+      lastCheckError: _required(_readFieldValue<String>(_readField(json, const ["last_check_error"]), "last_check_error", _readString, requiredField: false, nullable: false, defaultValue: ""), "last_check_error"),
+      lastCheckOk: _readFieldValue<bool>(_readField(json, const ["last_check_ok"]), "last_check_ok", _readBool, requiredField: false, nullable: true),
+      ownUrl: _required(_readFieldValue<String>(_readField(json, const ["own_url"]), "own_url", _readString, requiredField: false, nullable: false, defaultValue: ""), "own_url"),
+      person: _required(_readFieldValue<String>(_readField(json, const ["person"]), "person", _readString, requiredField: false, nullable: false, defaultValue: ""), "person"),
+      requireManualApproval: _required(_readFieldValue<bool>(_readField(json, const ["require_manual_approval"]), "require_manual_approval", _readBool, requiredField: false, nullable: false, defaultValue: true), "require_manual_approval"),
+      sendDayReviews: _required(_readFieldValue<bool>(_readField(json, const ["send_day_reviews"]), "send_day_reviews", _readBool, requiredField: false, nullable: false, defaultValue: true), "send_day_reviews"),
+      sendKeptConversations: _required(_readFieldValue<String>(_readField(json, const ["send_kept_conversations"]), "send_kept_conversations", _readString, requiredField: false, nullable: false, defaultValue: "off"), "send_kept_conversations"),
+      tokenFromEnv: _required(_readFieldValue<bool>(_readField(json, const ["token_from_env"]), "token_from_env", _readBool, requiredField: false, nullable: false, defaultValue: false), "token_from_env"),
+      url: _required(_readFieldValue<String>(_readField(json, const ["url"]), "url", _readString, requiredField: false, nullable: false, defaultValue: ""), "url"),
+      urlFromEnv: _required(_readFieldValue<bool>(_readField(json, const ["url_from_env"]), "url_from_env", _readBool, requiredField: false, nullable: false, defaultValue: false), "url_from_env"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'enabled': enabled,
+      'has_token': hasToken,
+      'include_transcript': includeTranscript,
+      'last_check_at': lastCheckAt?.toUtc().toIso8601String(),
+      'last_check_error': lastCheckError,
+      'last_check_ok': lastCheckOk,
+      'own_url': ownUrl,
+      'person': person,
+      'require_manual_approval': requireManualApproval,
+      'send_day_reviews': sendDayReviews,
+      'send_kept_conversations': sendKeptConversations,
+      'token_from_env': tokenFromEnv,
+      'url': url,
+      'url_from_env': urlFromEnv,
+    };
+  }
+}
+
+class GeneratedHermesOutboundSettings {
+  final bool enabled;
+  final bool hasToken;
+  final DateTime? lastCheckAt;
+  final String lastCheckError;
+  final bool? lastCheckOk;
+  final String ownUrl;
+  final bool tokenFromEnv;
+  final String url;
+  final bool urlFromEnv;
+
+  const GeneratedHermesOutboundSettings({
+    this.enabled = false,
+    this.hasToken = false,
+    this.lastCheckAt,
+    this.lastCheckError = "",
+    this.lastCheckOk,
+    this.ownUrl = "",
+    this.tokenFromEnv = false,
+    this.url = "",
+    this.urlFromEnv = false,
+  });
+
+  factory GeneratedHermesOutboundSettings.fromJson(Map<String, dynamic> json) {
+    return GeneratedHermesOutboundSettings(
+      enabled: _required(_readFieldValue<bool>(_readField(json, const ["enabled"]), "enabled", _readBool, requiredField: false, nullable: false, defaultValue: false), "enabled"),
+      hasToken: _required(_readFieldValue<bool>(_readField(json, const ["has_token"]), "has_token", _readBool, requiredField: false, nullable: false, defaultValue: false), "has_token"),
+      lastCheckAt: _readFieldValue<DateTime>(_readField(json, const ["last_check_at"]), "last_check_at", _readDateTime, requiredField: false, nullable: true),
+      lastCheckError: _required(_readFieldValue<String>(_readField(json, const ["last_check_error"]), "last_check_error", _readString, requiredField: false, nullable: false, defaultValue: ""), "last_check_error"),
+      lastCheckOk: _readFieldValue<bool>(_readField(json, const ["last_check_ok"]), "last_check_ok", _readBool, requiredField: false, nullable: true),
+      ownUrl: _required(_readFieldValue<String>(_readField(json, const ["own_url"]), "own_url", _readString, requiredField: false, nullable: false, defaultValue: ""), "own_url"),
+      tokenFromEnv: _required(_readFieldValue<bool>(_readField(json, const ["token_from_env"]), "token_from_env", _readBool, requiredField: false, nullable: false, defaultValue: false), "token_from_env"),
+      url: _required(_readFieldValue<String>(_readField(json, const ["url"]), "url", _readString, requiredField: false, nullable: false, defaultValue: ""), "url"),
+      urlFromEnv: _required(_readFieldValue<bool>(_readField(json, const ["url_from_env"]), "url_from_env", _readBool, requiredField: false, nullable: false, defaultValue: false), "url_from_env"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'enabled': enabled,
+      'has_token': hasToken,
+      'last_check_at': lastCheckAt?.toUtc().toIso8601String(),
+      'last_check_error': lastCheckError,
+      'last_check_ok': lastCheckOk,
+      'own_url': ownUrl,
+      'token_from_env': tokenFromEnv,
+      'url': url,
+      'url_from_env': urlFromEnv,
+    };
+  }
+}
+
+class GeneratedOdysseusOutboundSettings {
+  final bool enabled;
+  final String endpointId;
+  final bool hasToken;
+  final DateTime? lastCheckAt;
+  final String lastCheckError;
+  final bool? lastCheckOk;
+  final String model;
+  final String ownUrl;
+  final String sessionId;
+  final bool tokenFromEnv;
+  final String url;
+  final bool urlFromEnv;
+
+  const GeneratedOdysseusOutboundSettings({
+    this.enabled = false,
+    this.endpointId = "",
+    this.hasToken = false,
+    this.lastCheckAt,
+    this.lastCheckError = "",
+    this.lastCheckOk,
+    this.model = "",
+    this.ownUrl = "",
+    this.sessionId = "",
+    this.tokenFromEnv = false,
+    this.url = "",
+    this.urlFromEnv = false,
+  });
+
+  factory GeneratedOdysseusOutboundSettings.fromJson(Map<String, dynamic> json) {
+    return GeneratedOdysseusOutboundSettings(
+      enabled: _required(_readFieldValue<bool>(_readField(json, const ["enabled"]), "enabled", _readBool, requiredField: false, nullable: false, defaultValue: false), "enabled"),
+      endpointId: _required(_readFieldValue<String>(_readField(json, const ["endpoint_id"]), "endpoint_id", _readString, requiredField: false, nullable: false, defaultValue: ""), "endpoint_id"),
+      hasToken: _required(_readFieldValue<bool>(_readField(json, const ["has_token"]), "has_token", _readBool, requiredField: false, nullable: false, defaultValue: false), "has_token"),
+      lastCheckAt: _readFieldValue<DateTime>(_readField(json, const ["last_check_at"]), "last_check_at", _readDateTime, requiredField: false, nullable: true),
+      lastCheckError: _required(_readFieldValue<String>(_readField(json, const ["last_check_error"]), "last_check_error", _readString, requiredField: false, nullable: false, defaultValue: ""), "last_check_error"),
+      lastCheckOk: _readFieldValue<bool>(_readField(json, const ["last_check_ok"]), "last_check_ok", _readBool, requiredField: false, nullable: true),
+      model: _required(_readFieldValue<String>(_readField(json, const ["model"]), "model", _readString, requiredField: false, nullable: false, defaultValue: ""), "model"),
+      ownUrl: _required(_readFieldValue<String>(_readField(json, const ["own_url"]), "own_url", _readString, requiredField: false, nullable: false, defaultValue: ""), "own_url"),
+      sessionId: _required(_readFieldValue<String>(_readField(json, const ["session_id"]), "session_id", _readString, requiredField: false, nullable: false, defaultValue: ""), "session_id"),
+      tokenFromEnv: _required(_readFieldValue<bool>(_readField(json, const ["token_from_env"]), "token_from_env", _readBool, requiredField: false, nullable: false, defaultValue: false), "token_from_env"),
+      url: _required(_readFieldValue<String>(_readField(json, const ["url"]), "url", _readString, requiredField: false, nullable: false, defaultValue: ""), "url"),
+      urlFromEnv: _required(_readFieldValue<bool>(_readField(json, const ["url_from_env"]), "url_from_env", _readBool, requiredField: false, nullable: false, defaultValue: false), "url_from_env"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'enabled': enabled,
+      'endpoint_id': endpointId,
+      'has_token': hasToken,
+      'last_check_at': lastCheckAt?.toUtc().toIso8601String(),
+      'last_check_error': lastCheckError,
+      'last_check_ok': lastCheckOk,
+      'model': model,
+      'own_url': ownUrl,
+      'session_id': sessionId,
+      'token_from_env': tokenFromEnv,
+      'url': url,
+      'url_from_env': urlFromEnv,
+    };
+  }
+}
+
+class GeneratedStudioOutboundSettings {
+  final String defaultAgent;
+  final bool enabled;
+  final bool hasToken;
+  final bool hasWebhookSecret;
+  final DateTime? lastCheckAt;
+  final String lastCheckError;
+  final bool? lastCheckOk;
+  final String ownUrl;
+  final bool tokenFromEnv;
+  final String url;
+  final bool urlFromEnv;
+  final String webhookPath;
+  final String workspace;
+
+  const GeneratedStudioOutboundSettings({
+    this.defaultAgent = "ekko-agent",
+    this.enabled = false,
+    this.hasToken = false,
+    this.hasWebhookSecret = false,
+    this.lastCheckAt,
+    this.lastCheckError = "",
+    this.lastCheckOk,
+    this.ownUrl = "",
+    this.tokenFromEnv = false,
+    this.url = "",
+    this.urlFromEnv = false,
+    this.webhookPath = "/v1/integrations/studio/events",
+    this.workspace = "",
+  });
+
+  factory GeneratedStudioOutboundSettings.fromJson(Map<String, dynamic> json) {
+    return GeneratedStudioOutboundSettings(
+      defaultAgent: _required(_readFieldValue<String>(_readField(json, const ["default_agent"]), "default_agent", _readString, requiredField: false, nullable: false, defaultValue: "ekko-agent"), "default_agent"),
+      enabled: _required(_readFieldValue<bool>(_readField(json, const ["enabled"]), "enabled", _readBool, requiredField: false, nullable: false, defaultValue: false), "enabled"),
+      hasToken: _required(_readFieldValue<bool>(_readField(json, const ["has_token"]), "has_token", _readBool, requiredField: false, nullable: false, defaultValue: false), "has_token"),
+      hasWebhookSecret: _required(_readFieldValue<bool>(_readField(json, const ["has_webhook_secret"]), "has_webhook_secret", _readBool, requiredField: false, nullable: false, defaultValue: false), "has_webhook_secret"),
+      lastCheckAt: _readFieldValue<DateTime>(_readField(json, const ["last_check_at"]), "last_check_at", _readDateTime, requiredField: false, nullable: true),
+      lastCheckError: _required(_readFieldValue<String>(_readField(json, const ["last_check_error"]), "last_check_error", _readString, requiredField: false, nullable: false, defaultValue: ""), "last_check_error"),
+      lastCheckOk: _readFieldValue<bool>(_readField(json, const ["last_check_ok"]), "last_check_ok", _readBool, requiredField: false, nullable: true),
+      ownUrl: _required(_readFieldValue<String>(_readField(json, const ["own_url"]), "own_url", _readString, requiredField: false, nullable: false, defaultValue: ""), "own_url"),
+      tokenFromEnv: _required(_readFieldValue<bool>(_readField(json, const ["token_from_env"]), "token_from_env", _readBool, requiredField: false, nullable: false, defaultValue: false), "token_from_env"),
+      url: _required(_readFieldValue<String>(_readField(json, const ["url"]), "url", _readString, requiredField: false, nullable: false, defaultValue: ""), "url"),
+      urlFromEnv: _required(_readFieldValue<bool>(_readField(json, const ["url_from_env"]), "url_from_env", _readBool, requiredField: false, nullable: false, defaultValue: false), "url_from_env"),
+      webhookPath: _required(_readFieldValue<String>(_readField(json, const ["webhook_path"]), "webhook_path", _readString, requiredField: false, nullable: false, defaultValue: "/v1/integrations/studio/events"), "webhook_path"),
+      workspace: _required(_readFieldValue<String>(_readField(json, const ["workspace"]), "workspace", _readString, requiredField: false, nullable: false, defaultValue: ""), "workspace"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'default_agent': defaultAgent,
+      'enabled': enabled,
+      'has_token': hasToken,
+      'has_webhook_secret': hasWebhookSecret,
+      'last_check_at': lastCheckAt?.toUtc().toIso8601String(),
+      'last_check_error': lastCheckError,
+      'last_check_ok': lastCheckOk,
+      'own_url': ownUrl,
+      'token_from_env': tokenFromEnv,
+      'url': url,
+      'url_from_env': urlFromEnv,
+      'webhook_path': webhookPath,
+      'workspace': workspace,
+    };
+  }
+}
+
+class GeneratedCoinpileOutboundSettings {
+  final bool enabled;
+  final bool hasToken;
+  final DateTime? lastCheckAt;
+  final String lastCheckError;
+  final bool? lastCheckOk;
+  final String ownUrl;
+  final bool tokenFromEnv;
+  final String url;
+  final bool urlFromEnv;
+
+  const GeneratedCoinpileOutboundSettings({
+    this.enabled = false,
+    this.hasToken = false,
+    this.lastCheckAt,
+    this.lastCheckError = "",
+    this.lastCheckOk,
+    this.ownUrl = "",
+    this.tokenFromEnv = false,
+    this.url = "",
+    this.urlFromEnv = false,
+  });
+
+  factory GeneratedCoinpileOutboundSettings.fromJson(Map<String, dynamic> json) {
+    return GeneratedCoinpileOutboundSettings(
+      enabled: _required(_readFieldValue<bool>(_readField(json, const ["enabled"]), "enabled", _readBool, requiredField: false, nullable: false, defaultValue: false), "enabled"),
+      hasToken: _required(_readFieldValue<bool>(_readField(json, const ["has_token"]), "has_token", _readBool, requiredField: false, nullable: false, defaultValue: false), "has_token"),
+      lastCheckAt: _readFieldValue<DateTime>(_readField(json, const ["last_check_at"]), "last_check_at", _readDateTime, requiredField: false, nullable: true),
+      lastCheckError: _required(_readFieldValue<String>(_readField(json, const ["last_check_error"]), "last_check_error", _readString, requiredField: false, nullable: false, defaultValue: ""), "last_check_error"),
+      lastCheckOk: _readFieldValue<bool>(_readField(json, const ["last_check_ok"]), "last_check_ok", _readBool, requiredField: false, nullable: true),
+      ownUrl: _required(_readFieldValue<String>(_readField(json, const ["own_url"]), "own_url", _readString, requiredField: false, nullable: false, defaultValue: ""), "own_url"),
+      tokenFromEnv: _required(_readFieldValue<bool>(_readField(json, const ["token_from_env"]), "token_from_env", _readBool, requiredField: false, nullable: false, defaultValue: false), "token_from_env"),
+      url: _required(_readFieldValue<String>(_readField(json, const ["url"]), "url", _readString, requiredField: false, nullable: false, defaultValue: ""), "url"),
+      urlFromEnv: _required(_readFieldValue<bool>(_readField(json, const ["url_from_env"]), "url_from_env", _readBool, requiredField: false, nullable: false, defaultValue: false), "url_from_env"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'enabled': enabled,
+      'has_token': hasToken,
+      'last_check_at': lastCheckAt?.toUtc().toIso8601String(),
+      'last_check_error': lastCheckError,
+      'last_check_ok': lastCheckOk,
+      'own_url': ownUrl,
+      'token_from_env': tokenFromEnv,
+      'url': url,
+      'url_from_env': urlFromEnv,
+    };
+  }
+}
+
+class GeneratedOrbOutboundSettings {
+  final bool enabled;
+  final bool hasToken;
+  final DateTime? lastCheckAt;
+  final String lastCheckError;
+  final bool? lastCheckOk;
+  final bool logDayApprovals;
+  final String ownUrl;
+  final String project;
+  final bool requireManualApproval;
+  final bool tokenFromEnv;
+  final String url;
+  final bool urlFromEnv;
+
+  const GeneratedOrbOutboundSettings({
+    this.enabled = false,
+    this.hasToken = false,
+    this.lastCheckAt,
+    this.lastCheckError = "",
+    this.lastCheckOk,
+    this.logDayApprovals = false,
+    this.ownUrl = "",
+    this.project = "General",
+    this.requireManualApproval = true,
+    this.tokenFromEnv = false,
+    this.url = "",
+    this.urlFromEnv = false,
+  });
+
+  factory GeneratedOrbOutboundSettings.fromJson(Map<String, dynamic> json) {
+    return GeneratedOrbOutboundSettings(
+      enabled: _required(_readFieldValue<bool>(_readField(json, const ["enabled"]), "enabled", _readBool, requiredField: false, nullable: false, defaultValue: false), "enabled"),
+      hasToken: _required(_readFieldValue<bool>(_readField(json, const ["has_token"]), "has_token", _readBool, requiredField: false, nullable: false, defaultValue: false), "has_token"),
+      lastCheckAt: _readFieldValue<DateTime>(_readField(json, const ["last_check_at"]), "last_check_at", _readDateTime, requiredField: false, nullable: true),
+      lastCheckError: _required(_readFieldValue<String>(_readField(json, const ["last_check_error"]), "last_check_error", _readString, requiredField: false, nullable: false, defaultValue: ""), "last_check_error"),
+      lastCheckOk: _readFieldValue<bool>(_readField(json, const ["last_check_ok"]), "last_check_ok", _readBool, requiredField: false, nullable: true),
+      logDayApprovals: _required(_readFieldValue<bool>(_readField(json, const ["log_day_approvals"]), "log_day_approvals", _readBool, requiredField: false, nullable: false, defaultValue: false), "log_day_approvals"),
+      ownUrl: _required(_readFieldValue<String>(_readField(json, const ["own_url"]), "own_url", _readString, requiredField: false, nullable: false, defaultValue: ""), "own_url"),
+      project: _required(_readFieldValue<String>(_readField(json, const ["project"]), "project", _readString, requiredField: false, nullable: false, defaultValue: "General"), "project"),
+      requireManualApproval: _required(_readFieldValue<bool>(_readField(json, const ["require_manual_approval"]), "require_manual_approval", _readBool, requiredField: false, nullable: false, defaultValue: true), "require_manual_approval"),
+      tokenFromEnv: _required(_readFieldValue<bool>(_readField(json, const ["token_from_env"]), "token_from_env", _readBool, requiredField: false, nullable: false, defaultValue: false), "token_from_env"),
+      url: _required(_readFieldValue<String>(_readField(json, const ["url"]), "url", _readString, requiredField: false, nullable: false, defaultValue: ""), "url"),
+      urlFromEnv: _required(_readFieldValue<bool>(_readField(json, const ["url_from_env"]), "url_from_env", _readBool, requiredField: false, nullable: false, defaultValue: false), "url_from_env"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'enabled': enabled,
+      'has_token': hasToken,
+      'last_check_at': lastCheckAt?.toUtc().toIso8601String(),
+      'last_check_error': lastCheckError,
+      'last_check_ok': lastCheckOk,
+      'log_day_approvals': logDayApprovals,
+      'own_url': ownUrl,
+      'project': project,
+      'require_manual_approval': requireManualApproval,
+      'token_from_env': tokenFromEnv,
+      'url': url,
+      'url_from_env': urlFromEnv,
+    };
+  }
+}
+
+class GeneratedOutboundIntegrationsResponse {
+  final GeneratedCoinpileOutboundSettings? coinpile;
+  final bool conversationWebhookToWiki;
+  final GeneratedHermesOutboundSettings? hermes;
+  final GeneratedOdysseusOutboundSettings? odysseus;
+  final GeneratedOrbOutboundSettings? orb;
+  final GeneratedStudioOutboundSettings? studio;
+  final GeneratedWikiOutboundSettings? wiki;
+
+  const GeneratedOutboundIntegrationsResponse({
+    this.coinpile,
+    this.conversationWebhookToWiki = false,
+    this.hermes,
+    this.odysseus,
+    this.orb,
+    this.studio,
+    this.wiki,
+  });
+
+  factory GeneratedOutboundIntegrationsResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedOutboundIntegrationsResponse(
+      coinpile: _readFieldValue<GeneratedCoinpileOutboundSettings>(_readField(json, const ["coinpile"]), "coinpile", (value) => _readObject(value, GeneratedCoinpileOutboundSettings.fromJson), requiredField: false, nullable: true),
+      conversationWebhookToWiki: _required(_readFieldValue<bool>(_readField(json, const ["conversation_webhook_to_wiki"]), "conversation_webhook_to_wiki", _readBool, requiredField: false, nullable: false, defaultValue: false), "conversation_webhook_to_wiki"),
+      hermes: _readFieldValue<GeneratedHermesOutboundSettings>(_readField(json, const ["hermes"]), "hermes", (value) => _readObject(value, GeneratedHermesOutboundSettings.fromJson), requiredField: false, nullable: true),
+      odysseus: _readFieldValue<GeneratedOdysseusOutboundSettings>(_readField(json, const ["odysseus"]), "odysseus", (value) => _readObject(value, GeneratedOdysseusOutboundSettings.fromJson), requiredField: false, nullable: true),
+      orb: _readFieldValue<GeneratedOrbOutboundSettings>(_readField(json, const ["orb"]), "orb", (value) => _readObject(value, GeneratedOrbOutboundSettings.fromJson), requiredField: false, nullable: true),
+      studio: _readFieldValue<GeneratedStudioOutboundSettings>(_readField(json, const ["studio"]), "studio", (value) => _readObject(value, GeneratedStudioOutboundSettings.fromJson), requiredField: false, nullable: true),
+      wiki: _readFieldValue<GeneratedWikiOutboundSettings>(_readField(json, const ["wiki"]), "wiki", (value) => _readObject(value, GeneratedWikiOutboundSettings.fromJson), requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'coinpile': coinpile?.toJson(),
+      'conversation_webhook_to_wiki': conversationWebhookToWiki,
+      'hermes': hermes?.toJson(),
+      'odysseus': odysseus?.toJson(),
+      'orb': orb?.toJson(),
+      'studio': studio?.toJson(),
+      'wiki': wiki?.toJson(),
+    };
+  }
+}
+
+class GeneratedUpdateOutboundTarget {
+  final bool? enabled;
+  final String? token;
+  final String? url;
+
+  const GeneratedUpdateOutboundTarget({
+    this.enabled,
+    this.token,
+    this.url,
+  });
+
+  factory GeneratedUpdateOutboundTarget.fromJson(Map<String, dynamic> json) {
+    return GeneratedUpdateOutboundTarget(
+      enabled: _readFieldValue<bool>(_readField(json, const ["enabled"]), "enabled", _readBool, requiredField: false, nullable: true),
+      token: _readFieldValue<String>(_readField(json, const ["token"]), "token", _readString, requiredField: false, nullable: true),
+      url: _readFieldValue<String>(_readField(json, const ["url"]), "url", _readString, requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'enabled': enabled,
+      'token': token,
+      'url': url,
+    };
+  }
+}
+
+class GeneratedUpdateWikiOutbound {
+  final bool? enabled;
+  final bool? includeTranscript;
+  final String? person;
+  final bool? requireManualApproval;
+  final bool? sendDayReviews;
+  final String? sendKeptConversations;
+  final String? token;
+  final String? url;
+
+  const GeneratedUpdateWikiOutbound({
+    this.enabled,
+    this.includeTranscript,
+    this.person,
+    this.requireManualApproval,
+    this.sendDayReviews,
+    this.sendKeptConversations,
+    this.token,
+    this.url,
+  });
+
+  factory GeneratedUpdateWikiOutbound.fromJson(Map<String, dynamic> json) {
+    return GeneratedUpdateWikiOutbound(
+      enabled: _readFieldValue<bool>(_readField(json, const ["enabled"]), "enabled", _readBool, requiredField: false, nullable: true),
+      includeTranscript: _readFieldValue<bool>(_readField(json, const ["include_transcript"]), "include_transcript", _readBool, requiredField: false, nullable: true),
+      person: _readFieldValue<String>(_readField(json, const ["person"]), "person", _readString, requiredField: false, nullable: true),
+      requireManualApproval: _readFieldValue<bool>(_readField(json, const ["require_manual_approval"]), "require_manual_approval", _readBool, requiredField: false, nullable: true),
+      sendDayReviews: _readFieldValue<bool>(_readField(json, const ["send_day_reviews"]), "send_day_reviews", _readBool, requiredField: false, nullable: true),
+      sendKeptConversations: _readFieldValue<String>(_readField(json, const ["send_kept_conversations"]), "send_kept_conversations", _readString, requiredField: false, nullable: true),
+      token: _readFieldValue<String>(_readField(json, const ["token"]), "token", _readString, requiredField: false, nullable: true),
+      url: _readFieldValue<String>(_readField(json, const ["url"]), "url", _readString, requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'enabled': enabled,
+      'include_transcript': includeTranscript,
+      'person': person,
+      'require_manual_approval': requireManualApproval,
+      'send_day_reviews': sendDayReviews,
+      'send_kept_conversations': sendKeptConversations,
+      'token': token,
+      'url': url,
+    };
+  }
+}
+
+class GeneratedUpdateOdysseusOutbound {
+  final bool? enabled;
+  final String? endpointId;
+  final String? model;
+  final String? sessionId;
+  final String? token;
+  final String? url;
+
+  const GeneratedUpdateOdysseusOutbound({
+    this.enabled,
+    this.endpointId,
+    this.model,
+    this.sessionId,
+    this.token,
+    this.url,
+  });
+
+  factory GeneratedUpdateOdysseusOutbound.fromJson(Map<String, dynamic> json) {
+    return GeneratedUpdateOdysseusOutbound(
+      enabled: _readFieldValue<bool>(_readField(json, const ["enabled"]), "enabled", _readBool, requiredField: false, nullable: true),
+      endpointId: _readFieldValue<String>(_readField(json, const ["endpoint_id"]), "endpoint_id", _readString, requiredField: false, nullable: true),
+      model: _readFieldValue<String>(_readField(json, const ["model"]), "model", _readString, requiredField: false, nullable: true),
+      sessionId: _readFieldValue<String>(_readField(json, const ["session_id"]), "session_id", _readString, requiredField: false, nullable: true),
+      token: _readFieldValue<String>(_readField(json, const ["token"]), "token", _readString, requiredField: false, nullable: true),
+      url: _readFieldValue<String>(_readField(json, const ["url"]), "url", _readString, requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'enabled': enabled,
+      'endpoint_id': endpointId,
+      'model': model,
+      'session_id': sessionId,
+      'token': token,
+      'url': url,
+    };
+  }
+}
+
+class GeneratedUpdateStudioOutbound {
+  final String? defaultAgent;
+  final bool? enabled;
+  final String? token;
+  final String? url;
+  final String? webhookSecret;
+  final String? workspace;
+
+  const GeneratedUpdateStudioOutbound({
+    this.defaultAgent,
+    this.enabled,
+    this.token,
+    this.url,
+    this.webhookSecret,
+    this.workspace,
+  });
+
+  factory GeneratedUpdateStudioOutbound.fromJson(Map<String, dynamic> json) {
+    return GeneratedUpdateStudioOutbound(
+      defaultAgent: _readFieldValue<String>(_readField(json, const ["default_agent"]), "default_agent", _readString, requiredField: false, nullable: true),
+      enabled: _readFieldValue<bool>(_readField(json, const ["enabled"]), "enabled", _readBool, requiredField: false, nullable: true),
+      token: _readFieldValue<String>(_readField(json, const ["token"]), "token", _readString, requiredField: false, nullable: true),
+      url: _readFieldValue<String>(_readField(json, const ["url"]), "url", _readString, requiredField: false, nullable: true),
+      webhookSecret: _readFieldValue<String>(_readField(json, const ["webhook_secret"]), "webhook_secret", _readString, requiredField: false, nullable: true),
+      workspace: _readFieldValue<String>(_readField(json, const ["workspace"]), "workspace", _readString, requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'default_agent': defaultAgent,
+      'enabled': enabled,
+      'token': token,
+      'url': url,
+      'webhook_secret': webhookSecret,
+      'workspace': workspace,
+    };
+  }
+}
+
+class GeneratedUpdateOrbOutbound {
+  final bool? enabled;
+  final bool? logDayApprovals;
+  final String? project;
+  final bool? requireManualApproval;
+  final String? token;
+  final String? url;
+
+  const GeneratedUpdateOrbOutbound({
+    this.enabled,
+    this.logDayApprovals,
+    this.project,
+    this.requireManualApproval,
+    this.token,
+    this.url,
+  });
+
+  factory GeneratedUpdateOrbOutbound.fromJson(Map<String, dynamic> json) {
+    return GeneratedUpdateOrbOutbound(
+      enabled: _readFieldValue<bool>(_readField(json, const ["enabled"]), "enabled", _readBool, requiredField: false, nullable: true),
+      logDayApprovals: _readFieldValue<bool>(_readField(json, const ["log_day_approvals"]), "log_day_approvals", _readBool, requiredField: false, nullable: true),
+      project: _readFieldValue<String>(_readField(json, const ["project"]), "project", _readString, requiredField: false, nullable: true),
+      requireManualApproval: _readFieldValue<bool>(_readField(json, const ["require_manual_approval"]), "require_manual_approval", _readBool, requiredField: false, nullable: true),
+      token: _readFieldValue<String>(_readField(json, const ["token"]), "token", _readString, requiredField: false, nullable: true),
+      url: _readFieldValue<String>(_readField(json, const ["url"]), "url", _readString, requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'enabled': enabled,
+      'log_day_approvals': logDayApprovals,
+      'project': project,
+      'require_manual_approval': requireManualApproval,
+      'token': token,
+      'url': url,
+    };
+  }
+}
+
+class GeneratedUpdateOutboundIntegrationsRequest {
+  final GeneratedUpdateOutboundTarget? coinpile;
+  final GeneratedUpdateOutboundTarget? hermes;
+  final GeneratedUpdateOdysseusOutbound? odysseus;
+  final GeneratedUpdateOrbOutbound? orb;
+  final GeneratedUpdateStudioOutbound? studio;
+  final GeneratedUpdateWikiOutbound? wiki;
+
+  const GeneratedUpdateOutboundIntegrationsRequest({
+    this.coinpile,
+    this.hermes,
+    this.odysseus,
+    this.orb,
+    this.studio,
+    this.wiki,
+  });
+
+  factory GeneratedUpdateOutboundIntegrationsRequest.fromJson(Map<String, dynamic> json) {
+    return GeneratedUpdateOutboundIntegrationsRequest(
+      coinpile: _readFieldValue<GeneratedUpdateOutboundTarget>(_readField(json, const ["coinpile"]), "coinpile", (value) => _readObject(value, GeneratedUpdateOutboundTarget.fromJson), requiredField: false, nullable: true),
+      hermes: _readFieldValue<GeneratedUpdateOutboundTarget>(_readField(json, const ["hermes"]), "hermes", (value) => _readObject(value, GeneratedUpdateOutboundTarget.fromJson), requiredField: false, nullable: true),
+      odysseus: _readFieldValue<GeneratedUpdateOdysseusOutbound>(_readField(json, const ["odysseus"]), "odysseus", (value) => _readObject(value, GeneratedUpdateOdysseusOutbound.fromJson), requiredField: false, nullable: true),
+      orb: _readFieldValue<GeneratedUpdateOrbOutbound>(_readField(json, const ["orb"]), "orb", (value) => _readObject(value, GeneratedUpdateOrbOutbound.fromJson), requiredField: false, nullable: true),
+      studio: _readFieldValue<GeneratedUpdateStudioOutbound>(_readField(json, const ["studio"]), "studio", (value) => _readObject(value, GeneratedUpdateStudioOutbound.fromJson), requiredField: false, nullable: true),
+      wiki: _readFieldValue<GeneratedUpdateWikiOutbound>(_readField(json, const ["wiki"]), "wiki", (value) => _readObject(value, GeneratedUpdateWikiOutbound.fromJson), requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'coinpile': coinpile?.toJson(),
+      'hermes': hermes?.toJson(),
+      'odysseus': odysseus?.toJson(),
+      'orb': orb?.toJson(),
+      'studio': studio?.toJson(),
+      'wiki': wiki?.toJson(),
+    };
+  }
+}
+
+class GeneratedOutboundTestResponse {
+  final String detail;
+  final String error;
+  final bool ok;
+
+  const GeneratedOutboundTestResponse({
+    this.detail = "",
+    this.error = "",
+    required this.ok,
+  });
+
+  factory GeneratedOutboundTestResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedOutboundTestResponse(
+      detail: _required(_readFieldValue<String>(_readField(json, const ["detail"]), "detail", _readString, requiredField: false, nullable: false, defaultValue: ""), "detail"),
+      error: _required(_readFieldValue<String>(_readField(json, const ["error"]), "error", _readString, requiredField: false, nullable: false, defaultValue: ""), "error"),
+      ok: _required(_readFieldValue<bool>(_readField(json, const ["ok"]), "ok", _readBool, requiredField: true, nullable: false), "ok"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'detail': detail,
+      'error': error,
+      'ok': ok,
+    };
+  }
+}
+
+class GeneratedSendConversationRequest {
+  final bool revised;
+  final String target;
+
+  const GeneratedSendConversationRequest({
+    this.revised = false,
+    this.target = "wiki",
+  });
+
+  factory GeneratedSendConversationRequest.fromJson(Map<String, dynamic> json) {
+    return GeneratedSendConversationRequest(
+      revised: _required(_readFieldValue<bool>(_readField(json, const ["revised"]), "revised", _readBool, requiredField: false, nullable: false, defaultValue: false), "revised"),
+      target: _required(_readFieldValue<String>(_readField(json, const ["target"]), "target", _readString, requiredField: false, nullable: false, defaultValue: "wiki"), "target"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'revised': revised,
+      'target': target,
+    };
+  }
+}
+
+class GeneratedSendConversationResponse {
+  final bool alreadySent;
+  final String error;
+  final bool ok;
+  final GeneratedOutboundReceipt? receipt;
+
+  const GeneratedSendConversationResponse({
+    this.alreadySent = false,
+    this.error = "",
+    required this.ok,
+    this.receipt,
+  });
+
+  factory GeneratedSendConversationResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedSendConversationResponse(
+      alreadySent: _required(_readFieldValue<bool>(_readField(json, const ["already_sent"]), "already_sent", _readBool, requiredField: false, nullable: false, defaultValue: false), "already_sent"),
+      error: _required(_readFieldValue<String>(_readField(json, const ["error"]), "error", _readString, requiredField: false, nullable: false, defaultValue: ""), "error"),
+      ok: _required(_readFieldValue<bool>(_readField(json, const ["ok"]), "ok", _readBool, requiredField: true, nullable: false), "ok"),
+      receipt: _readFieldValue<GeneratedOutboundReceipt>(_readField(json, const ["receipt"]), "receipt", (value) => _readObject(value, GeneratedOutboundReceipt.fromJson), requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'already_sent': alreadySent,
+      'error': error,
+      'ok': ok,
+      'receipt': receipt?.toJson(),
+    };
+  }
+}
+
+class GeneratedOutboundPreviewResponse {
+  final String content;
+  final String destination;
+  final List<GeneratedOutboundReceipt>? receipts;
+  final String target;
+  final String title;
+
+  const GeneratedOutboundPreviewResponse({
+    this.content = "",
+    this.destination = "",
+    this.receipts,
+    required this.target,
+    this.title = "",
+  });
+
+  factory GeneratedOutboundPreviewResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedOutboundPreviewResponse(
+      content: _required(_readFieldValue<String>(_readField(json, const ["content"]), "content", _readString, requiredField: false, nullable: false, defaultValue: ""), "content"),
+      destination: _required(_readFieldValue<String>(_readField(json, const ["destination"]), "destination", _readString, requiredField: false, nullable: false, defaultValue: ""), "destination"),
+      receipts: _readFieldValue<List<GeneratedOutboundReceipt>>(_readField(json, const ["receipts"]), "receipts", (value) => _readObjectList(value, GeneratedOutboundReceipt.fromJson), requiredField: false, nullable: true),
+      target: _required(_readFieldValue<String>(_readField(json, const ["target"]), "target", _readString, requiredField: true, nullable: false), "target"),
+      title: _required(_readFieldValue<String>(_readField(json, const ["title"]), "title", _readString, requiredField: false, nullable: false, defaultValue: ""), "title"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'content': content,
+      'destination': destination,
+      'receipts': receipts?.map((value) => value.toJson()).toList(),
+      'target': target,
+      'title': title,
+    };
+  }
+}
+
+class GeneratedCoinpileSendRequest {
+  final String? accountId;
+  final double? amount;
+  final String body;
+  final String? category;
+  final String? conversationId;
+  final String? date;
+  final String? description;
+  final String kind;
+  final String? taskId;
+  final String title;
+
+  const GeneratedCoinpileSendRequest({
+    this.accountId,
+    this.amount,
+    this.body = "",
+    this.category,
+    this.conversationId,
+    this.date,
+    this.description,
+    this.kind = "note",
+    this.taskId,
+    this.title = "",
+  });
+
+  factory GeneratedCoinpileSendRequest.fromJson(Map<String, dynamic> json) {
+    return GeneratedCoinpileSendRequest(
+      accountId: _readFieldValue<String>(_readField(json, const ["account_id"]), "account_id", _readString, requiredField: false, nullable: true),
+      amount: _readFieldValue<double>(_readField(json, const ["amount"]), "amount", _readDouble, requiredField: false, nullable: true),
+      body: _required(_readFieldValue<String>(_readField(json, const ["body"]), "body", _readString, requiredField: false, nullable: false, defaultValue: ""), "body"),
+      category: _readFieldValue<String>(_readField(json, const ["category"]), "category", _readString, requiredField: false, nullable: true),
+      conversationId: _readFieldValue<String>(_readField(json, const ["conversation_id"]), "conversation_id", _readString, requiredField: false, nullable: true),
+      date: _readFieldValue<String>(_readField(json, const ["date"]), "date", _readString, requiredField: false, nullable: true),
+      description: _readFieldValue<String>(_readField(json, const ["description"]), "description", _readString, requiredField: false, nullable: true),
+      kind: _required(_readFieldValue<String>(_readField(json, const ["kind"]), "kind", _readString, requiredField: false, nullable: false, defaultValue: "note"), "kind"),
+      taskId: _readFieldValue<String>(_readField(json, const ["task_id"]), "task_id", _readString, requiredField: false, nullable: true),
+      title: _required(_readFieldValue<String>(_readField(json, const ["title"]), "title", _readString, requiredField: false, nullable: false, defaultValue: ""), "title"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'account_id': accountId,
+      'amount': amount,
+      'body': body,
+      'category': category,
+      'conversation_id': conversationId,
+      'date': date,
+      'description': description,
+      'kind': kind,
+      'task_id': taskId,
+      'title': title,
+    };
+  }
+}
+
+class GeneratedCoinpileSendResponse {
+  final String answer;
+  final String error;
+  final bool ok;
+
+  const GeneratedCoinpileSendResponse({
+    this.answer = "",
+    this.error = "",
+    required this.ok,
+  });
+
+  factory GeneratedCoinpileSendResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedCoinpileSendResponse(
+      answer: _required(_readFieldValue<String>(_readField(json, const ["answer"]), "answer", _readString, requiredField: false, nullable: false, defaultValue: ""), "answer"),
+      error: _required(_readFieldValue<String>(_readField(json, const ["error"]), "error", _readString, requiredField: false, nullable: false, defaultValue: ""), "error"),
+      ok: _required(_readFieldValue<bool>(_readField(json, const ["ok"]), "ok", _readBool, requiredField: true, nullable: false), "ok"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'answer': answer,
+      'error': error,
+      'ok': ok,
+    };
+  }
+}
+
+class GeneratedCoinpileAccount {
+  final String id;
+  final String name;
+  final String type;
+
+  const GeneratedCoinpileAccount({
+    required this.id,
+    this.name = "",
+    this.type = "",
+  });
+
+  factory GeneratedCoinpileAccount.fromJson(Map<String, dynamic> json) {
+    return GeneratedCoinpileAccount(
+      id: _required(_readFieldValue<String>(_readField(json, const ["id"]), "id", _readString, requiredField: true, nullable: false), "id"),
+      name: _required(_readFieldValue<String>(_readField(json, const ["name"]), "name", _readString, requiredField: false, nullable: false, defaultValue: ""), "name"),
+      type: _required(_readFieldValue<String>(_readField(json, const ["type"]), "type", _readString, requiredField: false, nullable: false, defaultValue: ""), "type"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'type': type,
+    };
+  }
+}
+
+class GeneratedCoinpileAccountsResponse {
+  final List<GeneratedCoinpileAccount>? accounts;
+  final String error;
+
+  const GeneratedCoinpileAccountsResponse({
+    this.accounts,
+    this.error = "",
+  });
+
+  factory GeneratedCoinpileAccountsResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedCoinpileAccountsResponse(
+      accounts: _readFieldValue<List<GeneratedCoinpileAccount>>(_readField(json, const ["accounts"]), "accounts", (value) => _readObjectList(value, GeneratedCoinpileAccount.fromJson), requiredField: false, nullable: true),
+      error: _required(_readFieldValue<String>(_readField(json, const ["error"]), "error", _readString, requiredField: false, nullable: false, defaultValue: ""), "error"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'accounts': accounts?.map((value) => value.toJson()).toList(),
+      'error': error,
+    };
+  }
+}
+
+class GeneratedAgentJobSection {
+  final String date;
+  final String sectionId;
+
+  const GeneratedAgentJobSection({
+    required this.date,
+    required this.sectionId,
+  });
+
+  factory GeneratedAgentJobSection.fromJson(Map<String, dynamic> json) {
+    return GeneratedAgentJobSection(
+      date: _required(_readFieldValue<String>(_readField(json, const ["date"]), "date", _readString, requiredField: true, nullable: false), "date"),
+      sectionId: _required(_readFieldValue<String>(_readField(json, const ["section_id"]), "section_id", _readString, requiredField: true, nullable: false), "section_id"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'date': date,
+      'section_id': sectionId,
+    };
+  }
+}
+
+class GeneratedAgentJobApproval {
+  final List<String>? choices;
+  final String command;
+  final String description;
+  final String requestId;
+
+  const GeneratedAgentJobApproval({
+    this.choices,
+    this.command = "",
+    this.description = "",
+    this.requestId = "",
+  });
+
+  factory GeneratedAgentJobApproval.fromJson(Map<String, dynamic> json) {
+    return GeneratedAgentJobApproval(
+      choices: _readFieldValue<List<String>>(_readField(json, const ["choices"]), "choices", _readStringList, requiredField: false, nullable: true),
+      command: _required(_readFieldValue<String>(_readField(json, const ["command"]), "command", _readString, requiredField: false, nullable: false, defaultValue: ""), "command"),
+      description: _required(_readFieldValue<String>(_readField(json, const ["description"]), "description", _readString, requiredField: false, nullable: false, defaultValue: ""), "description"),
+      requestId: _required(_readFieldValue<String>(_readField(json, const ["request_id"]), "request_id", _readString, requiredField: false, nullable: false, defaultValue: ""), "request_id"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'choices': choices,
+      'command': command,
+      'description': description,
+      'request_id': requestId,
+    };
+  }
+}
+
+class GeneratedAgentJob {
+  final String agentId;
+  final GeneratedAgentJobApproval? approval;
+  final bool attachResult;
+  final List<String>? conversationIds;
+  final DateTime? createdAt;
+  final String error;
+  final String externalId;
+  final DateTime? finishedAt;
+  final String id;
+  final String prompt;
+  final String result;
+  final GeneratedAgentJobSection? section;
+  final String status;
+  final String target;
+  final String? taskId;
+  final String title;
+  final DateTime? updatedAt;
+
+  const GeneratedAgentJob({
+    this.agentId = "",
+    this.approval,
+    this.attachResult = false,
+    this.conversationIds,
+    this.createdAt,
+    this.error = "",
+    this.externalId = "",
+    this.finishedAt,
+    required this.id,
+    this.prompt = "",
+    this.result = "",
+    this.section,
+    this.status = "queued",
+    required this.target,
+    this.taskId,
+    this.title = "",
+    this.updatedAt,
+  });
+
+  factory GeneratedAgentJob.fromJson(Map<String, dynamic> json) {
+    return GeneratedAgentJob(
+      agentId: _required(_readFieldValue<String>(_readField(json, const ["agent_id"]), "agent_id", _readString, requiredField: false, nullable: false, defaultValue: ""), "agent_id"),
+      approval: _readFieldValue<GeneratedAgentJobApproval>(_readField(json, const ["approval"]), "approval", (value) => _readObject(value, GeneratedAgentJobApproval.fromJson), requiredField: false, nullable: true),
+      attachResult: _required(_readFieldValue<bool>(_readField(json, const ["attach_result"]), "attach_result", _readBool, requiredField: false, nullable: false, defaultValue: false), "attach_result"),
+      conversationIds: _readFieldValue<List<String>>(_readField(json, const ["conversation_ids"]), "conversation_ids", _readStringList, requiredField: false, nullable: true),
+      createdAt: _readFieldValue<DateTime>(_readField(json, const ["created_at"]), "created_at", _readDateTime, requiredField: false, nullable: true),
+      error: _required(_readFieldValue<String>(_readField(json, const ["error"]), "error", _readString, requiredField: false, nullable: false, defaultValue: ""), "error"),
+      externalId: _required(_readFieldValue<String>(_readField(json, const ["external_id"]), "external_id", _readString, requiredField: false, nullable: false, defaultValue: ""), "external_id"),
+      finishedAt: _readFieldValue<DateTime>(_readField(json, const ["finished_at"]), "finished_at", _readDateTime, requiredField: false, nullable: true),
+      id: _required(_readFieldValue<String>(_readField(json, const ["id"]), "id", _readString, requiredField: true, nullable: false), "id"),
+      prompt: _required(_readFieldValue<String>(_readField(json, const ["prompt"]), "prompt", _readString, requiredField: false, nullable: false, defaultValue: ""), "prompt"),
+      result: _required(_readFieldValue<String>(_readField(json, const ["result"]), "result", _readString, requiredField: false, nullable: false, defaultValue: ""), "result"),
+      section: _readFieldValue<GeneratedAgentJobSection>(_readField(json, const ["section"]), "section", (value) => _readObject(value, GeneratedAgentJobSection.fromJson), requiredField: false, nullable: true),
+      status: _required(_readFieldValue<String>(_readField(json, const ["status"]), "status", _readString, requiredField: false, nullable: false, defaultValue: "queued"), "status"),
+      target: _required(_readFieldValue<String>(_readField(json, const ["target"]), "target", _readString, requiredField: true, nullable: false), "target"),
+      taskId: _readFieldValue<String>(_readField(json, const ["task_id"]), "task_id", _readString, requiredField: false, nullable: true),
+      title: _required(_readFieldValue<String>(_readField(json, const ["title"]), "title", _readString, requiredField: false, nullable: false, defaultValue: ""), "title"),
+      updatedAt: _readFieldValue<DateTime>(_readField(json, const ["updated_at"]), "updated_at", _readDateTime, requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'agent_id': agentId,
+      'approval': approval?.toJson(),
+      'attach_result': attachResult,
+      'conversation_ids': conversationIds,
+      'created_at': createdAt?.toUtc().toIso8601String(),
+      'error': error,
+      'external_id': externalId,
+      'finished_at': finishedAt?.toUtc().toIso8601String(),
+      'id': id,
+      'prompt': prompt,
+      'result': result,
+      'section': section?.toJson(),
+      'status': status,
+      'target': target,
+      'task_id': taskId,
+      'title': title,
+      'updated_at': updatedAt?.toUtc().toIso8601String(),
+    };
+  }
+}
+
+class GeneratedAgentJobPreviewRequest {
+  final String? agentId;
+  final List<String>? conversationIds;
+  final bool includeTranscript;
+  final String prompt;
+  final GeneratedAgentJobSection? section;
+  final String target;
+  final String? taskId;
+
+  const GeneratedAgentJobPreviewRequest({
+    this.agentId,
+    this.conversationIds,
+    this.includeTranscript = false,
+    this.prompt = "",
+    this.section,
+    required this.target,
+    this.taskId,
+  });
+
+  factory GeneratedAgentJobPreviewRequest.fromJson(Map<String, dynamic> json) {
+    return GeneratedAgentJobPreviewRequest(
+      agentId: _readFieldValue<String>(_readField(json, const ["agent_id"]), "agent_id", _readString, requiredField: false, nullable: true),
+      conversationIds: _readFieldValue<List<String>>(_readField(json, const ["conversation_ids"]), "conversation_ids", _readStringList, requiredField: false, nullable: true),
+      includeTranscript: _required(_readFieldValue<bool>(_readField(json, const ["include_transcript"]), "include_transcript", _readBool, requiredField: false, nullable: false, defaultValue: false), "include_transcript"),
+      prompt: _required(_readFieldValue<String>(_readField(json, const ["prompt"]), "prompt", _readString, requiredField: false, nullable: false, defaultValue: ""), "prompt"),
+      section: _readFieldValue<GeneratedAgentJobSection>(_readField(json, const ["section"]), "section", (value) => _readObject(value, GeneratedAgentJobSection.fromJson), requiredField: false, nullable: true),
+      target: _required(_readFieldValue<String>(_readField(json, const ["target"]), "target", _readString, requiredField: true, nullable: false), "target"),
+      taskId: _readFieldValue<String>(_readField(json, const ["task_id"]), "task_id", _readString, requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'agent_id': agentId,
+      'conversation_ids': conversationIds,
+      'include_transcript': includeTranscript,
+      'prompt': prompt,
+      'section': section?.toJson(),
+      'target': target,
+      'task_id': taskId,
+    };
+  }
+}
+
+class GeneratedAgentJobPreviewResponse {
+  final String content;
+  final String destination;
+  final String suggestedTarget;
+  final String target;
+  final String title;
+
+  const GeneratedAgentJobPreviewResponse({
+    this.content = "",
+    this.destination = "",
+    this.suggestedTarget = "odysseus",
+    required this.target,
+    this.title = "",
+  });
+
+  factory GeneratedAgentJobPreviewResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedAgentJobPreviewResponse(
+      content: _required(_readFieldValue<String>(_readField(json, const ["content"]), "content", _readString, requiredField: false, nullable: false, defaultValue: ""), "content"),
+      destination: _required(_readFieldValue<String>(_readField(json, const ["destination"]), "destination", _readString, requiredField: false, nullable: false, defaultValue: ""), "destination"),
+      suggestedTarget: _required(_readFieldValue<String>(_readField(json, const ["suggested_target"]), "suggested_target", _readString, requiredField: false, nullable: false, defaultValue: "odysseus"), "suggested_target"),
+      target: _required(_readFieldValue<String>(_readField(json, const ["target"]), "target", _readString, requiredField: true, nullable: false), "target"),
+      title: _required(_readFieldValue<String>(_readField(json, const ["title"]), "title", _readString, requiredField: false, nullable: false, defaultValue: ""), "title"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'content': content,
+      'destination': destination,
+      'suggested_target': suggestedTarget,
+      'target': target,
+      'title': title,
+    };
+  }
+}
+
+class GeneratedCreateAgentJobRequest {
+  final String? agentId;
+  final bool attachResult;
+  final List<String>? conversationIds;
+  final bool includeTranscript;
+  final String prompt;
+  final GeneratedAgentJobSection? section;
+  final String target;
+  final String? taskId;
+  final String title;
+
+  const GeneratedCreateAgentJobRequest({
+    this.agentId,
+    this.attachResult = false,
+    this.conversationIds,
+    this.includeTranscript = false,
+    this.prompt = "",
+    this.section,
+    required this.target,
+    this.taskId,
+    this.title = "",
+  });
+
+  factory GeneratedCreateAgentJobRequest.fromJson(Map<String, dynamic> json) {
+    return GeneratedCreateAgentJobRequest(
+      agentId: _readFieldValue<String>(_readField(json, const ["agent_id"]), "agent_id", _readString, requiredField: false, nullable: true),
+      attachResult: _required(_readFieldValue<bool>(_readField(json, const ["attach_result"]), "attach_result", _readBool, requiredField: false, nullable: false, defaultValue: false), "attach_result"),
+      conversationIds: _readFieldValue<List<String>>(_readField(json, const ["conversation_ids"]), "conversation_ids", _readStringList, requiredField: false, nullable: true),
+      includeTranscript: _required(_readFieldValue<bool>(_readField(json, const ["include_transcript"]), "include_transcript", _readBool, requiredField: false, nullable: false, defaultValue: false), "include_transcript"),
+      prompt: _required(_readFieldValue<String>(_readField(json, const ["prompt"]), "prompt", _readString, requiredField: false, nullable: false, defaultValue: ""), "prompt"),
+      section: _readFieldValue<GeneratedAgentJobSection>(_readField(json, const ["section"]), "section", (value) => _readObject(value, GeneratedAgentJobSection.fromJson), requiredField: false, nullable: true),
+      target: _required(_readFieldValue<String>(_readField(json, const ["target"]), "target", _readString, requiredField: true, nullable: false), "target"),
+      taskId: _readFieldValue<String>(_readField(json, const ["task_id"]), "task_id", _readString, requiredField: false, nullable: true),
+      title: _required(_readFieldValue<String>(_readField(json, const ["title"]), "title", _readString, requiredField: false, nullable: false, defaultValue: ""), "title"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'agent_id': agentId,
+      'attach_result': attachResult,
+      'conversation_ids': conversationIds,
+      'include_transcript': includeTranscript,
+      'prompt': prompt,
+      'section': section?.toJson(),
+      'target': target,
+      'task_id': taskId,
+      'title': title,
+    };
+  }
+}
+
+class GeneratedAgentJobsResponse {
+  final List<GeneratedAgentJob>? jobs;
+
+  const GeneratedAgentJobsResponse({
+    this.jobs,
+  });
+
+  factory GeneratedAgentJobsResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedAgentJobsResponse(
+      jobs: _readFieldValue<List<GeneratedAgentJob>>(_readField(json, const ["jobs"]), "jobs", (value) => _readObjectList(value, GeneratedAgentJob.fromJson), requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'jobs': jobs?.map((value) => value.toJson()).toList(),
+    };
+  }
+}
+
+class GeneratedAgentJobResponse {
+  final String error;
+  final GeneratedAgentJob? job;
+  final bool ok;
+
+  const GeneratedAgentJobResponse({
+    this.error = "",
+    this.job,
+    required this.ok,
+  });
+
+  factory GeneratedAgentJobResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedAgentJobResponse(
+      error: _required(_readFieldValue<String>(_readField(json, const ["error"]), "error", _readString, requiredField: false, nullable: false, defaultValue: ""), "error"),
+      job: _readFieldValue<GeneratedAgentJob>(_readField(json, const ["job"]), "job", (value) => _readObject(value, GeneratedAgentJob.fromJson), requiredField: false, nullable: true),
+      ok: _required(_readFieldValue<bool>(_readField(json, const ["ok"]), "ok", _readBool, requiredField: true, nullable: false), "ok"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'error': error,
+      'job': job?.toJson(),
+      'ok': ok,
+    };
+  }
+}
+
+class GeneratedAnswerAgentApprovalRequest {
+  final String choice;
+
+  const GeneratedAnswerAgentApprovalRequest({
+    required this.choice,
+  });
+
+  factory GeneratedAnswerAgentApprovalRequest.fromJson(Map<String, dynamic> json) {
+    return GeneratedAnswerAgentApprovalRequest(
+      choice: _required(_readFieldValue<String>(_readField(json, const ["choice"]), "choice", _readString, requiredField: true, nullable: false), "choice"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'choice': choice,
     };
   }
 }

@@ -56,6 +56,10 @@ import 'widgets/conversation_detail_tabs.dart';
 import 'widgets/detail_search_bar.dart';
 import 'widgets/summary_tab.dart';
 import 'widgets/ask_agent_sheet.dart';
+import 'package:omi/backend/schema/connections.dart' show AgentJobContext;
+import 'package:omi/pages/connections/send_to_agent_sheet.dart';
+import 'package:omi/pages/connections/send_to_coinpile_sheet.dart';
+import 'package:omi/pages/connections/send_to_wiki_sheet.dart';
 import 'widgets/share_to_contacts_sheet.dart';
 import 'widgets/summarized_apps_sheet.dart';
 import 'widgets/transcript_tab.dart';
@@ -1014,6 +1018,27 @@ class ConversationDetailPageState extends State<ConversationDetailPage>
             showAskAgentSheet(context, conversation);
           },
         ),
+      // omi-local Connections: each sends only after the sheet shows exactly what leaves.
+      if (!conversation.discarded && !conversation.isLocked) ...[
+        PullDownMenuItem(
+          title: l10n.sendToWikiTitle,
+          iconWidget: const FaIcon(FontAwesomeIcons.bookOpen, size: 16),
+          onTap: () => showSendToWikiSheet(context, conversation.id),
+        ),
+        PullDownMenuItem(
+          title: l10n.sendToAgentTitle,
+          iconWidget: const FaIcon(FontAwesomeIcons.robot, size: 16),
+          onTap: () => showSendToAgentSheet(
+            context,
+            jobContext: AgentJobContext(conversationIds: [conversation.id]),
+          ),
+        ),
+        PullDownMenuItem(
+          title: l10n.sendToCoinpileTitle,
+          iconWidget: const FaIcon(FontAwesomeIcons.coins, size: 16),
+          onTap: () => showSendToCoinpileSheet(context, conversationId: conversation.id),
+        ),
+      ],
       PullDownMenuItem(
         title: l10n.search,
         iconWidget: const FaIcon(FontAwesomeIcons.magnifyingGlass, size: 16),

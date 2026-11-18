@@ -5,8 +5,13 @@ import 'package:intl/intl.dart';
 
 import 'package:omi/backend/http/api/day_reviews.dart';
 import 'package:omi/backend/http/api/approvals.dart';
+import 'package:omi/backend/http/api/connections.dart';
+import 'package:omi/backend/schema/connections.dart';
 import 'package:omi/backend/schema/day_review.dart';
 import 'package:omi/pages/approvals/waiting_tasks_section.dart';
+import 'package:omi/pages/chat/widgets/content_blocks/conversation_link_blocks.dart';
+import 'package:omi/pages/connections/send_to_agent_sheet.dart';
+import 'package:omi/pages/connections/send_to_wiki_sheet.dart';
 import 'package:omi/providers/waiting_approval_controller.dart';
 import 'package:omi/pages/action_items/day_tasks_page.dart';
 import 'package:omi/pages/day_review/day_review_edit_text_sheet.dart';
@@ -39,8 +44,20 @@ class DayReviewPage extends StatefulWidget {
   /// omi-local: the day's tasks Omi heard wait for the user's OK in "From this day".
   final ApprovalsApi approvals;
 
+  /// omi-local: Connections, for "Send to wiki" on kept clips when the user chose to be asked.
+  final ConnectionsApi connections;
+
+  /// Opens one clip's conversation (title, summary, transcript and action items are editable
+  /// there); tests pass a recorder.
+  final Future<void> Function(BuildContext context, String conversationId)? openConversation;
+
   const DayReviewPage(
-      {super.key, required this.date, this.api = const DayReviewApi(), this.approvals = const ApprovalsApi()});
+      {super.key,
+      required this.date,
+      this.api = const DayReviewApi(),
+      this.approvals = const ApprovalsApi(),
+      this.connections = const ConnectionsApi(),
+      this.openConversation});
 
   static String todayKey([DateTime? now]) => DateFormat('yyyy-MM-dd').format(now ?? DateTime.now());
 
@@ -64,11 +81,59 @@ class _DayReviewPageState extends State<DayReviewPage> {
 
   late final WaitingApprovalController _waiting = WaitingApprovalController(api: widget.approvals);
 
+  /// The wiki connection, when it offers "Send to wiki" on kept clips (mode "ask").
+  bool _offerWikiSend = false;
+
+  /// A clip whose keep is being saved.
+  String? _keeping;
+
   @override
   void initState() {
     super.initState();
     _load();
     _waiting.load();
+    _loadConnections();
+  }
+
+  Future<void> _loadConnections() async {
+    final ConnectionResult<ConnectionsState> result;
+    try {
+      result = await widget.connections.load();
+    } catch (_) {
+      return; // Only decides whether kept clips offer Send to wiki; the review works without it.
+    }
+    if (!mounted || result.value == null) return;
+    final wiki = result.value!['wiki'];
+    setState(() => _offerWikiSend = wiki.ready && wiki.text('send_kept_conversations') == 'ask');
+  }
+
+  Future<void> _openConversation(String id) async {
+    final open = widget.openConversation;
+    if (open != null) return open(context, id);
+    final found = await openChatBlockConversation(context, conversationId: id);
+    if (!found && mounted) AppSnackbar.showSnackbarError(context.l10n.dayReviewConversationGone);
+  }
+
+  /// Keep one clip of the summary as its own conversation, or fold it back in.
+  Future<void> _keepConversation(String id, bool kept) async {
+    setState(() => _keeping = id);
+    final result = await widget.api.keepConversation(widget.date, id, kept);
+    if (!mounted) return;
+    setState(() => _keeping = null);
+    if (result.ok) {
+      AppSnackbar.showSnackbar(kept ? context.l10n.dayReviewClipKept : context.l10n.dayReviewClipFolded);
+      await _load();
+    } else {
+      _applyReview(result);
+    }
+  }
+
+  void _sendSection(DayReviewSection section) {
+    showSendToAgentSheet(
+      context,
+      jobContext: AgentJobContext(sectionDate: widget.date, sectionId: section.id),
+      api: widget.connections,
+    );
   }
 
   @override
@@ -464,8 +529,8 @@ class _DayReviewPageState extends State<DayReviewPage> {
     return c.finishedAt == null ? f.format(c.startedAt!) : '${f.format(c.startedAt!)} – ${f.format(c.finishedAt!)}';
   }
 
-  Widget _conversationTile(DayReviewConversation c, {Widget? trailing, Color? color}) {
-    return Container(
+  Widget _conversationTile(DayReviewConversation c, {Widget? trailing, Color? color, VoidCallback? onTap}) {
+    final tile = Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(color: color ?? OmiColors.surface1, borderRadius: BorderRadius.circular(14)),
@@ -497,6 +562,80 @@ class _DayReviewPageState extends State<DayReviewPage> {
           if (trailing != null) trailing,
         ],
       ),
+    );
+    if (onTap == null) return tile;
+    return InkWell(
+      key: Key('day_review_open_${c.id}'),
+      borderRadius: OmiRadius.mdAll,
+      onTap: onTap,
+      child: tile,
+    );
+  }
+
+  /// A clip of the reviewed day: tap opens it; in a section, a star keeps it as its own conversation.
+  Widget _reviewClip(DayReview review, DayReviewConversation c, {Color? color, bool keepButton = false}) {
+    final l10n = context.l10n;
+    final kept = review.keptConversationIds.contains(c.id);
+    final trailing = <Widget>[
+      if (kept && _offerWikiSend)
+        IconButton(
+          key: Key('day_review_send_wiki_${c.id}'),
+          tooltip: l10n.sendToWikiTitle,
+          visualDensity: VisualDensity.compact,
+          icon: Icon(Icons.ios_share_rounded, size: 20, color: OmiColors.textSecondary),
+          onPressed: () => showSendToWikiSheet(context, c.id, api: widget.connections),
+        ),
+      if (keepButton)
+        IconButton(
+          key: Key('day_review_keep_${c.id}'),
+          tooltip: kept ? l10n.dayReviewFoldClip : l10n.dayReviewKeepClip,
+          visualDensity: VisualDensity.compact,
+          icon: Icon(kept ? Icons.star_rounded : Icons.star_outline_rounded,
+              size: 22, color: kept ? OmiColors.warning : OmiColors.textSecondary),
+          onPressed: _keeping == null ? () => _keepConversation(c.id, !kept) : null,
+        ),
+    ];
+    return _conversationTile(
+      c,
+      color: color,
+      onTap: () => _openConversation(c.id),
+      trailing: trailing.isEmpty ? null : Row(mainAxisSize: MainAxisSize.min, children: trailing),
+    );
+  }
+
+  /// Where the approved summary went (Connections): sent, scheduled (Undo stops it) or not sent and why.
+  Widget _receipts(DayReview review) {
+    final l10n = context.l10n;
+    final rows = <Widget>[];
+    for (final r in review.outboundReceipts) {
+      final where = r.target == 'orb' ? l10n.connectionsOrbTitle : l10n.connectionsWikiTitle;
+      final String text;
+      Color color = OmiColors.textSecondary;
+      if (r.sent) {
+        text = l10n.dayReviewSentTo(where, DateFormat.MMMd().add_jm().format(r.sentAt!)) +
+            (r.revision > 0 ? ' · ${l10n.dayReviewSentRevision(r.revision)}' : '');
+      } else if (r.scheduled) {
+        text = l10n.dayReviewSendsAt(where, DateFormat.jm().format(r.scheduledAt!));
+      } else if (r.error.isNotEmpty) {
+        text = l10n.dayReviewNotSentTo(where, r.error);
+        color = OmiColors.warning;
+      } else {
+        continue;
+      }
+      rows.add(Padding(
+        padding: const EdgeInsets.only(top: 2),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Icon(r.sent ? Icons.cloud_done_outlined : Icons.cloud_upload_outlined, size: 16, color: color),
+          const SizedBox(width: OmiSpacing.xxs),
+          Expanded(child: Text(text, style: OmiType.caption.copyWith(color: color))),
+        ]),
+      ));
+    }
+    if (rows.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      key: const Key('day_review_receipts'),
+      padding: const EdgeInsets.only(top: OmiSpacing.xxs),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: rows),
     );
   }
 
@@ -938,6 +1077,14 @@ class _DayReviewPageState extends State<DayReviewPage> {
                 icon: Icon(Icons.add_rounded, size: 20, color: OmiColors.textSecondary),
                 onPressed: () => _addParagraph(paragraphs.isEmpty ? null : paragraphs.last.index),
               ),
+              if (section != null && !review.isDraft)
+                IconButton(
+                  key: Key('day_review_section_send_${section.id}'),
+                  tooltip: l10n.sendToAgentTitle,
+                  visualDensity: VisualDensity.compact,
+                  icon: Icon(Icons.smart_toy_outlined, size: 20, color: OmiColors.textSecondary),
+                  onPressed: () => _sendSection(section),
+                ),
               if (section != null && clips.isNotEmpty)
                 IconButton(
                   key: Key('day_review_section_favorite_${section.id}'),
@@ -954,7 +1101,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
             for (final c in clips)
               Padding(
                 padding: const EdgeInsets.only(right: OmiSpacing.xs),
-                child: _conversationTile(c, color: OmiColors.surface2),
+                child: _reviewClip(review, c, color: OmiColors.surface2, keepButton: true),
               ),
           ],
         ],
@@ -1064,6 +1211,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
                       ? l10n.dayReviewCounts(rolled.length, kept.length)
                       : l10n.dayReviewCountsFull(rolled.length, kept.length, merged, dropped.length),
                   style: OmiType.footnote.copyWith(color: OmiColors.textSecondary)),
+              if (!review.isDraft) _receipts(review),
               if (paragraphs.isNotEmpty) ...[
                 const SizedBox(height: OmiSpacing.xxs),
                 Text(l10n.dayReviewEditHint, style: OmiType.caption.copyWith(color: OmiColors.textSecondary)),
@@ -1108,7 +1256,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
               ],
               const SizedBox(height: OmiSpacing.md),
               if (kept.isNotEmpty) ...[
-                _group(l10n.dayReviewKeptTitle(kept.length), [for (final c in kept) _conversationTile(c)],
+                _group(l10n.dayReviewKeptTitle(kept.length), [for (final c in kept) _reviewClip(review, c)],
                     initiallyExpanded: kept.length <= 3),
                 const SizedBox(height: OmiSpacing.xs),
               ],
@@ -1130,7 +1278,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
               ],
               const SizedBox(height: OmiSpacing.md),
               if (rolled.isNotEmpty)
-                _group(l10n.dayReviewRolledTitle(rolled.length), [for (final c in rolled) _conversationTile(c)]),
+                _group(l10n.dayReviewRolledTitle(rolled.length), [for (final c in rolled) _reviewClip(review, c)]),
               if (merged > 0)
                 _group(l10n.dayReviewMergedTitle(merged), [
                   // The sources were merged away; only their count and ids remain.

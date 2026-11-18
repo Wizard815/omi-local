@@ -75,7 +75,9 @@ def test_registered_under_conversations_read():
 
 def test_a_bundled_day_is_compact_and_a_missing_date_means_today(monkeypatch):
     seen = {}
-    monkeypatch.setattr(day_review_service, 'get_day', lambda uid, date: seen.update(date=date) or DAY)
+    monkeypatch.setattr(
+        day_review_service, 'get_day', lambda uid, date, include_drafts=True: seen.update(date=date) or DAY
+    )
     import database.notifications as notification_db
 
     monkeypatch.setattr(notification_db, 'get_user_time_zone', lambda uid: 'UTC')
@@ -88,7 +90,9 @@ def test_a_bundled_day_is_compact_and_a_missing_date_means_today(monkeypatch):
 
 
 def test_an_unknown_argument_is_refused_not_read_as_today(monkeypatch):
-    monkeypatch.setattr(day_review_service, 'get_day', lambda uid, date: pytest.fail('must not read a day'))
+    monkeypatch.setattr(
+        day_review_service, 'get_day', lambda uid, date, include_drafts=True: pytest.fail('must not read a day')
+    )
     with pytest.raises(ToolExecutionError) as caught:
         other.get_day_review('u1', {'day': '2026-11-10'})
     assert caught.value.code == -32602 and 'date' in str(caught.value)
@@ -96,10 +100,52 @@ def test_an_unknown_argument_is_refused_not_read_as_today(monkeypatch):
 
 
 def test_errors_become_tool_errors(monkeypatch):
-    def boom(uid, date):
+    def boom(uid, date, include_drafts=True):
         raise day_review_service.DayReviewError(422, 'Date cannot be in the future')
 
     monkeypatch.setattr(day_review_service, 'get_day', boom)
     with pytest.raises(ToolExecutionError) as caught:
         other.get_day_review('u1', {'date': '2999-01-01'})
     assert 'future' in str(caught.value)
+
+
+def test_a_draft_never_reaches_an_agent(monkeypatch):
+    """A summary draft waits for the user's OK: through MCP (ALLGlance, any agent) the day reads as
+    not bundled and the draft's text, title and sections are absent."""
+    seen = {}
+
+    def fake_get_day(uid, date, include_drafts=True):
+        seen['include_drafts'] = include_drafts
+        draft = {**DAY['review'], 'draft': True, 'title': 'UNAPPROVED DRAFT', 'final_text': 'draft words'}
+        return {**DAY, 'review': draft}
+
+    monkeypatch.setattr(day_review_service, 'get_day', fake_get_day)
+    out = other.get_day_review('u1', {'date': '2026-10-27'})
+    assert seen['include_drafts'] is False
+    assert out['bundled'] is False and out['review'] is None
+    assert 'UNAPPROVED DRAFT' not in repr(out) and 'draft words' not in repr(out)
+    assert [c['id'] for c in out['conversations']] == ['c1', 'c2']
+
+
+def test_get_day_hides_a_stored_draft_from_the_mcp_tool(monkeypatch):
+    """End to end through day_review_service.get_day: the stored draft document is not returned."""
+    import database.day_bundle_users as day_bundle_users_db
+    import database.day_reviews as day_reviews_db
+    import database.notifications as notification_db
+
+    monkeypatch.setattr(notification_db, 'get_user_time_zone', lambda uid: 'UTC')
+    monkeypatch.setattr(day_bundle_users_db, 'mark_active', lambda uid: None)
+    monkeypatch.setattr(
+        day_review_service,
+        'load_day',
+        lambda uid, day, tz: day_review_service.DayConversations(
+            visible=[], rolled_up=[], dropped=[], processing_count=0, dropped_auto_count=0, hold_rules={}
+        ),
+    )
+    monkeypatch.setattr(
+        day_reviews_db,
+        'get_day_review',
+        lambda uid, date: {'status': 'draft', 'title': 'UNAPPROVED DRAFT', 'summary_text': 'x', 'date': date},
+    )
+    out = other.get_day_review('u1', {'date': '2026-10-27'})
+    assert out['review'] is None and out['bundled'] is False

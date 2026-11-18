@@ -11,7 +11,10 @@ import 'package:share_plus/share_plus.dart';
 
 import 'package:omi/backend/http/api/action_items.dart' as action_items_api;
 import 'package:omi/backend/schema/schema.dart';
+import 'package:omi/backend/schema/connections.dart' show AgentJobContext;
 import 'package:omi/pages/action_items/task_delete_undo.dart';
+import 'package:omi/pages/connections/send_to_agent_sheet.dart';
+import 'package:omi/pages/connections/send_to_coinpile_sheet.dart';
 import 'package:omi/providers/action_items_provider.dart';
 import 'package:omi/ui/ui.dart';
 import 'package:omi/utils/l10n_extensions.dart';
@@ -256,6 +259,25 @@ class _ActionItemFormSheetState extends State<ActionItemFormSheet> {
             label: l10n.share,
             color: OmiColors.textSecondary,
             onPressed: _isSaving ? null : _shareActionItem,
+          ),
+          // omi-local Connections: the agent sheet and the Coinpile sheet each show what leaves first.
+          OmiIconButton(
+            key: const Key('task_send_to_agent'),
+            icon: const FaIcon(FontAwesomeIcons.robot, size: 16),
+            label: l10n.sendToAgentTitle,
+            color: OmiColors.textSecondary,
+            onPressed: _isSaving
+                ? null
+                : () => showSendToAgentSheet(context,
+                    jobContext: AgentJobContext(taskId: widget.actionItem!.id),
+                    initialPrompt: widget.actionItem!.description),
+          ),
+          OmiIconButton(
+            key: const Key('task_send_to_coinpile'),
+            icon: const FaIcon(FontAwesomeIcons.coins, size: 16),
+            label: l10n.sendToCoinpileTitle,
+            color: OmiColors.textSecondary,
+            onPressed: _isSaving ? null : () => showSendToCoinpileSheet(context, taskId: widget.actionItem!.id),
           ),
           OmiIconButton(
             icon: const Icon(Icons.delete_outline),

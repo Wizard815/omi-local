@@ -11,11 +11,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:omi/backend/http/api/day_reviews.dart';
+import 'package:omi/backend/schema/connections.dart';
 import 'package:omi/backend/schema/day_review.dart';
 import 'package:omi/l10n/app_localizations.dart';
 import 'package:omi/pages/day_review/day_review_page.dart';
 
 import '../approvals/fake_approvals.dart';
+import '../connections/fake_connections.dart';
 
 const _date = '2026-11-15';
 
@@ -115,6 +117,29 @@ class _FakeApi extends DayReviewApi {
 
   final added = <Map<String, Object?>>[];
   final deleted = <String>[];
+  final keeps = <(String, bool)>[];
+
+  @override
+  Future<DayReviewResult<DayReview>> keepConversation(String date, String conversationId, bool kept) async {
+    keeps.add((conversationId, kept));
+    final current = review!;
+    review = DayReview(
+      date: current.date,
+      title: current.title,
+      summaryText: current.summaryText,
+      finalText: current.finalText,
+      corrections: current.corrections,
+      sections: current.sections,
+      keptConversationIds: kept
+          ? [...current.keptConversationIds, conversationId]
+          : current.keptConversationIds.where((c) => c != conversationId).toList(),
+      rolledUpConversationIds: kept
+          ? current.rolledUpConversationIds.where((c) => c != conversationId).toList()
+          : [...current.rolledUpConversationIds, conversationId],
+      outboundReceipts: current.outboundReceipts,
+    );
+    return DayReviewResult.ok(review!);
+  }
 
   @override
   Future<DayReviewResult<DayReviewDay>> getDay(String date) async => DayReviewResult.ok(DayReviewDay(
@@ -166,14 +191,23 @@ class _FakeApi extends DayReviewApi {
   }
 }
 
-Future<void> _open(WidgetTester tester, _FakeApi api, {FakeApprovals? approvals}) async {
+Future<void> _open(WidgetTester tester, _FakeApi api,
+    {FakeApprovals? approvals,
+    FakeConnections? connections,
+    Future<void> Function(BuildContext, String)? openConversation}) async {
   tester.view.physicalSize = const Size(390 * 3, 844 * 3);
   tester.view.devicePixelRatio = 3;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(MaterialApp(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
-    home: DayReviewPage(date: _date, api: api, approvals: approvals ?? FakeApprovals()),
+    home: DayReviewPage(
+      date: _date,
+      api: api,
+      approvals: approvals ?? FakeApprovals(),
+      connections: connections ?? FakeConnections(),
+      openConversation: openConversation,
+    ),
   ));
   await tester.pumpAndSettle();
 }
@@ -387,5 +421,78 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(approvals.batches.single.date, _date);
     expect(approvals.draftDates, isEmpty);
+  });
+
+  testWidgets('a clip of a section opens its conversation, and its star keeps just that clip', (tester) async {
+    final opened = <String>[];
+    final api = _FakeApi(review: _review(const [], sections: _sections));
+    await _open(tester, api, openConversation: (context, id) async => opened.add(id));
+
+    await tester.tap(find.byKey(const Key('day_review_section_clips_s2')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('day_review_open_c2')));
+    await tester.pumpAndSettle();
+    expect(opened, ['c2'], reason: 'tapping a clip opens the conversation, where it can be edited');
+
+    await tester.tap(find.byKey(const Key('day_review_keep_c2')));
+    await tester.pumpAndSettle();
+    expect(api.keeps, [('c2', true)]);
+    expect(find.text('Kept as conversations (1)'), findsOneWidget, reason: 'the kept list now holds the clip');
+  });
+
+  testWidgets('an approved day says where it was sent, and when it still waits for the Undo window', (tester) async {
+    final base = _review(const [], sections: _sections);
+    final api = _FakeApi(
+      review: DayReview(
+        date: _date,
+        title: base.title,
+        summaryText: base.summaryText,
+        finalText: base.finalText,
+        corrections: const [],
+        sections: base.sections,
+        keptConversationIds: const [],
+        rolledUpConversationIds: const ['c1', 'c2'],
+        outboundReceipts: [
+          OutboundReceipt(target: 'wiki', sentAt: DateTime(2026, 11, 16, 9, 5), title: 'Omi day review', revision: 1),
+          OutboundReceipt(target: 'orb', scheduledAt: DateTime(2026, 11, 16, 9, 15)),
+        ],
+      ),
+    );
+    await _open(tester, api);
+    expect(find.byKey(const Key('day_review_receipts')), findsOneWidget);
+    expect(find.textContaining('Sent to Family wiki'), findsOneWidget);
+    expect(find.textContaining('revised copy 1'), findsOneWidget);
+    expect(find.textContaining('Goes to Pondering Orb at'), findsOneWidget);
+    expect(find.byKey(const Key('day_review_section_send_s1')), findsOneWidget,
+        reason: 'each section of an approved day can go to an agent');
+  });
+
+  testWidgets('with "offer" chosen, a kept clip offers Send to wiki', (tester) async {
+    final connections = FakeConnections(
+      state: const ConnectionsState(targets: {
+        'wiki': ConnectionTarget(
+            name: 'wiki',
+            enabled: true,
+            url: 'http://192.168.20.5:27123',
+            hasToken: true,
+            options: {'send_kept_conversations': 'ask'}),
+      }),
+    );
+    final base = _review(const [], sections: _sections);
+    final api = _FakeApi(
+      review: DayReview(
+        date: _date,
+        title: base.title,
+        summaryText: base.summaryText,
+        finalText: base.finalText,
+        corrections: const [],
+        sections: base.sections,
+        keptConversationIds: const ['c3'],
+        rolledUpConversationIds: const ['c1', 'c2'],
+      ),
+    );
+    await _open(tester, api, connections: connections);
+    expect(find.byKey(const Key('day_review_send_wiki_c3')), findsOneWidget);
+    expect(find.byKey(const Key('day_review_send_wiki_c1')), findsNothing);
   });
 }

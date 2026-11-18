@@ -28,6 +28,7 @@ from models.users import WebhookType, webhook_url_from_setting
 from utils.conversations.render import populate_speaker_names, populate_folder_names
 from utils.conversations.render import conversation_to_dict, redact_conversation_for_integration
 from utils.executors import db_executor, run_blocking
+from utils import integrations_out
 from utils.http_client import (
     UnsafeWebhookURLError,
     get_pinned_delivery_client,
@@ -322,6 +323,12 @@ async def conversation_created_webhook(uid, memory: Conversation):
     if toggled:
         webhook_url = await run_blocking(db_executor, get_user_webhook_db, uid, WebhookType.memory_created)
         if not webhook_url:
+            return
+        if await run_blocking(db_executor, integrations_out.wiki_owns_conversation_webhook, uid, webhook_url):
+            # omi-local: Omi's backend sends to this wiki itself, only what the user approved or chose
+            # (utils/wiki_outbound.py). The developer webhook to the same wiki would file every opened
+            # clip again, unapproved, so it stays quiet while Send to wiki is on.
+            logger.info('memory_created_webhook: skipped uid=%s (Send to wiki owns this wiki)', uid)
             return
         webhook_url = _append_query_params(webhook_url, {'uid': uid})
         journey_attempt = ClientJourneyAttempt(

@@ -36,6 +36,7 @@ with 409 until the user confirms (``replace_edits``).
 from __future__ import annotations
 
 from utils.caldav import sync as caldav_sync
+from utils import outbound_dispatch
 import os
 import uuid
 from dataclasses import dataclass
@@ -217,6 +218,11 @@ def _transcript(conversation: Conversation) -> str:
             for s in (conversation.transcript_segments or [])
             if getattr(s, 'text', '')
         )
+
+
+def transcript_text(conversation: Conversation) -> str:
+    """A conversation's transcript as the review reads it (also what a Connection sends, when asked)."""
+    return _transcript(conversation)
 
 
 def _material_item(conversation: Conversation, ref: str = '') -> MaterialItem:
@@ -429,6 +435,7 @@ def finalize(
     drop_ids: Sequence[str] = (),
     *,
     replace_edits: bool = False,
+    approved_by: str = outbound_dispatch.APPROVED_BY_USER,
 ) -> Dict[str, Any]:
     day = parse_date(date_str)
     tz_name = notification_db.get_user_time_zone(uid)
@@ -541,6 +548,9 @@ def finalize(
         undo['tags'] = retagged
         day_reviews_db.set_day_review(uid, date_str, review)
     caldav_sync.mark_dirty(uid)
+    # The user's OK: queue what their Connections send for this day (the wiki, Orb). Sent
+    # after the Undo window, and only while this approval stands (utils/outbound_worker.py).
+    outbound_dispatch.day_approved(uid, date_str, review, approved_by)
     return present({**review, 'date': date_str})
 
 
@@ -635,7 +645,13 @@ def bundle(uid: str, date_str: str) -> Dict[str, Any]:
     return prepare_draft(uid, date_str)
 
 
-def approve(uid: str, date_str: str, *, replace_edits: bool = False) -> Dict[str, Any]:
+def approve(
+    uid: str,
+    date_str: str,
+    *,
+    replace_edits: bool = False,
+    approved_by: str = outbound_dispatch.APPROVED_BY_USER,
+) -> Dict[str, Any]:
     """The user's OK on a draft: finalize the day with the draft's split and text. Starred
     clips stay (also ones starred after the draft was written); a conversation that came in
     since is rolled up too, and only then is the summary written again."""
@@ -649,7 +665,7 @@ def approve(uid: str, date_str: str, *, replace_edits: bool = False) -> Dict[str
     planned = set(review.get('kept_conversation_ids') or [])
     keep = [cid for cid in visible if cid in planned or cid in starred]
     drop = [cid for cid in (review.get('dropped_conversation_ids') or []) if cid in visible and cid not in keep]
-    return finalize(uid, date_str, keep, (), drop, replace_edits=replace_edits)
+    return finalize(uid, date_str, keep, (), drop, replace_edits=replace_edits, approved_by=approved_by)
 
 
 def favorite_section(uid: str, date_str: str, section_id: str, favorited: bool) -> Dict[str, Any]:
@@ -676,6 +692,7 @@ def favorite_section(uid: str, date_str: str, section_id: str, favorited: bool) 
             conversations_db.set_conversation_starred(uid, cid, True)
             _submit(_enrich_held, uid, cid)
         kept.extend(ids)
+        outbound_dispatch.conversations_kept(uid, ids)
     else:
         for cid in ids:
             conversations_db.set_conversation_starred(uid, cid, False)
@@ -693,6 +710,60 @@ def favorite_section(uid: str, date_str: str, section_id: str, favorited: bool) 
     )
     day_reviews_db.set_day_review(uid, date_str, review)
     caldav_sync.mark_dirty(uid)
+    return present(review)
+
+
+def keep_conversation(uid: str, date_str: str, conversation_id: str, kept: bool) -> Dict[str, Any]:
+    """Pull one clip out of the day's summary as a starred conversation (``kept``), or fold it back
+    in. On a draft this only plans it (star or unstar); on an approved day the clip comes back
+    (restored, starred, processed if the hold kept it raw) or goes back into the summary
+    (unstarred, discarded). The summary text stays as it is either way. A section whose clips
+    are all kept reads as favorited."""
+    review = _require_review(uid, date_str)
+    kept_ids = list(review.get('kept_conversation_ids') or [])
+    rolled_ids = list(review.get('rolled_up_conversation_ids') or [])
+    if conversation_id not in kept_ids and conversation_id not in rolled_ids:
+        raise DayReviewError(404, 'Not a conversation of this day\'s summary')
+    if (conversation_id in kept_ids) == kept:
+        return present(review)
+    if not conversations_db.get_conversation(uid, conversation_id):
+        raise DayReviewError(404, 'Conversation not found')
+    if is_draft(review):
+        conversations_db.set_conversation_starred(uid, conversation_id, kept)
+    elif kept:
+        lifecycle.restore_discarded(uid, conversation_id)
+        conversations_db.update_conversation(uid, conversation_id, {DAY_REVIEW_DATE_FIELD: None})
+        conversations_db.set_conversation_starred(uid, conversation_id, True)
+        _submit(_enrich_held, uid, conversation_id)
+    else:
+        conversations_db.set_conversation_starred(uid, conversation_id, False)
+        conversations_db.update_conversation(uid, conversation_id, {DAY_REVIEW_DATE_FIELD: date_str})
+        lifecycle.discard(uid, conversation_id)
+    if kept:
+        rolled_ids = [c for c in rolled_ids if c != conversation_id]
+        kept_ids.append(conversation_id)
+    else:
+        kept_ids = [c for c in kept_ids if c != conversation_id]
+        rolled_ids.append(conversation_id)
+    sections = list(review.get('sections') or [])
+    for section in sections:
+        ids = list(section.get('conversation_ids') or [])
+        if conversation_id in ids:
+            section['favorited'] = all(c in kept_ids for c in ids)
+    review.update(
+        {
+            'sections': sections,
+            'kept_conversation_ids': kept_ids,
+            'rolled_up_conversation_ids': rolled_ids,
+            'updated_at': datetime.now(timezone.utc),
+        }
+    )
+    day_reviews_db.set_day_review(uid, date_str, review)
+    if not is_draft(review):
+        caldav_sync.mark_dirty(uid)
+        if kept:
+            # "Send when I keep a clip": the wiki gets it once it is processed (outbound_dispatch).
+            outbound_dispatch.conversations_kept(uid, [conversation_id])
     return present(review)
 
 

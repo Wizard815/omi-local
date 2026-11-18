@@ -1720,6 +1720,9 @@ _add(
 # omi-local (self-hosted fork): end-of-day reviews, the dashboard's in-progress
 # list, and the ChromaDB vector store.
 _add(DriverEntry('database.day_reviews.list_day_reviews', base={'uid': UID}, neutrals={'limit': _LIMIT}))
+# omi-local Connections: a user's agent jobs (newest first) and the outbound queue (streamed whole).
+_add(DriverEntry('database.agent_jobs.list_recent', base={'uid': UID}, neutrals={'limit': _LIMIT}))
+_add(DriverEntry('database.outbound_work.all_items'))
 _add(DriverEntry('routers.dashboard.dashboard_conversations', neutrals={'limit': _LIMIT}))
 _add(
     SkipEntry(

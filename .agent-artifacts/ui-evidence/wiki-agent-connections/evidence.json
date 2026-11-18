@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "images": [
+    {
+      "file": "001-mobile-android-connections-page-top.png",
+      "platform": "mobile-android",
+      "description": "Settings > Connections: six targets with status, and the webhook notice",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "002-mobile-android-connections-page-wiki.png",
+      "platform": "mobile-android",
+      "description": "The family wiki card: switches, kept-clip choice, address, write-only token",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "003-mobile-android-connections-page-wiki-bottom.png",
+      "platform": "mobile-android",
+      "description": "Wiki card: transcript choice, wiki person, Save, Test connection",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "004-mobile-android-send-to-agent-sheet-open.png",
+      "platform": "mobile-android",
+      "description": "Send to agent: Odysseus, Hermes, Studio with one-line explanations",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "005-mobile-android-send-to-agent-sheet-preview.png",
+      "platform": "mobile-android",
+      "description": "Send to agent: the exact text that leaves, and the suggested agent",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "006-mobile-android-send-to-wiki-sheet.png",
+      "platform": "mobile-android",
+      "description": "Send to wiki: exact markdown and destination; already sent, revised copy",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "007-mobile-android-send-to-coinpile-sheet-note.png",
+      "platform": "mobile-android",
+      "description": "Send to Coinpile: a note drafted from the conversation",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "008-mobile-android-send-to-coinpile-sheet-transaction.png",
+      "platform": "mobile-android",
+      "description": "Send to Coinpile: a transaction with account and amount",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "009-mobile-android-agent-jobs-page.png",
+      "platform": "mobile-android",
+      "description": "Agent jobs: Hermes asks (Allow once / Deny), Studio working, Odysseus answered",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "010-mobile-android-approvals-agents-asking.png",
+      "platform": "mobile-android",
+      "description": "Waiting for your OK: an agent's question",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "011-mobile-android-day-review-clips-keep-send-clips.png",
+      "platform": "mobile-android",
+      "description": "Approved day: receipts, section clips with keep stars and Send to agent",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "012-mobile-android-day-review-clips-keep-send-kept.png",
+      "platform": "mobile-android",
+      "description": "A kept clip offers Send to wiki",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    }
+  ]
+}
