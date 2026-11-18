@@ -16679,4 +16679,426 @@ class AppLocalizationsTa extends AppLocalizations {
   @override
   String get dayReviewApproveRewriteBody =>
       'New conversations came in since you edited this summary. Approving rewrites it, which will replace your edits — continue?';
+
+  @override
+  String get agentJobsAllowOnce => 'Allow once';
+
+  @override
+  String get agentJobsAnswerFailed => 'Could not send your answer';
+
+  @override
+  String get agentJobsAnswerInStudio => 'Answer this in Studio; Omi shows the result when it finishes.';
+
+  @override
+  String agentJobsAsks(String agent) {
+    return '$agent asks before it goes on';
+  }
+
+  @override
+  String get agentJobsDeny => 'Deny';
+
+  @override
+  String get agentJobsEmpty =>
+      'Nothing sent to an agent yet. Use Send to agent on a conversation, a part of a day summary or a task.';
+
+  @override
+  String get agentJobsLoadFailed => 'Could not load your agent jobs';
+
+  @override
+  String get agentJobsStatusAsking => 'Asks you';
+
+  @override
+  String get agentJobsStatusDone => 'Done';
+
+  @override
+  String get agentJobsStatusFailed => 'Failed';
+
+  @override
+  String get agentJobsStatusQueued => 'Queued';
+
+  @override
+  String get agentJobsStatusRunning => 'Working';
+
+  @override
+  String get agentJobsTitle => 'Agent jobs';
+
+  @override
+  String get agentJobsUntitled => 'Agent job';
+
+  @override
+  String get agentJobsWhatWasSent => 'What was sent';
+
+  @override
+  String get approvalAgentsAsking => 'Agents asking before they go on';
+
+  @override
+  String get connectionsAddress => 'Address';
+
+  @override
+  String connectionsAddressFromServer(String url) {
+    return 'Server default: $url';
+  }
+
+  @override
+  String get connectionsClearToken => 'Remove saved token';
+
+  @override
+  String get connectionsCoinpilePurpose =>
+      'A money note or transaction, only when you tap Send. Coinpile asks you again before anything changes.';
+
+  @override
+  String get connectionsCoinpileTitle => 'Coinpile';
+
+  @override
+  String get connectionsHermesPurpose =>
+      'Agentic jobs: research, plans, multi-step work. Its questions come to your Approvals.';
+
+  @override
+  String get connectionsHermesTitle => 'Hermes';
+
+  @override
+  String get connectionsIncludeTranscript => 'Include the transcript';
+
+  @override
+  String get connectionsIncludeTranscriptHint => 'Off: only the title, summary and action items are sent.';
+
+  @override
+  String get connectionsIntro =>
+      'Nothing leaves Omi without your OK: a day summary only when you approve the day, everything else only when you tap Send and have seen exactly what goes.';
+
+  @override
+  String get connectionsLastTestOk => 'Last test: connected';
+
+  @override
+  String get connectionsLoadFailed => 'Could not load Connections';
+
+  @override
+  String get connectionsOdysseusChat => 'Chat to reuse (optional)';
+
+  @override
+  String get connectionsOdysseusChatHint => 'Leave empty to start a new Odysseus chat for each ask.';
+
+  @override
+  String get connectionsOdysseusEndpoint => 'Model endpoint id';
+
+  @override
+  String get connectionsOdysseusEndpointHint =>
+      'From Odysseus Settings, Models; tokens cannot use a raw model address.';
+
+  @override
+  String get connectionsOdysseusModel => 'Model';
+
+  @override
+  String get connectionsOdysseusPurpose => 'Simple things: a quick question, a short summary, a reminder, a look-up.';
+
+  @override
+  String get connectionsOdysseusTitle => 'Odysseus';
+
+  @override
+  String get connectionsOnlyManual => 'Only days I approve myself';
+
+  @override
+  String get connectionsOnlyManualHint => 'Off: days approved automatically are sent too.';
+
+  @override
+  String get connectionsOrbLog => 'Log approved days';
+
+  @override
+  String get connectionsOrbLogHint => 'Adds a short line to Orb\'s log when you approve a day.';
+
+  @override
+  String get connectionsOrbProject => 'Orb project';
+
+  @override
+  String get connectionsOrbPurpose => 'An optional log line when you approve a day.';
+
+  @override
+  String get connectionsOrbTitle => 'Pondering Orb';
+
+  @override
+  String get connectionsSave => 'Save';
+
+  @override
+  String get connectionsSaveFailed => 'Could not save';
+
+  @override
+  String get connectionsStatusNeedsSetup => 'Needs setup';
+
+  @override
+  String get connectionsStatusOff => 'Off';
+
+  @override
+  String get connectionsStatusOn => 'On';
+
+  @override
+  String get connectionsStudioAgent => 'Agent';
+
+  @override
+  String get connectionsStudioPurpose => 'Coding agents (Claude Code, Codex, Ekko and others) in Studio.';
+
+  @override
+  String get connectionsStudioSecret => 'Webhook secret';
+
+  @override
+  String connectionsStudioSecretHint(String path) {
+    return 'For results: register $path on this server in Studio\'s webhooks, with the same secret.';
+  }
+
+  @override
+  String get connectionsStudioTitle => 'Studio';
+
+  @override
+  String get connectionsStudioWorkspace => 'Workspace (optional)';
+
+  @override
+  String get connectionsTest => 'Test connection';
+
+  @override
+  String get connectionsTestFailed => 'The test did not finish';
+
+  @override
+  String connectionsTestOk(String detail) {
+    return 'Connected: $detail';
+  }
+
+  @override
+  String get connectionsTitle => 'Connections';
+
+  @override
+  String get connectionsTokenCoinpile => 'Coinpile token (mcp scope)';
+
+  @override
+  String get connectionsTokenFromServer => 'Using this server\'s household token.';
+
+  @override
+  String get connectionsTokenHermes => 'Hermes API key';
+
+  @override
+  String get connectionsTokenNone => 'No token saved.';
+
+  @override
+  String get connectionsTokenOdysseus => 'Odysseus API token (chat scope)';
+
+  @override
+  String get connectionsTokenOrb => 'Orb API token';
+
+  @override
+  String get connectionsTokenSaved => 'A token is saved; leave empty to keep it.';
+
+  @override
+  String get connectionsTokenStudio => 'Studio sign-in token';
+
+  @override
+  String get connectionsTokenWiki => 'Your family wiki token';
+
+  @override
+  String get connectionsUseThis => 'Use this connection';
+
+  @override
+  String get connectionsWebhookNotice =>
+      'Your developer Conversation Events webhook points at this wiki. While Send to wiki is on, Omi skips that webhook so nothing is filed twice or before you approve it.';
+
+  @override
+  String get connectionsWikiKeptAsk => 'Offer';
+
+  @override
+  String get connectionsWikiKeptOff => 'Off';
+
+  @override
+  String get connectionsWikiKeptOnKeep => 'When I keep';
+
+  @override
+  String get connectionsWikiKeptTitle => 'Clips I keep from a day';
+
+  @override
+  String get connectionsWikiPerson => 'Wiki person (optional)';
+
+  @override
+  String get connectionsWikiPersonHint => 'Only for a shared token: whose folder to file into.';
+
+  @override
+  String get connectionsWikiPurpose =>
+      'Your approved day summaries and the conversations you choose, as sources in your wiki folder.';
+
+  @override
+  String get connectionsWikiSendDays => 'Send approved day summaries';
+
+  @override
+  String get connectionsWikiSendDaysHint => 'Sent 10 minutes after you approve, so Undo stops it.';
+
+  @override
+  String get connectionsWikiTitle => 'Family wiki';
+
+  @override
+  String get dayReviewClipFolded => 'Folded back into the summary';
+
+  @override
+  String get dayReviewClipKept => 'Kept as its own conversation';
+
+  @override
+  String get dayReviewConversationGone => 'This conversation is no longer available';
+
+  @override
+  String get dayReviewFoldClip => 'Fold back into the summary';
+
+  @override
+  String get dayReviewKeepClip => 'Keep as its own conversation';
+
+  @override
+  String dayReviewNotSentTo(String where, String reason) {
+    return 'Not sent to $where: $reason';
+  }
+
+  @override
+  String dayReviewSendsAt(String where, String time) {
+    return 'Goes to $where at $time (Undo stops it)';
+  }
+
+  @override
+  String dayReviewSentRevision(int count) {
+    return 'revised copy $count';
+  }
+
+  @override
+  String dayReviewSentTo(String where, String when) {
+    return 'Sent to $where $when';
+  }
+
+  @override
+  String get sendToAgentAttach => 'Add the result to this conversation';
+
+  @override
+  String get sendToAgentFailed => 'Could not send it';
+
+  @override
+  String get sendToAgentHermesHint =>
+      'For a job: research, a plan, several steps. It may ask you before it runs something.';
+
+  @override
+  String get sendToAgentOdysseusHint =>
+      'For something simple: a quick question, a short summary, a reminder, a look-up.';
+
+  @override
+  String get sendToAgentPreviewAgain => 'Refresh preview';
+
+  @override
+  String get sendToAgentPreviewFailed => 'Could not prepare the preview';
+
+  @override
+  String get sendToAgentPreviewFirst => 'Show what will be sent first; Send uses exactly that.';
+
+  @override
+  String get sendToAgentPrompt => 'What should it do?';
+
+  @override
+  String get sendToAgentPromptHint => 'e.g. Make a cut list from this';
+
+  @override
+  String sendToAgentSend(String agent) {
+    return 'Send to $agent';
+  }
+
+  @override
+  String sendToAgentSent(String agent) {
+    return 'Sent to $agent. You get the result when it is done.';
+  }
+
+  @override
+  String get sendToAgentShowPreview => 'Show what will be sent';
+
+  @override
+  String get sendToAgentStudioHint => 'For coding: a coding agent works on it in Studio.';
+
+  @override
+  String sendToAgentSuggest(String agent) {
+    return '$agent fits this better.';
+  }
+
+  @override
+  String get sendToAgentTitle => 'Send to agent…';
+
+  @override
+  String sendToAgentUseSuggested(String agent) {
+    return 'Use $agent';
+  }
+
+  @override
+  String sendToAgentWhatLeaves(String destination) {
+    return 'Exactly what goes to $destination';
+  }
+
+  @override
+  String get sendToAgentWho => 'Who should do it?';
+
+  @override
+  String get sendToCoinpileAccount => 'Account';
+
+  @override
+  String get sendToCoinpileAmount => 'Amount (negative = money out)';
+
+  @override
+  String get sendToCoinpileDate => 'Date (optional)';
+
+  @override
+  String get sendToCoinpileDescription => 'Description';
+
+  @override
+  String get sendToCoinpileFailed => 'Could not send it to Coinpile';
+
+  @override
+  String get sendToCoinpileIntro =>
+      'Exactly these fields go to Coinpile. Nothing changes there until you answer Yes on Coinpile\'s Agent page.';
+
+  @override
+  String get sendToCoinpileNeedsAccount => 'Pick an account and enter an amount';
+
+  @override
+  String get sendToCoinpileNote => 'Note';
+
+  @override
+  String get sendToCoinpileNoteBody => 'Note';
+
+  @override
+  String get sendToCoinpileNoteTitle => 'Title';
+
+  @override
+  String get sendToCoinpileSend => 'Send to Coinpile';
+
+  @override
+  String get sendToCoinpileSent => 'Sent. Answer Yes on Coinpile\'s Agent page to save it.';
+
+  @override
+  String get sendToCoinpileTitle => 'Send to Coinpile';
+
+  @override
+  String get sendToCoinpileTransaction => 'Transaction';
+
+  @override
+  String sendToWikiAlreadySent(String when) {
+    return 'Already sent $when. Sending again files a revised copy.';
+  }
+
+  @override
+  String get sendToWikiFailed => 'Could not send it to the wiki';
+
+  @override
+  String get sendToWikiSend => 'Send to wiki';
+
+  @override
+  String get sendToWikiSendRevised => 'Send revised copy';
+
+  @override
+  String get sendToWikiSent => 'Sent to the wiki';
+
+  @override
+  String get sendToWikiTitle => 'Send to wiki';
+
+  @override
+  String sendToWikiWhere(String destination) {
+    return 'Goes to $destination';
+  }
+
+  @override
+  String get connectionsNotReady =>
+      'This connection is off or has no address or token. Set it up in Settings > Connections.';
 }

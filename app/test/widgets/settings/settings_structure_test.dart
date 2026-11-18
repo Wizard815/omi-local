@@ -176,6 +176,8 @@ void main() {
       // omi-local: Calendar & tasks (CalDAV) and the ALLGlance calendar joined the sheet next to Integrations.
       'settings_row_caldav',
       'settings_row_family_calendar',
+      // omi-local: Connections (wiki, Odysseus, Hermes, Studio, Coinpile, Orb).
+      'settings_row_connections',
       'settings_row_connect_agent',
       'settings_group_privacy',
       'settings_row_memories',
@@ -196,6 +198,7 @@ void main() {
       en.integrations,
       en.caldavSettingsTitle,
       en.familyCalendarTitle,
+      en.connectionsTitle,
       en.connectAnAgent,
       en.dataAndPrivacy,
       en.memories,
@@ -250,6 +253,7 @@ void main() {
       // omi-local (2026-10-27 / 2026-11-07): CalDAV and the ALLGlance calendar rows next to Integrations.
       SettingsDestination.caldav: 'settings_row_caldav',
       SettingsDestination.familyCalendar: 'settings_row_family_calendar',
+      SettingsDestination.connections: 'settings_row_connections',
       SettingsDestination.planAndUsage: 'settings_row_planAndUsage',
       SettingsDestination.feedback: 'settings_row_feedback', // where Intercom is supported (the host test is)
       SettingsDestination.voice: 'settings_group_voice',

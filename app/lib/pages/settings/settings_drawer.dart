@@ -214,6 +214,12 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
               title: l10n.familyCalendarTitle,
             ),
             _row(
+              SettingsDestination.connections,
+              key: 'settings_row_connections',
+              icon: FontAwesomeIcons.diagramProject,
+              title: l10n.connectionsTitle,
+            ),
+            _row(
               SettingsDestination.connectAgent,
               key: 'settings_row_connect_agent',
               icon: FontAwesomeIcons.terminal,

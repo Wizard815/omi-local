@@ -3779,7 +3779,7 @@ FIELD_SITES = {
         (
             'get_day_review',
             'status',
-            "'draft' if review.get('draft') else 'finalized'",
+            "'finalized'",
             (
                 'generated_at',
                 'generation_count',

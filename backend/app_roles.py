@@ -37,6 +37,8 @@ from routers import (
     chat_receipts,
     dashboard,
     approvals,
+    integrations_outbound,
+    agent_jobs,
     caldav,
     day_reviews,
     family_calendar,
@@ -225,6 +227,8 @@ ROUTER_MOUNTS: tuple[Mount, ...] = (
     Mount(chat_first_e2e, harness_only=True),
     Mount(daily_summary_e2e, harness_only=True),
     Mount(task_integrations),
+    # omi-local: Connections, before /v1/integrations/{app_key} so /v1/integrations/outbound is not read as an app key.
+    Mount(integrations_outbound),  # omi-local: Connections (wiki, Hermes, Odysseus, Studio, Coinpile, Orb)
     Mount(integrations),
     Mount(x_connector),
     Mount(memories),
@@ -287,6 +291,7 @@ ROUTER_MOUNTS: tuple[Mount, ...] = (
     Mount(caldav),  # omi-local
     Mount(family_calendar),  # omi-local
     Mount(approvals),  # omi-local: tasks waiting for the user's OK, auto-approve
+    Mount(agent_jobs),  # omi-local: Send to agent (Odysseus, Hermes, Studio) and Studio's signed webhook
     Mount(search),
     Mount(knowledge_graph),
     Mount(goals),

@@ -1735,6 +1735,361 @@
         "title": "AdviceResponse",
         "type": "object"
       },
+      "AgentJob": {
+        "properties": {
+          "agent_id": {
+            "default": "",
+            "title": "Agent Id",
+            "type": "string"
+          },
+          "approval": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentJobApproval"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "attach_result": {
+            "default": false,
+            "title": "Attach Result",
+            "type": "boolean"
+          },
+          "conversation_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Conversation Ids",
+            "type": "array"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "error": {
+            "default": "",
+            "title": "Error",
+            "type": "string"
+          },
+          "external_id": {
+            "default": "",
+            "description": "Hermes run id, Studio chat session id, or Odysseus chat id",
+            "title": "External Id",
+            "type": "string"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "prompt": {
+            "default": "",
+            "title": "Prompt",
+            "type": "string"
+          },
+          "result": {
+            "default": "",
+            "title": "Result",
+            "type": "string"
+          },
+          "section": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentJobSection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "default": "queued",
+            "enum": [
+              "queued",
+              "running",
+              "waiting_for_approval",
+              "completed",
+              "failed",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "target": {
+            "enum": [
+              "odysseus",
+              "hermes",
+              "studio"
+            ],
+            "title": "Target",
+            "type": "string"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "id",
+          "target"
+        ],
+        "title": "AgentJob",
+        "type": "object"
+      },
+      "AgentJobApproval": {
+        "properties": {
+          "choices": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Choices",
+            "type": "array"
+          },
+          "command": {
+            "default": "",
+            "description": "What the agent asks to run (redacted by the agent)",
+            "title": "Command",
+            "type": "string"
+          },
+          "description": {
+            "default": "",
+            "title": "Description",
+            "type": "string"
+          },
+          "request_id": {
+            "default": "",
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "title": "AgentJobApproval",
+        "type": "object"
+      },
+      "AgentJobPreviewRequest": {
+        "properties": {
+          "agent_id": {
+            "anyOf": [
+              {
+                "enum": [
+                  "ekko-agent",
+                  "hermes",
+                  "claude-code",
+                  "codex",
+                  "pi",
+                  "grok",
+                  "opencode"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Id"
+          },
+          "conversation_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Conversation Ids",
+            "type": "array"
+          },
+          "include_transcript": {
+            "default": false,
+            "title": "Include Transcript",
+            "type": "boolean"
+          },
+          "prompt": {
+            "default": "",
+            "maxLength": 20000,
+            "title": "Prompt",
+            "type": "string"
+          },
+          "section": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentJobSection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "target": {
+            "enum": [
+              "odysseus",
+              "hermes",
+              "studio"
+            ],
+            "title": "Target",
+            "type": "string"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "title": "AgentJobPreviewRequest",
+        "type": "object"
+      },
+      "AgentJobPreviewResponse": {
+        "properties": {
+          "content": {
+            "default": "",
+            "description": "Exactly what would leave Omi: the prompt and its context",
+            "title": "Content",
+            "type": "string"
+          },
+          "destination": {
+            "default": "",
+            "title": "Destination",
+            "type": "string"
+          },
+          "suggested_target": {
+            "default": "odysseus",
+            "description": "Odysseus for a short ask, Hermes for a job",
+            "enum": [
+              "odysseus",
+              "hermes",
+              "studio"
+            ],
+            "title": "Suggested Target",
+            "type": "string"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "title": "AgentJobPreviewResponse",
+        "type": "object"
+      },
+      "AgentJobResponse": {
+        "properties": {
+          "error": {
+            "default": "",
+            "title": "Error",
+            "type": "string"
+          },
+          "job": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentJob"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "AgentJobResponse",
+        "type": "object"
+      },
+      "AgentJobSection": {
+        "properties": {
+          "date": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "title": "Date",
+            "type": "string"
+          },
+          "section_id": {
+            "maxLength": 128,
+            "title": "Section Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "section_id"
+        ],
+        "title": "AgentJobSection",
+        "type": "object"
+      },
+      "AgentJobsResponse": {
+        "properties": {
+          "jobs": {
+            "items": {
+              "$ref": "#/components/schemas/AgentJob"
+            },
+            "title": "Jobs",
+            "type": "array"
+          }
+        },
+        "title": "AgentJobsResponse",
+        "type": "object"
+      },
       "AgentProposalAnswer": {
         "additionalProperties": false,
         "properties": {
@@ -1999,6 +2354,24 @@
         ],
         "title": "AnnouncementType",
         "type": "string"
+      },
+      "AnswerAgentApprovalRequest": {
+        "properties": {
+          "choice": {
+            "description": "Allow this once, or refuse",
+            "enum": [
+              "once",
+              "deny"
+            ],
+            "title": "Choice",
+            "type": "string"
+          }
+        },
+        "required": [
+          "choice"
+        ],
+        "title": "AnswerAgentApprovalRequest",
+        "type": "object"
       },
       "App": {
         "description": "Full App model - includes large/internal fields for detail views.",
@@ -9921,6 +10294,251 @@
         "title": "ClientProcessing",
         "type": "object"
       },
+      "CoinpileAccount": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "default": "",
+            "title": "Name",
+            "type": "string"
+          },
+          "type": {
+            "default": "",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "CoinpileAccount",
+        "type": "object"
+      },
+      "CoinpileAccountsResponse": {
+        "properties": {
+          "accounts": {
+            "items": {
+              "$ref": "#/components/schemas/CoinpileAccount"
+            },
+            "title": "Accounts",
+            "type": "array"
+          },
+          "error": {
+            "default": "",
+            "title": "Error",
+            "type": "string"
+          }
+        },
+        "title": "CoinpileAccountsResponse",
+        "type": "object"
+      },
+      "CoinpileOutboundSettings": {
+        "properties": {
+          "enabled": {
+            "default": false,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "has_token": {
+            "default": false,
+            "title": "Has Token",
+            "type": "boolean"
+          },
+          "last_check_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Check At"
+          },
+          "last_check_error": {
+            "default": "",
+            "title": "Last Check Error",
+            "type": "string"
+          },
+          "last_check_ok": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Check Ok"
+          },
+          "own_url": {
+            "default": "",
+            "description": "The address the user set (\"\" = the stack's default)",
+            "title": "Own Url",
+            "type": "string"
+          },
+          "token_from_env": {
+            "default": false,
+            "description": "The token is the stack's household token (env)",
+            "title": "Token From Env",
+            "type": "boolean"
+          },
+          "url": {
+            "default": "",
+            "description": "The address in use (the user's own, else the stack's default)",
+            "title": "Url",
+            "type": "string"
+          },
+          "url_from_env": {
+            "default": false,
+            "description": "The address comes from the stack (env)",
+            "title": "Url From Env",
+            "type": "boolean"
+          }
+        },
+        "title": "CoinpileOutboundSettings",
+        "type": "object"
+      },
+      "CoinpileSendRequest": {
+        "properties": {
+          "account_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Coinpile account (ff:...)",
+            "title": "Account Id"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Negative = money out",
+            "title": "Amount"
+          },
+          "body": {
+            "default": "",
+            "maxLength": 20000,
+            "title": "Body",
+            "type": "string"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "kind": {
+            "default": "note",
+            "enum": [
+              "note",
+              "transaction"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id"
+          },
+          "title": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "title": "CoinpileSendRequest",
+        "type": "object"
+      },
+      "CoinpileSendResponse": {
+        "properties": {
+          "answer": {
+            "default": "",
+            "description": "Coinpile's answer (a change waits for a Yes on Coinpile's Agent page)",
+            "title": "Answer",
+            "type": "string"
+          },
+          "error": {
+            "default": "",
+            "title": "Error",
+            "type": "string"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "CoinpileSendResponse",
+        "type": "object"
+      },
       "ColdStartSequence": {
         "additionalProperties": false,
         "description": "Explicit local-only identity for the fixed sparse cold-start script.",
@@ -13091,6 +13709,97 @@
         "title": "CreateActionItemRequest",
         "type": "object"
       },
+      "CreateAgentJobRequest": {
+        "properties": {
+          "agent_id": {
+            "anyOf": [
+              {
+                "enum": [
+                  "ekko-agent",
+                  "hermes",
+                  "claude-code",
+                  "codex",
+                  "pi",
+                  "grok",
+                  "opencode"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Id"
+          },
+          "attach_result": {
+            "default": false,
+            "description": "Add the result to the first conversation as a note",
+            "title": "Attach Result",
+            "type": "boolean"
+          },
+          "conversation_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Conversation Ids",
+            "type": "array"
+          },
+          "include_transcript": {
+            "default": false,
+            "title": "Include Transcript",
+            "type": "boolean"
+          },
+          "prompt": {
+            "default": "",
+            "maxLength": 20000,
+            "title": "Prompt",
+            "type": "string"
+          },
+          "section": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentJobSection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "target": {
+            "enum": [
+              "odysseus",
+              "hermes",
+              "studio"
+            ],
+            "title": "Target",
+            "type": "string"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id"
+          },
+          "title": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "title": "CreateAgentJobRequest",
+        "type": "object"
+      },
       "CreateAnnouncementRequest": {
         "description": "Request body for creating an announcement.",
         "properties": {
@@ -15226,6 +15935,14 @@
               "$ref": "#/components/schemas/DayReviewMergeGroup"
             },
             "title": "Merged Groups",
+            "type": "array"
+          },
+          "outbound_receipts": {
+            "description": "Where the approved summary was sent (Connections: the wiki, Orb), or when it will be",
+            "items": {
+              "$ref": "#/components/schemas/OutboundReceipt"
+            },
+            "title": "Outbound Receipts",
             "type": "array"
           },
           "rolled_up_conversation_ids": {
@@ -22457,6 +23174,74 @@
         "title": "HeldAudioSummary",
         "type": "object"
       },
+      "HermesOutboundSettings": {
+        "properties": {
+          "enabled": {
+            "default": false,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "has_token": {
+            "default": false,
+            "title": "Has Token",
+            "type": "boolean"
+          },
+          "last_check_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Check At"
+          },
+          "last_check_error": {
+            "default": "",
+            "title": "Last Check Error",
+            "type": "string"
+          },
+          "last_check_ok": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Check Ok"
+          },
+          "own_url": {
+            "default": "",
+            "description": "The address the user set (\"\" = the stack's default)",
+            "title": "Own Url",
+            "type": "string"
+          },
+          "token_from_env": {
+            "default": false,
+            "description": "The token is the stack's household token (env)",
+            "title": "Token From Env",
+            "type": "boolean"
+          },
+          "url": {
+            "default": "",
+            "description": "The address in use (the user's own, else the stack's default)",
+            "title": "Url",
+            "type": "string"
+          },
+          "url_from_env": {
+            "default": false,
+            "description": "The address comes from the stack (env)",
+            "title": "Url From Env",
+            "type": "boolean"
+          }
+        },
+        "title": "HermesOutboundSettings",
+        "type": "object"
+      },
       "HiddenNoiseCountsResponse": {
         "properties": {
           "days": {
@@ -23117,6 +23902,18 @@
         ],
         "title": "InterventionSurface",
         "type": "string"
+      },
+      "KeepDayReviewConversationRequest": {
+        "properties": {
+          "kept": {
+            "default": true,
+            "description": "Pull this clip out of the summary as a starred conversation (false folds it back)",
+            "title": "Kept",
+            "type": "boolean"
+          }
+        },
+        "title": "KeepDayReviewConversationRequest",
+        "type": "object"
       },
       "KnowledgeGraphResponse": {
         "properties": {
@@ -27337,6 +28134,92 @@
         "title": "OAuthUrlResponse",
         "type": "object"
       },
+      "OdysseusOutboundSettings": {
+        "properties": {
+          "enabled": {
+            "default": false,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "endpoint_id": {
+            "default": "",
+            "description": "Odysseus model endpoint for new chats (Odysseus' Settings)",
+            "title": "Endpoint Id",
+            "type": "string"
+          },
+          "has_token": {
+            "default": false,
+            "title": "Has Token",
+            "type": "boolean"
+          },
+          "last_check_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Check At"
+          },
+          "last_check_error": {
+            "default": "",
+            "title": "Last Check Error",
+            "type": "string"
+          },
+          "last_check_ok": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Check Ok"
+          },
+          "model": {
+            "default": "",
+            "description": "Model for new chats",
+            "title": "Model",
+            "type": "string"
+          },
+          "own_url": {
+            "default": "",
+            "description": "The address the user set (\"\" = the stack's default)",
+            "title": "Own Url",
+            "type": "string"
+          },
+          "session_id": {
+            "default": "",
+            "description": "Reuse this Odysseus chat for every ask (else one chat per ask)",
+            "title": "Session Id",
+            "type": "string"
+          },
+          "token_from_env": {
+            "default": false,
+            "description": "The token is the stack's household token (env)",
+            "title": "Token From Env",
+            "type": "boolean"
+          },
+          "url": {
+            "default": "",
+            "description": "The address in use (the user's own, else the stack's default)",
+            "title": "Url",
+            "type": "string"
+          },
+          "url_from_env": {
+            "default": false,
+            "description": "The address comes from the stack (env)",
+            "title": "Url From Env",
+            "type": "boolean"
+          }
+        },
+        "title": "OdysseusOutboundSettings",
+        "type": "object"
+      },
       "OfflineQueueInstruction": {
         "description": "Server instruction for legacy offline/outbox queues on clients.\n\n``drain`` is only legal before the migration fence (legacy plane still\nwritable). ``quarantine`` applies once the account enters ``migrating``.",
         "enum": [
@@ -27672,6 +28555,245 @@
         ],
         "title": "OpenLoopStatus",
         "type": "string"
+      },
+      "OrbOutboundSettings": {
+        "properties": {
+          "enabled": {
+            "default": false,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "has_token": {
+            "default": false,
+            "title": "Has Token",
+            "type": "boolean"
+          },
+          "last_check_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Check At"
+          },
+          "last_check_error": {
+            "default": "",
+            "title": "Last Check Error",
+            "type": "string"
+          },
+          "last_check_ok": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Check Ok"
+          },
+          "log_day_approvals": {
+            "default": false,
+            "description": "Add an Orb log line when a day is approved",
+            "title": "Log Day Approvals",
+            "type": "boolean"
+          },
+          "own_url": {
+            "default": "",
+            "description": "The address the user set (\"\" = the stack's default)",
+            "title": "Own Url",
+            "type": "string"
+          },
+          "project": {
+            "default": "General",
+            "description": "Orb project for that log line",
+            "title": "Project",
+            "type": "string"
+          },
+          "require_manual_approval": {
+            "default": true,
+            "title": "Require Manual Approval",
+            "type": "boolean"
+          },
+          "token_from_env": {
+            "default": false,
+            "description": "The token is the stack's household token (env)",
+            "title": "Token From Env",
+            "type": "boolean"
+          },
+          "url": {
+            "default": "",
+            "description": "The address in use (the user's own, else the stack's default)",
+            "title": "Url",
+            "type": "string"
+          },
+          "url_from_env": {
+            "default": false,
+            "description": "The address comes from the stack (env)",
+            "title": "Url From Env",
+            "type": "boolean"
+          }
+        },
+        "title": "OrbOutboundSettings",
+        "type": "object"
+      },
+      "OutboundIntegrationsResponse": {
+        "properties": {
+          "coinpile": {
+            "$ref": "#/components/schemas/CoinpileOutboundSettings"
+          },
+          "conversation_webhook_to_wiki": {
+            "default": false,
+            "description": "The developer Conversation Events webhook points at the wiki: while Send to wiki is on, Omi skips that webhook so nothing is filed twice",
+            "title": "Conversation Webhook To Wiki",
+            "type": "boolean"
+          },
+          "hermes": {
+            "$ref": "#/components/schemas/HermesOutboundSettings"
+          },
+          "odysseus": {
+            "$ref": "#/components/schemas/OdysseusOutboundSettings"
+          },
+          "orb": {
+            "$ref": "#/components/schemas/OrbOutboundSettings"
+          },
+          "studio": {
+            "$ref": "#/components/schemas/StudioOutboundSettings"
+          },
+          "wiki": {
+            "$ref": "#/components/schemas/WikiOutboundSettings"
+          }
+        },
+        "title": "OutboundIntegrationsResponse",
+        "type": "object"
+      },
+      "OutboundPreviewResponse": {
+        "properties": {
+          "content": {
+            "default": "",
+            "description": "Exactly what would leave Omi",
+            "title": "Content",
+            "type": "string"
+          },
+          "destination": {
+            "default": "",
+            "description": "Where it would go, e.g. the wiki address",
+            "title": "Destination",
+            "type": "string"
+          },
+          "receipts": {
+            "description": "Copies already sent",
+            "items": {
+              "$ref": "#/components/schemas/OutboundReceipt"
+            },
+            "title": "Receipts",
+            "type": "array"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "title": "OutboundPreviewResponse",
+        "type": "object"
+      },
+      "OutboundReceipt": {
+        "properties": {
+          "detail": {
+            "default": "",
+            "description": "What the target answered, e.g. the wiki file's path",
+            "title": "Detail",
+            "type": "string"
+          },
+          "error": {
+            "default": "",
+            "description": "Why it was not sent (then sent_at is empty)",
+            "title": "Error",
+            "type": "string"
+          },
+          "revision": {
+            "default": 0,
+            "description": "0 for the first copy, n for the n-th revised copy",
+            "title": "Revision",
+            "type": "integer"
+          },
+          "scheduled_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Not sent yet: it leaves then, if the approval still stands (Undo stops it)",
+            "title": "Scheduled At"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "description": "The title it was filed under (a re-send says \"(revised n)\")",
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "title": "OutboundReceipt",
+        "type": "object"
+      },
+      "OutboundTestResponse": {
+        "properties": {
+          "detail": {
+            "default": "",
+            "description": "What the probe checked",
+            "title": "Detail",
+            "type": "string"
+          },
+          "error": {
+            "default": "",
+            "title": "Error",
+            "type": "string"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutboundTestResponse",
+        "type": "object"
       },
       "OutcomeCreate": {
         "additionalProperties": false,
@@ -34215,6 +35337,58 @@
         "title": "SeenRequest",
         "type": "object"
       },
+      "SendConversationRequest": {
+        "properties": {
+          "revised": {
+            "default": false,
+            "description": "Send again although a copy was sent already (filed as \"(revised n)\")",
+            "title": "Revised",
+            "type": "boolean"
+          },
+          "target": {
+            "const": "wiki",
+            "default": "wiki",
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "title": "SendConversationRequest",
+        "type": "object"
+      },
+      "SendConversationResponse": {
+        "properties": {
+          "already_sent": {
+            "default": false,
+            "description": "A copy was sent before; repeat with revised=true",
+            "title": "Already Sent",
+            "type": "boolean"
+          },
+          "error": {
+            "default": "",
+            "title": "Error",
+            "type": "string"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "receipt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OutboundReceipt"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "SendConversationResponse",
+        "type": "object"
+      },
       "SendMessageRequest": {
         "properties": {
           "context": {
@@ -37603,6 +38777,105 @@
           "available"
         ],
         "title": "SttAvailabilityResponse",
+        "type": "object"
+      },
+      "StudioOutboundSettings": {
+        "properties": {
+          "default_agent": {
+            "default": "ekko-agent",
+            "enum": [
+              "ekko-agent",
+              "hermes",
+              "claude-code",
+              "codex",
+              "pi",
+              "grok",
+              "opencode"
+            ],
+            "title": "Default Agent",
+            "type": "string"
+          },
+          "enabled": {
+            "default": false,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "has_token": {
+            "default": false,
+            "title": "Has Token",
+            "type": "boolean"
+          },
+          "has_webhook_secret": {
+            "default": false,
+            "title": "Has Webhook Secret",
+            "type": "boolean"
+          },
+          "last_check_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Check At"
+          },
+          "last_check_error": {
+            "default": "",
+            "title": "Last Check Error",
+            "type": "string"
+          },
+          "last_check_ok": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Check Ok"
+          },
+          "own_url": {
+            "default": "",
+            "description": "The address the user set (\"\" = the stack's default)",
+            "title": "Own Url",
+            "type": "string"
+          },
+          "token_from_env": {
+            "default": false,
+            "description": "The token is the stack's household token (env)",
+            "title": "Token From Env",
+            "type": "boolean"
+          },
+          "url": {
+            "default": "",
+            "description": "The address in use (the user's own, else the stack's default)",
+            "title": "Url",
+            "type": "string"
+          },
+          "url_from_env": {
+            "default": false,
+            "description": "The address comes from the stack (env)",
+            "title": "Url From Env",
+            "type": "boolean"
+          },
+          "webhook_path": {
+            "default": "/v1/integrations/studio/events",
+            "description": "Register this in Studio",
+            "title": "Webhook Path",
+            "type": "string"
+          },
+          "workspace": {
+            "default": "",
+            "description": "Default workspace path for coding agents",
+            "title": "Workspace",
+            "type": "string"
+          }
+        },
+        "title": "StudioOutboundSettings",
         "type": "object"
       },
       "SubjectAttribution": {
@@ -42257,6 +43530,271 @@
         "title": "UpdateNotificationSettingsRequest",
         "type": "object"
       },
+      "UpdateOdysseusOutbound": {
+        "properties": {
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "endpoint_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endpoint Id"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          },
+          "token": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Stored encrypted, never returned; '' clears it",
+            "title": "Token"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "http(s) address; '' clears it (the stack's default applies)",
+            "title": "Url"
+          }
+        },
+        "title": "UpdateOdysseusOutbound",
+        "type": "object"
+      },
+      "UpdateOrbOutbound": {
+        "properties": {
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "log_day_approvals": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Log Day Approvals"
+          },
+          "project": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project"
+          },
+          "require_manual_approval": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Require Manual Approval"
+          },
+          "token": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Stored encrypted, never returned; '' clears it",
+            "title": "Token"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "http(s) address; '' clears it (the stack's default applies)",
+            "title": "Url"
+          }
+        },
+        "title": "UpdateOrbOutbound",
+        "type": "object"
+      },
+      "UpdateOutboundIntegrationsRequest": {
+        "properties": {
+          "coinpile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UpdateOutboundTarget"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hermes": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UpdateOutboundTarget"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "odysseus": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UpdateOdysseusOutbound"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "orb": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UpdateOrbOutbound"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "studio": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UpdateStudioOutbound"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "wiki": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UpdateWikiOutbound"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "UpdateOutboundIntegrationsRequest",
+        "type": "object"
+      },
+      "UpdateOutboundTarget": {
+        "properties": {
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "token": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Stored encrypted, never returned; '' clears it",
+            "title": "Token"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "http(s) address; '' clears it (the stack's default applies)",
+            "title": "Url"
+          }
+        },
+        "title": "UpdateOutboundTarget",
+        "type": "object"
+      },
       "UpdateSegmentTextRequest": {
         "properties": {
           "segment_id": {
@@ -42276,6 +43814,94 @@
           "text"
         ],
         "title": "UpdateSegmentTextRequest",
+        "type": "object"
+      },
+      "UpdateStudioOutbound": {
+        "properties": {
+          "default_agent": {
+            "anyOf": [
+              {
+                "enum": [
+                  "ekko-agent",
+                  "hermes",
+                  "claude-code",
+                  "codex",
+                  "pi",
+                  "grok",
+                  "opencode"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Agent"
+          },
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "token": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Stored encrypted, never returned; '' clears it",
+            "title": "Token"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "http(s) address; '' clears it (the stack's default applies)",
+            "title": "Url"
+          },
+          "webhook_secret": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Stored encrypted, never returned; '' clears it",
+            "title": "Webhook Secret"
+          },
+          "workspace": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workspace"
+          }
+        },
+        "title": "UpdateStudioOutbound",
         "type": "object"
       },
       "UpdateSummaryRequest": {
@@ -42302,6 +43928,110 @@
           "content"
         ],
         "title": "UpdateSummaryRequest",
+        "type": "object"
+      },
+      "UpdateWikiOutbound": {
+        "properties": {
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "include_transcript": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Include Transcript"
+          },
+          "person": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Person"
+          },
+          "require_manual_approval": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Require Manual Approval"
+          },
+          "send_day_reviews": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Send Day Reviews"
+          },
+          "send_kept_conversations": {
+            "anyOf": [
+              {
+                "enum": [
+                  "off",
+                  "ask",
+                  "on_keep"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Send Kept Conversations"
+          },
+          "token": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Stored encrypted, never returned; '' clears it",
+            "title": "Token"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "http(s) address; '' clears it (the stack's default applies)",
+            "title": "Url"
+          }
+        },
+        "title": "UpdateWikiOutbound",
         "type": "object"
       },
       "UpgradeSubscriptionRequest": {
@@ -43396,6 +45126,14 @@
       },
       "WaitingForApprovalResponse": {
         "properties": {
+          "agent_jobs": {
+            "description": "Agent jobs whose agent asks before it goes on (Hermes: answer here; Studio: in Studio). Never auto-approved and never part of Approve all",
+            "items": {
+              "$ref": "#/components/schemas/AgentJob"
+            },
+            "title": "Agent Jobs",
+            "type": "array"
+          },
           "auto_approve": {
             "default": false,
             "title": "Auto Approve",
@@ -43537,6 +45275,109 @@
           "recommendations"
         ],
         "title": "WhatMattersNowProjection",
+        "type": "object"
+      },
+      "WikiOutboundSettings": {
+        "properties": {
+          "enabled": {
+            "default": false,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "has_token": {
+            "default": false,
+            "title": "Has Token",
+            "type": "boolean"
+          },
+          "include_transcript": {
+            "default": false,
+            "description": "Sent conversations include the transcript",
+            "title": "Include Transcript",
+            "type": "boolean"
+          },
+          "last_check_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Check At"
+          },
+          "last_check_error": {
+            "default": "",
+            "title": "Last Check Error",
+            "type": "string"
+          },
+          "last_check_ok": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Check Ok"
+          },
+          "own_url": {
+            "default": "",
+            "description": "The address the user set (\"\" = the stack's default)",
+            "title": "Own Url",
+            "type": "string"
+          },
+          "person": {
+            "default": "",
+            "description": "Wiki person to file under (for a shared token); empty = the token's owner",
+            "title": "Person",
+            "type": "string"
+          },
+          "require_manual_approval": {
+            "default": true,
+            "description": "Only a day the user approved by hand is sent (auto-approved days are not)",
+            "title": "Require Manual Approval",
+            "type": "boolean"
+          },
+          "send_day_reviews": {
+            "default": true,
+            "description": "Send each approved day summary as a wiki source",
+            "title": "Send Day Reviews",
+            "type": "boolean"
+          },
+          "send_kept_conversations": {
+            "default": "off",
+            "description": "'off': only on Send; 'ask': offer Send on kept clips; 'on_keep': send a clip when the user keeps it",
+            "enum": [
+              "off",
+              "ask",
+              "on_keep"
+            ],
+            "title": "Send Kept Conversations",
+            "type": "string"
+          },
+          "token_from_env": {
+            "default": false,
+            "description": "The token is the stack's household token (env)",
+            "title": "Token From Env",
+            "type": "boolean"
+          },
+          "url": {
+            "default": "",
+            "description": "The address in use (the user's own, else the stack's default)",
+            "title": "Url",
+            "type": "string"
+          },
+          "url_from_env": {
+            "default": false,
+            "description": "The address comes from the stack (env)",
+            "title": "Url From Env",
+            "type": "boolean"
+          }
+        },
+        "title": "WikiOutboundSettings",
         "type": "object"
       },
       "WorkIntentReceipt": {
@@ -46509,6 +48350,455 @@
         "summary": "Toggle Action Item Completion",
         "tags": [
           "action-items"
+        ]
+      }
+    },
+    "/v1/agent-jobs": {
+      "get": {
+        "operationId": "list_agent_jobs_v1_agent_jobs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentJobsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "List Agent Jobs",
+        "tags": [
+          "agent-jobs"
+        ]
+      },
+      "post": {
+        "description": "Send the previewed text to the agent (the user's explicit OK) and follow the job.",
+        "operationId": "create_agent_job_v1_agent_jobs_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAgentJobRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentJobResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Create Agent Job",
+        "tags": [
+          "agent-jobs"
+        ]
+      }
+    },
+    "/v1/agent-jobs/preview": {
+      "post": {
+        "description": "Exactly what Send would give the agent (the prompt and Omi's context), and where it goes.",
+        "operationId": "preview_agent_job_v1_agent_jobs_preview_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentJobPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentJobPreviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Preview Agent Job",
+        "tags": [
+          "agent-jobs"
+        ]
+      }
+    },
+    "/v1/agent-jobs/{job_id}": {
+      "get": {
+        "operationId": "get_agent_job_v1_agent_jobs__job_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentJob"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Get Agent Job",
+        "tags": [
+          "agent-jobs"
+        ]
+      }
+    },
+    "/v1/agent-jobs/{job_id}/approval": {
+      "post": {
+        "description": "Answer the agent's question (Hermes: allow once, or deny).",
+        "operationId": "answer_agent_job_approval_v1_agent_jobs__job_id__approval_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnswerAgentApprovalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentJobResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Answer Agent Job Approval",
+        "tags": [
+          "agent-jobs"
         ]
       }
     },
@@ -59831,6 +62121,204 @@
         ]
       }
     },
+    "/v1/conversations/{conversation_id}/send": {
+      "post": {
+        "description": "Send one conversation, as the user edited it, to the wiki (the user's explicit OK). A second\ncopy needs ``revised: true`` and is filed as \"(revised n)\".",
+        "operationId": "send_conversation_v1_conversations__conversation_id__send_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendConversationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendConversationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Send Conversation",
+        "tags": [
+          "integrations-outbound"
+        ]
+      }
+    },
+    "/v1/conversations/{conversation_id}/send/preview": {
+      "get": {
+        "description": "Exactly what Send to wiki would file (title, markdown, where), and the copies already sent.",
+        "operationId": "preview_send_conversation_v1_conversations__conversation_id__send_preview_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "target",
+            "required": false,
+            "schema": {
+              "default": "wiki",
+              "pattern": "^wiki$",
+              "title": "Target",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutboundPreviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Preview Send Conversation",
+        "tags": [
+          "integrations-outbound"
+        ]
+      }
+    },
     "/v1/conversations/{conversation_id}/share-email": {
       "post": {
         "description": "Send the meeting summary to the addresses the owner chose.\n\nThe card lets the owner type a recipient, so the address is theirs to pick\nrather than something we detected; detection only prefills the field. What\nkeeps this from being an open relay is unchanged: the sender must own the\nconversation, the mail carries only that conversation's own summary and\nshare link with the owner as reply-to, the request schema caps how many\naddresses one send may carry, and a per-owner daily quota bounds the total.\nSending\nmakes the conversation link-visible first (same contract as copying the\nshare link) so the emailed link resolves.",
@@ -69672,6 +72160,270 @@
         ]
       }
     },
+    "/v1/integrations/coinpile/accounts": {
+      "get": {
+        "description": "The user's Coinpile accounts, for a transaction (Coinpile's read-only list_accounts).",
+        "operationId": "coinpile_accounts_v1_integrations_coinpile_accounts_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoinpileAccountsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Coinpile Accounts",
+        "tags": [
+          "integrations-outbound"
+        ]
+      }
+    },
+    "/v1/integrations/coinpile/draft": {
+      "get": {
+        "description": "A note drafted from the conversation or task, for the user to edit before sending.",
+        "operationId": "coinpile_draft_v1_integrations_coinpile_draft_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "conversation_id",
+            "required": false,
+            "schema": {
+              "maxLength": 128,
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "task_id",
+            "required": false,
+            "schema": {
+              "maxLength": 128,
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoinpileSendRequest"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Coinpile Draft",
+        "tags": [
+          "integrations-outbound"
+        ]
+      }
+    },
+    "/v1/integrations/coinpile/send": {
+      "post": {
+        "description": "Send a note or a transaction to Coinpile (the user's explicit OK). Coinpile only asks:\nnothing changes there until the user answers Yes on its Agent page.",
+        "operationId": "coinpile_send_v1_integrations_coinpile_send_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoinpileSendRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoinpileSendResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Coinpile Send",
+        "tags": [
+          "integrations-outbound"
+        ]
+      }
+    },
     "/v1/integrations/notification": {
       "post": {
         "operationId": "send_app_notification_to_user_v1_integrations_notification_post",
@@ -69736,6 +72488,258 @@
           }
         ],
         "summary": "Send App Notification To User"
+      }
+    },
+    "/v1/integrations/outbound": {
+      "get": {
+        "description": "Where Omi may send this user's things. Tokens are never returned (``has_token``).",
+        "operationId": "get_outbound_integrations_v1_integrations_outbound_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutboundIntegrationsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Get Outbound Integrations",
+        "tags": [
+          "integrations-outbound"
+        ]
+      },
+      "put": {
+        "description": "Change one or more targets. A token is stored encrypted; ``\"\"`` clears it, omitted keeps it.",
+        "operationId": "update_outbound_integrations_v1_integrations_outbound_put",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOutboundIntegrationsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutboundIntegrationsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Update Outbound Integrations",
+        "tags": [
+          "integrations-outbound"
+        ]
+      }
+    },
+    "/v1/integrations/outbound/{target}/test": {
+      "post": {
+        "description": "Reach the target with the effective address and token (a real call that changes nothing).",
+        "operationId": "test_outbound_integration_v1_integrations_outbound__target__test_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "target",
+            "required": true,
+            "schema": {
+              "pattern": "^(wiki|hermes|odysseus|studio|coinpile|orb)$",
+              "title": "Target",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutboundTestResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Test Outbound Integration",
+        "tags": [
+          "integrations-outbound"
+        ]
       }
     },
     "/v1/integrations/{app_key}": {
@@ -83710,6 +86714,115 @@
           }
         ],
         "summary": "Bundle Day",
+        "tags": [
+          "day-reviews"
+        ]
+      }
+    },
+    "/v1/users/day-reviews/{date}/conversations/{conversation_id}/keep": {
+      "post": {
+        "description": "Keep one clip of the summary as its own (starred) conversation, or fold it back in: on a draft\nor on an approved day. The summary text is not rewritten.",
+        "operationId": "keep_day_review_conversation_v1_users_day_reviews__date__conversations__conversation_id__keep_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Local calendar date, YYYY-MM-DD",
+            "in": "path",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "description": "Local calendar date, YYYY-MM-DD",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "title": "Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KeepDayReviewConversationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayReview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Keep Day Review Conversation",
         "tags": [
           "day-reviews"
         ]

@@ -3,6 +3,7 @@
 from datetime import datetime
 from typing import List, Literal, Optional
 
+from models.integrations_out import OutboundReceipt
 from pydantic import BaseModel, Field, model_validator
 
 DayReviewCorrectionType = Literal['paragraph', 'highlight', 'redaction']
@@ -94,6 +95,10 @@ class DayReview(BaseModel):
         default=None,
         description='When the user last edited the text by hand; a rewrite asks before replacing it (then clears it)',
     )
+    outbound_receipts: List[OutboundReceipt] = Field(
+        default_factory=list,
+        description='Where the approved summary was sent (Connections: the wiki, Orb), or when it will be',
+    )
 
 
 class DayReviewConversation(BaseModel):
@@ -148,6 +153,12 @@ class FinalizeDayReviewRequest(BaseModel):
                 raise ValueError(f'Conversation {cid} is listed more than once')
             seen.add(cid)
         return self
+
+
+class KeepDayReviewConversationRequest(BaseModel):
+    kept: bool = Field(
+        default=True, description='Pull this clip out of the summary as a starred conversation (false folds it back)'
+    )
 
 
 class FavoriteDayReviewSectionRequest(BaseModel):

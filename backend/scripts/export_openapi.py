@@ -56,6 +56,7 @@ APP_CLIENT_PREFIXES = (
     '/v1/caldav',  # omi-local: tasks + calendar sync settings
     '/v1/family-calendar',  # omi-local: review heard events before they go to the family calendar
     '/v1/approvals',  # omi-local: tasks waiting for the user's OK, auto-approve
+    '/v1/agent-jobs',  # omi-local: Send to agent (Odysseus, Hermes, Studio)
     '/v1/pending-work',
     '/v1/attention-items',
     '/v1/messaging/links',
@@ -152,6 +153,14 @@ UNDOCUMENTED_PUBLIC_ROUTES: dict[tuple[str, str], str] = {
         'GET',
         '/v1/conversations/{conversation_id}/summary/stream',
     ): 'Firebase-authenticated first-party on-open notes stream; not a Developer API key route.',
+    (
+        'GET',
+        '/v1/conversations/{conversation_id}/send/preview',
+    ): 'omi-local first-party app route (Firebase): preview of Send to wiki; not a Developer API surface.',
+    (
+        'POST',
+        '/v1/conversations/{conversation_id}/send',
+    ): 'omi-local first-party app route (Firebase): Send to wiki; not a Developer API surface.',
     (
         'POST',
         '/v1/conversations/deletion-batch-purges/run',
@@ -401,6 +410,13 @@ APP_CLIENT_PUBLIC_PATHS = frozenset(
 # contract. The app-client exporter stamps firebaseBearer on every included path;
 # leaking these would teach generated clients and agents the wrong auth scheme.
 APP_CLIENT_EXCLUDED_ROUTES: dict[tuple[str, str], str] = {
+    (
+        'POST',
+        '/v1/integrations/studio/events',
+    ): (
+        'omi-local: Studio\'s signed chat webhook (X-Hermes-Signature-256), called by Studio, '
+        'never by the app; firebaseBearer would mis-document its auth.'
+    ),
     (
         'POST',
         '/v1/dev/user/ask',

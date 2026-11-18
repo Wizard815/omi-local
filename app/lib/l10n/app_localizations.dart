@@ -28820,6 +28820,768 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New conversations came in since you edited this summary. Approving rewrites it, which will replace your edits — continue?'**
   String get dayReviewApproveRewriteBody;
+
+  /// No description provided for @agentJobsAllowOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow once'**
+  String get agentJobsAllowOnce;
+
+  /// No description provided for @agentJobsAnswerFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send your answer'**
+  String get agentJobsAnswerFailed;
+
+  /// No description provided for @agentJobsAnswerInStudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer this in Studio; Omi shows the result when it finishes.'**
+  String get agentJobsAnswerInStudio;
+
+  /// No description provided for @agentJobsAsks.
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} asks before it goes on'**
+  String agentJobsAsks(String agent);
+
+  /// No description provided for @agentJobsDeny.
+  ///
+  /// In en, this message translates to:
+  /// **'Deny'**
+  String get agentJobsDeny;
+
+  /// No description provided for @agentJobsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing sent to an agent yet. Use Send to agent on a conversation, a part of a day summary or a task.'**
+  String get agentJobsEmpty;
+
+  /// No description provided for @agentJobsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your agent jobs'**
+  String get agentJobsLoadFailed;
+
+  /// No description provided for @agentJobsStatusAsking.
+  ///
+  /// In en, this message translates to:
+  /// **'Asks you'**
+  String get agentJobsStatusAsking;
+
+  /// No description provided for @agentJobsStatusDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get agentJobsStatusDone;
+
+  /// No description provided for @agentJobsStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get agentJobsStatusFailed;
+
+  /// No description provided for @agentJobsStatusQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued'**
+  String get agentJobsStatusQueued;
+
+  /// No description provided for @agentJobsStatusRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Working'**
+  String get agentJobsStatusRunning;
+
+  /// No description provided for @agentJobsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent jobs'**
+  String get agentJobsTitle;
+
+  /// No description provided for @agentJobsUntitled.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent job'**
+  String get agentJobsUntitled;
+
+  /// No description provided for @agentJobsWhatWasSent.
+  ///
+  /// In en, this message translates to:
+  /// **'What was sent'**
+  String get agentJobsWhatWasSent;
+
+  /// No description provided for @approvalAgentsAsking.
+  ///
+  /// In en, this message translates to:
+  /// **'Agents asking before they go on'**
+  String get approvalAgentsAsking;
+
+  /// No description provided for @connectionsAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get connectionsAddress;
+
+  /// No description provided for @connectionsAddressFromServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Server default: {url}'**
+  String connectionsAddressFromServer(String url);
+
+  /// No description provided for @connectionsClearToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove saved token'**
+  String get connectionsClearToken;
+
+  /// No description provided for @connectionsCoinpilePurpose.
+  ///
+  /// In en, this message translates to:
+  /// **'A money note or transaction, only when you tap Send. Coinpile asks you again before anything changes.'**
+  String get connectionsCoinpilePurpose;
+
+  /// No description provided for @connectionsCoinpileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Coinpile'**
+  String get connectionsCoinpileTitle;
+
+  /// No description provided for @connectionsHermesPurpose.
+  ///
+  /// In en, this message translates to:
+  /// **'Agentic jobs: research, plans, multi-step work. Its questions come to your Approvals.'**
+  String get connectionsHermesPurpose;
+
+  /// No description provided for @connectionsHermesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hermes'**
+  String get connectionsHermesTitle;
+
+  /// No description provided for @connectionsIncludeTranscript.
+  ///
+  /// In en, this message translates to:
+  /// **'Include the transcript'**
+  String get connectionsIncludeTranscript;
+
+  /// No description provided for @connectionsIncludeTranscriptHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Off: only the title, summary and action items are sent.'**
+  String get connectionsIncludeTranscriptHint;
+
+  /// No description provided for @connectionsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing leaves Omi without your OK: a day summary only when you approve the day, everything else only when you tap Send and have seen exactly what goes.'**
+  String get connectionsIntro;
+
+  /// No description provided for @connectionsLastTestOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Last test: connected'**
+  String get connectionsLastTestOk;
+
+  /// No description provided for @connectionsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load Connections'**
+  String get connectionsLoadFailed;
+
+  /// No description provided for @connectionsOdysseusChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat to reuse (optional)'**
+  String get connectionsOdysseusChat;
+
+  /// No description provided for @connectionsOdysseusChatHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty to start a new Odysseus chat for each ask.'**
+  String get connectionsOdysseusChatHint;
+
+  /// No description provided for @connectionsOdysseusEndpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Model endpoint id'**
+  String get connectionsOdysseusEndpoint;
+
+  /// No description provided for @connectionsOdysseusEndpointHint.
+  ///
+  /// In en, this message translates to:
+  /// **'From Odysseus Settings, Models; tokens cannot use a raw model address.'**
+  String get connectionsOdysseusEndpointHint;
+
+  /// No description provided for @connectionsOdysseusModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get connectionsOdysseusModel;
+
+  /// No description provided for @connectionsOdysseusPurpose.
+  ///
+  /// In en, this message translates to:
+  /// **'Simple things: a quick question, a short summary, a reminder, a look-up.'**
+  String get connectionsOdysseusPurpose;
+
+  /// No description provided for @connectionsOdysseusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Odysseus'**
+  String get connectionsOdysseusTitle;
+
+  /// No description provided for @connectionsOnlyManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Only days I approve myself'**
+  String get connectionsOnlyManual;
+
+  /// No description provided for @connectionsOnlyManualHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Off: days approved automatically are sent too.'**
+  String get connectionsOnlyManualHint;
+
+  /// No description provided for @connectionsOrbLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Log approved days'**
+  String get connectionsOrbLog;
+
+  /// No description provided for @connectionsOrbLogHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Adds a short line to Orb\'s log when you approve a day.'**
+  String get connectionsOrbLogHint;
+
+  /// No description provided for @connectionsOrbProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Orb project'**
+  String get connectionsOrbProject;
+
+  /// No description provided for @connectionsOrbPurpose.
+  ///
+  /// In en, this message translates to:
+  /// **'An optional log line when you approve a day.'**
+  String get connectionsOrbPurpose;
+
+  /// No description provided for @connectionsOrbTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pondering Orb'**
+  String get connectionsOrbTitle;
+
+  /// No description provided for @connectionsSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get connectionsSave;
+
+  /// No description provided for @connectionsSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save'**
+  String get connectionsSaveFailed;
+
+  /// No description provided for @connectionsStatusNeedsSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs setup'**
+  String get connectionsStatusNeedsSetup;
+
+  /// No description provided for @connectionsStatusOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get connectionsStatusOff;
+
+  /// No description provided for @connectionsStatusOn.
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get connectionsStatusOn;
+
+  /// No description provided for @connectionsStudioAgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent'**
+  String get connectionsStudioAgent;
+
+  /// No description provided for @connectionsStudioPurpose.
+  ///
+  /// In en, this message translates to:
+  /// **'Coding agents (Claude Code, Codex, Ekko and others) in Studio.'**
+  String get connectionsStudioPurpose;
+
+  /// No description provided for @connectionsStudioSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Webhook secret'**
+  String get connectionsStudioSecret;
+
+  /// No description provided for @connectionsStudioSecretHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For results: register {path} on this server in Studio\'s webhooks, with the same secret.'**
+  String connectionsStudioSecretHint(String path);
+
+  /// No description provided for @connectionsStudioTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Studio'**
+  String get connectionsStudioTitle;
+
+  /// No description provided for @connectionsStudioWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace (optional)'**
+  String get connectionsStudioWorkspace;
+
+  /// No description provided for @connectionsTest.
+  ///
+  /// In en, this message translates to:
+  /// **'Test connection'**
+  String get connectionsTest;
+
+  /// No description provided for @connectionsTestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The test did not finish'**
+  String get connectionsTestFailed;
+
+  /// No description provided for @connectionsTestOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected: {detail}'**
+  String connectionsTestOk(String detail);
+
+  /// No description provided for @connectionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connections'**
+  String get connectionsTitle;
+
+  /// No description provided for @connectionsTokenCoinpile.
+  ///
+  /// In en, this message translates to:
+  /// **'Coinpile token (mcp scope)'**
+  String get connectionsTokenCoinpile;
+
+  /// No description provided for @connectionsTokenFromServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Using this server\'s household token.'**
+  String get connectionsTokenFromServer;
+
+  /// No description provided for @connectionsTokenHermes.
+  ///
+  /// In en, this message translates to:
+  /// **'Hermes API key'**
+  String get connectionsTokenHermes;
+
+  /// No description provided for @connectionsTokenNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No token saved.'**
+  String get connectionsTokenNone;
+
+  /// No description provided for @connectionsTokenOdysseus.
+  ///
+  /// In en, this message translates to:
+  /// **'Odysseus API token (chat scope)'**
+  String get connectionsTokenOdysseus;
+
+  /// No description provided for @connectionsTokenOrb.
+  ///
+  /// In en, this message translates to:
+  /// **'Orb API token'**
+  String get connectionsTokenOrb;
+
+  /// No description provided for @connectionsTokenSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'A token is saved; leave empty to keep it.'**
+  String get connectionsTokenSaved;
+
+  /// No description provided for @connectionsTokenStudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Studio sign-in token'**
+  String get connectionsTokenStudio;
+
+  /// No description provided for @connectionsTokenWiki.
+  ///
+  /// In en, this message translates to:
+  /// **'Your family wiki token'**
+  String get connectionsTokenWiki;
+
+  /// No description provided for @connectionsUseThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this connection'**
+  String get connectionsUseThis;
+
+  /// No description provided for @connectionsWebhookNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Your developer Conversation Events webhook points at this wiki. While Send to wiki is on, Omi skips that webhook so nothing is filed twice or before you approve it.'**
+  String get connectionsWebhookNotice;
+
+  /// No description provided for @connectionsWikiKeptAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer'**
+  String get connectionsWikiKeptAsk;
+
+  /// No description provided for @connectionsWikiKeptOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get connectionsWikiKeptOff;
+
+  /// No description provided for @connectionsWikiKeptOnKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'When I keep'**
+  String get connectionsWikiKeptOnKeep;
+
+  /// No description provided for @connectionsWikiKeptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clips I keep from a day'**
+  String get connectionsWikiKeptTitle;
+
+  /// No description provided for @connectionsWikiPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Wiki person (optional)'**
+  String get connectionsWikiPerson;
+
+  /// No description provided for @connectionsWikiPersonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Only for a shared token: whose folder to file into.'**
+  String get connectionsWikiPersonHint;
+
+  /// No description provided for @connectionsWikiPurpose.
+  ///
+  /// In en, this message translates to:
+  /// **'Your approved day summaries and the conversations you choose, as sources in your wiki folder.'**
+  String get connectionsWikiPurpose;
+
+  /// No description provided for @connectionsWikiSendDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Send approved day summaries'**
+  String get connectionsWikiSendDays;
+
+  /// No description provided for @connectionsWikiSendDaysHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent 10 minutes after you approve, so Undo stops it.'**
+  String get connectionsWikiSendDaysHint;
+
+  /// No description provided for @connectionsWikiTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Family wiki'**
+  String get connectionsWikiTitle;
+
+  /// No description provided for @dayReviewClipFolded.
+  ///
+  /// In en, this message translates to:
+  /// **'Folded back into the summary'**
+  String get dayReviewClipFolded;
+
+  /// No description provided for @dayReviewClipKept.
+  ///
+  /// In en, this message translates to:
+  /// **'Kept as its own conversation'**
+  String get dayReviewClipKept;
+
+  /// No description provided for @dayReviewConversationGone.
+  ///
+  /// In en, this message translates to:
+  /// **'This conversation is no longer available'**
+  String get dayReviewConversationGone;
+
+  /// No description provided for @dayReviewFoldClip.
+  ///
+  /// In en, this message translates to:
+  /// **'Fold back into the summary'**
+  String get dayReviewFoldClip;
+
+  /// No description provided for @dayReviewKeepClip.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep as its own conversation'**
+  String get dayReviewKeepClip;
+
+  /// No description provided for @dayReviewNotSentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sent to {where}: {reason}'**
+  String dayReviewNotSentTo(String where, String reason);
+
+  /// No description provided for @dayReviewSendsAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Goes to {where} at {time} (Undo stops it)'**
+  String dayReviewSendsAt(String where, String time);
+
+  /// No description provided for @dayReviewSentRevision.
+  ///
+  /// In en, this message translates to:
+  /// **'revised copy {count}'**
+  String dayReviewSentRevision(int count);
+
+  /// No description provided for @dayReviewSentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to {where} {when}'**
+  String dayReviewSentTo(String where, String when);
+
+  /// No description provided for @sendToAgentAttach.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the result to this conversation'**
+  String get sendToAgentAttach;
+
+  /// No description provided for @sendToAgentFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send it'**
+  String get sendToAgentFailed;
+
+  /// No description provided for @sendToAgentHermesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For a job: research, a plan, several steps. It may ask you before it runs something.'**
+  String get sendToAgentHermesHint;
+
+  /// No description provided for @sendToAgentOdysseusHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For something simple: a quick question, a short summary, a reminder, a look-up.'**
+  String get sendToAgentOdysseusHint;
+
+  /// No description provided for @sendToAgentPreviewAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh preview'**
+  String get sendToAgentPreviewAgain;
+
+  /// No description provided for @sendToAgentPreviewFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not prepare the preview'**
+  String get sendToAgentPreviewFailed;
+
+  /// No description provided for @sendToAgentPreviewFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Show what will be sent first; Send uses exactly that.'**
+  String get sendToAgentPreviewFirst;
+
+  /// No description provided for @sendToAgentPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'What should it do?'**
+  String get sendToAgentPrompt;
+
+  /// No description provided for @sendToAgentPromptHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Make a cut list from this'**
+  String get sendToAgentPromptHint;
+
+  /// No description provided for @sendToAgentSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to {agent}'**
+  String sendToAgentSend(String agent);
+
+  /// No description provided for @sendToAgentSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to {agent}. You get the result when it is done.'**
+  String sendToAgentSent(String agent);
+
+  /// No description provided for @sendToAgentShowPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Show what will be sent'**
+  String get sendToAgentShowPreview;
+
+  /// No description provided for @sendToAgentStudioHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For coding: a coding agent works on it in Studio.'**
+  String get sendToAgentStudioHint;
+
+  /// No description provided for @sendToAgentSuggest.
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} fits this better.'**
+  String sendToAgentSuggest(String agent);
+
+  /// No description provided for @sendToAgentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to agent…'**
+  String get sendToAgentTitle;
+
+  /// No description provided for @sendToAgentUseSuggested.
+  ///
+  /// In en, this message translates to:
+  /// **'Use {agent}'**
+  String sendToAgentUseSuggested(String agent);
+
+  /// No description provided for @sendToAgentWhatLeaves.
+  ///
+  /// In en, this message translates to:
+  /// **'Exactly what goes to {destination}'**
+  String sendToAgentWhatLeaves(String destination);
+
+  /// No description provided for @sendToAgentWho.
+  ///
+  /// In en, this message translates to:
+  /// **'Who should do it?'**
+  String get sendToAgentWho;
+
+  /// No description provided for @sendToCoinpileAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get sendToCoinpileAccount;
+
+  /// No description provided for @sendToCoinpileAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount (negative = money out)'**
+  String get sendToCoinpileAmount;
+
+  /// No description provided for @sendToCoinpileDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date (optional)'**
+  String get sendToCoinpileDate;
+
+  /// No description provided for @sendToCoinpileDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get sendToCoinpileDescription;
+
+  /// No description provided for @sendToCoinpileFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send it to Coinpile'**
+  String get sendToCoinpileFailed;
+
+  /// No description provided for @sendToCoinpileIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Exactly these fields go to Coinpile. Nothing changes there until you answer Yes on Coinpile\'s Agent page.'**
+  String get sendToCoinpileIntro;
+
+  /// No description provided for @sendToCoinpileNeedsAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick an account and enter an amount'**
+  String get sendToCoinpileNeedsAccount;
+
+  /// No description provided for @sendToCoinpileNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get sendToCoinpileNote;
+
+  /// No description provided for @sendToCoinpileNoteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get sendToCoinpileNoteBody;
+
+  /// No description provided for @sendToCoinpileNoteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get sendToCoinpileNoteTitle;
+
+  /// No description provided for @sendToCoinpileSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to Coinpile'**
+  String get sendToCoinpileSend;
+
+  /// No description provided for @sendToCoinpileSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent. Answer Yes on Coinpile\'s Agent page to save it.'**
+  String get sendToCoinpileSent;
+
+  /// No description provided for @sendToCoinpileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to Coinpile'**
+  String get sendToCoinpileTitle;
+
+  /// No description provided for @sendToCoinpileTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction'**
+  String get sendToCoinpileTransaction;
+
+  /// No description provided for @sendToWikiAlreadySent.
+  ///
+  /// In en, this message translates to:
+  /// **'Already sent {when}. Sending again files a revised copy.'**
+  String sendToWikiAlreadySent(String when);
+
+  /// No description provided for @sendToWikiFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send it to the wiki'**
+  String get sendToWikiFailed;
+
+  /// No description provided for @sendToWikiSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to wiki'**
+  String get sendToWikiSend;
+
+  /// No description provided for @sendToWikiSendRevised.
+  ///
+  /// In en, this message translates to:
+  /// **'Send revised copy'**
+  String get sendToWikiSendRevised;
+
+  /// No description provided for @sendToWikiSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to the wiki'**
+  String get sendToWikiSent;
+
+  /// No description provided for @sendToWikiTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to wiki'**
+  String get sendToWikiTitle;
+
+  /// No description provided for @sendToWikiWhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Goes to {destination}'**
+  String sendToWikiWhere(String destination);
+
+  /// No description provided for @connectionsNotReady.
+  ///
+  /// In en, this message translates to:
+  /// **'This connection is off or has no address or token. Set it up in Settings > Connections.'**
+  String get connectionsNotReady;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

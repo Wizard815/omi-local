@@ -132,7 +132,7 @@ def approving(monkeypatch):
         'pending_dates',
         lambda uid, days=7: {'today': '2026-11-17', 'pending_dates': [], 'draft_dates': ['2026-11-16']},
     )
-    monkeypatch.setattr(auto_approve.day_review_service, 'approve', lambda uid, d: calls['days'].append(d))
+    monkeypatch.setattr(auto_approve.day_review_service, 'approve', lambda uid, d, **k: calls['days'].append(d))
     return settings, calls
 
 

@@ -128,6 +128,18 @@ Future<DayReviewResult<DayReview>> favoriteDayReviewSection(String date, String 
       response, (json) => DayReview.fromGenerated(wire.GeneratedDayReview.fromJson(json)), 'favoriteDayReviewSection');
 }
 
+/// Keep one clip of the summary as its own (starred) conversation ([kept] = true) or fold it back in.
+Future<DayReviewResult<DayReview>> keepDayReviewConversation(String date, String conversationId, bool kept) async {
+  final response = await makeApiCall(
+    url: '${_base()}/$date/conversations/$conversationId/keep',
+    headers: {'Content-Type': 'application/json'},
+    method: 'POST',
+    body: jsonEncode({'kept': kept}),
+  );
+  return _decode(
+      response, (json) => DayReview.fromGenerated(wire.GeneratedDayReview.fromJson(json)), 'keepDayReviewConversation');
+}
+
 Future<DayReviewResult<DayReview>> addDayReviewCorrection(
   String date, {
   required DayReviewCorrectionType type,
@@ -218,6 +230,9 @@ class DayReviewApi {
 
   Future<DayReviewResult<DayReview>> favoriteSection(String date, String sectionId, bool favorited) =>
       favoriteDayReviewSection(date, sectionId, favorited);
+
+  Future<DayReviewResult<DayReview>> keepConversation(String date, String conversationId, bool kept) =>
+      keepDayReviewConversation(date, conversationId, kept);
 
   Future<DayReviewResult<DayReview>> addCorrection(
     String date, {

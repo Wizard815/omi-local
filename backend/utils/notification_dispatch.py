@@ -31,6 +31,7 @@ class NotificationKind(str, Enum):
     CONVERSATION_MERGE = 'conversation_merge'
     PAYMENT_RECOVERY = 'payment_recovery'
     TRIAL_ENDING = 'trial_ending'
+    AGENT_JOB = 'agent_job'  # omi-local: an agent the user sent work to finished or asks something
 
 
 class NotificationPolicy(str, Enum):
@@ -382,3 +383,16 @@ def dispatch_merge_completed(
         sync_delivery=_merge_completed_delivery,
         deletion_blocks=account_deletion_blocks_user_work,
     ).dispatch(intent)
+
+
+def dispatch_agent_job(user_id: str, title: str, body: str, job_id: str) -> NotificationDispatchOutcome:
+    """omi-local Send to agent: the job finished, failed, or its agent asks before going on."""
+    intent = NotificationIntent(
+        user_id=user_id,
+        title=title,
+        body=body,
+        source='agent_job',
+        kind=NotificationKind.AGENT_JOB,
+        data={'type': 'agent_job', 'job_id': job_id, 'navigate_to': '/agent-jobs'},
+    )
+    return NotificationDispatcher(deletion_blocks=account_deletion_blocks_user_work).dispatch(intent)

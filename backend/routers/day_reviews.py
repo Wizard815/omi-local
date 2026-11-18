@@ -17,6 +17,7 @@ from models.day_review import (
     EditDayReviewTextRequest,
     FavoriteDayReviewSectionRequest,
     FinalizeDayReviewRequest,
+    KeepDayReviewConversationRequest,
     PendingDayReviewsResponse,
     ReopenDayReviewResponse,
 )
@@ -135,6 +136,25 @@ def favorite_day_review_section(
     """Pull a section's conversations back out of the bundle as starred conversations (favorited=false folds them back)."""
     try:
         return service.favorite_section(uid, date, section_id, request.favorited)
+    except service.DayReviewError as e:
+        _raise(e)
+
+
+@router.post(
+    '/v1/users/day-reviews/{date}/conversations/{conversation_id}/keep',
+    tags=['day-reviews'],
+    response_model=DayReview,
+)
+def keep_day_review_conversation(
+    conversation_id: str,
+    request: KeepDayReviewConversationRequest,
+    date: str = _DATE,
+    uid: str = Depends(auth.get_current_user_uid),
+):
+    """Keep one clip of the summary as its own (starred) conversation, or fold it back in: on a draft
+    or on an approved day. The summary text is not rewritten."""
+    try:
+        return service.keep_conversation(uid, date, conversation_id, request.kept)
     except service.DayReviewError as e:
         _raise(e)
 
