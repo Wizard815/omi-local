@@ -103,6 +103,9 @@ class DayReview {
   /// calendar until approved. The server says so only when asked (`include_drafts=true`).
   final bool isDraft;
 
+  /// When the user last edited the text by hand; a rewrite asks before replacing it.
+  final DateTime? editedByUserAt;
+
   const DayReview({
     required this.date,
     required this.title,
@@ -118,7 +121,10 @@ class DayReview {
     this.generatedAt,
     this.generationCount = 0,
     this.isDraft = false,
+    this.editedByUserAt,
   });
+
+  bool get editedByUser => editedByUserAt != null;
 
   /// Corrections the summary text does not reflect yet: unapplied paragraphs and
   /// highlights, plus redactions added since the last generation (until then
@@ -144,6 +150,7 @@ class DayReview {
         droppedConversationIds: g.droppedConversationIds ?? const [],
         generatedAt: g.generatedAt?.toLocal(),
         isDraft: g.draft,
+        editedByUserAt: g.editedByUserAt?.toLocal(),
         generationCount: g.generationCount,
       );
 }

@@ -994,11 +994,80 @@ class GeneratedUpdateApprovalSettingsRequest {
   }
 }
 
+class GeneratedFamilyCalendarEvent {
+  final bool approved;
+  final String? calendar;
+  final String conversationId;
+  final String conversationTitle;
+  final bool created;
+  final bool declined;
+  final String description;
+  final int duration;
+  final int eventIdx;
+  final String? externalId;
+  final DateTime? heardAt;
+  final DateTime start;
+  final String title;
+
+  const GeneratedFamilyCalendarEvent({
+    this.approved = false,
+    this.calendar,
+    required this.conversationId,
+    this.conversationTitle = "",
+    this.created = false,
+    this.declined = false,
+    this.description = "",
+    this.duration = 30,
+    required this.eventIdx,
+    this.externalId,
+    this.heardAt,
+    required this.start,
+    required this.title,
+  });
+
+  factory GeneratedFamilyCalendarEvent.fromJson(Map<String, dynamic> json) {
+    return GeneratedFamilyCalendarEvent(
+      approved: _required(_readFieldValue<bool>(_readField(json, const ["approved"]), "approved", _readBool, requiredField: false, nullable: false, defaultValue: false), "approved"),
+      calendar: _readFieldValue<String>(_readField(json, const ["calendar"]), "calendar", _readString, requiredField: false, nullable: true),
+      conversationId: _required(_readFieldValue<String>(_readField(json, const ["conversation_id"]), "conversation_id", _readString, requiredField: true, nullable: false), "conversation_id"),
+      conversationTitle: _required(_readFieldValue<String>(_readField(json, const ["conversation_title"]), "conversation_title", _readString, requiredField: false, nullable: false, defaultValue: ""), "conversation_title"),
+      created: _required(_readFieldValue<bool>(_readField(json, const ["created"]), "created", _readBool, requiredField: false, nullable: false, defaultValue: false), "created"),
+      declined: _required(_readFieldValue<bool>(_readField(json, const ["declined"]), "declined", _readBool, requiredField: false, nullable: false, defaultValue: false), "declined"),
+      description: _required(_readFieldValue<String>(_readField(json, const ["description"]), "description", _readString, requiredField: false, nullable: false, defaultValue: ""), "description"),
+      duration: _required(_readFieldValue<int>(_readField(json, const ["duration"]), "duration", _readInt, requiredField: false, nullable: false, defaultValue: 30), "duration"),
+      eventIdx: _required(_readFieldValue<int>(_readField(json, const ["event_idx"]), "event_idx", _readInt, requiredField: true, nullable: false), "event_idx"),
+      externalId: _readFieldValue<String>(_readField(json, const ["external_id"]), "external_id", _readString, requiredField: false, nullable: true),
+      heardAt: _readFieldValue<DateTime>(_readField(json, const ["heard_at"]), "heard_at", _readDateTime, requiredField: false, nullable: true),
+      start: _required(_readFieldValue<DateTime>(_readField(json, const ["start"]), "start", _readDateTime, requiredField: true, nullable: false), "start"),
+      title: _required(_readFieldValue<String>(_readField(json, const ["title"]), "title", _readString, requiredField: true, nullable: false), "title"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'approved': approved,
+      'calendar': calendar,
+      'conversation_id': conversationId,
+      'conversation_title': conversationTitle,
+      'created': created,
+      'declined': declined,
+      'description': description,
+      'duration': duration,
+      'event_idx': eventIdx,
+      'external_id': externalId,
+      'heard_at': heardAt?.toUtc().toIso8601String(),
+      'start': start.toUtc().toIso8601String(),
+      'title': title,
+    };
+  }
+}
+
 class GeneratedWaitingForApprovalResponse {
   final bool autoApprove;
   final String autoApproveTime;
   final List<String>? draftDates;
   final int eventCount;
+  final List<GeneratedFamilyCalendarEvent>? events;
   final int taskCount;
   final List<GeneratedActionItemResponse>? tasks;
   final String today;
@@ -1008,6 +1077,7 @@ class GeneratedWaitingForApprovalResponse {
     this.autoApproveTime = "",
     this.draftDates,
     this.eventCount = 0,
+    this.events,
     this.taskCount = 0,
     this.tasks,
     this.today = "",
@@ -1019,6 +1089,7 @@ class GeneratedWaitingForApprovalResponse {
       autoApproveTime: _required(_readFieldValue<String>(_readField(json, const ["auto_approve_time"]), "auto_approve_time", _readString, requiredField: false, nullable: false, defaultValue: ""), "auto_approve_time"),
       draftDates: _readFieldValue<List<String>>(_readField(json, const ["draft_dates"]), "draft_dates", _readStringList, requiredField: false, nullable: true),
       eventCount: _required(_readFieldValue<int>(_readField(json, const ["event_count"]), "event_count", _readInt, requiredField: false, nullable: false, defaultValue: 0), "event_count"),
+      events: _readFieldValue<List<GeneratedFamilyCalendarEvent>>(_readField(json, const ["events"]), "events", (value) => _readObjectList(value, GeneratedFamilyCalendarEvent.fromJson), requiredField: false, nullable: true),
       taskCount: _required(_readFieldValue<int>(_readField(json, const ["task_count"]), "task_count", _readInt, requiredField: false, nullable: false, defaultValue: 0), "task_count"),
       tasks: _readFieldValue<List<GeneratedActionItemResponse>>(_readField(json, const ["tasks"]), "tasks", (value) => _readObjectList(value, GeneratedActionItemResponse.fromJson), requiredField: false, nullable: true),
       today: _required(_readFieldValue<String>(_readField(json, const ["today"]), "today", _readString, requiredField: false, nullable: false, defaultValue: ""), "today"),
@@ -1031,6 +1102,7 @@ class GeneratedWaitingForApprovalResponse {
       'auto_approve_time': autoApproveTime,
       'draft_dates': draftDates,
       'event_count': eventCount,
+      'events': events?.map((value) => value.toJson()).toList(),
       'task_count': taskCount,
       'tasks': tasks?.map((value) => value.toJson()).toList(),
       'today': today,
@@ -1106,6 +1178,174 @@ class GeneratedTaskApprovalResponse {
       'error': error,
       'ok': ok,
       'task': task?.toJson(),
+    };
+  }
+}
+
+class GeneratedApprovalEventRef {
+  final String conversationId;
+  final int eventIdx;
+
+  const GeneratedApprovalEventRef({
+    required this.conversationId,
+    required this.eventIdx,
+  });
+
+  factory GeneratedApprovalEventRef.fromJson(Map<String, dynamic> json) {
+    return GeneratedApprovalEventRef(
+      conversationId: _required(_readFieldValue<String>(_readField(json, const ["conversation_id"]), "conversation_id", _readString, requiredField: true, nullable: false), "conversation_id"),
+      eventIdx: _required(_readFieldValue<int>(_readField(json, const ["event_idx"]), "event_idx", _readInt, requiredField: true, nullable: false), "event_idx"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'conversation_id': conversationId,
+      'event_idx': eventIdx,
+    };
+  }
+}
+
+class GeneratedApproveBatchRequest {
+  final bool allWaiting;
+  final String? date;
+  final List<String>? dayDates;
+  final List<GeneratedApprovalEventRef>? events;
+  final List<String>? taskIds;
+
+  const GeneratedApproveBatchRequest({
+    this.allWaiting = false,
+    this.date,
+    this.dayDates,
+    this.events,
+    this.taskIds,
+  });
+
+  factory GeneratedApproveBatchRequest.fromJson(Map<String, dynamic> json) {
+    return GeneratedApproveBatchRequest(
+      allWaiting: _required(_readFieldValue<bool>(_readField(json, const ["all_waiting"]), "all_waiting", _readBool, requiredField: false, nullable: false, defaultValue: false), "all_waiting"),
+      date: _readFieldValue<String>(_readField(json, const ["date"]), "date", _readString, requiredField: false, nullable: true),
+      dayDates: _readFieldValue<List<String>>(_readField(json, const ["day_dates"]), "day_dates", _readStringList, requiredField: false, nullable: true),
+      events: _readFieldValue<List<GeneratedApprovalEventRef>>(_readField(json, const ["events"]), "events", (value) => _readObjectList(value, GeneratedApprovalEventRef.fromJson), requiredField: false, nullable: true),
+      taskIds: _readFieldValue<List<String>>(_readField(json, const ["task_ids"]), "task_ids", _readStringList, requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'all_waiting': allWaiting,
+      'date': date,
+      'day_dates': dayDates,
+      'events': events?.map((value) => value.toJson()).toList(),
+      'task_ids': taskIds,
+    };
+  }
+}
+
+class GeneratedApproveBatchResponse {
+  final int dayCount;
+  final List<String>? dayDates;
+  final int eventCount;
+  final List<GeneratedApprovalEventRef>? events;
+  final List<String>? failedDayDates;
+  final int failedEventCount;
+  final int taskCount;
+  final List<String>? taskIds;
+
+  const GeneratedApproveBatchResponse({
+    this.dayCount = 0,
+    this.dayDates,
+    this.eventCount = 0,
+    this.events,
+    this.failedDayDates,
+    this.failedEventCount = 0,
+    this.taskCount = 0,
+    this.taskIds,
+  });
+
+  factory GeneratedApproveBatchResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedApproveBatchResponse(
+      dayCount: _required(_readFieldValue<int>(_readField(json, const ["day_count"]), "day_count", _readInt, requiredField: false, nullable: false, defaultValue: 0), "day_count"),
+      dayDates: _readFieldValue<List<String>>(_readField(json, const ["day_dates"]), "day_dates", _readStringList, requiredField: false, nullable: true),
+      eventCount: _required(_readFieldValue<int>(_readField(json, const ["event_count"]), "event_count", _readInt, requiredField: false, nullable: false, defaultValue: 0), "event_count"),
+      events: _readFieldValue<List<GeneratedApprovalEventRef>>(_readField(json, const ["events"]), "events", (value) => _readObjectList(value, GeneratedApprovalEventRef.fromJson), requiredField: false, nullable: true),
+      failedDayDates: _readFieldValue<List<String>>(_readField(json, const ["failed_day_dates"]), "failed_day_dates", _readStringList, requiredField: false, nullable: true),
+      failedEventCount: _required(_readFieldValue<int>(_readField(json, const ["failed_event_count"]), "failed_event_count", _readInt, requiredField: false, nullable: false, defaultValue: 0), "failed_event_count"),
+      taskCount: _required(_readFieldValue<int>(_readField(json, const ["task_count"]), "task_count", _readInt, requiredField: false, nullable: false, defaultValue: 0), "task_count"),
+      taskIds: _readFieldValue<List<String>>(_readField(json, const ["task_ids"]), "task_ids", _readStringList, requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'day_count': dayCount,
+      'day_dates': dayDates,
+      'event_count': eventCount,
+      'events': events?.map((value) => value.toJson()).toList(),
+      'failed_day_dates': failedDayDates,
+      'failed_event_count': failedEventCount,
+      'task_count': taskCount,
+      'task_ids': taskIds,
+    };
+  }
+}
+
+class GeneratedUndoApproveBatchRequest {
+  final List<String>? dayDates;
+  final List<GeneratedApprovalEventRef>? events;
+  final List<String>? taskIds;
+
+  const GeneratedUndoApproveBatchRequest({
+    this.dayDates,
+    this.events,
+    this.taskIds,
+  });
+
+  factory GeneratedUndoApproveBatchRequest.fromJson(Map<String, dynamic> json) {
+    return GeneratedUndoApproveBatchRequest(
+      dayDates: _readFieldValue<List<String>>(_readField(json, const ["day_dates"]), "day_dates", _readStringList, requiredField: false, nullable: true),
+      events: _readFieldValue<List<GeneratedApprovalEventRef>>(_readField(json, const ["events"]), "events", (value) => _readObjectList(value, GeneratedApprovalEventRef.fromJson), requiredField: false, nullable: true),
+      taskIds: _readFieldValue<List<String>>(_readField(json, const ["task_ids"]), "task_ids", _readStringList, requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'day_dates': dayDates,
+      'events': events?.map((value) => value.toJson()).toList(),
+      'task_ids': taskIds,
+    };
+  }
+}
+
+class GeneratedUndoApproveBatchResponse {
+  final int dayCount;
+  final int eventCount;
+  final int keptCount;
+  final int taskCount;
+
+  const GeneratedUndoApproveBatchResponse({
+    this.dayCount = 0,
+    this.eventCount = 0,
+    this.keptCount = 0,
+    this.taskCount = 0,
+  });
+
+  factory GeneratedUndoApproveBatchResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedUndoApproveBatchResponse(
+      dayCount: _required(_readFieldValue<int>(_readField(json, const ["day_count"]), "day_count", _readInt, requiredField: false, nullable: false, defaultValue: 0), "day_count"),
+      eventCount: _required(_readFieldValue<int>(_readField(json, const ["event_count"]), "event_count", _readInt, requiredField: false, nullable: false, defaultValue: 0), "event_count"),
+      keptCount: _required(_readFieldValue<int>(_readField(json, const ["kept_count"]), "kept_count", _readInt, requiredField: false, nullable: false, defaultValue: 0), "kept_count"),
+      taskCount: _required(_readFieldValue<int>(_readField(json, const ["task_count"]), "task_count", _readInt, requiredField: false, nullable: false, defaultValue: 0), "task_count"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'day_count': dayCount,
+      'event_count': eventCount,
+      'kept_count': keptCount,
+      'task_count': taskCount,
     };
   }
 }

@@ -1,5 +1,6 @@
 """End-of-day review: sort a day's conversations, roll the unstarred ones into
-one long day summary, and correct it (added paragraphs, highlights, redactions).
+one long day summary, and correct it (added paragraphs, highlights, redactions) or edit its
+text by hand.
 
 See utils/day_review.py (rules) and utils/day_review_service.py (side effects).
 """
@@ -13,6 +14,7 @@ from models.day_review import (
     DayReview,
     DayReviewDayResponse,
     DayReviewsListResponse,
+    EditDayReviewTextRequest,
     FavoriteDayReviewSectionRequest,
     FinalizeDayReviewRequest,
     PendingDayReviewsResponse,
@@ -25,6 +27,11 @@ from utils.subscription import enforce_chat_quota
 router = APIRouter()
 
 _DATE = Path(..., pattern=r'^\d{4}-\d{2}-\d{2}$', description='Local calendar date, YYYY-MM-DD')
+_REPLACE_EDITS = Query(
+    False,
+    description='The user confirmed that a rewrite may replace the text they edited by hand '
+    '(without it, such a rewrite answers 409)',
+)
 
 
 def _raise(error: service.DayReviewError):
@@ -66,6 +73,7 @@ def get_day_review(
 def finalize_day_review(
     request: FinalizeDayReviewRequest,
     date: str = _DATE,
+    replace_edits: bool = _REPLACE_EDITS,
     uid: str = Depends(auth.get_current_user_uid),
     x_app_platform: Optional[str] = Header(None, alias='X-App-Platform'),
 ):
@@ -78,6 +86,7 @@ def finalize_day_review(
             request.keep_conversation_ids,
             [g.conversation_ids for g in request.merge_groups],
             request.drop_conversation_ids,
+            replace_edits=replace_edits,
         )
     except service.DayReviewError as e:
         _raise(e)
@@ -101,6 +110,7 @@ def bundle_day(
 @router.post('/v1/users/day-reviews/{date}/approve', tags=['day-reviews'], response_model=DayReview)
 def approve_day_review(
     date: str = _DATE,
+    replace_edits: bool = _REPLACE_EDITS,
     uid: str = Depends(auth.get_current_user_uid),
     x_app_platform: Optional[str] = Header(None, alias='X-App-Platform'),
 ):
@@ -108,7 +118,7 @@ def approve_day_review(
     Only an approved day's summary goes to the user's calendar."""
     enforce_chat_quota(uid, platform=x_app_platform)
     try:
-        return service.approve(uid, date)
+        return service.approve(uid, date, replace_edits=replace_edits)
     except service.DayReviewError as e:
         _raise(e)
 
@@ -152,13 +162,33 @@ def delete_day_review_correction(correction_id: str, date: str = _DATE, uid: str
 @router.post('/v1/users/day-reviews/{date}/regenerate', tags=['day-reviews'], response_model=DayReview)
 def regenerate_day_review(
     date: str = _DATE,
+    replace_edits: bool = _REPLACE_EDITS,
     uid: str = Depends(auth.get_current_user_uid),
     x_app_platform: Optional[str] = Header(None, alias='X-App-Platform'),
 ):
-    """Rewrite the summary with every correction applied (redactions stay enforced)."""
+    """Rewrite the summary with every correction applied (redactions stay enforced). Text the user
+    edited by hand is replaced only with ``replace_edits=true``; otherwise 409."""
     enforce_chat_quota(uid, platform=x_app_platform)
     try:
-        return service.regenerate(uid, date)
+        return service.regenerate(uid, date, replace_edits=replace_edits)
+    except service.DayReviewError as e:
+        _raise(e)
+
+
+@router.put('/v1/users/day-reviews/{date}/text', tags=['day-reviews'], response_model=DayReview)
+def edit_day_review_text(
+    request: EditDayReviewTextRequest, date: str = _DATE, uid: str = Depends(auth.get_current_user_uid)
+):
+    """Edit the summary's text by hand: the title, and each section's heading and text. A draft stays
+    a draft; an approved day stays approved and its summary on the calendar follows."""
+    try:
+        return service.edit_text(
+            uid,
+            date,
+            title=request.title,
+            sections=[s.model_dump() for s in request.sections] if request.sections is not None else None,
+            summary_text=request.summary_text,
+        )
     except service.DayReviewError as e:
         _raise(e)
 

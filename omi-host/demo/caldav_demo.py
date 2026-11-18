@@ -420,6 +420,27 @@ def new_event(uid: str, summary: str, start: datetime, minutes: int, location: s
     )
 
 
+# ---- the pre-change sync code (for the legacy section) ------------------------------------------
+
+LEGACY_SYNC_PATH = 'backend/utils/caldav/sync.py'
+
+
+def legacy_sync_ref(repo: str, ref: Optional[str] = None) -> str:
+    """The revision whose sync.py is the code from before per-person lists.
+
+    An explicit ``ref`` wins. Otherwise: the parent of the first commit that put ``owner_tag``
+    into sync.py, so the default keeps working once that change is on main (a fixed
+    ``origin/main`` stopped being "before" the day it merged). On a tree that never had the
+    change, its own HEAD is the old code."""
+    if ref:
+        return ref
+    added = subprocess.run(
+        ['git', '-C', repo, 'log', '--format=%H', '--reverse', '-S', 'owner_tag', '--', LEGACY_SYNC_PATH],
+        capture_output=True, text=True, check=True,
+    ).stdout.split()
+    return f'{added[0]}^' if added else 'HEAD'
+
+
 # ---- seeding -----------------------------------------------------------------------------------
 
 
@@ -1307,16 +1328,18 @@ class Demo:
         anything, fix the summary collision, and move Carol cleanly when she picks lists of her own."""
         if not self.args.seed_cmd:
             return
+        repo = os.path.join(HERE, '..', '..')
         try:
+            ref = legacy_sync_ref(repo, self.args.legacy_ref)
             source = subprocess.run(
-                ['git', '-C', os.path.join(HERE, '..', '..'), 'show', f'{self.args.legacy_ref}:backend/utils/caldav/sync.py'],
+                ['git', '-C', repo, 'show', f'{ref}:{LEGACY_SYNC_PATH}'],
                 capture_output=True, text=True, check=True,
             ).stdout
         except Exception as error:  # noqa: BLE001
             self.r.add('legacy', '-', 'old sync code available', False, f'{type(error).__name__}: {error}')
             return
         if 'owner_tag' in source:
-            self.r.add('legacy', '-', f'{self.args.legacy_ref} still has the old sync code', False, 'it already scopes UIDs')
+            self.r.add('legacy', '-', f'{ref} still has the old sync code', False, 'it already scopes UIDs')
             return
         date_str = self.day.isoformat()
         shared_tasks_path, shared_cal_path = f'{self.args.caldav_user}/omi-tasks/', f'{self.args.caldav_user}/omi/'
@@ -1334,6 +1357,11 @@ class Demo:
             uid = seed(self.args.seed_cmd, {'op': 'account', 'username': name, 'password': password})['uid']
             omi = Omi(self.args.backend)
             omi.login(name, password)
+            # Before the old code has run, the new one must not sync them: the backend syncs a
+            # user within seconds of a new task or an approved day (and on the full pass), which
+            # would give them lists of their own and make them a new user, not an existing one.
+            # The old code ignores this switch on the bundled server, as it ignored every choice.
+            omi.call('PUT', '/v1/caldav/settings', {'enabled': False})
             title = f"{who.title()}'s appointment"
             (cid,) = seed(
                 self.args.seed_cmd,
@@ -1353,6 +1381,8 @@ class Demo:
             report = seed(self.args.seed_cmd, {'op': 'legacy_sync', 'uid': people[who]['uid'], 'source': source})
             if report.get('error'):
                 self.r.add('legacy', '-', f'old sync for {who}', False, json.dumps(report)[:200])
+        for who in ('carol', 'dan'):  # the upgrade: the new code may sync them from here on
+            people[who]['omi'].call('PUT', '/v1/caldav/settings', {'enabled': True})
 
         def todos():
             return self.phone.objects(shared_tasks, 'VTODO')
@@ -1451,6 +1481,178 @@ class Demo:
         self.guard('legacy', 'both', "nothing of Dan's is deleted by Carol's move (or by either sync)", dan_intact)
         self.r.add('legacy', '-', "Carol's task is still in Omi after the move", carol['omi'].task(carol['task']) is not None)
 
+    def edit_text(self) -> None:
+        """Edit text: the user rewrites an approved day's title and text by hand. It stays approved
+        and the all-day VEVENT on the server shows the new words at the next sync."""
+        date_str = self.day.isoformat()
+        before = (self.omi.call('GET', f'/v1/users/day-reviews/{date_str}?include_drafts=true') or {}).get('review') or {}
+        sections = before.get('sections') or []
+        body: Dict[str, Any] = {'title': 'Grandma turns 80'}
+        if sections:
+            body['sections'] = [{'id': sections[0]['id'], 'text': 'Edited by hand: grandma turns 80 at Luigi\'s.'}]
+        else:
+            body['summary_text'] = 'Edited by hand: grandma turns 80 at Luigi\'s.'
+        edited = self.omi.call('PUT', f'/v1/users/day-reviews/{date_str}/text', body)
+        self.r.add(
+            'edit',
+            '-',
+            'PUT /day-reviews/{date}/text on an approved day: still approved, edited_by_user_at set',
+            edited.get('draft') is False and bool(edited.get('edited_by_user_at')) and edited.get('title') == 'Grandma turns 80',
+            f"draft={edited.get('draft')} edited_by_user_at={edited.get('edited_by_user_at')}",
+        )
+        self.sync()
+
+        def on_server():
+            obj = self.day_of(date_str)
+            if obj is None:
+                return False, 'no all-day VEVENT'
+            summary, description = unescape(obj.value('SUMMARY')), unescape(obj.value('DESCRIPTION'))
+            return summary == 'Omi: Grandma turns 80' and 'Edited by hand' in description, f'SUMMARY={summary!r}'
+
+        self.guard('edit', 'send', 'the all-day VEVENT on Radicale shows the edited title and text', on_server)
+
+
+        def rewrite_asks():
+            try:
+                self.omi.call('POST', f'/v1/users/day-reviews/{date_str}/regenerate')
+            except HttpError as error:
+                return error.status == 409, f'{error.status}'
+            return False, 'rewritten without asking'
+
+        self.guard('edit', '-', 'a rewrite asks before replacing the edits (409 without replace_edits)', rewrite_asks)
+
+    def approve_all(self) -> None:
+        """Approve all for a third person on the same server (no family-calendar gateway): one tap
+        approves her waiting task, heard event and the day's summary draft, Undo takes exactly that
+        off the server again (the draft comes back as it was), and Approve selected with the summary
+        unticked leaves the summary waiting."""
+        if not self.args.seed_cmd:
+            return
+        date_str = self.day.isoformat()
+        name = f'caldav-demo-erin-{secrets.token_hex(3)}'
+        password = secrets.token_urlsafe(12)
+        erin_uid = seed(self.args.seed_cmd, {'op': 'account', 'username': name, 'password': password})['uid']
+        erin = Omi(self.args.backend)
+        erin.login(name, password)
+        tag = owner_tag(erin_uid)
+        start = at(self.today + timedelta(days=6), 15, 0)
+        (cid,) = seed(
+            self.args.seed_cmd,
+            {
+                'op': 'conversations',
+                'uid': erin_uid,
+                'conversations': [
+                    {
+                        'title': 'Piano lessons',
+                        'overview': 'Erin booked a trial piano lesson for Sam.',
+                        'started_at': at(self.day, 10, 0).isoformat(),
+                        'starred': True,
+                        'transcript': ['The trial lesson is next week at three.', 'Remember to buy the music book.'],
+                        'events': [{'title': 'Sam trial piano lesson', 'start': start.isoformat(), 'duration': 45}],
+                    }
+                ],
+            },
+        )['ids']
+        (task,) = seed(
+            self.args.seed_cmd,
+            {
+                'op': 'tasks',
+                'uid': erin_uid,
+                'tasks': [{'description': 'Buy the piano music book', 'conversation_id': cid,
+                           'created_at': at(self.day, 10, 5).isoformat()}],
+            },
+        )['ids']
+        erin.call('POST', f'/v1/users/day-reviews/{date_str}/bundle')
+        erin.call('POST', f'/v1/users/day-reviews/{date_str}/corrections', {'type': 'paragraph', 'text': "Erin's day: piano."})
+        draft = (erin.call('GET', f'/v1/users/day-reviews/{date_str}?include_drafts=true') or {}).get('review') or {}
+        erin.call('POST', '/v1/caldav/sync')
+        found = self.phone.collections()
+        cal = (found.get(f'Omi – {name}') or {}).get('href') or ''
+        todo_list = (found.get(f'Omi Tasks – {name}') or {}).get('href') or ''
+
+        def objects():
+            events = self.phone.objects(cal, 'VEVENT') if cal else {}
+            todos = self.phone.objects(todo_list, 'VTODO') if todo_list else {}
+            return (
+                todos.get(f'omi-task-{tag}-{task}@omi-local'),
+                events.get(f'omi-event-{tag}-{cid}-0@omi-local'),
+                events.get(f'omi-day-{tag}-{date_str}@omi-local'),
+            )
+
+        def shown(found_objects) -> str:
+            return 'task={} event={} summary={}'.format(*('on' if o is not None else 'off' for o in found_objects))
+
+        self.guard(
+            'all',
+            'send',
+            'before: the waiting task, event and summary draft are NOT on the server',
+            lambda: ((o := objects()) == (None, None, None), shown(o)),
+        )
+        batch = erin.call('POST', '/v1/approvals/batch', {'all_waiting': True, 'date': date_str})
+        self.r.add(
+            'all',
+            '-',
+            'Approve all (POST /v1/approvals/batch) answers with exactly what it approved',
+            batch.get('task_ids') == [task]
+            and [(e['conversation_id'], e['event_idx']) for e in batch.get('events') or []] == [(cid, 0)]
+            and batch.get('day_dates') == [date_str],
+            json.dumps({k: batch.get(k) for k in ('task_count', 'event_count', 'day_count')}),
+        )
+        erin.call('POST', '/v1/caldav/sync')
+        self.guard(
+            'all',
+            'send',
+            'Approve all puts the task, the event and the day summary on the server',
+            lambda: (None not in (o := objects()), shown(o)),
+        )
+        undone = erin.call(
+            'POST',
+            '/v1/approvals/batch/undo',
+            {'task_ids': batch.get('task_ids'), 'events': batch.get('events'), 'day_dates': batch.get('day_dates')},
+        )
+        erin.call('POST', '/v1/caldav/sync')
+        self.guard(
+            'all',
+            'send',
+            'Undo takes them back off the server',
+            lambda: ((o := objects()) == (None, None, None), f'{shown(o)} undo={json.dumps(undone)}'),
+        )
+        back = (erin.call('GET', f'/v1/users/day-reviews/{date_str}?include_drafts=true') or {}).get('review') or {}
+        same = all(back.get(k) == draft.get(k) for k in ('title', 'summary_text', 'sections', 'kept_conversation_ids'))
+        self.r.add(
+            'all',
+            '-',
+            'Undo puts the day back to its draft exactly (no rewrite), and the task waits again',
+            back.get('draft') is True
+            and same
+            and len(back.get('corrections') or []) == len(draft.get('corrections') or [])
+            and (erin.task(task) or {}).get('approval') == 'pending',
+            f"draft={back.get('draft')} same_text={same}",
+        )
+        picked = erin.call(
+            'POST',
+            '/v1/approvals/batch',
+            {'task_ids': [task], 'events': [{'conversation_id': cid, 'event_idx': 0}], 'day_dates': []},
+        )
+        erin.call('POST', '/v1/caldav/sync')
+        self.guard(
+            'all',
+            'send',
+            'Approve selected with the summary unticked: task and event on the server, the summary still waits',
+            lambda: (
+                (o := objects())[0] is not None and o[1] is not None and o[2] is None and picked.get('day_dates') == [],
+                shown(o),
+            ),
+        )
+        again = erin.call('POST', '/v1/approvals/batch', {'all_waiting': True, 'date': date_str})
+        self.r.add(
+            'all',
+            '-',
+            'a second Approve all approves only what still waits (the summary), nothing twice',
+            again.get('task_ids') == [] and again.get('events') == [] and again.get('day_dates') == [date_str],
+            json.dumps({k: again.get(k) for k in ('task_count', 'event_count', 'day_count')}),
+        )
+
     def run(self) -> int:
         try:
             if self.setup():
@@ -1458,6 +1660,8 @@ class Demo:
                 self.send()
                 self.receive()
                 self.second_person()
+                self.edit_text()
+                self.approve_all()
                 self.legacy_people()
         except SystemExit as stop:
             self.r.add('demo', '-', 'stopped early', False, str(stop))
@@ -1504,8 +1708,9 @@ def main() -> int:
     parser.add_argument('--keep-data', action='store_true', help='with --isolate: leave the run\'s calendars')
     parser.add_argument('--strict', action='store_true', help='GAP rows fail the run too')
     parser.add_argument(
-        '--legacy-ref', default='origin/main',
-        help='git revision whose backend/utils/caldav/sync.py is the pre-change sync (builds an existing install\'s state)',
+        '--legacy-ref', default=None,
+        help='git revision whose backend/utils/caldav/sync.py is the pre-change sync (builds an existing install\'s state); '
+        'default: the parent of the commit that introduced per-person UIDs',
     )
     args = parser.parse_args()
     if not args.caldav_password:

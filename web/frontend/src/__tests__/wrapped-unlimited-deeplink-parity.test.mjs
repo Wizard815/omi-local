@@ -85,8 +85,13 @@ describe('wrapped / unlimited acquisition parity contract', () => {
     assert.doesNotMatch(tasksSource, /omi:\/\/h\.omi\.me\/tasks/);
   });
 
-  it('registers Android App Link for /wrapped', () => {
-    assert.match(manifestSource, /android:path="\/wrapped"/);
-    assert.match(manifestSource, /android:path="\/unlimited"/);
+  // omi-local: the self-hosted Android build registers no App Links for Omi's cloud hosts
+  // (Android would verify h.omi.me / try.omi.me on every install, and those pages live in the
+  // cloud), so /wrapped and /unlimited open in the browser. Upstream asserts the opposite.
+  it('registers no Android App Link for /wrapped or Omi cloud hosts (self-hosted build)', () => {
+    assert.doesNotMatch(manifestSource, /android:path="\/wrapped"/);
+    assert.doesNotMatch(manifestSource, /android:path="\/unlimited"/);
+    assert.doesNotMatch(manifestSource, /android:autoVerify="true"/);
+    assert.doesNotMatch(manifestSource, /android:host="(h|try)\.omi\.me"/);
   });
 });

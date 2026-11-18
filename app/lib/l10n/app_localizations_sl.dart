@@ -16515,4 +16515,94 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get conversationWritingSummary => 'Pišemo vaš povzetek…';
+
+  @override
+  String approvalApproveAll(int count) {
+    return 'Approve all ($count)';
+  }
+
+  @override
+  String approvalApproveAllFromDay(int count) {
+    return 'Approve all from this day ($count)';
+  }
+
+  @override
+  String get approvalHoldToChoose => 'Hold to choose what to approve';
+
+  @override
+  String get approvalChoose => 'Choose…';
+
+  @override
+  String approvalApproveSelected(int count) {
+    return 'Approve selected ($count)';
+  }
+
+  @override
+  String get approvalSelectHint => 'Untick what should keep waiting.';
+
+  @override
+  String approvalCountSummaries(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count day summaries',
+      one: '1 day summary',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String approvalBatchApproved(String items) {
+    return 'Approved $items';
+  }
+
+  @override
+  String get approvalBatchNothing => 'Nothing was waiting any more.';
+
+  @override
+  String approvalBatchSomeStillWait(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items could not be approved and still wait',
+      one: '1 item could not be approved and still waits',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String approvalSummaryItem(String date) {
+    return 'Day summary · $date';
+  }
+
+  @override
+  String get dayReviewEditText => 'Edit text';
+
+  @override
+  String get dayReviewEditTitleField => 'Title';
+
+  @override
+  String get dayReviewEditHeadingField => 'Heading';
+
+  @override
+  String get dayReviewEditSummaryField => 'Text';
+
+  @override
+  String get dayReviewTextSaved => 'Summary saved';
+
+  @override
+  String get dayReviewEditedByYou => 'Edited by you';
+
+  @override
+  String get dayReviewRewriteEditsTitle => 'Rewrite the summary?';
+
+  @override
+  String get dayReviewRewriteEditsBody => 'Rewrite will replace your edits — continue?';
+
+  @override
+  String get dayReviewRewriteEditsAction => 'Rewrite';
+
+  @override
+  String get dayReviewApproveRewriteBody =>
+      'New conversations came in since you edited this summary. Approving rewrites it, which will replace your edits — continue?';
 }

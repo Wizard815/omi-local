@@ -264,10 +264,17 @@ SCHEMA_GROUPS = {
             # omi-local: tasks waiting for the user's OK, and auto-approve (routers/approvals.py).
             'ApprovalSettings',
             'UpdateApprovalSettingsRequest',
+            'FamilyCalendarEvent',
             'WaitingForApprovalResponse',
             'ApproveTaskRequest',
             'DeclineTaskRequest',
             'TaskApprovalResponse',
+            # Approve all / Approve selected, and its Undo (one batch).
+            'ApprovalEventRef',
+            'ApproveBatchRequest',
+            'ApproveBatchResponse',
+            'UndoApproveBatchRequest',
+            'UndoApproveBatchResponse',
         ),
     },
     'task_intelligence': {
