@@ -25,6 +25,7 @@ enum SettingsDestination {
   taskIntegrations,
   caldav,
   familyCalendar,
+  connections,
   permissions,
   memories,
   goals,
@@ -216,6 +217,8 @@ final List<SettingsSearchEntry> settingsSearchEntries = [
   SettingsSearchEntry('caldavSettingsTitle', (l) => l.caldavSettingsTitle, SettingsDestination.caldav, _drawer),
   // omi-local: confirm heard events before they go to the family calendar (dayGLANCE via ALLGlance).
   SettingsSearchEntry('familyCalendarTitle', (l) => l.familyCalendarTitle, SettingsDestination.familyCalendar, _drawer),
+  // omi-local: where Omi may send things (wiki, Odysseus, Hermes, Studio, Coinpile, Orb).
+  SettingsSearchEntry('connectionsTitle', (l) => l.connectionsTitle, SettingsDestination.connections, _drawer),
 
   // Data & Privacy group
   SettingsSearchEntry('dataProtection', (l) => l.dataProtection, SettingsDestination.dataPrivacy, _groups),

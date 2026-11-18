@@ -10,6 +10,7 @@ import 'scenarios/auth.dart';
 import 'scenarios/capture.dart';
 import 'scenarios/chat_apps.dart';
 import 'scenarios/chat.dart';
+import 'scenarios/connections.dart';
 import 'scenarios/conversation_detail.dart';
 import 'scenarios/conversations.dart';
 import 'scenarios/day_review.dart';
@@ -45,6 +46,7 @@ final auditSuite = AuditSuite(
     ...dayReviewFamilyScenarios,
     ...familyCalendarScenarios,
     ...approvalScenarios,
+    ...connectionsScenarios,
     ...offlineProcessingScenarios,
     ...speakerLabelScenarios,
     ...reviewScenarios,

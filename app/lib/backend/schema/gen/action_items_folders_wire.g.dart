@@ -1063,6 +1063,7 @@ class GeneratedFamilyCalendarEvent {
 }
 
 class GeneratedWaitingForApprovalResponse {
+  final List<GeneratedAgentJob>? agentJobs;
   final bool autoApprove;
   final String autoApproveTime;
   final List<String>? draftDates;
@@ -1073,6 +1074,7 @@ class GeneratedWaitingForApprovalResponse {
   final String today;
 
   const GeneratedWaitingForApprovalResponse({
+    this.agentJobs,
     this.autoApprove = false,
     this.autoApproveTime = "",
     this.draftDates,
@@ -1085,6 +1087,7 @@ class GeneratedWaitingForApprovalResponse {
 
   factory GeneratedWaitingForApprovalResponse.fromJson(Map<String, dynamic> json) {
     return GeneratedWaitingForApprovalResponse(
+      agentJobs: _readFieldValue<List<GeneratedAgentJob>>(_readField(json, const ["agent_jobs"]), "agent_jobs", (value) => _readObjectList(value, GeneratedAgentJob.fromJson), requiredField: false, nullable: true),
       autoApprove: _required(_readFieldValue<bool>(_readField(json, const ["auto_approve"]), "auto_approve", _readBool, requiredField: false, nullable: false, defaultValue: false), "auto_approve"),
       autoApproveTime: _required(_readFieldValue<String>(_readField(json, const ["auto_approve_time"]), "auto_approve_time", _readString, requiredField: false, nullable: false, defaultValue: ""), "auto_approve_time"),
       draftDates: _readFieldValue<List<String>>(_readField(json, const ["draft_dates"]), "draft_dates", _readStringList, requiredField: false, nullable: true),
@@ -1098,6 +1101,7 @@ class GeneratedWaitingForApprovalResponse {
 
   Map<String, dynamic> toJson() {
     return {
+      'agent_jobs': agentJobs?.map((value) => value.toJson()).toList(),
       'auto_approve': autoApprove,
       'auto_approve_time': autoApproveTime,
       'draft_dates': draftDates,
@@ -1346,6 +1350,146 @@ class GeneratedUndoApproveBatchResponse {
       'event_count': eventCount,
       'kept_count': keptCount,
       'task_count': taskCount,
+    };
+  }
+}
+
+class GeneratedAgentJobSection {
+  final String date;
+  final String sectionId;
+
+  const GeneratedAgentJobSection({
+    required this.date,
+    required this.sectionId,
+  });
+
+  factory GeneratedAgentJobSection.fromJson(Map<String, dynamic> json) {
+    return GeneratedAgentJobSection(
+      date: _required(_readFieldValue<String>(_readField(json, const ["date"]), "date", _readString, requiredField: true, nullable: false), "date"),
+      sectionId: _required(_readFieldValue<String>(_readField(json, const ["section_id"]), "section_id", _readString, requiredField: true, nullable: false), "section_id"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'date': date,
+      'section_id': sectionId,
+    };
+  }
+}
+
+class GeneratedAgentJobApproval {
+  final List<String>? choices;
+  final String command;
+  final String description;
+  final String requestId;
+
+  const GeneratedAgentJobApproval({
+    this.choices,
+    this.command = "",
+    this.description = "",
+    this.requestId = "",
+  });
+
+  factory GeneratedAgentJobApproval.fromJson(Map<String, dynamic> json) {
+    return GeneratedAgentJobApproval(
+      choices: _readFieldValue<List<String>>(_readField(json, const ["choices"]), "choices", _readStringList, requiredField: false, nullable: true),
+      command: _required(_readFieldValue<String>(_readField(json, const ["command"]), "command", _readString, requiredField: false, nullable: false, defaultValue: ""), "command"),
+      description: _required(_readFieldValue<String>(_readField(json, const ["description"]), "description", _readString, requiredField: false, nullable: false, defaultValue: ""), "description"),
+      requestId: _required(_readFieldValue<String>(_readField(json, const ["request_id"]), "request_id", _readString, requiredField: false, nullable: false, defaultValue: ""), "request_id"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'choices': choices,
+      'command': command,
+      'description': description,
+      'request_id': requestId,
+    };
+  }
+}
+
+class GeneratedAgentJob {
+  final String agentId;
+  final GeneratedAgentJobApproval? approval;
+  final bool attachResult;
+  final List<String>? conversationIds;
+  final DateTime? createdAt;
+  final String error;
+  final String externalId;
+  final DateTime? finishedAt;
+  final String id;
+  final String prompt;
+  final String result;
+  final GeneratedAgentJobSection? section;
+  final String status;
+  final String target;
+  final String? taskId;
+  final String title;
+  final DateTime? updatedAt;
+
+  const GeneratedAgentJob({
+    this.agentId = "",
+    this.approval,
+    this.attachResult = false,
+    this.conversationIds,
+    this.createdAt,
+    this.error = "",
+    this.externalId = "",
+    this.finishedAt,
+    required this.id,
+    this.prompt = "",
+    this.result = "",
+    this.section,
+    this.status = "queued",
+    required this.target,
+    this.taskId,
+    this.title = "",
+    this.updatedAt,
+  });
+
+  factory GeneratedAgentJob.fromJson(Map<String, dynamic> json) {
+    return GeneratedAgentJob(
+      agentId: _required(_readFieldValue<String>(_readField(json, const ["agent_id"]), "agent_id", _readString, requiredField: false, nullable: false, defaultValue: ""), "agent_id"),
+      approval: _readFieldValue<GeneratedAgentJobApproval>(_readField(json, const ["approval"]), "approval", (value) => _readObject(value, GeneratedAgentJobApproval.fromJson), requiredField: false, nullable: true),
+      attachResult: _required(_readFieldValue<bool>(_readField(json, const ["attach_result"]), "attach_result", _readBool, requiredField: false, nullable: false, defaultValue: false), "attach_result"),
+      conversationIds: _readFieldValue<List<String>>(_readField(json, const ["conversation_ids"]), "conversation_ids", _readStringList, requiredField: false, nullable: true),
+      createdAt: _readFieldValue<DateTime>(_readField(json, const ["created_at"]), "created_at", _readDateTime, requiredField: false, nullable: true),
+      error: _required(_readFieldValue<String>(_readField(json, const ["error"]), "error", _readString, requiredField: false, nullable: false, defaultValue: ""), "error"),
+      externalId: _required(_readFieldValue<String>(_readField(json, const ["external_id"]), "external_id", _readString, requiredField: false, nullable: false, defaultValue: ""), "external_id"),
+      finishedAt: _readFieldValue<DateTime>(_readField(json, const ["finished_at"]), "finished_at", _readDateTime, requiredField: false, nullable: true),
+      id: _required(_readFieldValue<String>(_readField(json, const ["id"]), "id", _readString, requiredField: true, nullable: false), "id"),
+      prompt: _required(_readFieldValue<String>(_readField(json, const ["prompt"]), "prompt", _readString, requiredField: false, nullable: false, defaultValue: ""), "prompt"),
+      result: _required(_readFieldValue<String>(_readField(json, const ["result"]), "result", _readString, requiredField: false, nullable: false, defaultValue: ""), "result"),
+      section: _readFieldValue<GeneratedAgentJobSection>(_readField(json, const ["section"]), "section", (value) => _readObject(value, GeneratedAgentJobSection.fromJson), requiredField: false, nullable: true),
+      status: _required(_readFieldValue<String>(_readField(json, const ["status"]), "status", _readString, requiredField: false, nullable: false, defaultValue: "queued"), "status"),
+      target: _required(_readFieldValue<String>(_readField(json, const ["target"]), "target", _readString, requiredField: true, nullable: false), "target"),
+      taskId: _readFieldValue<String>(_readField(json, const ["task_id"]), "task_id", _readString, requiredField: false, nullable: true),
+      title: _required(_readFieldValue<String>(_readField(json, const ["title"]), "title", _readString, requiredField: false, nullable: false, defaultValue: ""), "title"),
+      updatedAt: _readFieldValue<DateTime>(_readField(json, const ["updated_at"]), "updated_at", _readDateTime, requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'agent_id': agentId,
+      'approval': approval?.toJson(),
+      'attach_result': attachResult,
+      'conversation_ids': conversationIds,
+      'created_at': createdAt?.toUtc().toIso8601String(),
+      'error': error,
+      'external_id': externalId,
+      'finished_at': finishedAt?.toUtc().toIso8601String(),
+      'id': id,
+      'prompt': prompt,
+      'result': result,
+      'section': section?.toJson(),
+      'status': status,
+      'target': target,
+      'task_id': taskId,
+      'title': title,
+      'updated_at': updatedAt?.toUtc().toIso8601String(),
     };
   }
 }

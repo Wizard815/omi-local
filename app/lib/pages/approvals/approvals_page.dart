@@ -6,8 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import 'package:omi/backend/http/api/approvals.dart';
+import 'package:omi/backend/http/api/connections.dart';
+import 'package:omi/backend/schema/connections.dart';
 import 'package:omi/l10n/app_localizations.dart';
 import 'package:omi/pages/approvals/waiting_tasks_section.dart';
+import 'package:omi/pages/connections/agent_jobs_page.dart';
 import 'package:omi/pages/day_review/day_review_page.dart';
 import 'package:omi/pages/family_calendar/family_calendar_review_page.dart';
 import 'package:omi/pages/settings/caldav_settings_page.dart';
@@ -38,9 +41,12 @@ String _summaryLabel(AppLocalizations l10n, String date, String today) {
 }
 
 class ApprovalsPage extends StatefulWidget {
-  const ApprovalsPage({super.key, this.api = const ApprovalsApi()});
+  const ApprovalsPage({super.key, this.api = const ApprovalsApi(), this.connections = const ConnectionsApi()});
 
   final ApprovalsApi api;
+
+  /// omi-local: agent jobs whose agent asks before it goes on (Hermes is answered here).
+  final ConnectionsApi connections;
 
   @override
   State<ApprovalsPage> createState() => _ApprovalsPageState();
@@ -49,10 +55,29 @@ class ApprovalsPage extends StatefulWidget {
 class _ApprovalsPageState extends State<ApprovalsPage> {
   late final WaitingApprovalController _controller = WaitingApprovalController(api: widget.api);
 
+  /// Agent jobs waiting for an answer (never part of Approve all, never auto-approved).
+  List<AgentJob> _asking = const [];
+
   @override
   void initState() {
     super.initState();
     _controller.load();
+    _loadAsking();
+  }
+
+  Future<void> _loadAsking() async {
+    final ConnectionResult<List<AgentJob>> result;
+    try {
+      result = await widget.connections.listAgentJobs();
+    } catch (_) {
+      return; // The agents' questions are an extra section; tasks and drafts stand without it.
+    }
+    if (!mounted || result.value == null) return;
+    setState(() => _asking = result.value!.where((j) => j.waiting).toList());
+  }
+
+  Future<void> _refresh() async {
+    await Future.wait([_controller.load(), _loadAsking()]);
   }
 
   @override
@@ -76,10 +101,21 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
             return OmiErrorState(message: l10n.somethingWentWrong, onRetry: _controller.load);
           }
           return RefreshIndicator(
-            onRefresh: _controller.load,
+            onRefresh: _refresh,
             child: ListView(
               padding: const EdgeInsets.only(bottom: OmiSpacing.xl),
               children: [
+                if (_asking.isNotEmpty)
+                  Padding(
+                    key: const Key('approval_agents_asking'),
+                    padding: const EdgeInsets.fromLTRB(OmiSpacing.md, OmiSpacing.sm, OmiSpacing.md, 0),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(l10n.approvalAgentsAsking, style: OmiType.headline.copyWith(color: OmiColors.textPrimary)),
+                      const SizedBox(height: OmiSpacing.xs),
+                      for (final job in _asking)
+                        AgentJobCard(job: job, api: widget.connections, onChanged: _loadAsking),
+                    ]),
+                  ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(OmiSpacing.md, OmiSpacing.sm, OmiSpacing.md, 0),
                   child: Text(

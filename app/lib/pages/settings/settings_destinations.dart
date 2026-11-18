@@ -24,6 +24,7 @@ import 'package:omi/pages/settings/developer.dart';
 import 'package:omi/pages/settings/device_settings.dart';
 import 'package:omi/pages/settings/import_history_page.dart';
 import 'package:omi/pages/settings/caldav_settings_page.dart';
+import 'package:omi/pages/connections/connections_page.dart';
 import 'package:omi/pages/family_calendar/family_calendar_review_page.dart';
 import 'package:omi/pages/settings/integrations_page.dart';
 import 'package:omi/pages/settings/task_integrations_page.dart';
@@ -90,6 +91,8 @@ Future<void> openSettingsDestination(BuildContext context, SettingsDestination d
       await routeToPage(context, const TaskIntegrationsPage());
     case SettingsDestination.caldav:
       await routeToPage(context, const CalDavSettingsPage());
+    case SettingsDestination.connections:
+      await routeToPage(context, const ConnectionsPage());
     case SettingsDestination.familyCalendar:
       await routeToPage(context, const FamilyCalendarReviewPage());
     case SettingsDestination.permissions:
