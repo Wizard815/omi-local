@@ -18,12 +18,18 @@ construction): those must not re-buy anything.
 
 from __future__ import annotations
 
-# omi-local: upstream's notes-4 plus the fork's reviewed-event fields (calendar, external_id,
+# omi-local: upstream's notes-6 plus the fork's reviewed-event fields (calendar, external_id,
 # declined, approved) on the Event output schema. A later upstream bump replaces this with its
 # own version; re-apply the omi-local suffix then.
-NOTES_PROMPT_VERSION = 'notes-4-omi-local-2'
-# The scaled-detail change leaves short and switch-off packets byte-identical.
-# Accept their notes-3 checkpoints with identical routing, dependencies and inputs.
+NOTES_PROMPT_VERSION = 'notes-6-omi-local-2'
+# notes-6 adds the v3 (recordings and conversations) notes path: its own model,
+# low effort and bounded personal context, all behind v3_models.active(). Output
+# for every non-v3 conversation is unchanged, so notes-5 checkpoints stay reusable.
+# Unchanged notes-4 checkpoints are filtered locally, not invalidated by the
+# quality prompt. Retain the earlier unscaled notes-3 alias.
+# omi-local: the fork never stored upstream's notes-4/notes-5 schema; its checkpoints carry
+# 'notes-4-omi-local-2' (notes-4 + the Event review fields), which is what stays reusable here.
+NOTES_REUSABLE_PREVIOUS_VERSIONS = ('notes-4-omi-local-2',)
 NOTES_UNSCALED_PREVIOUS_VERSION = 'notes-3'
 L1_PROMPT_VERSION = 'l1-1'
 

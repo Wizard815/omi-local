@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:omi/backend/schema/capture_group.dart';
 import 'package:omi/backend/schema/conversation_speakers.dart';
+import 'package:omi/backend/schema/conversation_v3.dart';
 import 'package:omi/backend/schema/gen/conversation_wire.g.dart' as wire;
 import 'package:omi/backend/schema/geolocation.dart';
 import 'package:omi/utils/audio/audio_timeline_mapper.dart';
@@ -435,6 +436,9 @@ class ServerConversation {
   /// Authoritative episode membership, including before the episode list arrives.
   final String? episodeId;
 
+  /// Recordings-and-conversations (v3) fields; null from older servers and one-to-one conversations.
+  final ConversationV3Fields? v3;
+
   /// Coverage projected from the server capture receipt; absent on legacy rows.
   final String? captureCoverage;
 
@@ -490,6 +494,7 @@ class ServerConversation {
     this.excludedSpeakers,
     this.homeStep,
     this.episodeId,
+    this.v3,
   }) : tags = tags ?? <String>[];
 
   /// List rows omit transcript_segments ("unknown/not loaded, not an empty transcript"), while the
@@ -546,6 +551,7 @@ class ServerConversation {
         captureCoverage: captureCoverage,
         homeStep: homeStep ?? this.homeStep,
         episodeId: episodeId,
+        v3: v3,
       )..isNew = isNew;
 
   factory ServerConversation.fromJson(Map<String, dynamic> json) {
@@ -591,6 +597,7 @@ class ServerConversation {
       onDeviceProvenance:
           json['on_device_provenance'] is Map ? Map<String, dynamic>.from(json['on_device_provenance']) : null,
       clientProcessing: json['client_processing'] is Map ? Map<String, dynamic>.from(json['client_processing']) : null,
+      v3: ConversationV3Fields.fromJson(json),
     );
   }
 
@@ -606,6 +613,7 @@ class ServerConversation {
     Map<String, dynamic>? onDeviceProvenance,
     Map<String, dynamic>? clientProcessing,
     String? homeStep,
+    ConversationV3Fields? v3,
   }) {
     final snippets = matchSnippets ?? const <TranscriptMatchSnippet>[];
     return ServerConversation(
@@ -657,6 +665,7 @@ class ServerConversation {
       excludedSpeakers: generated.excludedSpeakers,
       homeStep: homeStep,
       episodeId: generated.episodeId,
+      v3: v3,
     );
   }
 
@@ -701,6 +710,7 @@ class ServerConversation {
       if (episodeId != null) 'episode_id': episodeId,
       if (captureCoverage != null) 'capture_coverage': captureCoverage,
       if (excludedSpeakers != null) 'excluded_speakers': excludedSpeakers,
+      ...?v3?.toJson(),
     };
   }
 

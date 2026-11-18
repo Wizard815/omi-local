@@ -23,6 +23,8 @@ BACKEND = Path(__file__).resolve().parents[2]
 # prompt. A change here can change the model's output for the same input.
 PROMPT_SOURCES: dict[str, tuple[str, ...]] = {
     'notes': (
+        'utils/summary_quality.py',
+        'utils/llm/notes_agent_prompt.py',
         'config/notes_detail.py',
         'utils/llm/conversation_notes_prompts.py',
         'utils/llm/notes_packet.py',
@@ -65,10 +67,14 @@ PINNED: dict[str, dict[str, str]] = {
         'notes-2': 'da38487a9fb7cc52ef0508b6fa3639c6724b42666c5b38600e5235fa9fbc7437',
         'notes-3': '5307871ec67f0f81cafbca8d9aa209dd4fdc3fe9eec9d13139156fd0706ac766',
         'notes-4': '018b0f5c72af37d0ccb23f8a492ebfd88d8f8c28d30024042ad7ce0114efddc8',
+        'notes-5': '618f083cb5fb222e0982df19e52b2ad7e18b7b9871c839463eb931f3aa636801',
+        'notes-6': '25076427ce2b964154d4e1ccc272b48690e875cc937e65aa4e8d16533f401462',
         # omi-local: models/structured.py's Event carries the fork's calendar review fields.
         'notes-4-omi-local': 'c8cc7773ec00bf4314ad913a66ec272abb98b23384482986ba07236d5539d555',
         # omi-local: + Event.approved (the Calendar check's yes; the extractor always resets it).
         'notes-4-omi-local-2': 'dd721e82806627ebfa4f2cc45a82613b5a4c00e06808766f78ea3ffe2704cc58',
+        # omi-local: upstream's notes-6 sources plus the same Event review fields as notes-4-omi-local-2.
+        'notes-6-omi-local-2': 'a990bddc48d5f1827241bc2e74352a7c31200b42f8b500aee4df3fc6d34d8607',
     },
     'l1': {'l1-1': '0ad51076315481003b05af2a90ce18797539846e35f4970680dff906c00b7d70'},
 }

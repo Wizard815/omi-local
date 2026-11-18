@@ -29,6 +29,7 @@ from config.batch_pipeline import (
     projection_hold_recovery_enabled,
     sweep_owner_chain_enabled,
     serving_sweep_page_rows,
+    silence_read_skip_enabled,
 )
 from config.record_latency import recent_native_record
 from database.batch_pipeline_projection import ProjectionBlocked, ProjectionReplay, ProjectionStore
@@ -328,6 +329,13 @@ def build_incoming(
     incoming['data_protection_level'] = binding.data_protection_level
     # Consumed by the existing assignment transaction, never a separate write.
     incoming['_episode_transcript_receipt'] = True
+    if item.capture_time_trust is not None:
+        incoming['capture_time_trust'] = item.capture_time_trust
+        # Use raw-source identity rather than receipt time for replay. This
+        # pre-existing partition also fences new rows from older row readers.
+        incoming['id'] = item.conversation_id or incoming['id']
+        incoming['sync_clock_run'] = incoming['id']
+        incoming['clock'] = 'imported'
     from utils.sync.intake_completion import apply_capture_evidence_dark_write
 
     apply_capture_evidence_dark_write(incoming, None, segments)
@@ -586,12 +594,23 @@ class Projector:
             raise ProjectionBlocked('shadow publication forbidden')
         policy = ProjectionPolicy.from_dict(job['policy_parts']['projection'])
         item = WorkItem(**{key: job[key] for key in WorkItem.__dataclass_fields__ if key in job})
+        if item.source_reuse_key:
+            from database.batch_pipeline_source_projection import project_alias
+
+            if project_alias(self.store, item, binding, self.clock(), policy=policy):
+                return
         session = self.store.session(segment_id, binding, self.clock(), policy=policy)
         if job.get('_projection_privacy_deleted'):
             persist_disposition(session, privacy_deleted=True)
             return
+        silent = (
+            silence_read_skip_enabled()
+            and entry['result']['outcome'] == 'silence'
+            and not binding.record_origin
+            and not binding.native_record
+        )
         # A walk's fresh read showed no receipt; the transaction still fences.
-        prechecked = not (hint is not None and hint.successor and not entry.get('projection'))
+        prechecked = not silent and not (hint is not None and hint.successor and not entry.get('projection'))
         if prechecked:
             try:
                 with projection_phase('predecessor', policy):
@@ -616,7 +635,12 @@ class Projector:
                 if binding.record_origin:
                     self.assign_record_silence(item, binding, session, hint=hint)
                 else:
-                    session.persist_empty()
+                    if silent:
+                        # prepare() in this transaction retains every authority,
+                        # binding and predecessor fence. No follow-up is owed.
+                        session.persist_empty(silence=True)
+                    else:
+                        session.persist_empty()
             except ProjectionReplay:
                 if prechecked and not policy.projection_contention:
                     raise
@@ -700,12 +724,39 @@ class Projector:
             sorted(parts.items(), key=lambda pair: int(pair[0])) if parts else [(None, entry['projection'])]
         ):
             self.finish_part(item, binding, receipt, int(index) if index is not None else None, policy=policy)
-        return self.complete_content(item.segment_id, binding, policy=policy)
+        return self.complete_content(
+            item.segment_id,
+            binding,
+            policy=policy,
+            silence=entry.get('result', {}).get('outcome') == 'silence',
+        )
 
-    def complete_content(self, segment_id, binding, *, policy=None):
+    def complete_content(self, segment_id, binding, *, policy=None, silence=False):
         policy = policy or self.store.policy(segment_id)
+        entries = None
+        if silence and silence_read_skip_enabled() and not binding.record_origin and not binding.native_record:
+            # Reuse ordinary accounting's result reads to rule out known mixed
+            # uploads before paying for a speculative completion transaction.
+            with projection_phase('completion_scan', policy):
+                entries = self.store.completion_entries(binding)
+            if len(entries) == len(binding.segment_ids) and all(
+                entry.get('result', {}).get('outcome') == 'silence'
+                and (entry.get('projection') or {}).get('state') == 'ready'
+                and not entry.get('projection_parts')
+                for entry in entries.values()
+            ):
+                # This hint never authorizes completion: ALL sibling identities,
+                # outcomes, privacy and accounting are verified transactionally.
+                with projection_phase('completion', policy):
+                    result = self.store.complete(segment_id, binding, self.clock(), None, policy=policy)
+                if result is not None:
+                    return self.publish_completion(binding, result, policy=policy)
         with projection_phase('accounting', policy):
-            accounting = self.store.prepare_accounting(binding, self.clock())
+            accounting = (
+                self.store.prepare_accounting(binding, self.clock(), result_entries=entries)
+                if entries is not None
+                else self.store.prepare_accounting(binding, self.clock())
+            )
         if accounting is None:
             self.store.hold_for_quarantine(segment_id, binding, self.clock(), policy=policy)
             return None
@@ -714,6 +765,9 @@ class Projector:
                 record_speech(binding, accounting, self.clock())
         with projection_phase('completion', policy):
             result = self.store.complete(segment_id, binding, self.clock(), accounting, policy=policy)
+        return self.publish_completion(binding, result, policy=policy)
+
+    def publish_completion(self, binding, result, *, policy):
         if result is not None:
             # complete() aggregated every part before setting this disposition.
             # Never call the publisher, even with empty IDs, for a deleted job.
@@ -862,7 +916,11 @@ class Projector:
             'data_protection_level': binding.data_protection_level,
             '_batch_require_live_target': True,
             '_batch_redrive_target': bool(session.entry.get('projection_redriven_at')),
-            '_batch_replace_live': {'start': item.capture_at, 'end': item.capture_at + item.duration_seconds},
+            '_batch_replace_live': {
+                'start': item.capture_at,
+                'end': item.capture_at + item.duration_seconds,
+                'terminal_empty_outcome': (session.entry.get('result') or {}).get('outcome'),
+            },
         }
         try:
             conversations_db.assign_sync_conversation(
@@ -1008,7 +1066,12 @@ class Projector:
                     hint is not None and hint.successor and not entry.get('projection') and str(index) not in receipts
                 ):
                     self.store.check(session)
-                if hint is not None and hint.parallel_candidate and not binding.target_conversation_id:
+                if (
+                    hint is not None
+                    and hint.parallel_candidate
+                    and not binding.target_conversation_id
+                    and item.capture_time_trust != 'untrusted'
+                ):
                     pending_candidate = self._start_candidate(binding, part, part_payload)
                 context = ResolvedContext(binding.target_conversation_id)
                 if manifest is not None and item.requires_compute_admission:
@@ -1059,7 +1122,11 @@ class Projector:
                         receipt_box[:] = [session.persist(transaction, planned)]
 
                     candidate = None
-                    if context.target_id is None and incoming['transcript_segments']:
+                    if (
+                        context.target_id is None
+                        and incoming['transcript_segments']
+                        and item.capture_time_trust != 'untrusted'
+                    ):
                         with projection_phase('candidate', policy):
                             span = (int(incoming['started_at'].timestamp()), int(incoming['finished_at'].timestamp()))
                             deadline = hint.deadline if hint is not None else None
@@ -1730,7 +1797,7 @@ class Projector:
         Async rows belong to the follow-up drain; seeing one keeps it scheduled.
         Synchronous-policy rows replay assignment and finish exactly as the
         mixed page did, so no persisted or ready obligation loses its retry.
-        The dark finish backoff owns page selection and deferral; see
+        FinishBackoff owns async discovery hints and synchronous deferral; see
         utils/batch_pipeline/projection_finish_backoff.py.
         """
         from database.batch_pipeline_privacy import BatchPrivacyBlocked
@@ -1748,7 +1815,7 @@ class Projector:
                 policy = ProjectionPolicy.from_dict(job['policy_parts']['projection'])
                 contention = contention or policy.projection_contention
                 if policy.async_projection:
-                    self.has_async_followups = True
+                    self.finish_backoff.observed_async(segment_id, entry)
                     defer = False
                     continue
                 result = self._project_read(segment_id, job, entry, binding)

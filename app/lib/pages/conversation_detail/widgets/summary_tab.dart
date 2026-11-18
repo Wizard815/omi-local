@@ -15,6 +15,7 @@ import 'package:omi/pages/conversation_detail/conversation_detail_provider.dart'
 import 'package:omi/pages/conversation_detail/widgets.dart';
 import 'package:omi/pages/on_device/on_device_provenance_section.dart';
 import 'package:omi/providers/connectivity_provider.dart';
+import 'package:omi/providers/conversations_v3_provider.dart';
 import 'package:omi/utils/platform/platform_manager.dart';
 import 'package:omi/utils/analytics/product_telemetry.dart';
 import 'package:omi/utils/analytics/analytics_manager.dart';
@@ -25,6 +26,7 @@ import 'package:uuid/uuid.dart';
 
 import 'conversation_action_items_section.dart';
 import 'conversation_screenshots_section.dart';
+import 'live_summary_section.dart';
 import 'summary_task_recovery.dart';
 import 'feedback_prompt_policy.dart';
 import 'feedback_sheet.dart';
@@ -59,6 +61,10 @@ class SummaryTab extends StatefulWidget {
 
 class _SummaryTabState extends State<SummaryTab> with AutomaticKeepAliveClientMixin {
   bool _isEditing = false;
+
+  /// v3: the summary written on open stands in for the stored one until it is stored. Null until the
+  /// section first reports, so the stored summary does not flash in its first frame.
+  bool? _liveSummaryActive;
   @override
   bool get wantKeepAlive => true;
 
@@ -87,6 +93,10 @@ class _SummaryTabState extends State<SummaryTab> with AutomaticKeepAliveClientMi
         builder: (context, provider, child) {
           final conversation = provider.conversationOrNull;
           final discarded = conversation?.discarded ?? true;
+          final liveWanted = conversation != null &&
+              !discarded &&
+              context.select<ConversationsV3Provider?, bool>((p) => p?.v3 ?? false) &&
+              LiveSummarySection.wants(conversation);
           // Base the surrounding tab state on the summary the user is actually looking at
           // (the displayed source chip), not the canonical server selection.
           final summarySelection = provider.getDisplayedSummarySelection();
@@ -124,37 +134,51 @@ class _SummaryTabState extends State<SummaryTab> with AutomaticKeepAliveClientMi
                       // Redo with Omi Cloud waits on a re-transcription endpoint.
                       if (conversation != null && !discarded)
                         SliverToBoxAdapter(child: OnDeviceProvenanceSection(conversationId: conversation.id)),
+                      if (liveWanted)
+                        LiveSummarySection(
+                          key: ValueKey('live-summary-${conversation.id}'),
+                          conversation: conversation,
+                          refresh: provider.refreshConversation,
+                          onActiveChanged: (active) {
+                            if (mounted && active != _liveSummaryActive) {
+                              setState(() => _liveSummaryActive = active);
+                            }
+                          },
+                        ),
                       discarded
                           ? const SliverToBoxAdapter(child: ReprocessDiscardedWidget())
-                          : GetAppsWidgets(
-                              onOpenSource: widget.onOpenSource,
-                              searchQuery: widget.searchQuery,
-                              currentResultIndex: widget.currentResultIndex,
-                              onOpenTranscript: widget.onOpenTranscript,
-                              canStartEditing: () {
-                                final connectivityProvider = Provider.of<ConnectivityProvider>(context, listen: false);
-                                if (!connectivityProvider.isConnected) {
-                                  ConnectivityProvider.showNoInternetDialog(context);
-                                  return false;
-                                }
-                                return true;
-                              },
-                              onEditStarted: (_) {
-                                setState(() => _isEditing = true);
-                                PlatformManager.instance.analytics.editSummaryStarted();
-                              },
-                              onEditCancelled: (_) {
-                                setState(() => _isEditing = false);
-                                PlatformManager.instance.analytics.editSummaryCancelled();
-                              },
-                              onSaveSummarySelection: (selection, newContent) {
-                                PlatformManager.instance.analytics.editSummarySaved();
-                                context.read<ConversationDetailProvider>().saveEditingSummarySelection(
-                                      selection,
-                                      newContent,
-                                    );
-                              },
-                            ),
+                          : liveWanted && (_liveSummaryActive ?? true)
+                              ? const SliverToBoxAdapter(child: SizedBox.shrink())
+                              : GetAppsWidgets(
+                                  onOpenSource: widget.onOpenSource,
+                                  searchQuery: widget.searchQuery,
+                                  currentResultIndex: widget.currentResultIndex,
+                                  onOpenTranscript: widget.onOpenTranscript,
+                                  canStartEditing: () {
+                                    final connectivityProvider =
+                                        Provider.of<ConnectivityProvider>(context, listen: false);
+                                    if (!connectivityProvider.isConnected) {
+                                      ConnectivityProvider.showNoInternetDialog(context);
+                                      return false;
+                                    }
+                                    return true;
+                                  },
+                                  onEditStarted: (_) {
+                                    setState(() => _isEditing = true);
+                                    PlatformManager.instance.analytics.editSummaryStarted();
+                                  },
+                                  onEditCancelled: (_) {
+                                    setState(() => _isEditing = false);
+                                    PlatformManager.instance.analytics.editSummaryCancelled();
+                                  },
+                                  onSaveSummarySelection: (selection, newContent) {
+                                    PlatformManager.instance.analytics.editSummarySaved();
+                                    context.read<ConversationDetailProvider>().saveEditingSummarySelection(
+                                          selection,
+                                          newContent,
+                                        );
+                                  },
+                                ),
                       // After the note's sections, before the screenshots: the Mac's order.
                       if (conversation != null &&
                           !_isEditing &&
@@ -171,8 +195,8 @@ class _SummaryTabState extends State<SummaryTab> with AutomaticKeepAliveClientMi
                           currentResultIndex: widget.currentResultIndex,
                           searchResultOffset: widget.summarySearchResultOffset,
                         ),
-                      if (conversation != null && !_isEditing && !summarySelection.isApp)
-                        SliverToBoxAdapter(child: ConversationCalendarRow(conversation: conversation)),
+                        if (conversation != null && !_isEditing && !summarySelection.isApp)
+                          SliverToBoxAdapter(child: ConversationCalendarRow(conversation: conversation)),
                     ]),
                   ),
                   // Where the Mac puts its strip: after the note's own sections. Only a completed
