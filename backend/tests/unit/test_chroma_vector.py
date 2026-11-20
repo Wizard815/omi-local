@@ -63,3 +63,18 @@ def test_delete_by_uid_leaves_other_users(store):
 
     assert store.chroma_count() == 1
     assert store.chroma_query(query_vector=[1.0, 0.0, 0.0], uid='uid-b') == ['uid-b-c2']
+
+
+def test_empty_list_and_none_metadata_do_not_drop_the_record(store):
+    """A conversation whose dates came back empty was rejected by Chroma and never searchable."""
+    store.chroma_upsert(
+        'uid-a-c1',
+        [1.0, 0.0, 0.0],
+        {'uid': 'uid-a', 'created_at': 100, 'dates': [], 'people': ['Gary'], 'overview': None},
+    )
+    store.chroma_upsert_batch(
+        ['uid-a-c2'], [[0.0, 1.0, 0.0]], [{'uid': 'uid-a', 'created_at': 200, 'topics': [], 'dates': None}]
+    )
+
+    assert store.chroma_count() == 2
+    assert store.chroma_query(query_vector=[1.0, 0.0, 0.0], uid='uid-a', top_k=1) == ['uid-a-c1']

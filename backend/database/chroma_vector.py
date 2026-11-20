@@ -62,6 +62,19 @@ def is_chroma_enabled() -> bool:
     return os.environ.get("LOCAL_VECTOR_DB", "").lower() == "chroma"
 
 
+def _storable_metadata(metadata: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Chroma rejects None values and empty lists, and with them the whole record.
+
+    A conversation whose model returned no dates (``dates: []``) was never stored, so
+    it could never be found. Absent keys mean the same thing to every filter here.
+    """
+    return {
+        key: value
+        for key, value in (metadata or {}).items()
+        if value is not None and not (isinstance(value, (list, tuple)) and not value)
+    }
+
+
 def chroma_upsert(
     doc_id: str,
     vector: List[float],
@@ -75,7 +88,7 @@ def chroma_upsert(
         collection.upsert(
             ids=[doc_id],
             embeddings=[vector],
-            metadatas=[metadata or {}],
+            metadatas=[_storable_metadata(metadata)],
         )
     except Exception as e:
         logger.error(f"Chroma upsert failed for {doc_id}: {e}")
@@ -96,7 +109,7 @@ def chroma_upsert_batch(
         collection.upsert(
             ids=ids,
             embeddings=cast(Any, vectors),
-            metadatas=cast(Any, metadatas or [{}] * len(ids)),
+            metadatas=cast(Any, [_storable_metadata(m) for m in (metadatas or [{}] * len(ids))]),
         )
     except Exception as e:
         logger.error(f"Chroma batch upsert failed: {e}")

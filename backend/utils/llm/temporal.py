@@ -16,6 +16,7 @@ DB layer, so a module can use them without pulling the Firestore client in at im
 """
 
 import logging
+import re
 from datetime import datetime, timedelta, timezone
 from typing import Iterable, List, Optional
 from zoneinfo import ZoneInfo
@@ -57,12 +58,13 @@ def date_in_tz(dt: datetime, tz: Optional[str] = None) -> str:
 # Two years is generous on purpose — the bound exists to drop hallucinations, and people do plan
 # real events well ahead, so erring wide keeps this from becoming the silent-loss bug it replaced.
 MAX_EXTRACTED_DATE_LOOKAHEAD_DAYS = 731
+_ISO_DATE = re.compile(r'(?<!\d)(\d{4}-\d{2}-\d{2})(?!\d)')
 
 
 def normalize_extracted_dates(dates: Optional[Iterable[str]], reference_date: str) -> List[str]:
     """Parse model-extracted ``YYYY-MM-DD`` dates, bounded relative to ``reference_date``.
 
-    Values the model did not emit as a full date, and dates more than
+    A full date embedded in a longer value is kept; values without one, and dates more than
     ``MAX_EXTRACTED_DATE_LOOKAHEAD_DAYS`` after the reference, are dropped. An unparseable
     reference keeps every parseable date rather than discarding the whole set.
     """
@@ -73,14 +75,19 @@ def normalize_extracted_dates(dates: Optional[Iterable[str]], reference_date: st
 
     normalized: List[str] = []
     for raw in dates or []:
+        # Models decorate the date they were asked for ("Monday 2026-11-23",
+        # "2026-11-19 09:00", "2026-11-19T09:00"); keep the calendar date inside.
+        match = _ISO_DATE.search(raw) if isinstance(raw, str) else None
         try:
-            parsed = datetime.strptime(raw, '%Y-%m-%d')
+            parsed = datetime.strptime(match.group(1) if match else raw, '%Y-%m-%d')
         except (TypeError, ValueError) as e:
             logger.warning(f'normalize_extracted_dates - dropping unparseable date: {e}')
             continue
         if cutoff is not None and parsed > cutoff:
             continue
-        normalized.append(parsed.strftime('%Y-%m-%d'))
+        value = parsed.strftime('%Y-%m-%d')
+        if value not in normalized:
+            normalized.append(value)
     return normalized
 
 
