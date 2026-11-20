@@ -53,3 +53,41 @@ def test_search_goes_to_chroma_and_strips_the_uid_prefix(monkeypatch):
             {'query_vector': [0.3], 'uid': 'u1', 'top_k': 2, 'filter_created_after': 5, 'filter_created_before': 9},
         )
     ]
+
+
+def test_action_item_vectors_use_the_local_store(monkeypatch, tmp_path):
+    """Without Pinecone the task duplicate finder used to return nothing, so tasks never merged."""
+    from unittest.mock import MagicMock
+
+    monkeypatch.setattr(chroma_vector, 'CHROMA_PATH', str(tmp_path / 'chroma'))
+    monkeypatch.setattr(chroma_vector, '_chroma_client', None)
+    monkeypatch.setattr(chroma_vector, '_chroma_collection', None)
+    monkeypatch.setattr(chroma_vector, '_chroma_enabled', False)
+    monkeypatch.setattr(vector_db, '_use_chroma', True)
+    monkeypatch.setattr(vector_db, 'index', None)
+    vectors = {
+        'Call Gary the plumber': [1.0, 0.0, 0.0],
+        'Call the plumber Gary back': [0.98, 0.2, 0.0],
+        'Buy salmon cat food': [0.0, 1.0, 0.0],
+    }
+    fake = MagicMock()
+    fake.embed_query.side_effect = lambda text: vectors[text]
+    fake.embed_documents.side_effect = lambda texts: [vectors[t] for t in texts]
+    monkeypatch.setattr(vector_db, 'embeddings', fake)
+
+    stored = vector_db.upsert_action_item_vectors_batch(
+        'u1',
+        [
+            {'action_item_id': 'plumber', 'description': 'Call Gary the plumber'},
+            {'action_item_id': 'cat', 'description': 'Buy salmon cat food'},
+        ],
+    )
+    assert stored == 2
+
+    similar = vector_db.find_similar_action_items('u1', 'Call the plumber Gary back', threshold=0.6)
+    assert [m['action_item_id'] for m in similar] == ['plumber']
+    assert vector_db.search_action_items_by_vector('u1', 'Call Gary the plumber', limit=1) == ['plumber']
+    assert vector_db.find_similar_action_items('someone-else', 'Call Gary the plumber') == []
+
+    vector_db.delete_action_item_vectors_batch('u1', ['plumber'])
+    assert vector_db.find_similar_action_items('u1', 'Call Gary the plumber', threshold=0.6) == []

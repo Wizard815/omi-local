@@ -109,6 +109,8 @@ server's audio service", whatever engine runs behind it.
   own after the first rejection, or you can set `OMI_ASR_RESPONSE_FORMAT=json`.
 - **Latency.** Each utterance is one HTTP request. A distant engine adds one round
   trip, and a line appears once you pause, the same as today (`OMI_VAD_MIN_SILENCE_MS`).
+  On a slow machine, [`../../SLOW-HARDWARE.md`](../../SLOW-HARDWARE.md) lists the settings that
+  bring live text sooner and what each costs in accuracy.
 - **Language.** `OMI_ASR_LANGUAGE=en` is the default. Set another language code, or
   `auto` to let the engine detect it.
 - **GPU memory.** With `OMI_ASR_ENGINE=openai`, nothing loads whisper on this GPU, so

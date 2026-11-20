@@ -23,6 +23,9 @@ ASR engines:
       check is therefore about the pipeline (VAD endpointing, framing,
       timestamps, segment count, no lost or duplicated utterances), not the
       model; the numbers are pipeline overhead plus the simulated decode.
+  --engine whispercpp --whisper-bin PATH --whisper-model FILE runs a real
+      whisper.cpp server (e.g. the repository's sdks/swift/.../ggml-tiny.en.bin);
+      the transcript check is the same word-overlap score.
   --engine fasterwhisper --model DIR|NAME uses a real CTranslate2 Whisper
       model (e.g. a local tiny/base directory); the transcript check is then a
       word-overlap score against the fixture sentence.
@@ -31,6 +34,11 @@ Usage (from the repo root, with backend/.venv from `make setup-backend`):
   backend/.venv/bin/python omi-host/bench_audio_pipeline.py --utterances 3
   backend/.venv/bin/python omi-host/bench_audio_pipeline.py --utterances 120 --gap-s 3 --no-realtime
   backend/.venv/bin/python omi-host/bench_audio_pipeline.py --client backend
+  backend/.venv/bin/python omi-host/bench_audio_pipeline.py --engine whispercpp \
+      --whisper-bin whisper.cpp/build/bin/whisper-server --whisper-model ggml-tiny.en.bin \
+      --env OMI_ASR_LIVE_BEAM_SIZE=1 --env OMI_ASR_LIVE_BEST_OF=1
+  --gap-s 0.25 makes one continuous monologue (no pause long enough to end an
+  utterance): first_text_s / max_text_gap_s then show how long text waits.
 Exit status is non-zero when a transcript check fails.
 """
 
@@ -231,6 +239,19 @@ class Service:
                 "FAKE_ASR_MAX_S": str(clip_s + 1.5),
                 "FAKE_ASR_LOG": self.asr_log,
             })
+        elif args.engine == "whispercpp":
+            model = os.path.abspath(args.whisper_model)
+            name = os.path.basename(model)
+            if not (name.startswith("ggml-") and name.endswith(".bin")):
+                raise SystemExit("--whisper-model must be a ggml-<name>.bin file")
+            env.update({
+                "OMI_ASR_ENGINE": "whispercpp",
+                "WHISPER_CPP_SERVER_BIN": os.path.abspath(args.whisper_bin),
+                "WHISPER_CPP_MODELS_DIR": os.path.dirname(model),
+                "WHISPER_MODEL": name[len("ggml-"):-len(".bin")],
+                "WHISPER_CPP_SERVER_URL": f"http://127.0.0.1:{free_port()}",
+                "THREADS": str(args.threads),
+            })
         else:
             env.update({
                 "OMI_ASR_ENGINE": "fasterwhisper",
@@ -397,6 +418,13 @@ def summarize_live(received: List[Tuple[float, Dict[str, Any]]], sent_at: List[f
         idx = min(len(sent_at) - 1, int(b * 1000 // chunk_ms))
         lat.append(arr - sent_at[idx])
     out: Dict[str, Any] = {"segments": len(received)}
+    if received and sent_at:
+        # How long the listener waits for text: the first line, and the longest silence
+        # between lines while audio is still arriving (a monologue's worst case).
+        arrivals = [t for t, _seg in received]
+        out["first_text_s"] = round(arrivals[0] - sent_at[0], 3)
+        marks = [sent_at[0]] + arrivals
+        out["max_text_gap_s"] = round(max(b - a for a, b in zip(marks, marks[1:])), 3)
     if lat:
         out.update({
             "first_final_latency_s": round(lat[0], 3),
@@ -413,7 +441,9 @@ def main() -> int:
         _run_fake_whisper_server(sys.argv[2:])
         return 0
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--engine", choices=["fake-whispercpp", "fasterwhisper"], default="fake-whispercpp")
+    ap.add_argument("--engine", choices=["fake-whispercpp", "whispercpp", "fasterwhisper"], default="fake-whispercpp")
+    ap.add_argument("--whisper-bin", help="whispercpp: path to a built whisper-server")
+    ap.add_argument("--whisper-model", help="whispercpp: path to a ggml-<name>.bin model")
     ap.add_argument("--model", help="fasterwhisper model dir or name (e.g. a local tiny.en directory)")
     ap.add_argument("--compute", default="int8")
     ap.add_argument("--threads", type=int, default=4)
@@ -434,6 +464,8 @@ def main() -> int:
     args = ap.parse_args()
     if args.engine == "fasterwhisper" and not args.model:
         ap.error("--engine fasterwhisper needs --model")
+    if args.engine == "whispercpp" and not (args.whisper_bin and args.whisper_model):
+        ap.error("--engine whispercpp needs --whisper-bin and --whisper-model")
     if args.client == "backend":
         sys.path.insert(0, os.path.join(REPO, "backend"))
         os.environ.setdefault("ENCRYPTION_SECRET", "omi-local-audio-bench-not-a-secret-0000")

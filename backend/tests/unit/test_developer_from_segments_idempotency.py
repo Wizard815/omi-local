@@ -1339,3 +1339,75 @@ def test_http_continuation_assembles_one_recording_and_retry_never_creates_anoth
     assert retry.status_code == 200
     assert retry.json()['id'] == replies[-1]['id']
     assert len(processed) == 1
+
+
+def test_self_hosted_upload_answers_processing_and_leaves_notes_to_the_background(monkeypatch):
+    """A slow local model used to hold the upload past the 120s limit (504) and a timeout
+    deleted the claimed row. The coordinator now stores it deferred; the route answers at once."""
+    captured = {}
+    monkeypatch.setattr(conversations_db, 'get_conversation', MagicMock(return_value=None))
+    monkeypatch.setattr(developer.lifecycle_service, 'create_processing_conversation', MagicMock(return_value=True))
+    monkeypatch.setattr(developer.lifecycle_service, 'persist_processed_conversation', MagicMock())
+    monkeypatch.setattr(developer.local_processing_queue, 'enabled', lambda: True)
+    delete = MagicMock()
+    monkeypatch.setattr(conversations_db, 'delete_conversation', delete)
+
+    def _process(uid, language, conversation, **kwargs):
+        captured.update(kwargs)
+        conversation.status = ConversationStatus.processing
+        conversation.deferred = True
+        return conversation
+
+    monkeypatch.setattr(developer, 'process_conversation', _process)
+
+    response = developer._create_conversation_from_segments('uid1', _request(client_session_id='slow-session'))
+
+    assert captured['local_background'] is True
+    assert response.status == 'processing'
+    assert response.discarded is False
+    delete.assert_not_called()
+
+
+def test_cloud_upload_does_not_ask_for_background_processing(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(conversations_db, 'get_conversation', MagicMock(return_value=None))
+    monkeypatch.setattr(developer.lifecycle_service, 'create_processing_conversation', MagicMock(return_value=True))
+    monkeypatch.setattr(developer.lifecycle_service, 'persist_processed_conversation', MagicMock())
+    monkeypatch.setattr(developer.local_processing_queue, 'enabled', lambda: False)
+
+    def _process(uid, language, conversation, **kwargs):
+        captured.update(kwargs)
+        conversation.status = ConversationStatus.completed
+        return conversation
+
+    monkeypatch.setattr(developer, 'process_conversation', _process)
+    developer._create_conversation_from_segments('uid1', _request(client_session_id='cloud-session'))
+    assert 'local_background' not in captured
+
+
+def test_refused_empty_first_summary_on_the_final_persist_is_not_a_500(monkeypatch):
+    """A three-line clip: the coordinator committed the row, then the route's second persist
+    raised SummaryOutputUnavailable and answered 500, so the client retried and stored it twice."""
+    monkeypatch.setattr(conversations_db, 'get_conversation', MagicMock(return_value=None))
+    monkeypatch.setattr(developer.lifecycle_service, 'create_processing_conversation', MagicMock(return_value=True))
+    monkeypatch.setattr(
+        developer.lifecycle_service,
+        'persist_processed_conversation',
+        MagicMock(
+            side_effect=developer.summary_delivery.SummaryOutputUnavailable('kept first-summary output is empty')
+        ),
+    )
+    delete = MagicMock()
+    monkeypatch.setattr(conversations_db, 'delete_conversation', delete)
+
+    def _process(uid, language, conversation, **kwargs):
+        conversation.status = ConversationStatus.completed
+        return conversation
+
+    monkeypatch.setattr(developer, 'process_conversation', _process)
+
+    response = developer._create_conversation_from_segments('uid1', _request(client_session_id='short-clip'))
+
+    assert response.id == developer._from_segments_conversation_id('uid1', 'short-clip')
+    assert response.status == 'completed'
+    delete.assert_not_called()

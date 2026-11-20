@@ -1111,3 +1111,48 @@ def test_silent_backfill_budget_denial_cannot_persist_a_title_only_success(monke
         pc.process_conversation('uid', 'en', _existing_desktop(), trigger=pc.ProcessingTrigger.SILENT_BACKFILL)
     assert payloads == []
     spies['get_structured'].assert_not_called()
+
+
+class _NotesRan(Exception):
+    pass
+
+
+@pytest.mark.parametrize('source', ['omi', 'desktop'])
+def test_local_background_upload_stores_transcript_and_enqueues(monkeypatch, pc, source) -> None:
+    """Self-hosted slow model: the upload stores the transcript now, the worker writes the notes."""
+    spies = _spy_managed_effects(monkeypatch, pc)
+    spies['should_defer'].return_value = False
+    payloads = _capture_all_persists(monkeypatch, pc)
+    enqueue = MagicMock(return_value=True)
+    monkeypatch.setattr(pc.local_processing_queue, 'enabled', lambda: True)
+    monkeypatch.setattr(pc.local_processing_queue, 'enqueue', enqueue)
+    create = _omi_create() if source == 'omi' else _desktop_create()
+
+    result = pc.process_conversation(
+        'local-uid', 'en', create, trigger=pc.ProcessingTrigger.CLIENT_FINALIZE, local_background=True
+    )
+
+    assert result.deferred is True
+    assert result.status == ConversationStatus.processing
+    assert result.transcript_segments[0].text == create.transcript_segments[0].text
+    assert payloads and payloads[-1]['deferred'] is True
+    spies['get_structured'].assert_not_called()
+    spies['extract_memories'].assert_not_called()
+    enqueue.assert_called_once_with('local-uid', result.id)
+
+
+@pytest.mark.parametrize('enabled, local_background', [(False, True), (True, False)])
+def test_local_background_needs_both_the_setting_and_the_caller(monkeypatch, pc, enabled, local_background) -> None:
+    spies = _spy_managed_effects(monkeypatch, pc)
+    spies['should_defer'].return_value = False
+    spies['get_structured'].side_effect = _NotesRan()
+    _capture_all_persists(monkeypatch, pc)
+    enqueue = MagicMock()
+    monkeypatch.setattr(pc.local_processing_queue, 'enabled', lambda: enabled)
+    monkeypatch.setattr(pc.local_processing_queue, 'enqueue', enqueue)
+
+    with pytest.raises(_NotesRan):
+        pc.process_conversation(
+            'uid', 'en', _omi_create(), trigger=pc.ProcessingTrigger.CLIENT_FINALIZE, local_background=local_background
+        )
+    enqueue.assert_not_called()

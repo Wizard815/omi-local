@@ -102,6 +102,7 @@ from utils.conversations.sync_hold_completion import complete_explicit, defer_he
 from utils.conversations.merge_before_processing import before_notes, ConversationAbsorbed
 from utils.enrichment.admission import SyncConversationPersistenceFenced
 from utils.enrichment import early_abort
+from utils.conversations import local_processing_queue
 from utils.conversations.processing_trigger import PROCESSING_MODES, ProcessingTrigger, is_recovery_trigger
 from utils.conversations.recovery import (
     RECOVERY_QUIET_MINIMUM_MAX_WORDS,
@@ -2666,8 +2667,12 @@ def process_conversation(
     derived_effects_transcript_sha256: str | None = None,
     finalization_fence: tuple[str, int, int] | None = None,
     recovery_final_attempt: bool = True,
+    local_background: bool = False,
 ) -> Conversation:
     """Process using trigger policy and stored user-kept authority.
+
+    ``local_background`` lets a synchronous upload on a self-hosted stack store the
+    transcript now and write the notes in the background (local_processing_queue).
 
     ``first_party_only`` requests Omi notes; the derived-effects digest identifies
     the transcript last used for memories, tasks and goal progress.
@@ -2804,6 +2809,25 @@ def process_conversation(
         # That is deliberate and pre-existing: the conversation is not terminally
         # processed (status=processing, deferred=True; first-open will reprocess).
         # Do not change this onto the flag-off path — it must stay byte-identical.
+        report_persistence(False)
+        return deferred
+    # Self-hosted, slow local model: an upload must neither wait minutes for the notes
+    # nor lose its transcript when the model times out. Store the transcript as a
+    # deferred row now; the local worker writes the notes and retries on failure.
+    if (
+        local_background
+        and not probe_uid
+        and not app_id
+        and explicit_app is None
+        and not first_party_only
+        and local_processing_queue.enabled()
+    ):
+        deferred = _store_deferred_conversation(
+            uid, conversation, client_projection=client_projection, trigger=trigger, user_kept=user_kept
+        )
+        if deferred.deferred and not deferred.discarded:
+            local_processing_queue.enqueue(uid, deferred.id)
+        logger.info('local_processing deferred uid=%s conversation=%s', uid, deferred.id)
         report_persistence(False)
         return deferred
     # Custom-STT skips managed-STT credits at listen connect. The LLM work that

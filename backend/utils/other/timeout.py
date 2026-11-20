@@ -7,6 +7,7 @@ import os
 import time
 from typing import Dict, Mapping, Optional
 from config.dream_agent import enabled, HTTP_TIMEOUT_SECONDS
+from config.local_llm import local_http_timeout_seconds
 
 
 class TimeoutMiddleware(BaseHTTPMiddleware):
@@ -18,7 +19,11 @@ class TimeoutMiddleware(BaseHTTPMiddleware):
     ) -> None:
         super().__init__(app)
 
-        self.default_timeout = self._get_timeout_from_env("HTTP_DEFAULT_TIMEOUT", default=2 * 60)
+        # A self-hosted model takes minutes per call; its HTTP limit follows
+        # OMI_LOCAL_LLM_TIMEOUT_SECONDS (config/local_llm.py). Cloud keeps 120s.
+        self.default_timeout = self._get_timeout_from_env(
+            "HTTP_DEFAULT_TIMEOUT", default=max(2 * 60, local_http_timeout_seconds() or 0)
+        )
         self.maximum_age_seconds = self._get_timeout_from_env("HTTP_MAXIMUM_AGE_SECONDS", default=5 * 60)
         self.clock_skew_allowance = self._get_timeout_from_env("HTTP_CLOCK_SKEW_ALLOWANCE", default=5 * 60)
 
