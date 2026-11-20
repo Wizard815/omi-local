@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
 
 import database.action_items as action_items_db
+from config.local_llm import local_task_dedup_threshold
 from database.action_item_dedup import may_have_recent_dedup_candidates
 from database.vector_db import find_similar_action_items
 from utils.observability.fallback import record_fallback
@@ -46,7 +47,9 @@ def fetch_dedup_candidates_for_query(uid: str, query: str, conversation: Any = N
                 reason='unavailable',
                 outcome='recovered',
             )
-        similar = find_similar_action_items(uid, query, threshold=0.6, limit=10)
+        # The local Chroma store scores transcript-to-task similarity on its own scale.
+        threshold = local_task_dedup_threshold()
+        similar = find_similar_action_items(uid, query, threshold=0.6 if threshold is None else threshold, limit=10)
         if not similar:
             return []
 

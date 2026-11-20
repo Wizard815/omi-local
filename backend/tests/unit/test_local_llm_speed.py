@@ -5,10 +5,13 @@ LLM deadline from OMI_LOCAL_LLM_TIMEOUT_SECONDS, that short structured calls car
 configured reasoning effort, and that cloud deployments see none of it.
 """
 
+from unittest.mock import MagicMock
+
 import pytest
 
 import utils.llm.model_config as model_config
 from config import local_llm
+from utils.conversations import notes_task_context
 from utils.llm import notes_agent_policy, providers
 from utils.llm.clients import get_llm
 from utils.other.timeout import TimeoutMiddleware
@@ -143,3 +146,23 @@ def test_chat_stream_deadlines_fit_a_slow_model():
     assert stream_deadline_defaults(None) == (25.0, 150.0)
     assert stream_deadline_defaults(300.0) == (300.0, 1200.0)
     assert stream_deadline_defaults(30.0) == (30.0, 150.0)
+
+
+def test_local_chroma_store_uses_its_own_task_dedup_threshold():
+    assert local_llm.local_task_dedup_threshold({}) is None
+    assert local_llm.local_task_dedup_threshold({'LOCAL_VECTOR_DB': 'chroma'}) == 0.45
+    env = {'LOCAL_VECTOR_DB': 'chroma', local_llm.TASK_DEDUP_THRESHOLD_ENV: '0.5'}
+    assert local_llm.local_task_dedup_threshold(env) == 0.5
+
+
+def test_dedup_candidates_use_the_local_threshold(monkeypatch):
+    monkeypatch.setenv('LOCAL_VECTOR_DB', 'chroma')
+    monkeypatch.delenv(local_llm.TASK_DEDUP_THRESHOLD_ENV, raising=False)
+    monkeypatch.setattr(notes_task_context, 'may_have_recent_dedup_candidates', lambda *a: True)
+    similar = MagicMock(return_value=[])
+    monkeypatch.setattr(notes_task_context, 'find_similar_action_items', similar)
+    notes_task_context.fetch_dedup_candidates_for_query('u1', 'we still owe Gary for the sink')
+    assert similar.call_args.kwargs['threshold'] == 0.45
+    monkeypatch.delenv('LOCAL_VECTOR_DB')
+    notes_task_context.fetch_dedup_candidates_for_query('u1', 'we still owe Gary for the sink')
+    assert similar.call_args.kwargs['threshold'] == 0.6
