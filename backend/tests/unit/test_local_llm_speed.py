@@ -12,6 +12,7 @@ from config import local_llm
 from utils.llm import notes_agent_policy, providers
 from utils.llm.clients import get_llm
 from utils.other.timeout import TimeoutMiddleware
+from utils.retrieval.agentic import stream_deadline_defaults
 
 
 @pytest.fixture
@@ -136,3 +137,9 @@ def test_notes_agent_deadline_unchanged_in_the_cloud(cloud_mode):
     budget = notes_agent_policy.budget_for_words(2000)
     assert budget.deadline_seconds == notes_agent_policy.DEADLINE_SECONDS
     assert budget.force_submit_after_seconds == notes_agent_policy.FORCE_SUBMIT_AFTER_SECONDS
+
+
+def test_chat_stream_deadlines_fit_a_slow_model():
+    assert stream_deadline_defaults(None) == (25.0, 150.0)
+    assert stream_deadline_defaults(300.0) == (300.0, 1200.0)
+    assert stream_deadline_defaults(30.0) == (30.0, 150.0)
