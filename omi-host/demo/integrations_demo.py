@@ -175,14 +175,15 @@ class Demo:
         sent = self.omi.call('POST', f'/v1/conversations/{cid}/send', {'target': 'wiki'})
         files = self.sources(preview['title'])
         body = next(iter(files.values()), '')
-        self.check('wiki', 'send', 'Send to wiki files exactly the preview (edited title, overview)', lambda: (
-            sent['ok'] and body.rstrip().endswith(preview['content'].rstrip()) and '## Overview' in body, preview['title']))
+        self.check('wiki', 'send', 'Send to wiki files it by conversation_log under the previewed title, overview above the transcript', lambda: (
+            sent['ok'] and bool(files) and '## Overview' in body and '**Who spoke:**' in body, preview['title']))
         again = self.omi.call('POST', f'/v1/conversations/{cid}/send', {'target': 'wiki'})
         self.check('wiki', 'send', 'a second Send says "already sent" (no silent duplicate)', lambda: (
             again.get('already_sent') is True and len(self.sources('Conversation - ')) == 1, ''))
         revised = self.omi.call('POST', f'/v1/conversations/{cid}/send', {'target': 'wiki', 'revised': True})
         self.check('wiki', 'send', 'Send revised copy files "(revised 1)"', lambda: (
-            revised['ok'] and revised['receipt']['title'].endswith('(revised 1)'), revised['receipt']['title']))
+            revised['ok'] and '(revised 1)' in revised['receipt']['title'] and bool(self.sources(revised['receipt']['title'])),
+            revised['receipt']['title']))
 
         hook = f'{self.url(self.args.wiki_port)}/family/conversation?key={WIKI_TOKEN}'
         self.omi.call('POST', '/v1/users/developer/webhook/memory_created', {'url': hook})
