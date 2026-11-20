@@ -187,3 +187,62 @@ def test_rearm_only_takes_back_the_attempt_that_reacquired_the_row(data, rearmed
         transaction.update.assert_called_once_with(ref, {'deferred': True})
     else:
         transaction.update.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    'row, owned',
+    [
+        ({'deferred': True, 'status': 'processing'}, True),
+        ({'deferred': True, 'status': 'completed'}, False),  # worker gave up: first open takes over
+        ({'deferred': False, 'status': 'processing'}, False),  # an attempt is running
+    ],
+)
+def test_worker_owns_only_queued_deferred_rows(monkeypatch, row, owned):
+    monkeypatch.setattr(queue, 'enabled', lambda: True)
+    assert queue.owns(row) is owned
+    monkeypatch.setattr(queue, 'enabled', lambda: False)
+    assert queue.owns(row) is False
+
+
+def test_ensure_queued_restores_a_lost_entry_without_delaying_a_scheduled_retry(redis):
+    queue.ensure_queued('u1', 'lost')
+    assert redis.zscore(queue.DUE_KEY, 'u1/lost') is not None
+    queue.enqueue('u1', 'retry', delay_seconds=900)
+    due = redis.zscore(queue.DUE_KEY, 'u1/retry')
+    queue.ensure_queued('u1', 'retry')
+    assert redis.zscore(queue.DUE_KEY, 'u1/retry') == due
+
+
+def test_opening_a_worker_owned_row_does_not_start_a_parallel_run(monkeypatch):
+    """A detail read used to launch first-open enrichment for every queued upload at once."""
+    import routers.conversations as conversations_router
+
+    row = {'id': 'c1', 'deferred': True, 'status': 'processing', 'source': 'omi'}
+    monkeypatch.setattr(conversations_router, '_get_valid_conversation_by_id', lambda *a, **k: dict(row))
+    monkeypatch.setattr(conversations_router, 'hidden_from_default_detail', lambda c: False)
+    monkeypatch.setattr(conversations_router.conversations_db, 'is_visible_conversation', lambda *a, **k: True)
+    monkeypatch.setattr(conversations_router.local_processing_queue, 'enabled', lambda: True)
+    queued = MagicMock()
+    monkeypatch.setattr(conversations_router.local_processing_queue, 'ensure_queued', queued)
+    enrich = MagicMock(side_effect=AssertionError('first-open enrichment must not run'))
+    monkeypatch.setattr(conversations_router, '_enrich_deferred_conversation', enrich)
+    monkeypatch.setattr(conversations_router, 'populate_speaker_names', lambda *a, **k: None, raising=False)
+
+    try:
+        conversations_router.get_conversation_by_id(
+            'c1',
+            source=None,
+            include_discarded=None,
+            uid='u1',
+            include_translations=False,
+            translation_cursor=None,
+            response=None,
+            request=None,
+        )
+    except AssertionError:
+        raise
+    except Exception:
+        # Later presentation steps need more fakes; the decision under test is already made.
+        pass
+    queued.assert_called_once_with('u1', 'c1')
+    enrich.assert_not_called()

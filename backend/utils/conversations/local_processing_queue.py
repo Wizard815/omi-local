@@ -59,6 +59,25 @@ def enqueue(uid: str, conversation_id: str, *, delay_seconds: float = FIRST_ATTE
         return False
 
 
+def owns(conversation: dict) -> bool:
+    """Whether the background worker, not a detail open, should process this row.
+
+    A deferred row still ``processing`` is queued or between retries; opening it must
+    not start a second, parallel model run against a slow local server. Once the worker
+    gives up the row is ``completed`` and deferred, and first-open enrichment takes over.
+    """
+    return enabled() and conversation.get('deferred') is True and conversation.get('status') == 'processing'
+
+
+def ensure_queued(uid: str, conversation_id: str) -> None:
+    """Re-add a worker-owned row Redis lost (restart, flush); a queued or running one is left alone."""
+    try:
+        if redis_db.r.zscore(DUE_KEY, _member(uid, conversation_id)) is None:
+            redis_db.r.zadd(DUE_KEY, {_member(uid, conversation_id): time.time()}, nx=True)
+    except Exception as exc:
+        logger.warning('local_processing ensure_queued failed error=%s', type(exc).__name__)
+
+
 def claim_due(limit: int, *, now: Optional[float] = None) -> List[Tuple[str, str, int]]:
     """Take up to ``limit`` due conversations as ``(uid, conversation_id, attempt)``.
 
