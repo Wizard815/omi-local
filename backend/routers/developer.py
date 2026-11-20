@@ -106,6 +106,8 @@ from utils.mcp_server.errors import ToolExecutionError
 from utils.mcp_server.helpers import conversation_participants
 from utils.notifications import send_action_item_data_message, sync_action_item_reminder
 from utils.conversations.process_conversation import process_conversation
+from utils.conversations import local_processing_queue, summary_delivery
+from utils.observability.fallback import record_fallback
 from utils.conversations.processing_trigger import ProcessingTrigger
 from utils.conversations.projection_payload import (
     client_processing_mutation,
@@ -2308,6 +2310,10 @@ def _ingest_conversation_from_segments(
     # CLIENT_FINALIZE), instead of letting the freemium desktop deferral store a cheap
     # placeholder and skip enrichment entirely.
     process_kwargs['trigger'] = ProcessingTrigger.CLIENT_FINALIZE
+    if local_processing_queue.enabled():
+        # Self-hosted, slow local model: store the transcript now and answer
+        # `processing`; the notes are written in the background with retries.
+        process_kwargs['local_background'] = True
     try:
         if conversation_id:
             with lifecycle_service.processing_admission_guard(uid, conversation_id, rollback_on_failure=False):
@@ -2356,9 +2362,28 @@ def _ingest_conversation_from_segments(
             request.client_session_id,
             conversation.id,
         )
-        lifecycle_service.persist_processed_conversation(
-            uid, omit_null_processing_state(strip_client_processing(conversation.model_dump()))
-        )
+        try:
+            lifecycle_service.persist_processed_conversation(
+                uid, omit_null_processing_state(strip_client_processing(conversation.model_dump()))
+            )
+        except summary_delivery.SummaryOutputUnavailable:
+            # The coordinator already committed this row (a short clip whose notes came
+            # back empty keeps its transcript and minimum title, and its open summary
+            # debt stays recoverable). Answering 500 here made clients retry and store
+            # the clip twice.
+            record_fallback(
+                component='other',
+                from_mode='from_segments_final_persist',
+                to_mode='coordinator_persist',
+                reason='other',
+                outcome='degraded',
+                log=logger,
+            )
+            logger.warning(
+                'from-segments final persist refused empty first summary uid=%s conversation_id=%s',
+                uid,
+                conversation.id,
+            )
 
     if request.folder_id is not None:
         # A preset folder skips AI folder assignment, and with it the count refresh that assignment does.

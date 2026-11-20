@@ -3184,6 +3184,31 @@ def reacquire_deferred_processing(uid: str, conversation_id: str, *, firestore_c
     return transactional(transaction, _conversation_ref(client, uid, conversation_id), _now())
 
 
+def _rearm_deferred_processing_txn(transaction: Any, conversation_ref: Any) -> bool:
+    """Hand a failed attempt back to the deferred queue while it still shows as processing.
+
+    Only the attempt that reacquired the row (``deferred`` False, ``processing``) may
+    re-arm it; a completed, discarded or already re-armed row is left alone. The
+    stale-processing sweep skips deferred rows, so the row waits for its retry.
+    """
+    snapshot = conversation_ref.get(transaction=transaction)
+    if not getattr(snapshot, 'exists', False):
+        return False
+    data = snapshot.to_dict() or {}
+    if data.get('status') != 'processing' or data.get('discarded') or data.get('deferred') is not False:
+        return False
+    transaction.update(conversation_ref, {'deferred': True})
+    return True
+
+
+def rearm_deferred_processing(uid: str, conversation_id: str, *, firestore_client: Any = None) -> bool:
+    """Atomically re-arm deferred enrichment for a scheduled retry, keeping ``processing``."""
+    client = _client(firestore_client)
+    transaction = client.transaction()
+    transactional = firestore.transactional(_rearm_deferred_processing_txn)
+    return transactional(transaction, _conversation_ref(client, uid, conversation_id))
+
+
 def recover_deferred_processing_failure(uid: str, conversation_id: str, *, firestore_client: Any = None) -> bool:
     """Atomically re-arm deferred enrichment without exposing a stuck processing row."""
     client = _client(firestore_client)
