@@ -630,7 +630,7 @@ def test_observation_intake_preserves_locks_rejection_and_explicit_intake(promot
     assert not report.decided_memory_ids
 
 
-@pytest.mark.parametrize('unsafe', ['partition', 'foreign_evidence', 'unknown_subject', 'supersedes'])
+@pytest.mark.parametrize('unsafe', ['partition', 'foreign_evidence', 'supersedes'])
 def test_observation_intake_validates_whole_batch_before_writing(unsafe):
     source = _item('mem_unsafe', 'A synthetic observation.')
     db = _db_for_items(source)
@@ -642,7 +642,6 @@ def test_observation_intake_validates_whole_batch_before_writing(unsafe):
     else:
         changes = {
             'foreign_evidence': {'evidence_ids': ['foreign']},
-            'unknown_subject': {'subject_entity_id': 'invented'},
             'supersedes': {'supersedes': ['unseen']},
         }
         decisions = [decision.model_copy(update=changes[unsafe])]
@@ -656,6 +655,54 @@ def test_observation_intake_validates_whole_batch_before_writing(unsafe):
     )
     assert report.failed_memory_ids == [source.memory_id]
     assert db.docs == before
+
+
+def _third_party_item(memory_id: str, content: str) -> MemoryItem:
+    item = _item(memory_id, content)
+    item.subject_entity_id = 'source:pet'
+    item.promotion = {'source_attribution': {'subject_entity_id': 'source:pet', 'subject_attribution': 'third_party'}}
+    return item
+
+
+@pytest.mark.parametrize('unsafe', ['third_party_subject', 'unknown_subject', 'low_confidence'])
+def test_one_unsafe_promotion_goes_to_review_and_keeps_the_batch(unsafe):
+    """A slow local model promoted a third-party fact; the whole batch used to be dropped."""
+    risky = _third_party_item('mem_pet', 'Biscuit likes the salmon cat food.')
+    sibling = _third_party_item('mem_trip', 'The science museum trip slip is due Wednesday.')
+    db = _db_for_items(risky, sibling)
+    canonical_consolidation._read_control_state(UID, db_client=db)
+    promote = _promote_decision(risky).model_copy(
+        update={'subject_entity_id': 'source:pet', 'relationship_to_user': 'adopted', 'aboutness': 'user_relationship'}
+    )
+    if unsafe == 'unknown_subject':
+        promote = promote.model_copy(update={'subject_entity_id': 'invented'})
+    if unsafe == 'low_confidence':
+        risky.subject_entity_id = 'user'
+        risky.promotion = {'source_attribution': {'subject_entity_id': 'user', 'subject_attribution': 'user'}}
+        db = _db_for_items(risky, sibling)
+        canonical_consolidation._read_control_state(UID, db_client=db)
+        promote = _promote_decision(risky).model_copy(update={'confidence': 'medium'})
+    archive = ConsolidationAgentDecision(
+        source_memory_id=sibling.memory_id,
+        route='archive',
+        evidence_ids=[e.evidence_id for e in sibling.evidence],
+        rationale='Time-bound third-party context.',
+    )
+    report = observation_intake.complete_observation_intake(
+        UID,
+        memory_ids=[risky.memory_id, sibling.memory_id],
+        db_client=db,
+        now=NOW,
+        run_id='mixed',
+        planner=lambda items: [promote, archive],
+    )
+    assert report.error_code is None
+    assert sorted(report.decided_memory_ids) == sorted([risky.memory_id, sibling.memory_id])
+    assert report.promoted_memory_ids == []
+    stored = MemoryItem(**db.docs[f'users/{UID}/memory_items/{risky.memory_id}'])
+    assert stored.promotion['route'] == 'review'
+    assert stored.tier != MemoryTier.long_term
+    assert MemoryItem(**db.docs[f'users/{UID}/memory_items/{sibling.memory_id}']).promotion['route'] == 'archive'
 
 
 def test_restricted_observation_gets_review_without_provider_call():
