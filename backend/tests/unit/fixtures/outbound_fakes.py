@@ -199,12 +199,14 @@ def mcp_text(text: str, *, error: bool = False, rpc_id: Any = 1) -> Dict[str, An
 
 
 class WikiFake:
-    """The wiki bridge's /family-mcp: memory_add_source never overwrites (main.js memoryAddSource)."""
+    """The wiki bridge's /family-mcp: memory_add_source never overwrites (main.js memoryAddSource);
+    conversation_log files a conversation (main.js conversationLog)."""
 
     def __init__(self, token: str = 't-wizard', person_dir: str = 'people/wizard'):
         self.token = token
         self.person_dir = person_dir
         self.files: Dict[str, str] = {}
+        self.logged: List[Dict[str, Any]] = []
         self.server = FakeServer(self._respond)
 
     def _respond(self, rec: Recorded) -> Tuple[int, Any]:
@@ -229,6 +231,31 @@ class WikiFake:
                 )
             self.files[path] = str(args.get('content'))
             return 200, mcp_text(f'Added {path} (status: unprocessed) for the Ingest workflow.')
+        if name == 'conversation_log':
+            # main.js conversationLog: "Conversation - <title> (<id8>)", the overview and action
+            # items above the transcript; the same id again answers "Already filed" (not an error).
+            self.logged.append(args)
+            segments = args.get('segments') or []
+            if not segments and not args.get('overview') and not args.get('action_items'):
+                return 200, mcp_text('conversation_log: segments is empty: nothing to file.', error=True)
+            short = ''.join(c for c in str(args.get('id') or '') if c.isalnum() or c == '-')[:8]
+            title = f"Conversation - {args.get('title') or 'untitled'}" + (f' ({short})' if short else '')
+            path = f"{self.person_dir}/raw/sources/{args.get('date')} - {title}.md"
+            if path in self.files:
+                return 200, mcp_text(f'Already filed for {self.person_dir} (same conversation id): left as it was.')
+            parts = []
+            if args.get('overview'):
+                parts.append(f"## Overview\n\n{args['overview']}")
+            if args.get('action_items'):
+                rows = [f"- [{'x' if i.get('completed') else ' '}] {i['description']}" for i in args['action_items']]
+                parts.append('## Action items\n\n' + '\n'.join(rows))
+            if segments:
+                lines = [f"**{x.get('speaker') or 'Speaker'}:** {x['text']}" for x in segments]
+                parts.append('## Transcript\n\n' + '\n\n'.join(lines))
+            self.files[path] = '\n\n'.join(parts)
+            return 200, mcp_text(
+                f'Added {path} (status: unprocessed) for the Ingest workflow.\nSpeakers: Wizard (wizard).'
+            )
         return 200, {
             'jsonrpc': '2.0',
             'id': msg.get('id'),

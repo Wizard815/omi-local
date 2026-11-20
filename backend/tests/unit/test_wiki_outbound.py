@@ -21,6 +21,7 @@ import database.integrations_out as settings_db  # noqa: E402
 import database.notifications as notification_db  # noqa: E402
 import database.outbound_receipts as receipts_db  # noqa: E402
 import database.outbound_work as work_db  # noqa: E402
+import database.users as users_db  # noqa: E402
 from routers import integrations_outbound as router_module  # noqa: E402
 from tests.unit.fixtures.outbound_fakes import FakeFirestore, McpFake, WikiFake  # noqa: E402
 from utils import (  # noqa: E402
@@ -242,12 +243,26 @@ def test_send_a_conversation_shows_and_sends_exactly_the_preview(client, env):
     assert '## Transcript' not in preview['content']  # include_transcript is off by default
     sent = client.post('/v1/conversations/c-kept-1/send', json={'target': 'wiki'}).json()
     assert sent['ok'] is True and sent['receipt']['revision'] == 0
+    assert sent['receipt']['title'] == preview['title']
+    logged = wiki.logged[-1]
+    assert logged == {
+        'id': 'c-kept-1',
+        'date': '2026-11-16',
+        'source': 'omi',
+        'title': 'Plumber visit (edited)',
+        'overview': 'The plumber fixes the sink on Thursday for $120 cash.',
+        'action_items': [{'description': 'Get $120 cash', 'completed': False}],
+    }
     path = f"people/wizard/raw/sources/2026-11-16 - {preview['title']}.md"
-    assert wiki.files[path] == preview['content']
+    assert '## Overview\n\nThe plumber fixes the sink' in wiki.files[path]
+    assert '- [ ] Get $120 cash' in wiki.files[path]
     again = client.post('/v1/conversations/c-kept-1/send', json={'target': 'wiki'}).json()
     assert again == {'ok': False, 'receipt': None, 'error': 'Already sent to the wiki', 'already_sent': True}
     revised = client.post('/v1/conversations/c-kept-1/send', json={'target': 'wiki', 'revised': True}).json()
-    assert revised['ok'] is True and revised['receipt']['title'].endswith('(revised 1)')
+    assert (
+        revised['ok'] is True
+        and revised['receipt']['title'] == 'Conversation - Plumber visit (edited) (revised 1) (c-kept-1)'
+    )
     assert len(client.get('/v1/conversations/c-kept-1/send/preview').json()['receipts']) == 2
 
 
@@ -256,6 +271,54 @@ def test_the_transcript_goes_only_when_the_user_chose_it(client, env):
     _turn_on(wiki, include_transcript=True)
     preview = client.get('/v1/conversations/c-kept-1/send/preview').json()
     assert '## Transcript' in preview['content'] and '120 cash' in preview['content']
+    sent = client.post('/v1/conversations/c-kept-1/send', json={'target': 'wiki'}).json()
+    assert sent['ok'] is True
+    segments = wiki.logged[-1]['segments']
+    assert segments == [{'text': 'Thursday works, 120 cash.', 'speaker': 'SPEAKER_00', 'is_user': False, 'start': 0.0}]
+
+
+def test_a_speaker_omi_knows_goes_by_name_and_a_copy_already_there_moves_on(client, env, monkeypatch):
+    db, wiki = env
+    _turn_on(wiki, include_transcript=True, person='wizard')
+    row = dict(CONVERSATIONS['c-kept-1'])
+    row['transcript_segments'] = [
+        {
+            'text': 'Thursday works.',
+            'speaker': 'SPEAKER_01',
+            'is_user': False,
+            'person_id': 'p-sam',
+            'start': 0,
+            'end': 1,
+        },
+        {'text': 'Great.', 'speaker': 'SPEAKER_00', 'is_user': True, 'start': 1, 'end': 2},
+        {'text': '  ', 'speaker': 'SPEAKER_00', 'is_user': True, 'start': 2, 'end': 3},
+    ]
+    monkeypatch.setattr(conversations_db, 'get_conversation', lambda uid, cid, **k: row)
+    monkeypatch.setattr(users_db, 'get_people_by_ids', lambda uid, ids: [{'id': 'p-sam', 'name': 'Sam'}])
+    # A copy the receipts never saw (sent from another device) is already in the wiki.
+    wiki.files['people/wizard/raw/sources/2026-11-16 - Conversation - Plumber visit (edited) (c-kept-1).md'] = 'x'
+    sent = client.post('/v1/conversations/c-kept-1/send', json={'target': 'wiki'}).json()
+    assert sent['ok'] is True and sent['receipt']['revision'] == 1
+    assert sent['receipt']['title'] == 'Conversation - Plumber visit (edited) (revised 1) (c-kept-1)'
+    logged = wiki.logged[-1]
+    assert logged['wearer'] == 'wizard' and logged['title'] == 'Plumber visit (edited) (revised 1)'
+    assert [(x['speaker'], x['is_user'], x.get('person_id')) for x in logged['segments']] == [
+        ('Sam', False, 'p-sam'),
+        ('SPEAKER_00', True, None),
+    ]
+
+
+def test_the_wiki_refusing_a_conversation_is_recorded_not_sent(client, env, monkeypatch):
+    db, wiki = env
+    _turn_on(wiki)
+    row = {
+        **CONVERSATIONS['c-kept-1'],
+        'structured': {**CONVERSATIONS['c-kept-1']['structured'], 'overview': '', 'action_items': []},
+    }
+    monkeypatch.setattr(conversations_db, 'get_conversation', lambda uid, cid, **k: row)
+    sent = client.post('/v1/conversations/c-kept-1/send', json={'target': 'wiki'}).json()
+    assert sent['ok'] is False and 'nothing to file' in sent['error']
+    assert wiki.files == {}
 
 
 def test_send_is_refused_while_the_wiki_is_off(client, env):

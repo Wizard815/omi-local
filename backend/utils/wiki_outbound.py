@@ -5,13 +5,17 @@ The wiki is the family Obsidian vault's MCP bridge (Wizard815/LLM-will-remember-
 .obsidian/plugins/llmwiki-mcp-bridge/main.js). Omi calls its stateless JSON-RPC endpoint
 ``POST {url}/family-mcp`` with the person's family token (Bearer) and the tool
 ``memory_add_source {title, content, date, person?}``, which writes
-``raw/sources/<date> - <title>.md`` (status unprocessed, for Ingest) and never overwrites.
+``raw/sources/<date> - <title>.md`` (status unprocessed, for Ingest) and never overwrites. A
+day summary goes that way.
 
-Why not ``conversation_log`` / ``/family/conversation`` for a conversation: that path files a
-transcript per speaker but drops the overview and the action items (main.js serveConversation
-maps only title, date, id and segments). ``memory_add_source`` carries Omi's edited title,
-overview and action items in markdown; the per-speaker filing is lost (an optional wiki-side
-change could add overview/action_items to conversation_log).
+A conversation goes through ``conversation_log {title, id, date, source, overview,
+action_items, segments?, wearer?}``: the wiki files it in the folder of each family member who
+spoke (as far as the token may), with Omi's edited overview and action items above the
+transcript. Each line carries the speaker's name when Omi knows the person, else Omi's label,
+plus ``is_user`` and ``person_id`` (the registry's ``omi_people`` maps them). Without the
+transcript (the default) only the overview and action items go, filed for the wearer. The
+wiki names it ``Conversation - <title> (<id8>)``; a copy already there answers "Already
+filed", and the next revision is tried.
 
 A second copy of the same day or conversation (the day reopened and approved again, or the
 user chose "send revised copy") is filed as "<title> (revised n)", because sources are never
@@ -22,6 +26,7 @@ its review.
 from __future__ import annotations
 
 import logging
+import re
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -29,6 +34,7 @@ import database.conversations as conversations_db
 import database.day_reviews as day_reviews_db
 import database.notifications as notification_db
 import database.outbound_receipts as receipts_db
+import database.users as users_db
 from models.conversation import Conversation
 from utils import day_review_service, integrations_out, outbound_dispatch
 from utils.executors import db_executor, run_blocking
@@ -59,6 +65,16 @@ def revised(title: str, revision: int) -> str:
 
 def _sent(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return [r for r in rows if r.get('sent_at')]
+
+
+def wiki_conversation_title(title: str, conversation_id: str) -> str:
+    """The name the wiki gives a conversation_log source (main.js: the id cut to 8 safe chars)."""
+    short = re.sub(r'[^A-Za-z0-9-]', '', conversation_id)[:8]
+    return f'Conversation - {title or "untitled"}' + (f' ({short})' if short else '')
+
+
+class _Taken(Exception):
+    """The wiki already has a source of that title: try the next revision."""
 
 
 def _local(value: Any, zone: Any) -> str:
@@ -160,6 +176,45 @@ def conversation_markdown(uid: str, conversation_id: str, *, include_transcript:
     return base, date_str, '\n'.join(lines).strip()[:MAX_CONTENT_CHARS]
 
 
+def conversation_log_arguments(
+    uid: str, conversation_id: str, *, include_transcript: bool, wearer: str = ''
+) -> Tuple[str, Dict[str, Any]]:
+    """(edited title, conversation_log arguments without the title) for one conversation."""
+    conversation = _conversation(uid, conversation_id)
+    structured = conversation.structured
+    started = conversation.started_at or conversation.created_at
+    date_str = _local(started, _zone(uid))[:10] or datetime.now(timezone.utc).date().isoformat()
+    arguments: Dict[str, Any] = {'id': conversation.id, 'date': date_str, 'source': 'omi'}
+    overview = str(getattr(structured, 'overview', '') or '').strip()
+    if overview:
+        arguments['overview'] = overview
+    items = [
+        {'description': str(a.description), 'completed': bool(getattr(a, 'completed', False))}
+        for a in (getattr(structured, 'action_items', None) or [])
+        if getattr(a, 'description', '')
+    ]
+    if items:
+        arguments['action_items'] = items
+    if include_transcript:
+        segments = [s for s in (conversation.transcript_segments or []) if str(getattr(s, 'text', '') or '').strip()]
+        ids = sorted({s.person_id for s in segments if s.person_id is not None})
+        names = {p.get('id'): p.get('name') for p in (users_db.get_people_by_ids(uid, ids) if ids else []) if p}
+        arguments['segments'] = [
+            {
+                'text': str(s.text),
+                'speaker': names.get(s.person_id) or s.speaker or '',
+                'is_user': bool(s.is_user),
+                **({'person_id': s.person_id} if s.person_id else {}),
+                **({'start': s.start} if getattr(s, 'start', None) is not None else {}),
+            }
+            for s in segments
+        ]
+    if wearer and wearer != 'household':
+        arguments['wearer'] = wearer
+    title = str(getattr(structured, 'title', '') or '').strip() or 'Conversation'
+    return title, arguments
+
+
 # ---- sending ---------------------------------------------------------------------------------
 
 
@@ -173,15 +228,12 @@ def _wiki(uid: str) -> Dict[str, Any]:
 async def _add_source(
     uid: str, wiki: Dict[str, Any], key: str, base: str, date_str: str, content: str
 ) -> Dict[str, Any]:
-    """memory_add_source as the next revision; a taken title (a copy the receipts do not know
-    about) moves on to the next revision. Records and returns the receipt."""
-    previous = await run_blocking(db_executor, receipts_db.receipts, uid, key)
-    revision = len(_sent(previous))
+    """memory_add_source as the next revision. Records and returns the receipt."""
     arguments: Dict[str, Any] = {'date': date_str, 'content': content}
     if wiki.get('person'):
         arguments['person'] = wiki['person']
-    last_error, last_kind = '', ''
-    for _ in range(MAX_REVISION_TRIES):
+
+    async def attempt(revision: int) -> Tuple[str, str]:
         title = revised(base, revision)
         try:
             answer = await mcp_call(
@@ -189,8 +241,55 @@ async def _add_source(
             )
         except OutboundError as error:
             if error.kind == 'refused' and 'already exists' in error.message:
-                revision += 1
-                continue
+                raise _Taken() from error
+            raise
+        return title, answer
+
+    return await _file(uid, key, attempt, lambda revision: revised(base, revision))
+
+
+async def _log_conversation(uid: str, wiki: Dict[str, Any], key: str, conversation_id: str) -> Dict[str, Any]:
+    """conversation_log as the next revision. Records and returns the receipt."""
+    base, arguments = await run_blocking(
+        db_executor,
+        lambda: conversation_log_arguments(
+            uid,
+            conversation_id,
+            include_transcript=bool(wiki.get('include_transcript')),
+            wearer=str(wiki.get('person') or ''),
+        ),
+    )
+
+    def name(revision: int) -> str:
+        return wiki_conversation_title(revised(base, revision), conversation_id)
+
+    async def attempt(revision: int) -> Tuple[str, str]:
+        answer = await mcp_call(
+            f"{wiki['url']}/family-mcp",
+            wiki['token'],
+            'conversation_log',
+            {**arguments, 'title': revised(base, revision)},
+        )
+        if answer.lstrip().startswith('Already filed'):
+            raise _Taken()
+        return name(revision), answer
+
+    return await _file(uid, key, attempt, name)
+
+
+async def _file(uid: str, key: str, attempt, name) -> Dict[str, Any]:
+    """Send as the next revision; a taken title (a copy the receipts do not know about) moves on
+    to the next revision. Records and returns the receipt."""
+    previous = await run_blocking(db_executor, receipts_db.receipts, uid, key)
+    revision = len(_sent(previous))
+    last_error, last_kind = '', ''
+    for _ in range(MAX_REVISION_TRIES):
+        try:
+            title, answer = await attempt(revision)
+        except _Taken:
+            revision += 1
+            continue
+        except OutboundError as error:
             last_error, last_kind = error.message, error.kind
             break
         receipt = {
@@ -208,7 +307,7 @@ async def _add_source(
     receipt = {
         'target': 'wiki',
         'sent_at': None,
-        'title': revised(base, revision),
+        'title': name(revision),
         'revision': revision,
         'detail': '',
         'error': last_error,
@@ -234,11 +333,13 @@ async def send_day(uid: str, date_str: str) -> Dict[str, Any]:
 async def preview_conversation(uid: str, conversation_id: str) -> Dict[str, Any]:
     def _build() -> Dict[str, Any]:
         wiki = integrations_out.effective(uid)['wiki']
-        base, date_str, content = conversation_markdown(
+        _, date_str, content = conversation_markdown(
             uid, conversation_id, include_transcript=bool(wiki.get('include_transcript'))
         )
+        conversation = _conversation(uid, conversation_id)
+        edited = str(getattr(conversation.structured, 'title', '') or '').strip() or 'Conversation'
         rows = receipts_db.receipts(uid, conversation_receipt_key(conversation_id))
-        title = revised(base, len(_sent(rows)))
+        title = wiki_conversation_title(revised(edited, len(_sent(rows))), conversation_id)
         where = f"{wiki.get('url') or '(no address)'} : raw/sources/{date_str} - {title}.md"
         return {'target': 'wiki', 'title': title, 'content': content, 'destination': where, 'receipts': rows}
 
@@ -255,10 +356,6 @@ async def send_conversation(
     previous = await run_blocking(db_executor, receipts_db.receipts, uid, key)
     if _sent(previous) and not revised_copy:
         return None, True
-    base, date_str, content = await run_blocking(
-        db_executor,
-        lambda: conversation_markdown(uid, conversation_id, include_transcript=bool(wiki.get('include_transcript'))),
-    )
-    receipt = await _add_source(uid, wiki, key, base, date_str, content)
+    receipt = await _log_conversation(uid, wiki, key, conversation_id)
     logger.info('wiki_outbound: conversation uid=%s ok=%s revision=%s', uid, not receipt['error'], receipt['revision'])
     return receipt, False
