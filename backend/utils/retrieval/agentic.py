@@ -23,6 +23,8 @@ import uuid
 import asyncio
 import contextvars
 import os
+
+from config.local_llm import local_llm_timeout_seconds
 from typing import List, Optional, AsyncGenerator, Any, Tuple
 
 from langchain_core.runnables import RunnableConfig
@@ -218,9 +220,28 @@ def _positive_int_from_env(name: str, default: int) -> int:
 # heartbeat keeps a known-long tool call observable while the total deadline
 # still prevents an agent task from running without bound.
 AGENT_STREAM_SETUP_TIMEOUT_SECONDS = _positive_timeout_from_env('AGENT_STREAM_SETUP_TIMEOUT_SECONDS', 25.0)
-AGENT_STREAM_FIRST_EVENT_TIMEOUT_SECONDS = _positive_timeout_from_env('AGENT_STREAM_FIRST_EVENT_TIMEOUT_SECONDS', 25.0)
+
+
+def stream_deadline_defaults(local_timeout: float | None) -> tuple[float, float]:
+    """Default (first event, whole answer) seconds for a chat turn.
+
+    A self-hosted model can take minutes for one model call, so it gets one call for the
+    first event and four for the answer, derived from OMI_LOCAL_LLM_TIMEOUT_SECONDS
+    (config/local_llm.py). Cloud keeps 25 s / 150 s; the env vars below override both.
+    """
+    if local_timeout is None:
+        return 25.0, 150.0
+    return max(25.0, local_timeout), max(150.0, 4 * local_timeout)
+
+
+_FIRST_EVENT_DEFAULT, _MAX_DURATION_DEFAULT = stream_deadline_defaults(local_llm_timeout_seconds())
+AGENT_STREAM_FIRST_EVENT_TIMEOUT_SECONDS = _positive_timeout_from_env(
+    'AGENT_STREAM_FIRST_EVENT_TIMEOUT_SECONDS', _FIRST_EVENT_DEFAULT
+)
 AGENT_STREAM_PROGRESS_HEARTBEAT_SECONDS = _positive_timeout_from_env('AGENT_STREAM_PROGRESS_HEARTBEAT_SECONDS', 20.0)
-AGENT_STREAM_MAX_DURATION_SECONDS = _positive_timeout_from_env('AGENT_STREAM_MAX_DURATION_SECONDS', 150.0)
+AGENT_STREAM_MAX_DURATION_SECONDS = _positive_timeout_from_env(
+    'AGENT_STREAM_MAX_DURATION_SECONDS', _MAX_DURATION_DEFAULT
+)
 AGENT_STREAM_CANCEL_GRACE_SECONDS = _positive_timeout_from_env('AGENT_STREAM_CANCEL_GRACE_SECONDS', 2.0)
 
 # How much of the turn budget a retry needs to be worth starting. The silent-interval bound on
