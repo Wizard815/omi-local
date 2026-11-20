@@ -18,6 +18,8 @@ import os
 from dataclasses import dataclass
 from typing import Optional
 
+from config.local_llm import local_llm_timeout_seconds
+
 FLAG = 'CONVERSATION_NOTES_AGENT_ENABLED'
 LOOKUP_EFFICIENCY = 'CONVERSATION_NOTES_AGENT_LOOKUP_EFFICIENCY_ENABLED'
 
@@ -74,13 +76,28 @@ def in_cohort(uid: Optional[str], conversation_id: Optional[str]) -> bool:
     return True
 
 
+def deadlines() -> tuple[float, float]:
+    """(deadline, force-submit-after) seconds. A self-hosted model gets room for its slow calls.
+
+    Locally one call may take OMI_LOCAL_LLM_TIMEOUT_SECONDS, so the loop allows three of
+    them and forces the submission early enough that the final call still fits.
+    """
+    local = local_llm_timeout_seconds()
+    if local is None:
+        return DEADLINE_SECONDS, FORCE_SUBMIT_AFTER_SECONDS
+    deadline = max(DEADLINE_SECONDS, 3 * local)
+    return deadline, max(FORCE_SUBMIT_AFTER_SECONDS, deadline - 1.2 * local)
+
+
 def budget_for_words(words: int) -> NotesAgentBudget:
     """Value-proportional: longer meetings must investigate more, never past ~15 tools or ~2 cents."""
+    deadline, force_after = deadlines()
+    timing = {'deadline_seconds': deadline, 'force_submit_after_seconds': force_after}
     if words >= 5000:
-        return NotesAgentBudget(max_turns=9, max_tool_calls=15, min_tool_calls=5)
+        return NotesAgentBudget(max_turns=9, max_tool_calls=15, min_tool_calls=5, **timing)
     if words >= AGENT_MIN_WORDS:
-        return NotesAgentBudget(max_turns=7, max_tool_calls=10, min_tool_calls=4)
-    return NotesAgentBudget(max_turns=5, max_tool_calls=6, min_tool_calls=2)
+        return NotesAgentBudget(max_turns=7, max_tool_calls=10, min_tool_calls=4, **timing)
+    return NotesAgentBudget(max_turns=5, max_tool_calls=6, min_tool_calls=2, **timing)
 
 
 def plan_notes_agent(

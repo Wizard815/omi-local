@@ -39,6 +39,7 @@ from langchain_core.output_parsers import PydanticOutputParser
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 import tiktoken
 
+from config.local_llm import local_llm_timeout_seconds
 from models.structured_extraction import StructuredExtraction
 from utils.byok import get_byok_key
 from utils.llm.byok_errors import handle_llm_error, handle_llm_error_async
@@ -798,6 +799,11 @@ def get_llm(
         # background gateway transport deadline. Three separate call-site fixes proved that
         # leaving this to each caller loses the user's summary (see model_config).
         request_timeout = feature_request_timeout(feature)
+    local_timeout = local_llm_timeout_seconds()
+    if local_timeout is not None:
+        # A self-hosted model is slow by nature: a caller's cloud-tuned deadline
+        # (60s memory intake, 120s client default) must not cut it off mid-answer.
+        request_timeout = max(request_timeout or 0.0, local_timeout)
 
     model, provider = _get_model_config(feature)
     if is_anthropic_only_feature(feature) or provider == 'anthropic':

@@ -16,8 +16,9 @@ import logging
 import os
 from contextvars import ContextVar, Token
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, Optional, Tuple, Union, cast
 
+from config.local_llm import local_llm_timeout_seconds, local_reasoning_effort
 from utils.llm.gateway_client import is_auto_lane_id
 from utils.llm.model_constants import LUNA_MODEL
 from utils.llm.vertex_pt_routing import (
@@ -394,9 +395,12 @@ STRUCTURED_OUTPUT_FEATURES = _STRUCTURED_OUTPUT_FEATURES
 # these features now inherits the deadline instead of having to remember it.
 # Env-overridable (default unchanged) for self-hosted local LLM backends where
 # a cold model load (e.g. llama-swap loading a model for the first request
-# since idle-unload) can plausibly take longer than 60s — raising this only
-# affects deployments that explicitly set FOREGROUND_REQUEST_TIMEOUT_SECONDS.
-FOREGROUND_REQUEST_TIMEOUT_SECONDS = float(os.environ.get('FOREGROUND_REQUEST_TIMEOUT_SECONDS') or 60.0)
+# since idle-unload) can plausibly take longer than 60s. A self-hosted stack
+# derives it from OMI_LOCAL_LLM_TIMEOUT_SECONDS (config/local_llm.py) unless
+# FOREGROUND_REQUEST_TIMEOUT_SECONDS is set; cloud deployments keep 60s.
+FOREGROUND_REQUEST_TIMEOUT_SECONDS = float(
+    os.environ.get('FOREGROUND_REQUEST_TIMEOUT_SECONDS') or local_llm_timeout_seconds() or 60.0
+)
 _FOREGROUND_TIMEOUT_FEATURES = frozenset(
     {
         'conv_structure',
@@ -411,6 +415,30 @@ _FOREGROUND_TIMEOUT_FEATURES = frozenset(
         # invoke_failed:APITimeoutError" 9-21×/day, no retry. The extractor reads
         # the whole transcript in one structured call, like its siblings above.
         'memory_l1',
+    }
+)
+
+
+# Short structured calls (a classifier, a folder pick, three-word metadata, a
+# memory route). A reasoning model served locally otherwise spends thousands of
+# tokens and tens of seconds thinking about a one-line answer. In local mode they
+# carry OMI_LOCAL_LLM_REASONING_EFFORT (config/local_llm.py) when it is set.
+LOCAL_SHORT_REASONING_FEATURES = frozenset(
+    {
+        'chat_extraction',
+        'conv_app_select',
+        'conv_discard',
+        'conv_folder',
+        'daily_summary_simple',
+        'episode_incremental',
+        'followup',
+        'memory_category',
+        'memory_l2',
+        'memory_l2_flex',
+        'open_loop_card',
+        'session_titles',
+        'sync_redrive_title',
+        'wake_word_adjudication',
     }
 )
 
@@ -449,6 +477,10 @@ def _get_model_config(feature: str) -> Tuple[str, str]:
     restarting.
     """
     if feature in _PINNED_FEATURES:
+        if feature == 'fair_use' and not os.getenv('FAIR_USE_CLASSIFIER_MODEL', '').strip() and _is_local_mode():
+            # The pin names a cloud model a self-hosted proxy does not serve; an
+            # explicit FAIR_USE_CLASSIFIER_MODEL still wins.
+            return (get_local_primary_model(), 'openai')
         return _PINNED_FEATURES[feature]
 
     try:
@@ -511,6 +543,13 @@ def get_route_options(feature: str, model: str, provider: str) -> Dict[str, obje
     options: Dict[str, object] = {}
     if supports_cache_retention(model):
         options['extra_body'] = {"prompt_cache_retention": "24h"}
+    effort = local_reasoning_effort() if feature in LOCAL_SHORT_REASONING_FEATURES else None
+    if effort and provider == 'openai' and _is_local_mode():
+        # Sent only when configured: servers that do not know the field ignore it
+        # (llama.cpp, Ollama, LM Studio, OpenRouter all accept reasoning_effort).
+        extra_body = dict(cast(Dict[str, object], options.get('extra_body') or {}))
+        extra_body['reasoning_effort'] = effort
+        options['extra_body'] = extra_body
     if provider == 'openrouter':
         temperature = _OPENROUTER_TEMPERATURES.get(feature)
         if temperature is not None:
@@ -536,9 +575,11 @@ def feature_request_timeout(feature: str) -> float | None:
     deadline declare one (see _FOREGROUND_TIMEOUT_FEATURES). Callers may still pass an
     explicit request_timeout to get_llm; this is the default when they do not.
     """
+    local = local_llm_timeout_seconds()
     if feature in _FOREGROUND_TIMEOUT_FEATURES:
-        return FOREGROUND_REQUEST_TIMEOUT_SECONDS
-    return None
+        return FOREGROUND_REQUEST_TIMEOUT_SECONDS if local is None else max(FOREGROUND_REQUEST_TIMEOUT_SECONDS, local)
+    # A self-hosted model gets one deadline for every call; cloud keeps the client default.
+    return local
 
 
 def get_route_ref(feature: str) -> RouteRef:
