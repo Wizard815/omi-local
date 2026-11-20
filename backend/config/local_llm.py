@@ -107,3 +107,26 @@ def local_processing_retry_delay(attempts: int) -> float:
     """Wait after ``attempts`` failed attempts (1-based) before the next one."""
     index = min(max(attempts, 1), len(RETRY_DELAYS_SECONDS)) - 1
     return RETRY_DELAYS_SECONDS[index]
+
+
+TASK_DEDUP_THRESHOLD_ENV = 'OMI_LOCAL_TASK_DEDUP_THRESHOLD'
+# Cosine similarity between a whole transcript and a short task description, as the
+# local Chroma store scores it with a small embedding model: a related task scored
+# 0.52-0.54, unrelated ones 0.07-0.30 (OMI_LOCAL_TASK_DEDUP_THRESHOLD overrides).
+DEFAULT_LOCAL_TASK_DEDUP_THRESHOLD = 0.45
+
+
+def local_task_dedup_threshold(environ: Optional[Mapping[str, str]] = None) -> Optional[float]:
+    """Similarity a task needs to reach the notes prompt as a possible duplicate, or None.
+
+    Only for the local Chroma store; the cloud Pinecone threshold is the caller's own.
+    """
+    env = _env(environ)
+    if env.get('LOCAL_VECTOR_DB', '').strip().lower() != 'chroma':
+        return None
+    raw = env.get(TASK_DEDUP_THRESHOLD_ENV, '').strip()
+    try:
+        value = float(raw) if raw else DEFAULT_LOCAL_TASK_DEDUP_THRESHOLD
+    except ValueError:
+        value = DEFAULT_LOCAL_TASK_DEDUP_THRESHOLD
+    return min(1.0, max(0.0, value))
