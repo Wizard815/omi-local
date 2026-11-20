@@ -197,7 +197,7 @@ def conversation_log_arguments(
         arguments['action_items'] = items
     if include_transcript:
         segments = [s for s in (conversation.transcript_segments or []) if str(getattr(s, 'text', '') or '').strip()]
-        ids = sorted({s.person_id for s in segments if getattr(s, 'person_id', None)})
+        ids = sorted({s.person_id for s in segments if s.person_id is not None})
         names = {p.get('id'): p.get('name') for p in (users_db.get_people_by_ids(uid, ids) if ids else []) if p}
         arguments['segments'] = [
             {
