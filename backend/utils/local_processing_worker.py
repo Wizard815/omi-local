@@ -59,11 +59,10 @@ def run_one(uid: str, conversation_id: str, attempt: int) -> str:
                 app_usage_attribution=AppUsageAttribution.AUTOMATIC_PROCESSING,
                 trigger=ProcessingTrigger.CLIENT_FINALIZE,
             )
-        if processed is not None:
-            try:
-                record_finalized_meeting_receipt(uid, processed)
-            except Exception:
-                logger.exception('local_processing receipt failed uid=%s conversation=%s', uid, conversation_id)
+        try:
+            record_finalized_meeting_receipt(uid, processed)
+        except Exception:
+            logger.exception('local_processing receipt failed uid=%s conversation=%s', uid, conversation_id)
         logger.info('local_processing completed uid=%s conversation=%s attempt=%d', uid, conversation_id, attempt)
         return COMPLETED
     except Exception as exc:
