@@ -17,6 +17,9 @@ from database import conversation_finalization_jobs as jobs_db
 from utils import local_processing_worker as worker
 from utils.conversations import local_processing_queue as queue
 
+# Imported here so the router's import time is paid at collection, not inside one test.
+import routers.conversations as conversations_router  # noqa: E402
+
 
 class _ModelTimedOut(Exception):
     """Stands in for openai.APITimeoutError from a slow local model."""
@@ -215,8 +218,6 @@ def test_ensure_queued_restores_a_lost_entry_without_delaying_a_scheduled_retry(
 
 def test_opening_a_worker_owned_row_does_not_start_a_parallel_run(monkeypatch):
     """A detail read used to launch first-open enrichment for every queued upload at once."""
-    import routers.conversations as conversations_router
-
     row = {'id': 'c1', 'deferred': True, 'status': 'processing', 'source': 'omi'}
     monkeypatch.setattr(conversations_router, '_get_valid_conversation_by_id', lambda *a, **k: dict(row))
     monkeypatch.setattr(conversations_router, 'hidden_from_default_detail', lambda c: False)
