@@ -33,7 +33,7 @@ from utils.other.account_gate_http import account_gate_busy_http_exception
 from database.firestore_read_metrics import FirestoreReadSite
 from utils.list_version_check import ListVersionCheck
 from config.episodes import home_step_projection_enabled, home_transcription_presentation_gate_enabled
-from utils.conversations import home_step, transcribing_hold
+from utils.conversations import home_step, local_processing_queue, transcribing_hold
 from utils.conversations.list_filters import aware_datetime, reject_oversized_filter
 from database.vector_db import (
     delete_action_item_vector,
@@ -1196,7 +1196,11 @@ def get_conversation_by_id(
         open_recording(uid, conversation)
     # A desktop conversation stored raw (deferred) for a freemium/Neo user is
     # enriched on first open. Other conversations are returned unchanged.
-    if conversation.get('deferred') and not conversation.get('processing_deferred'):
+    if local_processing_queue.owns(conversation):
+        # Self-hosted background processing owns this row; an open must not start a
+        # second model run. A row the queue lost is re-queued, never left behind.
+        local_processing_queue.ensure_queued(uid, conversation_id)
+    elif conversation.get('deferred') and not conversation.get('processing_deferred'):
         conversation = _enrich_deferred_conversation(uid, conversation)
     if include_translations is True:
         try:
