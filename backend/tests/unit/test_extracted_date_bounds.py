@@ -59,6 +59,17 @@ class TestUnparseableInput:
     def test_good_dates_survive_alongside_bad_ones(self):
         assert normalize_extracted_dates(['2027-02', '2026-08-01'], '2026-07-29') == ['2026-08-01']
 
+    def test_decorated_dates_keep_their_calendar_date(self):
+        # A slow local model returned these; dropping them left `dates` empty and the
+        # conversation unsearchable (Chroma rejects an empty list in metadata).
+        raw = ['Monday 2026-11-23', '2026-11-19 09:00', '2026-11-19T09:00:00', 'Thu, 2026-11-26.']
+        assert normalize_extracted_dates(raw, '2026-11-20') == ['2026-11-23', '2026-11-19', '2026-11-26']
+
+    def test_embedded_dates_are_still_bounded_and_validated(self):
+        assert normalize_extracted_dates(['due 2031-01-01'], '2026-11-20') == []
+        assert normalize_extracted_dates(['Monday 2026-13-45'], '2026-11-20') == []
+        assert normalize_extracted_dates(['ref 12026-11-20'], '2026-11-20') == []
+
 
 class TestUnusableReferenceDate:
     def test_empty_reference_keeps_parseable_dates(self):
