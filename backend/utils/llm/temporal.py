@@ -77,8 +77,8 @@ def normalize_extracted_dates(dates: Optional[Iterable[str]], reference_date: st
     for raw in dates or []:
         # Models decorate the date they were asked for ("Monday 2026-11-23",
         # "2026-11-19 09:00", "2026-11-19T09:00"); keep the calendar date inside.
-        match = _ISO_DATE.search(raw) if isinstance(raw, str) else None
         try:
+            match = _ISO_DATE.search(raw)
             parsed = datetime.strptime(match.group(1) if match else raw, '%Y-%m-%d')
         except (TypeError, ValueError) as e:
             logger.warning(f'normalize_extracted_dates - dropping unparseable date: {e}')
