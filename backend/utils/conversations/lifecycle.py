@@ -617,6 +617,11 @@ def reacquire_deferred_processing(uid: str, conversation_id: str) -> bool:
     return jobs_db.reacquire_deferred_processing(uid, conversation_id)
 
 
+def rearm_deferred_processing(uid: str, conversation_id: str) -> bool:
+    """Re-arm deferred enrichment for a scheduled background retry; the row stays ``processing``."""
+    return jobs_db.rearm_deferred_processing(uid, conversation_id)
+
+
 def recover_deferred_processing_failure(uid: str, conversation_id: str) -> bool:
     """Atomically re-arm deferred enrichment and expose a non-spinning terminal.
 

@@ -16,7 +16,11 @@ What this pins down:
   * utterances queued behind a slow call are sent in order, and all of them
     before the server closes after "finalize",
   * with whisper.cpp, a stopped server is started at the speech onset, so a
-    cold start overlaps the utterance instead of following it.
+    cold start overlaps the utterance instead of following it,
+  * continuous speech is cut every OMI_VAD_MAX_UTTERANCE_S at the quietest
+    recent moment, with no audio lost or repeated between the pieces,
+  * the live stream decodes with OMI_ASR_LIVE_BEAM_SIZE / _BEST_OF while
+    uploads keep OMI_ASR_BEAM_SIZE / _BEST_OF.
 
 Run:  python3 test_audio_stream_pipeline.py   (no pytest required; needs
 fastapi, numpy, httpx, e.g. backend/.venv/bin/python)
@@ -87,7 +91,7 @@ class _FakeASR:
         self.gate = None  # threading.Event the first call waits on
         self.gate_opened = None  # whether it opened while that call was blocked
 
-    def __call__(self, audio16, language=None):
+    def __call__(self, audio16, language=None, live=False):
         self.calls.append(len(audio16))
         if self.gate is not None and len(self.calls) == 1:
             self.gate_opened = self.gate.wait(timeout=5)
@@ -223,7 +227,7 @@ def test_whisper_server_is_started_at_speech_onset_not_after_the_utterance():
 
     asr = _FakeASR()
 
-    def transcribe(audio16, language=None):
+    def transcribe(audio16, language=None, live=False):
         started.wait(timeout=2)  # the prewarm runs on another executor thread
         events.append("transcribe")
         return asr(audio16, language)
@@ -261,6 +265,56 @@ def test_parse_wav_reads_in_memory():
     assert np.max(np.abs(got - audio)) < 1e-3
 
 
+def _monologue(seconds: float, dip_every_s: float = 0.7, dip_s: float = 0.06) -> np.ndarray:
+    """Talking without a pause long enough to end an utterance: short dips between 'words'."""
+    parts, t = [_silence(0.5)], 0.0
+    while t < seconds:
+        parts += [_tone(dip_every_s - dip_s), _tone(dip_s, amp=0.02)]
+        t += dip_every_s
+    parts.append(_silence(1.5))
+    return np.concatenate(parts)
+
+
+def test_continuous_speech_is_cut_at_quiet_moments_without_losing_audio():
+    audio = _monologue(40.0)
+    spans = _spans(audio, [FRAME])
+    max_len = int(las.VAD_MAX_UT_S * SR)
+    assert len(spans) >= 3, spans
+    for (a, b), (c, _d) in zip(spans, spans[1:]):
+        assert c == b, "pieces of one monologue must meet exactly: no lost or repeated audio"
+    for a, b in spans[:-1]:
+        assert b - a <= max_len + las.VAD_STEP, (a, b)
+        # The cut is inside a dip (a quiet 'between words' moment), not mid-tone.
+        assert abs(float(audio[b + las.VAD_STEP // 2])) < 0.05, b
+    # First text no longer waits for the speaker to pause: it is due after one max-length piece.
+    assert spans[0][1] <= int(0.5 * SR) + max_len + las.VAD_STEP
+
+
+def test_live_stream_uses_the_live_decode_settings():
+    calls = []
+
+    def fake_whispercpp(audio16, language, beam_size=las.WHISPER_CPP_BEAM_SIZE, best_of=las.WHISPER_CPP_BEST_OF,
+                        audio_ctx=0):
+        calls.append((beam_size, best_of, audio_ctx))
+        return []
+
+    saved = (las.OMI_ASR_ENGINE, las._transcribe_whispercpp, las.WHISPER_CPP_LIVE_BEAM_SIZE,
+             las.WHISPER_CPP_LIVE_BEST_OF, las.WHISPER_CPP_LIVE_AUDIO_CTX)
+    las.OMI_ASR_ENGINE, las._transcribe_whispercpp = "whispercpp", fake_whispercpp
+    las.WHISPER_CPP_LIVE_BEAM_SIZE, las.WHISPER_CPP_LIVE_BEST_OF, las.WHISPER_CPP_LIVE_AUDIO_CTX = 1, 1, "auto"
+    try:
+        las.transcribe(_tone(4.0), "en", live=True)
+        las.transcribe(_tone(4.0), "en")
+        assert las.live_audio_ctx(40 * SR) == 1500
+        las.WHISPER_CPP_LIVE_AUDIO_CTX = "0"
+        assert las.live_audio_ctx(4 * SR) == 0
+    finally:
+        (las.OMI_ASR_ENGINE, las._transcribe_whispercpp, las.WHISPER_CPP_LIVE_BEAM_SIZE,
+         las.WHISPER_CPP_LIVE_BEST_OF, las.WHISPER_CPP_LIVE_AUDIO_CTX) = saved
+    # Live: greedy and an encoder sized to 4 s (200 frames + margin); uploads keep the full settings.
+    assert calls == [(1, 1, 264), (las.WHISPER_CPP_BEAM_SIZE, las.WHISPER_CPP_BEST_OF, 0)]
+
+
 def main() -> None:
     tests = [
         test_vad_spans_do_not_depend_on_frame_size,
@@ -270,6 +324,8 @@ def main() -> None:
         test_whisper_server_is_started_at_speech_onset_not_after_the_utterance,
         test_whisper_server_start_is_polled_finely,
         test_parse_wav_reads_in_memory,
+        test_continuous_speech_is_cut_at_quiet_moments_without_losing_audio,
+        test_live_stream_uses_the_live_decode_settings,
     ]
     for t in tests:
         t()

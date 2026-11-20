@@ -726,7 +726,42 @@ def _validate_observation_decision(item: MemoryItem, decision: ConsolidationAgen
         }
         or decision.basis_for_memory not in {'explicit', 'recurring'}
     ):
-        raise ValueError('observation_intake_unsafe_promotion')
+        raise ValueError(UNSAFE_PROMOTION)
+
+
+UNSAFE_PROMOTION = 'observation_intake_unsafe_promotion'
+
+
+def _admit_observation_decision(item: MemoryItem, decision: ConsolidationAgentDecision) -> ConsolidationAgentDecision:
+    """Validate one decision; an unsafe promotion becomes owner review instead of failing the batch.
+
+    A model (often a small or slow local one) that promotes a third-party fact used to raise
+    for the whole batch, dropping every sibling decision. Review never writes long-term
+    memory, so it is the safe route for exactly that item; every other violation still fails
+    the batch before any write.
+    """
+    try:
+        _validate_observation_decision(item, decision)
+        return decision
+    except ValueError as exc:
+        if str(exc) != UNSAFE_PROMOTION:
+            raise
+    log = logging.getLogger(__name__)
+    record_fallback(
+        component='memory_analytics',
+        from_mode='observation_intake_promote',
+        to_mode='owner_review',
+        reason='other',
+        outcome='degraded',
+        log=log,
+    )
+    owned = {e.evidence_id for e in item.evidence}
+    return ConsolidationAgentDecision(
+        source_memory_id=item.memory_id,
+        route='review',
+        evidence_ids=[value for value in decision.evidence_ids if value in owned],
+        rationale='Promotion did not meet the owner-fact rules; owner review required.',
+    )
 
 
 def _load_observation_intake(uid, memory_ids, *, db_client):
@@ -762,8 +797,7 @@ def _settle_observation_intake(uid, context, decisions, report, *, db_client, no
     by_id = {item.memory_id: item for item in items}
     if len(decisions) != len(items) or {d.source_memory_id for d in decisions} != set(by_id):
         raise ValueError('observation_intake_partition_mismatch')
-    for decision in decisions:
-        _validate_observation_decision(by_id[decision.source_memory_id], decision)
+    decisions = [_admit_observation_decision(by_id[decision.source_memory_id], decision) for decision in decisions]
     for decision in decisions:
         source = by_id[decision.source_memory_id]
         if decision.route == 'promote':

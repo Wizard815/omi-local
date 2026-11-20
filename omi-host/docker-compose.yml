@@ -88,10 +88,17 @@ services:
       BUCKET_SPEECH_PROFILES: ${BUCKET_SPEECH_PROFILES:-omi-speech-profiles}
       BUCKET_MEMORIES_RECORDINGS: ${BUCKET_MEMORIES_RECORDINGS:-omi-memories-recordings}
       CHROMA_DATA_PATH: ${CHROMA_DATA_PATH:-/data/chroma/vector_db}
-      # Raise these if conversation processing/chat times out waiting on a
-      # cold local-LLM model load (e.g. llama-swap loading a model for the
-      # first request after idle-unload). Defaults match upstream's
-      # production-tuned values — see model_config.py/clients.py for why.
+      # A slow local model (SLOW-HARDWARE.md): the longest one model call may
+      # take; every LLM deadline and the HTTP limit (3x) derive from it.
+      OMI_LOCAL_LLM_TIMEOUT_SECONDS: ${OMI_LOCAL_LLM_TIMEOUT_SECONDS:-300}
+      # Short structured calls ask for this reasoning effort (none|low|medium|high;
+      # empty sends nothing). Servers that do not know the field ignore it.
+      OMI_LOCAL_LLM_REASONING_EFFORT: ${OMI_LOCAL_LLM_REASONING_EFFORT-low}
+      # Uploads are stored at once and their notes written in the background,
+      # retried up to OMI_LOCAL_PROCESSING_MAX_ATTEMPTS times (off = wait for the model).
+      OMI_LOCAL_BACKGROUND_PROCESSING: ${OMI_LOCAL_BACKGROUND_PROCESSING:-on}
+      OMI_LOCAL_PROCESSING_MAX_ATTEMPTS: ${OMI_LOCAL_PROCESSING_MAX_ATTEMPTS:-5}
+      # Per-deadline overrides (unset: derived from OMI_LOCAL_LLM_TIMEOUT_SECONDS).
       FOREGROUND_REQUEST_TIMEOUT_SECONDS: ${FOREGROUND_REQUEST_TIMEOUT_SECONDS:-}
       BACKGROUND_CHAT_EXTRACTION_TIMEOUT_SECONDS: ${BACKGROUND_CHAT_EXTRACTION_TIMEOUT_SECONDS:-}
       # Signs the session tokens /v1/auth/local-login issues, the only way to
@@ -268,11 +275,19 @@ services:
       # peak, to count as voice — lower this to pick up quieter speech.
       OMI_VAD_MIN_SILENCE_MS: ${OMI_VAD_MIN_SILENCE_MS:-1000}
       OMI_VAD_THRESH_REL: ${OMI_VAD_THRESH_REL:-0.12}
+      # Someone talking without a pause gets text every N seconds; the cut
+      # lands on the quietest moment of the last 1.5 s (SLOW-HARDWARE.md).
+      OMI_VAD_MAX_UTTERANCE_S: ${OMI_VAD_MAX_UTTERANCE_S:-12}
       # Decode quality vs. latency: beam search (beam_size > 1) catches more
       # words correctly than whisper-server's own default (greedy, best_of=2)
       # at the cost of slower decode — set both to 1 to go back to greedy.
       OMI_ASR_BEAM_SIZE: ${OMI_ASR_BEAM_SIZE:-5}
       OMI_ASR_BEST_OF: ${OMI_ASR_BEST_OF:-5}
+      # Live stream only (uploads keep the two above). On a CPU, 1/1 plus
+      # OMI_ASR_LIVE_AUDIO_CTX=auto returns live text ~3x sooner (SLOW-HARDWARE.md).
+      OMI_ASR_LIVE_BEAM_SIZE: ${OMI_ASR_LIVE_BEAM_SIZE:-}
+      OMI_ASR_LIVE_BEST_OF: ${OMI_ASR_LIVE_BEST_OF:-}
+      OMI_ASR_LIVE_AUDIO_CTX: ${OMI_ASR_LIVE_AUDIO_CTX:-0}
       HIP_VISIBLE_DEVICES: "0"
       THREADS: ${THREADS:-8}
       # Diarization (resemblyzer) on the GPU. Set OMI_DIA_DEVICE=cpu to force CPU

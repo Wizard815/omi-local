@@ -49,6 +49,7 @@ No cloud calls, ever. ASR runs on the MI50 (gfx906) by default; everything else 
 """
 
 import asyncio
+import functools
 import io
 import logging
 import os
@@ -58,6 +59,7 @@ import tempfile
 import threading
 import time
 import wave
+from collections import deque
 from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -94,6 +96,16 @@ WHISPER_CPP_START_POLL_S = 0.1
 # either to 1 to fall back to the server's plain greedy decode.
 WHISPER_CPP_BEAM_SIZE = int(os.getenv("OMI_ASR_BEAM_SIZE", "5"))
 WHISPER_CPP_BEST_OF = int(os.getenv("OMI_ASR_BEST_OF", "5"))
+# The live stream's decode can differ from uploads (/v1, /v2 transcribe): on a CPU
+# or a small GPU, greedy decoding (1/1) returns each utterance several times
+# faster than beam 5 for a small accuracy cost. Unset follows the values above.
+WHISPER_CPP_LIVE_BEAM_SIZE = int(os.getenv("OMI_ASR_LIVE_BEAM_SIZE") or WHISPER_CPP_BEAM_SIZE)
+WHISPER_CPP_LIVE_BEST_OF = int(os.getenv("OMI_ASR_LIVE_BEST_OF") or WHISPER_CPP_BEST_OF)
+# whisper.cpp encodes a full 30 s window for every utterance, however short. "auto"
+# sizes the encoder to the utterance (audio_ctx = 50 frames/s + a margin): 2-3x
+# faster per live utterance on a CPU, at some risk of clipped or repeated words on
+# very short clips. "0"/unset keeps the full window; a number sets it directly.
+WHISPER_CPP_LIVE_AUDIO_CTX = (os.getenv("OMI_ASR_LIVE_AUDIO_CTX") or "0").strip().lower()
 # Language for every transcription: "en" (the default) or "auto" to let the engine
 # detect it. The backend's stream and upload calls don't carry a language.
 ASR_LANGUAGE = (os.getenv("OMI_ASR_LANGUAGE") or "en").strip().lower()
@@ -126,7 +138,11 @@ VAD_WIN_MS = int(os.getenv("OMI_VAD_WIN_MS", "30"))
 VAD_THRESH_REL = float(os.getenv("OMI_VAD_THRESH_REL", "0.12"))
 VAD_MIN_SIL_MS = int(os.getenv("OMI_VAD_MIN_SILENCE_MS", "1000"))
 VAD_MIN_SPEECH_MS = int(os.getenv("OMI_VAD_MIN_SPEECH_MS", "300"))
-VAD_MAX_UT_S = int(os.getenv("OMI_VAD_MAX_UTTERANCE_S", "20"))
+# Continuous speech is cut into utterances of at most this long, so a monologue
+# shows text every ~N seconds instead of only when the speaker pauses. The cut
+# lands on the quietest moment of the last VAD_CUT_SEARCH_MS (between words).
+VAD_MAX_UT_S = float(os.getenv("OMI_VAD_MAX_UTTERANCE_S", "12"))
+VAD_CUT_SEARCH_MS = int(os.getenv("OMI_VAD_CUT_SEARCH_MS", "1500"))
 DIA_ON = os.getenv("OMI_DISABLE_DIA", "0") != "1"
 # "cuda" is correct under ROCm/HIP too -- torch's device string, not a CUDA-specific
 # claim. Falls back to cpu at load time if the GPU isn't actually available.
@@ -208,7 +224,9 @@ class EnergyVAD:
         self.last_voice = -1
         self._rest = np.zeros(0, dtype=np.float32)  # < one window carried to the next feed
         self._min_sil = int(VAD_MIN_SIL_MS / 1000 * 16000)
-        self._max_ut = VAD_MAX_UT_S * 16000
+        self._max_ut = int(VAD_MAX_UT_S * 16000)
+        # (window start, rms) of the most recent windows, to place a max-length cut.
+        self._recent: "deque[Tuple[int, float]]" = deque(maxlen=max(1, VAD_CUT_SEARCH_MS // VAD_WIN_MS))
 
     def _thr(self) -> float:
         return max(0.004, self.peak * VAD_THRESH_REL)
@@ -240,6 +258,7 @@ class EnergyVAD:
                 t_abs = base + k * step
                 thr = self._thr()
                 exit_thr = thr * 0.5
+                self._recent.append((t_abs, rms))
                 if not self.in_speech:
                     if rms >= thr:
                         self.in_speech = True
@@ -248,14 +267,25 @@ class EnergyVAD:
                 else:
                     if rms >= exit_thr:
                         self.last_voice = t_abs + step
-                    if (t_abs - self.last_voice) >= self._min_sil or \
-                       (t_abs - self.start) >= self._max_ut:
+                    if (t_abs - self.last_voice) >= self._min_sil:
                         if self.last_voice - self.start >= MIN_SPEECH_SAMPLES:
                             out.append((self.start, self.last_voice))
                         self.in_speech = False
+                    elif (t_abs - self.start) >= self._max_ut:
+                        # Still talking: emit up to the quietest recent window and
+                        # carry on from there, so no word is split or dropped.
+                        cut = self._quiet_cut(t_abs)
+                        out.append((self.start, cut))
+                        self.start = cut
         self.n = base + nwin * step
         self._rest = chunk[nwin * step:].copy()
         return out
+
+    def _quiet_cut(self, now: int) -> int:
+        """Window start of the quietest recent window that leaves a real utterance behind."""
+        floor = self.start + MIN_SPEECH_SAMPLES
+        candidates = [(rms, t) for t, rms in self._recent if floor <= t <= now]
+        return min(candidates)[1] if candidates else now
 
     def flush(self) -> Optional[Tuple[int, int]]:
         if self.in_speech and self.last_voice - self.start >= MIN_SPEECH_SAMPLES:
@@ -608,14 +638,17 @@ def prewarm_asr() -> None:
 
 
 # --------------------------------------------------------------------------- inference helpers
-def transcribe(audio16: np.ndarray, language: Optional[str] = None) -> List[Dict[str, Any]]:
-    """Return [{text,start,end}] in seconds for 16k float audio."""
+def transcribe(audio16: np.ndarray, language: Optional[str] = None, live: bool = False) -> List[Dict[str, Any]]:
+    """Return [{text,start,end}] in seconds for 16k float audio. ``live``: the stream's decode settings."""
     if len(audio16) < 1600:
         return []
     language = language or ASR_LANGUAGE
     if OMI_ASR_ENGINE == "openai":
         return _transcribe_openai(audio16, language)
     if OMI_ASR_ENGINE == "whispercpp":
+        if live:
+            return _transcribe_whispercpp(audio16, language, WHISPER_CPP_LIVE_BEAM_SIZE, WHISPER_CPP_LIVE_BEST_OF,
+                                          live_audio_ctx(len(audio16)))
         return _transcribe_whispercpp(audio16, language)
     seg_iter, _info = MODELS.whisper.transcribe(
         audio16, language=None if language == "auto" else language, vad_filter=False,
@@ -628,7 +661,18 @@ def transcribe(audio16: np.ndarray, language: Optional[str] = None) -> List[Dict
     return out
 
 
-def _transcribe_whispercpp(audio16: np.ndarray, language: str) -> List[Dict[str, Any]]:
+def live_audio_ctx(samples: int) -> int:
+    """whisper.cpp audio_ctx for a live utterance of ``samples`` (16 kHz); 0 = the full window."""
+    if WHISPER_CPP_LIVE_AUDIO_CTX == "auto":
+        return min(1500, int(samples / 16000 * 50) + 64)
+    try:
+        return max(0, min(1500, int(WHISPER_CPP_LIVE_AUDIO_CTX)))
+    except ValueError:
+        return 0
+
+
+def _transcribe_whispercpp(audio16: np.ndarray, language: str, beam_size: int = WHISPER_CPP_BEAM_SIZE,
+                           best_of: int = WHISPER_CPP_BEST_OF, audio_ctx: int = 0) -> List[Dict[str, Any]]:
     """POST to the whisper-server process on the MI50 and translate its
     verbose_json segments into the same {text,start,end} shape the
     faster-whisper path returns, so callers (WS stream + batch v1/v2) don't need
@@ -640,15 +684,18 @@ def _transcribe_whispercpp(audio16: np.ndarray, language: str) -> List[Dict[str,
         # Cold start after an idle release: bring the server (and its model load)
         # up first, so the request timeout below covers inference only.
         WHISPER_CPP_SERVER.ensure_running()
+        data = {
+            "response_format": "verbose_json",
+            "language": language or "auto",
+            "beam_size": str(beam_size),
+            "best_of": str(best_of),
+        }
+        if audio_ctx:
+            data["audio_ctx"] = str(audio_ctx)
         resp = requests.post(
             f"{WHISPER_CPP_SERVER_URL}/inference",
             files={"file": ("audio.wav", wav, "audio/wav")},
-            data={
-                "response_format": "verbose_json",
-                "language": language or "auto",
-                "beam_size": str(WHISPER_CPP_BEAM_SIZE),
-                "best_of": str(WHISPER_CPP_BEST_OF),
-            },
+            data=data,
             # Idle-unload means the first request after a long silence pays
             # whisper-server's own reload time on top of inference — give it room.
             timeout=180,
@@ -788,7 +835,7 @@ async def ws_stream(ws: WebSocket, sample_rate: int = 16000):
 
     async def emit(a: int, b: int, seg_audio: np.ndarray) -> None:
         t0 = time.time()
-        segs = await loop.run_in_executor(None, transcribe, seg_audio)
+        segs = await loop.run_in_executor(None, functools.partial(transcribe, seg_audio, live=True))
         if not segs:
             return
         text = " ".join(s["text"] for s in segs)
@@ -909,7 +956,7 @@ async def do_transcribe(file_bytes: bytes, diarize: bool) -> Dict[str, Any]:
         seg_audio = audio16[max(0, a):b]
         if len(seg_audio) < MIN_SPEECH_SAMPLES:
             continue
-        segs = await loop.run_in_executor(None, transcribe, seg_audio)
+        segs = await loop.run_in_executor(None, functools.partial(transcribe, seg_audio, live=True))
         for s in segs:
             spk = 0
             if diarize:

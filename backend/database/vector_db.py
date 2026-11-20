@@ -1162,6 +1162,15 @@ def upsert_action_item_vector(uid: str, action_item_id: str, description: str) -
     Degrades to ``None`` — the task is simply absent from semantic search until it
     is next indexed, matching ``find_similar_action_items``.
     """
+    if _use_chroma:
+        try:
+            vector = embeddings.embed_query(description)
+        except Exception as e:
+            logger.warning(f'upsert_action_item_vector embed failed uid={uid} (task saved, vector missing): {e}')
+            return None
+        meta = {'uid': uid, 'action_item_id': action_item_id, 'created_at': int(datetime.now(timezone.utc).timestamp())}
+        stored = _chroma().chroma_upsert_action_items([f'{uid}-ai-{action_item_id}'], [vector], [meta])
+        return vector if stored else None
     if index is None:
         logger.warning('Pinecone index not initialized, skipping action item vector upsert')
         return None
@@ -1195,11 +1204,22 @@ def upsert_action_item_vectors_batch(uid: str, items: List[Dict[str, Any]]) -> i
     """Index a batch of action items. Best-effort, for the same reason as
     ``upsert_action_item_vector``: returns 0 instead of raising into a caller
     whose Firestore writes already succeeded."""
+    if not items:
+        return 0
+    if _use_chroma:
+        try:
+            vectors = embeddings.embed_documents([item['description'] for item in items])
+        except Exception as e:
+            logger.warning(f'upsert_action_item_vectors_batch embed failed uid={uid} count={len(items)}: {e}')
+            return 0
+        now = int(datetime.now(timezone.utc).timestamp())
+        return _chroma().chroma_upsert_action_items(
+            [f"{uid}-ai-{item['action_item_id']}" for item in items],
+            vectors,
+            [{'uid': uid, 'action_item_id': item['action_item_id'], 'created_at': now} for item in items],
+        )
     if index is None:
         logger.warning('Pinecone index not initialized, skipping action item vector batch upsert')
-        return 0
-
-    if not items:
         return 0
 
     try:
@@ -1238,6 +1258,23 @@ def upsert_action_item_vectors_batch(uid: str, items: List[Dict[str, Any]]) -> i
 _ACTION_ITEM_QUERY_MAX_CHARS = 8000
 
 
+def _action_item_matches(
+    uid: str, vector: List[float], limit: int, filter_data: Dict[str, Any], caller: str
+) -> List[Any]:
+    """Pinecone-shaped matches (``id``/``score``/``metadata``) from Pinecone or the local Chroma store."""
+    if _use_chroma:
+        return _chroma().chroma_query_action_items(vector, uid, limit)
+    xc = owner_index(index, uid, index_name=_pinecone_index_name).query(
+        caller=caller,
+        vector=vector,
+        top_k=limit,
+        include_metadata=True,
+        filter=filter_data,
+        namespace=ACTION_ITEMS_NAMESPACE,
+    )
+    return xc.get('matches', [])
+
+
 def _prepare_action_item_query(query: str) -> Optional[str]:
     """Strip, reject empty, and clip untrusted action-item query text."""
     prepared = (query or "").strip()
@@ -1248,7 +1285,7 @@ def _prepare_action_item_query(query: str) -> Optional[str]:
 
 def search_action_items_by_vector(uid: str, query: str, limit: int = 10, min_score: float = 0.3) -> List[str]:
     prepared_query = _prepare_action_item_query(query)
-    if index is None or prepared_query is None:
+    if (index is None and not _use_chroma) or prepared_query is None:
         logger.warning('Pinecone index not initialized or empty query, skipping action item search')
         return []
 
@@ -1256,16 +1293,7 @@ def search_action_items_by_vector(uid: str, query: str, limit: int = 10, min_sco
         vector = embeddings.embed_query(prepared_query)
         filter_data: Dict[str, Any] = {'uid': uid}
 
-        xc = owner_index(index, uid, index_name=_pinecone_index_name).query(
-            caller='search_action_items_by_vector',
-            vector=vector,
-            top_k=limit,
-            include_metadata=True,
-            filter=filter_data,
-            namespace=ACTION_ITEMS_NAMESPACE,
-        )
-
-        matches: List[Any] = xc.get('matches', [])
+        matches: List[Any] = _action_item_matches(uid, vector, limit, filter_data, 'search_action_items_by_vector')
         top_score = matches[0]['score'] if matches else None
         kept = [m for m in matches if m.get('score', 0.0) >= min_score]
         logger.info(
@@ -1301,20 +1329,12 @@ def find_similar_action_items(uid: str, query: str, threshold: float = 0.6, limi
     the same behavior as a brand-new user.
     """
     prepared_query = _prepare_action_item_query(query)
-    if index is None or prepared_query is None:
+    if (index is None and not _use_chroma) or prepared_query is None:
         return []
 
     try:
         vector = embeddings.embed_query(prepared_query)
-        xc = owner_index(index, uid, index_name=_pinecone_index_name).query(
-            caller='find_similar_action_items',
-            vector=vector,
-            top_k=limit,
-            include_metadata=True,
-            filter={'uid': uid},
-            namespace=ACTION_ITEMS_NAMESPACE,
-        )
-        matches: List[Any] = xc.get('matches', [])
+        matches: List[Any] = _action_item_matches(uid, vector, limit, {'uid': uid}, 'find_similar_action_items')
         kept: List[Dict[str, Any]] = []
         dropped_no_id = 0
         for m in matches:
@@ -1338,6 +1358,9 @@ def find_similar_action_items(uid: str, query: str, threshold: float = 0.6, limi
 
 
 def delete_action_item_vector(uid: str, action_item_id: str) -> None:
+    if _use_chroma:
+        _chroma().chroma_delete_action_items([f'{uid}-ai-{action_item_id}'])
+        return
     if index is None:
         logger.warning('Pinecone index not initialized, skipping action item vector delete')
         return
@@ -1350,6 +1373,9 @@ def delete_action_item_vector(uid: str, action_item_id: str) -> None:
 
 
 def delete_action_item_vectors_batch(uid: str, action_item_ids: List[str]) -> None:
+    if _use_chroma:
+        _chroma().chroma_delete_action_items([f'{uid}-ai-{aid}' for aid in action_item_ids])
+        return
     if index is None:
         return
     if not action_item_ids:

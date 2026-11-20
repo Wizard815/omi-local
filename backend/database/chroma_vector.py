@@ -62,6 +62,19 @@ def is_chroma_enabled() -> bool:
     return os.environ.get("LOCAL_VECTOR_DB", "").lower() == "chroma"
 
 
+def _storable_metadata(metadata: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Chroma rejects None values and empty lists, and with them the whole record.
+
+    A conversation whose model returned no dates (``dates: []``) was never stored, so
+    it could never be found. Absent keys mean the same thing to every filter here.
+    """
+    return {
+        key: value
+        for key, value in (metadata or {}).items()
+        if value is not None and not (isinstance(value, (list, tuple)) and not value)
+    }
+
+
 def chroma_upsert(
     doc_id: str,
     vector: List[float],
@@ -75,7 +88,7 @@ def chroma_upsert(
         collection.upsert(
             ids=[doc_id],
             embeddings=[vector],
-            metadatas=[metadata or {}],
+            metadatas=[_storable_metadata(metadata)],
         )
     except Exception as e:
         logger.error(f"Chroma upsert failed for {doc_id}: {e}")
@@ -96,7 +109,7 @@ def chroma_upsert_batch(
         collection.upsert(
             ids=ids,
             embeddings=cast(Any, vectors),
-            metadatas=cast(Any, metadatas or [{}] * len(ids)),
+            metadatas=cast(Any, [_storable_metadata(m) for m in (metadatas or [{}] * len(ids))]),
         )
     except Exception as e:
         logger.error(f"Chroma batch upsert failed: {e}")
@@ -168,6 +181,7 @@ def chroma_delete_by_uid(uid: str) -> None:
         collection.delete(where={"uid": uid})
     except Exception as e:
         logger.error(f"Chroma delete by uid failed: {e}")
+    chroma_delete_action_items_by_uid(uid)
 
 
 def chroma_count() -> int:
@@ -179,3 +193,80 @@ def chroma_count() -> int:
         return collection.count()
     except Exception:
         return 0
+
+
+# ---------------------------------------------------------------------------
+# Action items (Pinecone namespace ns4). A separate collection, so conversation
+# searches never see a task and the task duplicate finder never sees a summary.
+# Without it a self-hosted stack never found a similar task: duplicates were
+# never merged and the notes agent always saw an empty open-task list.
+# ---------------------------------------------------------------------------
+
+ACTION_ITEMS_COLLECTION = "omi_action_items"
+
+
+def _action_items_collection() -> Optional[Collection]:
+    _init_chroma()
+    if not _chroma_enabled or _chroma_client is None:
+        return None
+    try:
+        return _chroma_client.get_or_create_collection(name=ACTION_ITEMS_COLLECTION, metadata={"hnsw:space": "cosine"})
+    except Exception as e:
+        logger.error(f"Chroma action-item collection unavailable: {e}")
+        return None
+
+
+def chroma_upsert_action_items(ids: List[str], vectors: List[List[float]], metadatas: List[Dict[str, Any]]) -> int:
+    """Store task vectors; returns how many were written (0 on any failure)."""
+    collection = _action_items_collection()
+    if not ids or collection is None:
+        return 0
+    try:
+        collection.upsert(
+            ids=ids,
+            embeddings=cast(Any, vectors),
+            metadatas=cast(Any, [_storable_metadata(m) for m in metadatas]),
+        )
+        return len(ids)
+    except Exception as e:
+        logger.error(f"Chroma action-item upsert failed: {e}")
+        return 0
+
+
+def chroma_query_action_items(vector: List[float], uid: str, top_k: int) -> List[Dict[str, Any]]:
+    """Nearest tasks of one user as ``{'id', 'score', 'metadata'}``, best first.
+
+    ``score`` is cosine similarity (1 - cosine distance), the scale Pinecone's
+    cosine index reports, so the callers' thresholds mean the same thing.
+    """
+    collection = _action_items_collection()
+    if collection is None:
+        return []
+    results = collection.query(query_embeddings=[vector], n_results=top_k, where={"uid": uid})
+    ids = (results.get("ids") or [[]])[0]
+    distances = (results.get("distances") or [[]])[0]
+    metadatas = (results.get("metadatas") or [[]])[0]
+    return [
+        {"id": doc_id, "score": 1.0 - float(distance), "metadata": dict(metadata or {})}
+        for doc_id, distance, metadata in zip(ids, distances, metadatas)
+    ]
+
+
+def chroma_delete_action_items(ids: List[str]) -> None:
+    collection = _action_items_collection()
+    if not ids or collection is None:
+        return
+    try:
+        collection.delete(ids=ids)
+    except Exception as e:
+        logger.error(f"Chroma action-item delete failed: {e}")
+
+
+def chroma_delete_action_items_by_uid(uid: str) -> None:
+    collection = _action_items_collection()
+    if collection is None:
+        return
+    try:
+        collection.delete(where={"uid": uid})
+    except Exception as e:
+        logger.error(f"Chroma action-item delete by uid failed: {e}")
