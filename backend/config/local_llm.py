@@ -12,6 +12,11 @@ self-hosted stack derives every LLM deadline from one setting instead:
   ``medium``, ``high``, ``none``…), short structured calls send it as
   ``reasoning_effort`` so a reasoning model does not spend thousands of tokens
   on a three-word answer. Unset sends nothing.
+- ``OMI_LOCAL_BACKGROUND_PROCESSING`` (default on): a conversation uploaded from
+  segments is stored at once (transcript intact, status ``processing``) and its
+  notes, tasks and memories are written in the background, retried with backoff
+  up to ``OMI_LOCAL_PROCESSING_MAX_ATTEMPTS`` (default 5) times. ``off`` keeps the
+  upload waiting for the model.
 
 Everything here applies only when a local LLM is configured
 (``OPENAI_BASE_URL`` plus ``OMI_SELF_HOSTED`` or ``OMI_LOCAL_MODEL``). Cloud
@@ -73,3 +78,32 @@ def local_reasoning_effort(environ: Optional[Mapping[str, str]] = None) -> Optio
         return None
     value = env.get(REASONING_EFFORT_ENV, '').strip().lower()
     return value if value in _EFFORTS else None
+
+
+BACKGROUND_ENV = 'OMI_LOCAL_BACKGROUND_PROCESSING'
+MAX_ATTEMPTS_ENV = 'OMI_LOCAL_PROCESSING_MAX_ATTEMPTS'
+DEFAULT_MAX_ATTEMPTS = 5
+# Seconds before attempt n+1 (index n-1); the last value repeats past the end.
+RETRY_DELAYS_SECONDS = (60.0, 300.0, 900.0, 3600.0)
+
+
+def local_background_processing_enabled(environ: Optional[Mapping[str, str]] = None) -> bool:
+    """Whether uploads return at once and notes are written in the background."""
+    env = _env(environ)
+    if not local_llm_configured(env):
+        return False
+    return env.get(BACKGROUND_ENV, 'on').strip().lower() not in {'0', 'false', 'no', 'off'}
+
+
+def local_processing_max_attempts(environ: Optional[Mapping[str, str]] = None) -> int:
+    raw = _env(environ).get(MAX_ATTEMPTS_ENV, '').strip()
+    try:
+        return max(1, int(raw)) if raw else DEFAULT_MAX_ATTEMPTS
+    except ValueError:
+        return DEFAULT_MAX_ATTEMPTS
+
+
+def local_processing_retry_delay(attempts: int) -> float:
+    """Wait after ``attempts`` failed attempts (1-based) before the next one."""
+    index = min(max(attempts, 1), len(RETRY_DELAYS_SECONDS)) - 1
+    return RETRY_DELAYS_SECONDS[index]
