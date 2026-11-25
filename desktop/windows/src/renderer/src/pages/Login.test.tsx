@@ -40,7 +40,9 @@ describe('Login page (omi-local)', () => {
     render(<Login />)
     fill('192.168.1.10:8000', 'dana', 'secret')
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
-    await waitFor(() => expect(h.signIn).toHaveBeenCalledWith('192.168.1.10:8000', 'dana', 'secret'))
+    await waitFor(() =>
+      expect(h.signIn).toHaveBeenCalledWith('192.168.1.10:8000', 'dana', 'secret')
+    )
   })
 
   it("shows the server's refusal", async () => {

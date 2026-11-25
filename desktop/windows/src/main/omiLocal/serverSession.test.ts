@@ -45,7 +45,11 @@ describe('normalizeServerUrl', () => {
 describe('ServerSession', () => {
   it('starts on the default server, signed out', () => {
     const s = new ServerSession({ userDataDir: dir, crypto: fakeCrypto })
-    expect(s.state()).toEqual({ serverUrl: DEFAULT_SERVER_URL, serverUrlPinned: false, session: null })
+    expect(s.state()).toEqual({
+      serverUrl: DEFAULT_SERVER_URL,
+      serverUrlPinned: false,
+      session: null
+    })
   })
 
   it('signs in at /v1/auth/local-login and keeps the uid from the token it fetched', async () => {
@@ -55,7 +59,10 @@ describe('ServerSession', () => {
     const result = await s.login('192.0.2.10:8000', ' dana ', 'pw')
     expect(fetchImpl).toHaveBeenCalledWith(
       'http://192.0.2.10:8000/v1/auth/local-login',
-      expect.objectContaining({ method: 'POST', body: JSON.stringify({ username: 'dana', password: 'pw' }) })
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ username: 'dana', password: 'pw' })
+      })
     )
     expect(result.ok).toBe(true)
     expect(s.state().serverUrl).toBe('http://192.0.2.10:8000')
@@ -102,12 +109,20 @@ describe('ServerSession', () => {
   })
 
   it('explains a refused or unreachable sign-in', async () => {
-    const wrong = new ServerSession({ userDataDir: dir, crypto: fakeCrypto, fetchImpl: loginFetch(401, {}) })
+    const wrong = new ServerSession({
+      userDataDir: dir,
+      crypto: fakeCrypto,
+      fetchImpl: loginFetch(401, {})
+    })
     expect(await wrong.login('omi.lan:8000', 'dana', 'x')).toEqual({
       ok: false,
       error: 'Wrong username or password'
     })
-    const limited = new ServerSession({ userDataDir: dir, crypto: fakeCrypto, fetchImpl: loginFetch(429, {}) })
+    const limited = new ServerSession({
+      userDataDir: dir,
+      crypto: fakeCrypto,
+      fetchImpl: loginFetch(429, {})
+    })
     expect(await limited.login('omi.lan:8000', 'dana', 'x')).toMatchObject({ ok: false })
     const down = new ServerSession({
       userDataDir: dir,
@@ -140,7 +155,11 @@ describe('ServerSession', () => {
   })
 
   it('honours OMI_SERVER_URL and refuses to move off it', async () => {
-    const s = new ServerSession({ userDataDir: dir, crypto: fakeCrypto, envServerUrl: 'omi.box:8000' })
+    const s = new ServerSession({
+      userDataDir: dir,
+      crypto: fakeCrypto,
+      envServerUrl: 'omi.box:8000'
+    })
     expect(s.state()).toMatchObject({ serverUrl: 'http://omi.box:8000', serverUrlPinned: true })
     expect(s.setServerUrl('http://other:8000')).toMatchObject({ ok: false })
     expect(await s.login('http://other:8000', 'dana', 'pw')).toMatchObject({ ok: false })
@@ -153,7 +172,9 @@ describe('buildRendererCsp', () => {
     const connect = csp.split('; ').find((d) => d.startsWith('connect-src')) ?? ''
     expect(connect).toContain('http://192.0.2.10:8000')
     expect(connect).toContain('ws://192.0.2.10:8000')
-    expect(connect).not.toMatch(/posthog|sentry|googleapis|firebase|omi\.me|openai|deepgram|https:\s/)
+    expect(connect).not.toMatch(
+      /posthog|sentry|googleapis|firebase|omi\.me|openai|deepgram|https:\s/
+    )
     expect(csp).not.toMatch(/posthog|sentry|segment|mixpanel|amplitude|google-analytics/)
   })
 })

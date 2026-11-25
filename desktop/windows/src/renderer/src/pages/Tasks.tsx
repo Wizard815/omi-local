@@ -215,7 +215,10 @@ export function Tasks(): React.JSX.Element {
   // mount-refetch loop, window-focus refetch, and create→reload dance.
   useEffect(() => window.omi.onTasksChanged(() => void readTasks()), [readTasks])
   useEffect(() => {
-    if (tasksPanelIsActive) void readWaiting()
+    if (!tasksPanelIsActive) return
+    void (async () => {
+      await readWaiting()
+    })()
   }, [tasksPanelIsActive, readWaiting])
 
   // A background task mutation failed (e.g. a delete that the server rejected and

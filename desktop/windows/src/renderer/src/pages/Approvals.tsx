@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { CalendarDays, Check, ChevronDown, ChevronRight, ListChecks, RefreshCw, X } from 'lucide-react'
+import {
+  CalendarDays,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  ListChecks,
+  RefreshCw,
+  X
+} from 'lucide-react'
 import { PageHeader } from '../components/layout/PageHeader'
 import { Markdown } from '../components/Markdown'
 import { toast } from '../lib/toast'
@@ -58,18 +66,29 @@ function DayCard({
   const [loading, setLoading] = useState(false)
   const [approving, setApproving] = useState(false)
 
+  const loadDay = useCallback(async (): Promise<DayReview | null> => {
+    setLoading(true)
+    try {
+      return (await fetchDay(date)).review
+    } catch {
+      toast('Could not load this day', { tone: 'error' })
+      return null
+    } finally {
+      setLoading(false)
+    }
+  }, [date])
+
   useEffect(() => {
     if (!open || review) return
     let live = true
-    setLoading(true)
-    fetchDay(date)
-      .then((d) => live && setReview(d.review))
-      .catch(() => live && toast('Could not load this day', { tone: 'error' }))
-      .finally(() => live && setLoading(false))
+    void (async () => {
+      const r = await loadDay()
+      if (live) setReview(r)
+    })()
     return () => {
       live = false
     }
-  }, [open, review, date])
+  }, [open, review, loadDay])
 
   const approve = async (): Promise<void> => {
     setApproving(true)
@@ -150,7 +169,9 @@ function DayCard({
             </div>
           ) : (
             review?.approved_at && (
-              <p className="mt-3 text-xs text-white/45">Approved {formatWhen(review.approved_at)}.</p>
+              <p className="mt-3 text-xs text-white/45">
+                Approved {formatWhen(review.approved_at)}.
+              </p>
             )
           )}
         </div>
@@ -191,7 +212,10 @@ export function Approvals(): React.JSX.Element {
   }, [])
 
   useEffect(() => {
-    if (active) void load()
+    if (!active) return
+    void (async () => {
+      await load()
+    })()
   }, [active, load])
 
   const mark = (id: string, on: boolean): void =>
@@ -222,8 +246,11 @@ export function Approvals(): React.JSX.Element {
     const key = `${conversationId}:${eventIdx}`
     mark(key, true)
     try {
-      const r = await approveBatch({ events: [{ conversation_id: conversationId, event_idx: eventIdx }] })
-      if (r.failed_event_count) toast('Your calendar refused this event; it still waits', { tone: 'warn' })
+      const r = await approveBatch({
+        events: [{ conversation_id: conversationId, event_idx: eventIdx }]
+      })
+      if (r.failed_event_count)
+        toast('Your calendar refused this event; it still waits', { tone: 'warn' })
       await load()
     } catch {
       toast('Could not add this event', { tone: 'error' })
@@ -347,7 +374,11 @@ export function Approvals(): React.JSX.Element {
               </h2>
               <ul className="space-y-2">
                 {waiting.tasks.map((t) => (
-                  <li key={t.id} className="surface-card flex items-center gap-3 p-3" data-task={t.id}>
+                  <li
+                    key={t.id}
+                    className="surface-card flex items-center gap-3 p-3"
+                    data-task={t.id}
+                  >
                     <div className="min-w-0 flex-1">
                       <div className="text-sm text-white/90">{t.description}</div>
                       <div className="mt-0.5 text-xs text-white/40">

@@ -101,8 +101,8 @@ export function Login(): React.JSX.Element {
           )}
           {!error && (
             <p className="text-xs leading-relaxed text-white/35">
-              The account is the one your server&apos;s owner made for you. Nothing is sent
-              anywhere but this server.
+              The account is the one your server&apos;s owner made for you. Nothing is sent anywhere
+              but this server.
             </p>
           )}
         </div>

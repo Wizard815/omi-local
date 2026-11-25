@@ -168,7 +168,9 @@ export async function approveDay(date: string): Promise<DayReview> {
 }
 
 /** A short "1 task, 2 events and 1 day summary" line for a batch result. */
-export function describeBatch(r: Pick<ApproveBatchResult, 'task_count' | 'event_count' | 'day_count'>): string {
+export function describeBatch(
+  r: Pick<ApproveBatchResult, 'task_count' | 'event_count' | 'day_count'>
+): string {
   const parts: string[] = []
   const n = (count: number, one: string, many: string): string =>
     `${count} ${count === 1 ? one : many}`

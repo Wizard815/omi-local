@@ -211,7 +211,8 @@ export class ServerSession {
   async login(rawUrl: string, username: string, password: string): Promise<OmiLocalLoginResult> {
     const url = normalizeServerUrl(rawUrl)
     if (!url) return { ok: false, error: 'Enter a server address like http://192.168.1.10:8000' }
-    if (!username.trim() || !password) return { ok: false, error: 'Enter your username and password' }
+    if (!username.trim() || !password)
+      return { ok: false, error: 'Enter your username and password' }
     if (this.state().serverUrlPinned && url !== this.serverUrl) {
       return { ok: false, error: 'The server is set by OMI_SERVER_URL for this install' }
     }

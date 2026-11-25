@@ -30,9 +30,9 @@ describe('Linux XDG autostart', () => {
   })
 
   it('starts the AppImage itself and quotes paths with spaces', () => {
-    expect(autostartExecutable({ APPIMAGE: '/home/d/Apps/Omi.AppImage' }, '/tmp/.mount_x/omi')).toBe(
-      '/home/d/Apps/Omi.AppImage'
-    )
+    expect(
+      autostartExecutable({ APPIMAGE: '/home/d/Apps/Omi.AppImage' }, '/tmp/.mount_x/omi')
+    ).toBe('/home/d/Apps/Omi.AppImage')
     expect(autostartEntry('/home/d/My Apps/Omi.AppImage')).toContain(
       'Exec="/home/d/My Apps/Omi.AppImage" --hidden'
     )

@@ -35,7 +35,9 @@ const waiting = (over: Partial<Waiting> = {}): Waiting => ({
 describe('approvals client (omi-local "Waiting for your OK")', () => {
   it('counts tasks, events and draft days', () => {
     expect(waitingCount(null)).toBe(0)
-    expect(waitingCount(waiting({ task_count: 3, event_count: 2, draft_dates: ['2026-11-24'] }))).toBe(6)
+    expect(
+      waitingCount(waiting({ task_count: 3, event_count: 2, draft_dates: ['2026-11-24'] }))
+    ).toBe(6)
   })
 
   it('approves everything waiting in one batch and undoes exactly that batch', async () => {
@@ -73,7 +75,9 @@ describe('approvals client (omi-local "Waiting for your OK")', () => {
   })
 
   it('reads a day with its draft and approves it', async () => {
-    h.get.mockResolvedValue({ data: { date: '2026-11-24', review: null, conversations: [], processing_count: 0 } })
+    h.get.mockResolvedValue({
+      data: { date: '2026-11-24', review: null, conversations: [], processing_count: 0 }
+    })
     await fetchDay('2026-11-24')
     expect(h.get).toHaveBeenCalledWith('/v1/users/day-reviews/2026-11-24', {
       params: { include_drafts: true }
