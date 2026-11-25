@@ -16994,4 +16994,81 @@ class AppLocalizationsLt extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'DI šiame telefone';
+
+  @override
+  String get phoneLlmHint => 'Atsakyti pokalbyje šiame telefone veikiančiu modeliu, pvz., llama-server per Termux.';
+
+  @override
+  String get phoneLlmSource => 'DI šaltinis';
+
+  @override
+  String get phoneLlmModeServer => 'Serveris';
+
+  @override
+  String get phoneLlmModePhone => 'Šis telefonas';
+
+  @override
+  String get phoneLlmModeAuto => 'Telefonas, kai serveris nepasiekiamas';
+
+  @override
+  String get phoneLlmAddress => 'Telefono modelio adresas';
+
+  @override
+  String get phoneLlmNoModels => 'Modelių nerasta. Ar telefono modelis veikia?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Atsakė per $ms ms';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Telefono modelis neatsakė.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Telefono modelis atmetė API raktą.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Įtraukti mano naujausius pokalbius kaip kontekstą';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Atsakyta šiame telefone ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Neišsaugoma jūsų serveryje. Laikoma, kol Omi uždaroma.';
+
+  @override
+  String get phoneLlmAskPhone => 'Klausti šio telefono';
+
+  @override
+  String get phoneLlmReplyFailed => 'Telefono modelis neatsakė. Patikrinkite, ar jis veikia.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Telefono modelis veikia';
+
+  @override
+  String get phoneLlmStatusLoading => 'Telefono modelis įkeliamas';
+
+  @override
+  String get phoneLlmStatusOff => 'Telefono modelis išjungtas';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Patikrinta $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'DI šaltinis: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Perjungti';
+
+  @override
+  String get sendToHermesTitle => 'Siųsti į Hermes';
 }

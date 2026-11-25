@@ -16848,4 +16848,81 @@ class AppLocalizationsHe extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'בינה מלאכותית בטלפון הזה';
+
+  @override
+  String get phoneLlmHint => 'מענה בצ\'אט בעזרת מודל שרץ בטלפון הזה, למשל llama-server ב-Termux.';
+
+  @override
+  String get phoneLlmSource => 'מקור הבינה המלאכותית';
+
+  @override
+  String get phoneLlmModeServer => 'שרת';
+
+  @override
+  String get phoneLlmModePhone => 'הטלפון הזה';
+
+  @override
+  String get phoneLlmModeAuto => 'הטלפון כשאין גישה לשרת';
+
+  @override
+  String get phoneLlmAddress => 'כתובת המודל בטלפון';
+
+  @override
+  String get phoneLlmNoModels => 'לא נמצאו מודלים. האם המודל בטלפון פועל?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'ענה תוך $ms אלפיות שנייה';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'המודל בטלפון לא ענה.';
+
+  @override
+  String get phoneLlmUnauthorized => 'המודל בטלפון דחה את מפתח ה-API.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'לכלול את השיחות האחרונות שלי כהקשר';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'נענה בטלפון הזה ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'לא נשמר בשרת שלך. נשמר עד ש-Omi נסגר.';
+
+  @override
+  String get phoneLlmAskPhone => 'לשאול את הטלפון הזה במקום';
+
+  @override
+  String get phoneLlmReplyFailed => 'המודל בטלפון לא ענה. בדוק שהוא פועל.';
+
+  @override
+  String get phoneLlmStatusRunning => 'המודל בטלפון פועל';
+
+  @override
+  String get phoneLlmStatusLoading => 'המודל בטלפון נטען';
+
+  @override
+  String get phoneLlmStatusOff => 'המודל בטלפון כבוי';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'נבדק $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'מקור הבינה המלאכותית: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'החלפה';
+
+  @override
+  String get sendToHermesTitle => 'שליחה ל-Hermes';
 }

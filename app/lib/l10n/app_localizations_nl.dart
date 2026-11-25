@@ -17005,4 +17005,82 @@ class AppLocalizationsNl extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'AI op deze telefoon';
+
+  @override
+  String get phoneLlmHint =>
+      'Beantwoord de chat met een model dat op deze telefoon draait, zoals llama-server in Termux.';
+
+  @override
+  String get phoneLlmSource => 'AI-bron';
+
+  @override
+  String get phoneLlmModeServer => 'Server';
+
+  @override
+  String get phoneLlmModePhone => 'Deze telefoon';
+
+  @override
+  String get phoneLlmModeAuto => 'Telefoon als de server onbereikbaar is';
+
+  @override
+  String get phoneLlmAddress => 'Adres van het telefoonmodel';
+
+  @override
+  String get phoneLlmNoModels => 'Geen modellen gevonden. Draait het telefoonmodel?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Antwoord in $ms ms';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Het telefoonmodel antwoordde niet.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Het telefoonmodel weigerde de API-sleutel.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Mijn recente gesprekken als context meesturen';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Beantwoord op deze telefoon ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Niet opgeslagen op je server. Blijft tot Omi sluit.';
+
+  @override
+  String get phoneLlmAskPhone => 'Vraag deze telefoon';
+
+  @override
+  String get phoneLlmReplyFailed => 'Het telefoonmodel antwoordde niet. Controleer of het draait.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Telefoonmodel draait';
+
+  @override
+  String get phoneLlmStatusLoading => 'Telefoonmodel wordt geladen';
+
+  @override
+  String get phoneLlmStatusOff => 'Telefoonmodel uit';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Gecontroleerd om $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'AI-bron: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Wisselen';
+
+  @override
+  String get sendToHermesTitle => 'Naar Hermes sturen';
 }

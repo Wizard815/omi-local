@@ -20,6 +20,10 @@ mixin ChatHistoryState on ChangeNotifier {
   bool get chatMutationInProgress;
   void resetChatDraft();
 
+  /// Rows only this device holds (answers from the phone's own model) put back into [loaded], the
+  /// history just read for the current chat.
+  List<ServerMessage> withLocalTurns(List<ServerMessage> loaded) => loaded;
+
   List<ServerMessage> messages = [];
   bool isLoadingMessages = false;
   bool hasCachedMessages = false;
@@ -90,7 +94,7 @@ mixin ChatHistoryState on ChangeNotifier {
     chatSessionId = session.id;
     isFreshChat = false;
     final loaded = result as ApiSuccess<List<ServerMessage>>;
-    messages = loaded.data.where((m) => !m.isAutomaticChatEntry).toList()
+    messages = withLocalTurns(loaded.data.where((m) => !m.isAutomaticChatEntry).toList())
       ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
     _messageOffset = loaded.data.length + loaded.rejectedRows;
     hasOlderMessages = _messageOffset == 100;
@@ -284,7 +288,7 @@ mixin ChatHistoryState on ChangeNotifier {
         hasCachedMessages = messages.isNotEmpty;
       }
     }
-    messages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    messages = withLocalTurns(messages)..sort((a, b) => a.createdAt.compareTo(b.createdAt));
     notifyListeners();
   }
 

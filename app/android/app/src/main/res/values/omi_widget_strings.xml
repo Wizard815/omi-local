@@ -19,6 +19,8 @@
     <string name="omi_widget_tasks_description">Your next open tasks</string>
     <string name="omi_widget_approvals_name">Waiting for your OK</string>
     <string name="omi_widget_approvals_description">What waits for your OK before it reaches your lists and calendar</string>
+    <string name="omi_widget_ai_source_name">AI source</string>
+    <string name="omi_widget_ai_source_description">Whether chat is answered by your server or this phone, and the phone model\'s state</string>
     <string name="omi_widget_preview_value">3 conversations today</string>
     <string name="omi_widget_preview_row">Send the slides to Maya</string>
 </resources>

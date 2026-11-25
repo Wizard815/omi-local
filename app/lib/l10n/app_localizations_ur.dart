@@ -16977,4 +16977,81 @@ class AppLocalizationsUr extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'اس فون پر AI';
+
+  @override
+  String get phoneLlmHint => 'اس فون پر چلنے والے ماڈل سے چیٹ کا جواب دیں، جیسے Termux میں llama-server۔';
+
+  @override
+  String get phoneLlmSource => 'AI کا ذریعہ';
+
+  @override
+  String get phoneLlmModeServer => 'سرور';
+
+  @override
+  String get phoneLlmModePhone => 'یہ فون';
+
+  @override
+  String get phoneLlmModeAuto => 'سرور تک رسائی نہ ہو تو فون';
+
+  @override
+  String get phoneLlmAddress => 'فون ماڈل کا پتہ';
+
+  @override
+  String get phoneLlmNoModels => 'کوئی ماڈل نہیں ملا۔ کیا فون ماڈل چل رہا ہے؟';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return '$ms ms میں جواب دیا';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'فون ماڈل نے جواب نہیں دیا۔';
+
+  @override
+  String get phoneLlmUnauthorized => 'فون ماڈل نے API کلید مسترد کر دی۔';
+
+  @override
+  String get phoneLlmIncludeConversations => 'میری حالیہ گفتگو کو سیاق کے طور پر شامل کریں';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'اس فون پر جواب دیا گیا ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'آپ کے سرور پر محفوظ نہیں۔ Omi بند ہونے تک رہے گا۔';
+
+  @override
+  String get phoneLlmAskPhone => 'اس کے بجائے اس فون سے پوچھیں';
+
+  @override
+  String get phoneLlmReplyFailed => 'فون ماڈل نے جواب نہیں دیا۔ دیکھیں کہ یہ چل رہا ہے۔';
+
+  @override
+  String get phoneLlmStatusRunning => 'فون ماڈل چل رہا ہے';
+
+  @override
+  String get phoneLlmStatusLoading => 'فون ماڈل لوڈ ہو رہا ہے';
+
+  @override
+  String get phoneLlmStatusOff => 'فون ماڈل بند ہے';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return '$time پر جانچا گیا';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'AI کا ذریعہ: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'تبدیل کریں';
+
+  @override
+  String get sendToHermesTitle => 'Hermes کو بھیجیں';
 }

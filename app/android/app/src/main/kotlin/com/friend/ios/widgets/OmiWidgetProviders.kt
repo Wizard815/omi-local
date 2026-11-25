@@ -53,6 +53,7 @@ abstract class OmiWidgetProvider : AppWidgetProvider() {
             OmiWidgetKeys.TRANSLATION to listOf(OmiTranslationWidget::class.java),
             OmiWidgetKeys.TASKS to listOf(OmiTasksWidget::class.java),
             OmiWidgetKeys.APPROVALS to listOf(OmiApprovalsWidget::class.java),
+            OmiWidgetKeys.AI_SOURCE to listOf(OmiAiSourceWidget::class.java),
         )
 
         /** Redraws the widgets that read [key], or every widget when [key] is null. */
@@ -182,6 +183,27 @@ class OmiTranslationWidget : OmiWidgetProvider() {
             ?: return OmiStatusViews.empty(context, R.string.omi_widget_translation_name)
         val views = OmiStatusViews.build(context, data.title, data.state, data.target, valueLines = 1)
         views.setOnClickPendingIntent(R.id.omi_widget_root, OmiWidgetLinks.open(context, "/settings/language", 8))
+        return views
+    }
+}
+
+/**
+ * AI source: Server, This phone or Auto, and the phone model's last known state. Switch opens Omi on
+ * `/ai-source/next?from=<mode>`, which moves to the next source in the app (an activity start from
+ * a tap, so no background work). `from` makes each link differ from the last one and a stale tap
+ * a no-op. The rest of the widget opens the setting.
+ */
+class OmiAiSourceWidget : OmiWidgetProvider() {
+    override fun render(context: Context, medium: Boolean): RemoteViews {
+        val data = OmiWidgetData.aiSource(OmiWidgetStore.read(context, OmiWidgetKeys.AI_SOURCE))
+            ?: return OmiStatusViews.empty(context, R.string.omi_widget_ai_source_name)
+        val views = OmiStatusViews.build(
+            context, data.title, data.modeLabel, data.detail, action = data.action, valueLines = 1,
+            detailLines = if (medium) 2 else 1,
+        )
+        val next = "/ai-source/next?from=${android.net.Uri.encode(data.mode)}"
+        views.setOnClickPendingIntent(R.id.omi_widget_action, OmiWidgetLinks.open(context, next, 30))
+        views.setOnClickPendingIntent(R.id.omi_widget_root, OmiWidgetLinks.open(context, "/ai-source", 31))
         return views
     }
 }

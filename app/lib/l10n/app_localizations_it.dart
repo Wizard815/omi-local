@@ -17043,4 +17043,82 @@ class AppLocalizationsIt extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'IA su questo telefono';
+
+  @override
+  String get phoneLlmHint =>
+      'Rispondi alla chat con un modello che gira su questo telefono, come llama-server in Termux.';
+
+  @override
+  String get phoneLlmSource => 'Origine dell\'IA';
+
+  @override
+  String get phoneLlmModeServer => 'Server';
+
+  @override
+  String get phoneLlmModePhone => 'Questo telefono';
+
+  @override
+  String get phoneLlmModeAuto => 'Il telefono quando il server non è raggiungibile';
+
+  @override
+  String get phoneLlmAddress => 'Indirizzo del modello del telefono';
+
+  @override
+  String get phoneLlmNoModels => 'Nessun modello trovato. Il modello del telefono è in esecuzione?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Risposta in $ms ms';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Il modello del telefono non ha risposto.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Il modello del telefono ha rifiutato la chiave API.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Includi le mie conversazioni recenti come contesto';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Risposta da questo telefono ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Non salvato sul tuo server. Resta finché Omi non viene chiuso.';
+
+  @override
+  String get phoneLlmAskPhone => 'Chiedi a questo telefono';
+
+  @override
+  String get phoneLlmReplyFailed => 'Il modello del telefono non ha risposto. Controlla che sia in esecuzione.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Modello del telefono attivo';
+
+  @override
+  String get phoneLlmStatusLoading => 'Modello del telefono in caricamento';
+
+  @override
+  String get phoneLlmStatusOff => 'Modello del telefono spento';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Controllato alle $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'Origine dell\'IA: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Cambia';
+
+  @override
+  String get sendToHermesTitle => 'Invia a Hermes';
 }
