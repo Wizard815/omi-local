@@ -43,6 +43,7 @@ OUT_OF_SCOPE_PREFIXES = (
     '/v2/apps',  # Rust-proxied app routes
     '/v2/voice-message/transcribe-stream',  # streaming upload; spec models only the non-streaming sibling
     '/v4/listen',  # WebSocket transcription socket
+    '/v1/auth/local-login',  # omi-local sign-in (routers/auth.py); self-hosted only, not in the app-client spec
 )
 
 # Known gaps already tracked with a follow-up owner. Add here ONLY with a note
