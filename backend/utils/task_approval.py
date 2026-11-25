@@ -32,6 +32,8 @@ PENDING = 'pending'
 APPROVED = 'approved'
 DECLINED = 'declined'
 FIELD = 'approval'
+# A waiting due-date change to an approved task (utils/conversations/task_merge.py).
+UPDATES_FIELD = 'updates_task_id'
 WAITING_LIMIT = 500
 
 
@@ -122,8 +124,15 @@ def approve(
     due_at: Optional[datetime] = None,
     deliver: bool = True,
 ) -> Dict[str, Any]:
-    """The user's yes, with their edits. Idempotent; a declined task can be approved too."""
+    """The user's yes, with their edits. Idempotent; a declined task can be approved too.
+
+    A waiting update (``updates_task_id``) is applied to the approved task it updates, and
+    the update row goes; the approved task is returned."""
     item = _load(uid, task_id)
+    if item.get(UPDATES_FIELD):
+        applied = _apply_update(uid, {**item, 'id': task_id}, due_at=due_at)
+        if applied is not None:
+            return applied
     update: Dict[str, Any] = {FIELD: APPROVED}
     if description is not None and description.strip():
         update['description'] = description.strip()
@@ -138,6 +147,35 @@ def approve(
         # otherwise lose the reminder and the task app's copy, with nothing to redo them (the
         # task is approved by then, so it is never delivered again).
         _deliver(uid, current)
+    return current
+
+
+def _apply_update(uid: str, update_row: Dict[str, Any], *, due_at: Optional[datetime]) -> Optional[Dict[str, Any]]:
+    """Move an approved update's due date onto its task and remove the update row. None when
+    that task is gone or done (the update is then approved as a task of its own)."""
+    target_id = str(update_row.get(UPDATES_FIELD) or '')
+    target = action_items_db.get_action_item(uid, target_id) if target_id else None
+    if not target or target.get('deleted') or target.get('completed'):
+        return None
+    new_due = due_at if due_at is not None else update_row.get('due_at')
+    if new_due is not None:
+        action_items_db.update_action_item(uid, target_id, {'due_at': new_due})
+    action_items_db.delete_action_item(uid, str(update_row['id']))
+    current = action_items_db.get_action_item(uid, target_id) or {**target, 'due_at': new_due}
+    current['id'] = target_id
+    if new_due is not None and is_approved(current):
+        try:
+            dispatch_action_item_reminder(
+                user_id=uid,
+                action_item_id=target_id,
+                description=current.get('description', ''),
+                due_at=new_due.isoformat() if isinstance(new_due, datetime) else str(new_due),
+                completed=False,
+                status=current.get('status'),
+                deleted=False,
+            )
+        except Exception as error:  # noqa: BLE001 — the new date stands; the reminder is a bonus
+            logger.warning('task_approval: reminder reschedule failed uid=%s %s', uid, type(error).__name__)
     return current
 
 

@@ -25,6 +25,7 @@ os.environ.setdefault(
 
 from config.action_item_identity import ACTION_ITEM_IDENTITY_PRESERVE_ENV
 from utils.conversations import process_conversation
+from utils.conversations.task_merge import MergeOutcome
 
 DUE = datetime(2026, 9, 21, 9, tzinfo=timezone.utc)
 
@@ -203,3 +204,18 @@ def test_failed_post_create_reminder_read_does_not_fail_committed_processing(mon
         reason='other',
         outcome='degraded',
     )
+
+
+def test_a_task_repeating_an_open_task_from_another_conversation_is_not_written(monkeypatch, writer):
+    """omi-local task merge: the writer runs the merge before anything is written."""
+    create = MagicMock(return_value=[])
+    monkeypatch.setattr(writer.action_items_db, "create_action_items_batch", create)
+    monkeypatch.setattr(
+        writer.task_merge,
+        "merge_into_open_tasks",
+        lambda uid, conversation, items, now=None: MergeOutcome(kept=[], merged=[{'item': items[0]}]),
+    )
+    _write(monkeypatch, writer, [])
+
+    create.assert_not_called()
+    writer.action_items_db.delete_action_items_for_conversation.assert_not_called()
