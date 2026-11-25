@@ -332,14 +332,12 @@ def test_helper_kill_switch_budget_entries_match_the_live_registry():
                 if name.endswith('_SERVE_PERCENT')
                 else 'Default empty' if name.endswith('_SERVE_UID_SHA256S') else 'Default off'
             )
-            assert flag['lifecycle'] == 'rollout'
+            # omi-local runs record-close v3 off: a fixed setting, not a rollout with review dates.
+            assert flag['lifecycle'] == 'config_switch'
+            assert flag['decision'] == 'keep'
             assert flag['fail'] == 'closed'
             assert flag['summary'].startswith(default)
-            assert flag['review_by'] == '2026-11-16'
-            assert flag['ramp']['cohorts'][0].startswith('consenting owner account only')
-            assert flag['ramp']['cohorts'][-1] == 'fleet only after clean owner and small-cohort windows'
-            assert 'stranded live-producer tokens' in flag['ramp']['clean_metric']
-            assert 'quality lead' in flag['ramp']['expander']
+            assert 'review_by' not in flag and 'ramp' not in flag
         else:
             assert flag['lifecycle'] == 'ops_kill'
             assert flag['fail'] == 'open'
