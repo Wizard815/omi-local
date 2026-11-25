@@ -1,12 +1,14 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+vi.mock('./session', () => ({ serverUrl: () => 'http://omi.lan:8000' }))
 import { conversationShareUrl, shareBaseUrl } from './shareLinks'
 
 describe('shareLinks (#4339)', () => {
-  it('defaults to production h.omi.me', () => {
-    expect(shareBaseUrl('')).toBe('https://h.omi.me')
-    expect(shareBaseUrl(undefined)).toBe('https://h.omi.me')
+  it("defaults to the user's omi-local server", () => {
+    expect(shareBaseUrl('')).toBe('http://omi.lan:8000')
+    expect(shareBaseUrl(undefined)).toBe('http://omi.lan:8000')
     expect(conversationShareUrl('abc', '', 'sid12345')).toBe(
-      'https://h.omi.me/conversations/abc?sid=sid12345&s=win'
+      'http://omi.lan:8000/conversations/abc?sid=sid12345&s=win'
     )
   })
 
@@ -19,8 +21,8 @@ describe('shareLinks (#4339)', () => {
   })
 
   it('falls back for malformed or unsupported overrides', () => {
-    expect(shareBaseUrl('ftp://share.example.com')).toBe('https://h.omi.me')
-    expect(shareBaseUrl('not a url')).toBe('https://h.omi.me')
+    expect(shareBaseUrl('ftp://share.example.com')).toBe('http://omi.lan:8000')
+    expect(shareBaseUrl('not a url')).toBe('http://omi.lan:8000')
   })
 
   it('mints a random share id per link', () => {

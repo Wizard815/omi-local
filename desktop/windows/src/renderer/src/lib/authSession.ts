@@ -1,13 +1,12 @@
-// Firebase session health for the primary API client. Mirrors the macOS
+// omi-local session health for the primary API client. Mirrors the macOS
 // AuthSessionCoordinator refresh→retry→classify model (INV-AUTH-1): on a 401 the
 // client force-refreshes the ID token once and retries; the outcome is then
 // classified as a DEFINITIVE death (→ sign-in) or a TRANSIENT failure (→ keep the
 // session, retry later). Critically, a network blip during refresh must NOT sign
 // the user out. The definitive path is LIGHT — it never wipes local data; a full
-// teardown is reserved for a user-initiated Sign Out (firebase.signOutUser →
+// teardown is reserved for a user-initiated Sign Out (account.signOutUser →
 // authTeardown).
-import { signOut } from 'firebase/auth'
-import { auth, onAuthStateChanged } from './firebase'
+import { signOut, auth, onAuthStateChanged } from './session'
 import { toast } from './toast'
 
 // Firebase Auth error codes that mean the credential is permanently dead — the

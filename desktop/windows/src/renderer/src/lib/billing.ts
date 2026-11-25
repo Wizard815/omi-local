@@ -98,45 +98,24 @@ export function resetLegacyCatalogReport(): void {
 
 /**
  * Fire the canary if `plans` is the legacy catalog: a loud, structured
- * console.error (no renderer-side recordFallback exists) plus a one-shot Sentry
- * capture when Sentry is wired. Returns whether the catalog was legacy. Never
+ * console.error, once per session (no renderer-side recordFallback exists; nothing
+ * is reported off the machine). Returns whether the catalog was legacy. Never
  * throws and never blocks rendering. See the section comment for why.
  */
 export function reportLegacyCatalog(plans: SubscriptionPlan[] | undefined): boolean {
   const { legacy, reasons } = detectLegacyCatalog(plans)
   if (!legacy) return false
+  if (legacyCatalogReported) return true
+  legacyCatalogReported = true
   console.error(
     '[billing:legacy-catalog] Legacy plan catalog served to the Windows desktop client — ' +
       'backend did not recognize this platform/version, so it returned the legacy-adapted ' +
       `catalog. The plan grid is rendering the wrong catalog. Signals: ${reasons.join('; ')}.`,
     { plan_ids: plans?.map((p) => p.id), plan_titles: plans?.map((p) => p.title) }
   )
-  if (!legacyCatalogReported) {
-    legacyCatalogReported = true
-    captureLegacyCatalog(reasons, plans)
-  }
   return true
 }
 
-// One-shot Sentry capture, gated on a configured DSN exactly like main.tsx's init
-// (so dev builds and tests, which have no DSN, never load the SDK). Dynamic import
-// keeps the Sentry dependency out of billing.ts's static graph.
-function captureLegacyCatalog(reasons: string[], plans: SubscriptionPlan[] | undefined): void {
-  if (!import.meta.env.VITE_SENTRY_DSN) return
-  void import('@sentry/electron/renderer')
-    .then((Sentry) => {
-      Sentry.captureMessage('Legacy plan catalog served to Windows desktop client', {
-        level: 'error',
-        tags: { area: 'billing', signal: 'legacy_catalog', platform: 'windows' },
-        extra: {
-          reasons,
-          plan_ids: (plans ?? []).map((p) => p.id),
-          plan_titles: (plans ?? []).map((p) => p.title)
-        }
-      })
-    })
-    .catch(() => {})
-}
 
 // ── Plan-name resolution (BillingHelpers.currentPlanTitle) ──────────────────
 

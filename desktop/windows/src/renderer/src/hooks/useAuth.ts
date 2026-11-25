@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { auth, onAuthStateChanged } from '../lib/firebase'
+import { auth, onAuthStateChanged, type SessionUser as User } from '../lib/session'
 import { getBenchUser } from '../lib/dev/benchAuth'
 import { getE2EUser } from '../lib/dev/e2eAuth'
 import { reconcileAccountForSignIn } from '../lib/authTeardown'
 import { isSecondaryWindow } from '../lib/windowRole'
-import type { User } from 'firebase/auth'
 
 export function useAuth(): { user: User | null; loading: boolean } {
   // Injected fake user (null in normal use):

@@ -9,7 +9,8 @@ const { get, currentUser } = vi.hoisted(() => ({
     displayName: string | null
   } | null
 }))
-vi.mock('../firebase', () => ({
+vi.mock('../session', () => ({
+  serverUrl: () => 'http://omi.test:8000',
   auth: {
     get currentUser() {
       return currentUser

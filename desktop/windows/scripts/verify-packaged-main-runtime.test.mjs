@@ -31,20 +31,19 @@ describe('packaged main runtime guard', () => {
   it('loads debug from the packaged main entry so its ms dependency is exercised', () => {
     const unpackedDir = makePackagedFixture()
     const mainEntry = join(unpackedDir, 'resources', 'app.asar', 'out', 'main', 'index.js')
-    const sentryMainPath = join(
+    const updaterPath = join(
       unpackedDir,
       'resources',
       'app.asar',
       'node_modules',
-      '@sentry',
-      'electron',
-      'main',
-      'index.js'
+      'electron-updater',
+      'out',
+      'main.js'
     )
     const msPath = join(unpackedDir, 'resources', 'app.asar', 'node_modules', 'ms', 'index.js')
     const spawn = vi.fn(() => ({
       status: 0,
-      stdout: `PACKAGED_MAIN_RUNTIME_OK ${JSON.stringify({ mainEntry, sentryMainPath, msPath })}\n`,
+      stdout: `PACKAGED_MAIN_RUNTIME_OK ${JSON.stringify({ mainEntry, updaterPath, msPath })}\n`,
       stderr: ''
     }))
 
@@ -60,7 +59,7 @@ describe('packaged main runtime guard', () => {
 
     expect(result.output).toContain('PACKAGED_MAIN_RUNTIME_OK')
     expect(result.mainEntry).toBe(mainEntry)
-    expect(result.sentryMainPath).toBe(sentryMainPath)
+    expect(result.updaterPath).toBe(updaterPath)
     expect(result.msPath).toBe(msPath)
     expect(spawn).toHaveBeenCalledOnce()
     const [executable, args, options] = spawn.mock.calls[0]
@@ -72,7 +71,7 @@ describe('packaged main runtime guard', () => {
     expect(options.env.AZURE_CLIENT_SECRET).toBeUndefined()
     expect(options.env.OMI_PACKAGED_APP_ROOT).toBe(join(unpackedDir, 'resources', 'app.asar'))
     expect(packagedRuntimeDriver()).toContain('manifest.main')
-    expect(packagedRuntimeDriver()).toContain('@sentry/electron/main')
+    expect(packagedRuntimeDriver()).toContain('electron-updater')
     expect(packagedRuntimeDriver()).toContain('debugRequire.resolve("ms")')
     expect(packagedRuntimeDriver()).toContain('ms resolved outside packaged app root')
   })
@@ -81,13 +80,13 @@ describe('packaged main runtime guard', () => {
     const unpackedDir = makePackagedFixture()
     const appAsar = join(unpackedDir, 'resources', 'app.asar')
     const mainEntry = join(appAsar, 'out', 'main', 'index.js')
-    const sentryMainPath = join(appAsar, 'node_modules', '@sentry', 'electron', 'main', 'index.js')
+    const updaterPath = join(appAsar, 'node_modules', 'electron-updater', 'out', 'main.js')
     const hostMsPath = join(unpackedDir, '..', 'node_modules', 'ms', 'index.js')
     const spawn = vi.fn(() => ({
       status: 0,
       stdout: `PACKAGED_MAIN_RUNTIME_OK ${JSON.stringify({
         mainEntry,
-        sentryMainPath,
+        updaterPath,
         msPath: hostMsPath
       })}\n`,
       stderr: ''

@@ -1,98 +1,39 @@
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-
-vi.mock('./firebase', () => ({ auth: { currentUser: { uid: 'user-123' } } }))
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { trackEvent, trackPaywallOpened, trackUpgradePlanSelected } from './analytics'
 
-describe('analytics capture contract', () => {
-  beforeEach(() => {
+describe('local event log (omi-local reports nothing off the machine)', () => {
+  afterEach(() => {
     vi.restoreAllMocks()
   })
 
-  afterEach(() => {
-    vi.unstubAllEnvs()
-  })
-
-  it('is disabled by default and never calls PostHog', () => {
+  it('never makes a network call', () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response())
+    vi.spyOn(console, 'info').mockImplementation(() => {})
     trackEvent('App Launched', { feature: 'voice' })
+    trackPaywallOpened('windows_settings_view', 'free')
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it('sends PostHog identity and Windows enrichment inside properties when opted in', async () => {
-    vi.stubEnv('VITE_ANALYTICS_ENABLED', '1')
-    vi.resetModules()
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response())
-    const { trackEvent } = await import('./analytics')
-
-    trackEvent('App Launched', { feature: 'voice' })
-
-    expect(fetchMock).toHaveBeenCalledOnce()
-    const [url, init] = fetchMock.mock.calls[0]
-    expect(url).toBe('https://us.i.posthog.com/i/v0/e/')
-    expect(JSON.parse(init?.body as string)).toEqual({
-      api_key: 'phc_z3qUFhGUgYIOMYnfxVSrLmYISQvbgph8iREQv3sez3Y',
-      event: 'App Launched',
-      distinct_id: 'user-123',
-      properties: {
-        feature: 'voice',
-        $lib: 'omi-windows',
-        $os: 'Windows',
-        platform: 'windows'
-      }
+  it('writes one structured console line per event', () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {})
+    trackEvent('fallback_triggered', { component: 'ptt_cascade', outcome: 'degraded' })
+    expect(info).toHaveBeenCalledExactlyOnceWith('[event]', 'fallback_triggered', {
+      component: 'ptt_cascade',
+      outcome: 'degraded'
     })
   })
 
-  it.each(['index.html', 'capture.html', 'glow.html', 'insight-toast.html'])(
-    'allows PostHog capture from %s',
-    (entry) => {
-      const html = readFileSync(resolve(__dirname, '../../', entry), 'utf8')
-      expect(html).toMatch(/connect-src[\s\S]*https:\/\/us\.i\.posthog\.com[\s\S]*;/)
-    }
-  )
-
-  // A VITE_POSTHOG_HOST override used to be honoured here, which sent capture to
-  // an origin the renderer CSP does not allow. Assert the runtime behaviour, not
-  // the source text: a set override must not reach fetch.
-  it('ignores a VITE_POSTHOG_HOST override and posts to the CSP-allowed origin', async () => {
-    vi.stubEnv('VITE_POSTHOG_HOST', 'https://not-in-csp.example.com')
-    vi.stubEnv('VITE_ANALYTICS_ENABLED', '1')
-    vi.resetModules()
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response())
-
-    const { trackEvent: trackWithOverride } = await import('./analytics')
-    trackWithOverride('App Launched')
-
-    expect(fetchMock.mock.calls[0][0]).toBe('https://us.i.posthog.com/i/v0/e/')
-  })
-
-  it('collapses plan and interval aliases onto the closed funnel vocabulary', async () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response())
-
-    trackPaywallOpened('Usage Page Plan Sheet', 'pro')
-    trackUpgradePlanSelected('free', 'Annual', 'windows_billing')
-    trackUpgradePlanSelected('plus', 'Plus Yearly Monthly', 'windows_settings_view')
-
-    const bodies = fetchMock.mock.calls.map((call) =>
-      JSON.parse(String((call[1] as RequestInit).body))
-    )
-    expect(bodies.map((body: { event: string }) => body.event)).toEqual([
-      'Paywall Opened',
-      'Upgrade Plan Selected',
-      'Upgrade Plan Selected'
+  it('keeps the closed funnel vocabulary for plan and interval aliases', () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {})
+    trackPaywallOpened('windows_settings_view', 'free')
+    trackUpgradePlanSelected('unlimited', 'Annual', 'not-a-source')
+    expect(info.mock.calls.map((c) => [c[1], c[2]])).toEqual([
+      ['Paywall Opened', { source: 'windows_settings_view', current_plan: 'basic' }],
+      [
+        'Upgrade Plan Selected',
+        { plan: 'unlimited', billing_interval: 'year', source: 'unknown' }
+      ]
     ])
-    expect(bodies[0].properties).toMatchObject({ source: 'unknown', current_plan: 'unknown' })
-    expect(bodies[1].properties).toMatchObject({
-      plan: 'basic',
-      billing_interval: 'year',
-      source: 'windows_billing'
-    })
-    expect(bodies[2].properties).toMatchObject({
-      plan: 'plus',
-      billing_interval: 'year',
-      source: 'windows_settings_view'
-    })
   })
 })

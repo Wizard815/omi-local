@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ArrowDown, ArrowUp, AudioLines } from 'lucide-react'
-import type { User } from 'firebase/auth'
-import { auth, onAuthStateChanged } from '../lib/firebase'
+import { type SessionUser as User, auth, onAuthStateChanged } from '../lib/session'
 import { useAppState } from '../state/appState'
 import { QuickTaskWidget } from '../components/home/QuickTaskWidget'
 import { QuickGoalsWidget } from '../components/home/QuickGoalsWidget'

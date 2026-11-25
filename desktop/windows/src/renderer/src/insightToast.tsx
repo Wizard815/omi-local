@@ -14,22 +14,10 @@ import '@fontsource-variable/inter/opsz-italic.css'
 import './styles/globals.css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import * as Sentry from '@sentry/electron/renderer'
 import { HashRouter } from 'react-router-dom'
 import { InsightToast } from './components/insight/InsightToast'
 import { SandboxBadge } from './components/SandboxBadge'
 import { ErrorBoundary } from './components/ui/ErrorBoundary'
-import { scrubEventPii } from '../../shared/sentryScrub'
-
-// Renderer-side crash reporting — same init as the main entry (main.tsx). No-op
-// without a DSN (dev builds).
-const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN as string | undefined
-if (SENTRY_DSN) {
-  Sentry.init({
-    dsn: SENTRY_DSN,
-    beforeSend: (event) => scrubEventPii(event)
-  })
-}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

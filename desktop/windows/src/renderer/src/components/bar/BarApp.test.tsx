@@ -29,7 +29,8 @@ vi.mock('../../hooks/usePushToTalk', () => ({
 vi.mock('../../hooks/useVoicePlaneSupervisor', () => ({
   useVoicePlaneSupervisor: () => ({ chip: null, noteCancel: vi.fn() })
 }))
-vi.mock('../../lib/firebase', () => ({
+vi.mock('../../lib/session', () => ({
+  serverUrl: () => 'http://omi.test:8000',
   auth: { authStateReady: async () => {} }
 }))
 vi.mock('../../lib/preferences', () => ({

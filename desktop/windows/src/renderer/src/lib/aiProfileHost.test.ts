@@ -13,8 +13,11 @@ const h = vi.hoisted(() => ({
   auth: { currentUser: null as FakeUser | null }
 }))
 
-vi.mock('firebase/auth', () => ({ onIdTokenChanged: h.onIdTokenChanged }))
-vi.mock('./firebase', () => ({ auth: h.auth }))
+vi.mock('./session', () => ({
+  auth: h.auth,
+  onIdTokenChanged: h.onIdTokenChanged,
+  serverUrl: () => 'http://omi.test:8000'
+}))
 
 type FakeUser = { getIdToken: () => Promise<string> }
 type AuthCallback = (user: FakeUser | null) => void

@@ -5,7 +5,8 @@ import { DeveloperKeysSection } from './DeveloperKeysSection'
 import { SettingsSearchProvider } from '../SettingsSearchProvider'
 
 const { getIdToken } = vi.hoisted(() => ({ getIdToken: vi.fn() }))
-vi.mock('../../../lib/firebase', () => ({
+vi.mock('../../../lib/session', () => ({
+  serverUrl: () => 'http://omi.test:8000',
   auth: { currentUser: { getIdToken } }
 }))
 vi.mock('../../../lib/billing', () => ({

@@ -1,4 +1,4 @@
-import { auth } from './firebase'
+import { auth, serverUrl } from './session'
 import type { XConnectorSession } from '../../../shared/types'
 
 // The X connector runs in main (so the import outlives the panel), but the Firebase
@@ -9,5 +9,5 @@ export async function getXSession(): Promise<XConnectorSession | null> {
   const user = auth.currentUser
   if (!user) return null
   const token = await user.getIdToken()
-  return { apiBase: import.meta.env.VITE_OMI_API_BASE as string, token }
+  return { apiBase: serverUrl(), token }
 }

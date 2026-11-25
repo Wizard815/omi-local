@@ -59,7 +59,6 @@ overrides:
   source-map-js: '^1.2.2'
 
 allowBuilds:
-  '@firebase/util': true
   better-sqlite3: true
   electron: true
   electron-winstaller: true

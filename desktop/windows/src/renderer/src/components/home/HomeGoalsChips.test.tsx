@@ -7,7 +7,8 @@ import { MemoryRouter, useNavigate } from 'react-router-dom'
 // Firebase. `currentUser` is set so the auth-gated fetch fires on mount.
 const get = vi.fn()
 vi.mock('../../lib/apiClient', () => ({ omiApi: { get: (...a: unknown[]) => get(...a) } }))
-vi.mock('../../lib/firebase', () => ({
+vi.mock('../../lib/session', () => ({
+  serverUrl: () => 'http://omi.test:8000',
   auth: { currentUser: { uid: 'u1' } },
   onAuthStateChanged: (_a: unknown, cb: (u: { uid: string }) => void) => {
     cb({ uid: 'u1' })

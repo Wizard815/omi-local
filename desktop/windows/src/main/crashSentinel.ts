@@ -4,12 +4,12 @@
 // an OS kill, or a main-process death that bypasses uncaughtException all just
 // leave the process gone, with nothing recorded. macOS solves this with
 // `lastSessionCleanExit` (a UserDefaults bool cleared to dirty at every launch and
-// set clean only in applicationWillTerminate) + AnalyticsManager.detectAndReportCrash,
-// which fires a Sentry MESSAGE — developer-facing telemetry only, no user-visible
-// banner or recovery UI. This mirrors that shape:
+// set clean only in applicationWillTerminate) + AnalyticsManager.detectAndReportCrash.
+// This mirrors that shape, but the report stays on this machine (the main log,
+// observability/localReport.ts) — omi-local sends no crash telemetry anywhere:
 //
 //   - On boot: read the persisted flag. If the PREVIOUS session left it dirty
-//     (wrote "running" but never reached the quit path), report a crash to Sentry
+//     (wrote "running" but never reached the quit path), log a crash report
 //     as a message (not an exception, no banner). Then mark THIS session dirty.
 //   - On the real quit path (will-quit): mark the flag clean.
 //
@@ -20,7 +20,7 @@
 import { app } from 'electron'
 import { join } from 'path'
 import { readFileSync, writeFileSync } from 'fs'
-import { captureMessage } from './sentry'
+import { captureMessage } from './observability/localReport'
 
 export type Sentinel = { cleanExit: boolean }
 
@@ -39,7 +39,7 @@ export type SentinelDeps = {
   read: () => Sentinel | null
   /** Persist the sentinel synchronously. */
   write: (s: Sentinel) => void
-  /** Report the detected crash (Sentry message). Called at most once per boot. */
+  /** Report the detected crash (local log). Called at most once per boot. */
   report: () => void
 }
 
@@ -87,8 +87,7 @@ export function writeSentinelFile(s: Sentinel): void {
 let bootCrashDetected = false
 
 /**
- * Wire the real deps and run detection once at startup. Must run AFTER Sentry init
- * (so a detected crash can report) and AFTER the single-instance lock (so a losing
+ * Wire the real deps and run detection once at startup. Must run AFTER the single-instance lock (so a losing
  * duplicate process never reads/rewrites the live instance's sentinel). Returns
  * whether a crash was detected this boot.
  */

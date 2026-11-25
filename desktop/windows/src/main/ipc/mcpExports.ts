@@ -9,6 +9,7 @@
 // credential — never logged.
 
 import { ipcMain, webContents, clipboard, shell } from 'electron'
+import { serverUrl } from '../omiLocal'
 import { McpKeyStore } from '../mcp/mcpKeyStore'
 import { McpExportsService } from '../mcp/mcpExportsService'
 import { buildCloudConnectors } from '../mcp/cloudConnectors'
@@ -51,7 +52,8 @@ function getService(): McpExportsService {
 }
 
 function apiBase(): string {
-  return import.meta.env.VITE_OMI_API_BASE || 'https://api.omi.me'
+  // The user's omi-local server (runtime config; see omiLocal/serverSession.ts).
+  return serverUrl()
 }
 
 /** Ping every renderer so the Connections UI re-reads connector status. */

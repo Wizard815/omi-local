@@ -3,8 +3,7 @@
 // has NO endpoint for the user's own name — so the name is set as the Firebase
 // Auth displayName (the closest account-level value). All calls are best-effort;
 // the wizard persists values locally regardless and never blocks on these.
-import { updateProfile } from 'firebase/auth'
-import { auth } from './firebase'
+import { updateProfile, auth } from './session'
 import { omiApi } from './apiClient'
 
 export async function syncLanguage(language: string): Promise<void> {

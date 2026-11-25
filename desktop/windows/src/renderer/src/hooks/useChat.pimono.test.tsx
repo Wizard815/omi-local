@@ -14,7 +14,8 @@ import type {
 // mainChat event stream, makes the INV-CHAT-1 saveMessage calls, and honours the
 // C5 generation guards (dismiss mid-stream must not persist/save/unlatch).
 
-vi.mock('../lib/firebase', () => ({
+vi.mock('../lib/session', () => ({
+  serverUrl: () => 'http://omi.test:8000',
   auth: { currentUser: { getIdToken: async () => 'test-token' } }
 }))
 vi.mock('../lib/pageCache', () => ({ invalidateConversationsCache: vi.fn() }))

@@ -1,21 +1,8 @@
 /// <reference types="vite/client" />
 
-interface ImportMetaEnv {
-  /** Sentry DSN for main-process error reporting. Unset → reporting disabled. */
-  readonly MAIN_VITE_SENTRY_DSN?: string
-  /** Omi backend base URL (shared VITE_ prefix — visible to all processes).
-   *  Main uses it for the sign-in authorize/token endpoints. */
-  readonly VITE_OMI_API_BASE?: string
-  /** Firebase project id (shared VITE_ prefix — frozen into the main bundle at
-   *  build time). Main verifies the relayed Firebase ID token's aud/iss against
-   *  it (auth/firebaseIdToken.ts); it must come from here, never the renderer. */
-  readonly VITE_FIREBASE_PROJECT_ID?: string
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv
-}
-
+// omi-local bakes no service config into the build: the server URL and session
+// are runtime state (src/main/omiLocal), and there is no Firebase project or
+// crash-report DSN.
 declare namespace NodeJS {
   interface ProcessEnv {
     /** '1' enables bench mode: run the fixed workload after load, then quit. */
@@ -34,5 +21,9 @@ declare namespace NodeJS {
     /** '1' forces the auto-updater to run against dev-app-update.yml even in an
      *  unpackaged build (local update testing only). */
     OMI_UPDATER_DEV?: string
+    /** Pins the omi-local server for this install (see omiLocal/serverSession.ts). */
+    OMI_SERVER_URL?: string
+    /** A self-hosted electron-builder "generic" update feed; unset = no update checks. */
+    OMI_UPDATE_FEED_URL?: string
   }
 }

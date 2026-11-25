@@ -5,7 +5,7 @@ const h = vi.hoisted(() => ({
   startOmiListen: vi.fn()
 }))
 
-vi.mock('./firebase', () => ({ auth: h.auth }))
+vi.mock('./session', () => ({ serverUrl: () => 'http://omi.test:8000', auth: h.auth }))
 vi.mock('./omiListenClient', () => ({ startOmiListen: h.startOmiListen }))
 
 import { startTranscription, type TranscriptionCallbacks } from './transcriptionClient'

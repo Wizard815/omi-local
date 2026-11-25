@@ -16,6 +16,7 @@ export type TranslationResult = {
 // BYOK provider key types used by the OmiBridgeApi surface below.
 import type { ByokEnrollResult, ByokKeys, ByokProvider } from './byok'
 import type { ChatContentBlock } from './chatContent'
+import type { OmiLocalLoginResult, OmiLocalServerCheck, OmiLocalState } from './omiLocal'
 import type { ChatEvidenceReferenceEnvelope } from './knowledgeLedger'
 import type {
   McpConnectorId,
@@ -949,10 +950,20 @@ export type OmiBridgeApi = {
   // synthesizes the returned note text and writes /v3/memories itself (it holds
   // the auth token).
   readStickyNotes: () => Promise<StickyNotesReadResult>
-  // Auth: run the backend-mediated Google or Apple OAuth flow in the SYSTEM
-  // browser (main owns the loopback callback + token exchange; the renderer
-  // finishes with signInWithCustomToken on the returned custom token).
-  signInWithProvider: (provider: SignInProvider) => Promise<SignInResult>
+  // --- The user's omi-local server and session (main owns both; src/main/omiLocal) ---
+  /** Server URL + session as main had them when this window loaded. */
+  omiLocalInitialState: OmiLocalState
+  /** Sign in with username/password at the server's /v1/auth/local-login. */
+  omiLocalLogin: (serverUrl: string, username: string, password: string) => Promise<OmiLocalLoginResult>
+  /** GET /health on a server address (Settings → Server "Test"). */
+  omiLocalCheckServer: (serverUrl: string) => Promise<OmiLocalServerCheck>
+  /** Change the server; a different server signs the user out. */
+  omiLocalSetServerUrl: (
+    serverUrl: string
+  ) => Promise<{ ok: true; state: OmiLocalState } | { ok: false; error: string }>
+  omiLocalSignOut: () => Promise<OmiLocalState>
+  /** Every sign-in, sign-out and server change, in every window. */
+  onOmiLocalChanged: (cb: (state: OmiLocalState) => void) => () => void
   // Gmail session connector (Option B): an Omi-owned login window + own-session
   // cookie replay against Gmail's web endpoints — no restricted-scope OAuth.
   // `gmailSessionConnect` opens the login window and resolves once signed in;
@@ -1370,23 +1381,6 @@ export type OmiBridgeApi = {
     provider: 'gemini' | 'chatgpt' | 'claude',
     memories: ExportMemory[]
   ) => Promise<string>
-  // --- Encrypted-at-rest Firebase auth persistence ---
-  /** Main-process encrypted store (safeStorage/DPAPI) backing a custom Firebase
-   *  Persistence, so ID/refresh tokens never sit in plaintext localStorage. Keyed
-   *  by Firebase's namespaced persistence key; values are opaque JSON strings. */
-  authStore: {
-    /** True when OS-backed encryption (DPAPI) is available on this machine. */
-    isAvailable: () => Promise<boolean>
-    /** Decrypt + return one entry's value, or null if unset/undecryptable. */
-    get: (key: string) => Promise<string | null>
-    /** Encrypt + persist one entry's value. */
-    set: (key: string, value: string) => Promise<void>
-    /** Remove one entry. */
-    remove: (key: string) => Promise<void>
-    /** Subscribe to cross-window change events (key only, never the value).
-     *  Returns an unsubscribe function. */
-    onChanged: (cb: (key: string) => void) => () => void
-  }
   // --- Track 6 (UI surfaces) additions ---
   /** Settings → General → Font Size "Reset Window Size": restore the main window
    *  to its default content size (1280×820) and re-center it. */
@@ -1906,17 +1900,6 @@ export type StickyNotesReadResult = {
   /** set on read failure (locked + copy failed, corrupt db, etc.) */
   error?: string
 }
-
-// --- Auth: backend-mediated provider sign-in (system browser + loopback) ---
-
-/** Result of the main-process sign-in flow. On ok the renderer completes the
- *  session with firebase signInWithCustomToken(customToken); email/name are
- *  display-only claims decoded (unverified) from the provider's id_token. */
-export type SignInProvider = 'google' | 'apple'
-
-export type SignInResult =
-  | { ok: true; customToken: string; email?: string; givenName?: string; familyName?: string }
-  | { ok: false; error: string }
 
 // --- Integrations: Gmail via an Omi-owned Electron session (Option B) ---
 // Windows can't harvest system-browser cookies the way macOS does (Chrome 127+

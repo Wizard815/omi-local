@@ -5,7 +5,7 @@ const h = vi.hoisted(() => ({
   fetch: vi.fn()
 }))
 
-vi.mock('./firebase', () => ({ auth: h.auth }))
+vi.mock('./session', () => ({ serverUrl: () => 'http://omi.test:8000', auth: h.auth }))
 
 import { generate } from './geminiClient'
 import { GeminiLane } from '../../../shared/geminiAttribution'

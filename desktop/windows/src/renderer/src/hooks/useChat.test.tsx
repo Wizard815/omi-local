@@ -22,7 +22,7 @@ const fbAuth = vi.hoisted(
       currentUser: { getIdToken: async () => 'test-token' }
     }) as { currentUser: { getIdToken: () => Promise<string> } | null }
 )
-vi.mock('../lib/firebase', () => ({ auth: fbAuth }))
+vi.mock('../lib/session', () => ({ serverUrl: () => 'http://omi.test:8000', auth: fbAuth }))
 vi.mock('../lib/pageCache', () => ({ invalidateConversationsCache: vi.fn() }))
 vi.mock('../lib/localAgent', () => ({ gatherLocalContext: async () => '' }))
 vi.mock('../lib/screenContext', () => ({ readCurrentScreen: async () => '' }))
@@ -94,6 +94,9 @@ vi.mock('../lib/usageLimit', () => ({
 import {
   useChat,
   CHAT_STREAM_TIMEOUT_MS,
+  CHAT_STREAM_TIMEOUT_COPY,
+  CHAT_STILL_WORKING_AFTER_MS,
+  CHAT_STILL_WORKING_COPY,
   CHAT_NOT_READY_INTERIM,
   CHAT_NOT_READY_FINAL
 } from './useChat'
@@ -616,7 +619,7 @@ describe('useChat — C5 abort on reset', () => {
   })
 })
 
-describe('useChat — C5 stream watchdog (180s)', () => {
+describe('useChat — C5 stream watchdog (20 min for slow local models)', () => {
   // Under fake timers, send()'s pre-fetch awaits (token, context, fetch) are
   // microtasks — advancing 1ms flushes them, opening the stream.
   const pumpFakeUntilStream = async (i: number): Promise<void> => {
@@ -649,9 +652,38 @@ describe('useChat — C5 stream watchdog (180s)', () => {
       })
       expect(signals[0]?.aborted).toBe(true)
       expect(result.current.sending).toBe(false)
+      expect(lastAssistant(result.current.history)?.content).toBe(CHAT_STREAM_TIMEOUT_COPY)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('waits 4× the 300 s local-model budget before giving up', () => {
+    expect(CHAT_STREAM_TIMEOUT_MS).toBe(1_200_000)
+  })
+
+  it('says "Still working…" (with the server\'s status) until the first words, then streams', async () => {
+    vi.useFakeTimers()
+    try {
+      const { result } = renderHook(() => useChat())
+      await act(async () => {
+        void result.current.send('a slow question')
+        await pumpFakeUntilStream(0)
+        streams[0].push('data: think: Searching memories|app_id:x\n')
+        await vi.advanceTimersByTimeAsync(CHAT_STILL_WORKING_AFTER_MS + 10)
+      })
+      expect(result.current.sending).toBe(true)
       expect(lastAssistant(result.current.history)?.content).toBe(
-        'Response took too long. Try again.'
+        `${CHAT_STILL_WORKING_COPY}\n\n_Searching memories_`
       )
+      // Minutes later the model answers: the reply replaces the interim line.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5 * 60_000)
+        streams[0].push('data: Here you go\n')
+        await vi.advanceTimersByTimeAsync(1)
+      })
+      expect(lastAssistant(result.current.history)?.content).toBe('Here you go')
+      expect(result.current.sending).toBe(true)
     } finally {
       vi.useRealTimers()
     }
@@ -687,9 +719,7 @@ describe('useChat — C5 stream watchdog (180s)', () => {
       })
       expect(signals[1]?.aborted).toBe(true)
       expect(result.current.sending).toBe(false)
-      expect(lastAssistant(result.current.history)?.content).toBe(
-        'Response took too long. Try again.'
-      )
+      expect(lastAssistant(result.current.history)?.content).toBe(CHAT_STREAM_TIMEOUT_COPY)
     } finally {
       vi.useRealTimers()
     }

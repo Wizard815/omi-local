@@ -4,7 +4,7 @@
 // (`/v2/chat-sessions[/{id}]` and the read side of `/v2/desktop/messages`) and
 // owns the snake_case↔camelCase translation that `src/shared/chatSessions.ts`
 // documents as deferred to this layer. Built on the shared `omiApi` axios
-// instance (VITE_OMI_API_BASE — the same Python backend `useChat` streams
+// instance (the omi-local server URL — the same Python backend `useChat` streams
 // `/v2/messages` from), so auth, platform headers, and 401/429 retry come for
 // free.
 //
