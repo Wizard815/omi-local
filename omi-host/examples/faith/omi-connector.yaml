@@ -1,0 +1,22 @@
+# FAITH connector for Omi: one entry under `connectors:` in faith.yaml.
+# Each person's own Omi MCP key: OMI_MCP_KEY_WIZARD, OMI_MCP_KEY_PARTNER... in FAITH's .env.
+# No household key: Omi is a person's own memory, so it is not in the shared (household) view.
+id: omi
+type: mcp
+url: http://192.168.1.5:8000/v1/mcp
+description: "Omi: what this person heard and approved: conversations, approved day summaries, tasks, calendar, memories"
+person_token_env: OMI_MCP_KEY_{ID}
+roles: [admin, adult]
+tools:
+  - search_conversations
+  - get_conversation_by_id
+  - get_conversations
+  - get_day_review
+  - get_action_items
+  - search_action_items
+  - create_action_item
+  - complete_action_item
+  - get_calendar_events
+  - create_calendar_event
+  - search_memories
+  - get_memories
