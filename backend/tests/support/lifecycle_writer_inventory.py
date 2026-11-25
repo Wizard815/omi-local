@@ -4561,6 +4561,35 @@ FIELD_SITES = {
     'utils/local_processing_worker.py': [
         ('run_one', 'status', 'ConversationStatus.processing', ('status',)),
     ],
+    # Home Assistant actions: a service call's own action document (waiting_for_approval -> running ->
+    # executed/failed, or refused/declined/expired); no conversation lifecycle write.
+    'utils/home_assistant/actions.py': [
+        ('_execute', 'status', "'executed'", ('decided_by', 'error', 'finished_at', 'result_states', 'status')),
+        ('_execute', 'status', "'failed'", ('decided_by', 'error', 'finished_at', 'status')),
+        ('_waiting_row', 'status', "'expired'", ('status',)),
+        ('approve', 'status', "'refused'", ('error', 'status')),
+        ('approve', 'status', "'running'", ('approved_at', 'status')),
+        ('decline', 'status', "'declined'", ('decided_by', 'finished_at', 'status')),
+        ('recent', 'status', "'expired'", ('status',)),
+        (
+            'request',
+            'status',
+            "'refused'",
+            ('data', 'domain', 'entity_ids', 'error', 'requested_by', 'service', 'status'),
+        ),
+        (
+            'request',
+            'status',
+            "WAITING if call['needs_approval'] else 'running'; literal aliases=[('WAITING', ('waiting_for_approval',))]",
+            ('error', 'requested_by', 'status'),
+        ),
+    ],
+    # MCP ha_call_service: the tool's JSON schema and its response echo the action's status; read-only
+    # projections of the action document above.
+    'utils/mcp_server/handlers/home_assistant.py': [
+        ('<module>', 'status', "{'type': 'string'}", ('action_id', 'message', 'status')),
+        ('ha_call_service', 'status', 'status', ('action_id', 'call', 'error', 'message', 'status')),
+    ],
 }
 
 # Phase 3 baseline reviewed against origin/main 148bf4c1c57073dba4ec9a750415f2c72f5adb87.
