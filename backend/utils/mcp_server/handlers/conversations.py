@@ -13,6 +13,7 @@ import database.conversations as conversations_db
 import database.mcp_conversation_pages as mcp_conversation_pages
 import database.vector_db as vector_db
 from models.conversation_enums import CategoryEnum
+from utils.conversations.day_rollup import rolled_up_ids
 from utils.conversations.mcp_transcript_search import (
     attach_match_snippets_to_conversations,
     resolve_mcp_conversation_search_ids,
@@ -429,6 +430,36 @@ def get_conversations_by_ids(
     return envelope(items)
 
 
+_ROLLUP_FIELDS = ('discarded', 'day_review_date')
+
+
+def _search_rows(uid: str, ids: List[str], **read: Any) -> List[Dict[str, Any]]:
+    """The visible rows for these ids, plus the discarded ones an approved day rolled up: they
+    are part of that day (omi-local; utils/conversations/day_rollup.py). Every other hidden
+    row (dropped, held, deleted) stays out."""
+    rows = conversations_db.get_mcp_conversations_by_id(uid, ids, **read)
+    found = {str(row.get('id')) for row in rows}
+    missing = [cid for cid in ids if str(cid) not in found]
+    if not missing:
+        return rows
+    extra = [
+        row
+        for row in conversations_db.get_mcp_conversations_by_id(
+            uid,
+            missing,
+            **{
+                **read,
+                'include_discarded': True,
+                'extra_field_paths': [*(read.get('extra_field_paths') or []), *_ROLLUP_FIELDS],
+            },
+        )
+        if row.get('discarded') and row.get('day_review_date')
+    ]
+    rolled_up = rolled_up_ids(uid, extra)
+    by_id = {str(row.get('id')): row for row in [*rows, *[r for r in extra if str(r.get('id')) in rolled_up]]}
+    return [by_id[str(cid)] for cid in ids if str(cid) in by_id]
+
+
 def search_conversations_core(
     uid: str,
     query: Any,
@@ -466,7 +497,7 @@ def search_conversations_core(
         logger.warning("MCP summary vector search unavailable")
         conversation_ids = []
     conversations = (
-        conversations_db.get_mcp_conversations_by_id(
+        _search_rows(
             uid,
             conversation_ids,
             include_transcript=include_transcript,
@@ -504,7 +535,7 @@ def search_conversations_core(
         ) from exc
     if not keyword_ids:
         return []
-    rows = conversations_db.get_mcp_conversations_by_id(
+    rows = _search_rows(
         uid,
         keyword_ids,
         include_transcript=include_transcript,

@@ -15,6 +15,7 @@ os.environ.setdefault(
 import database.notifications as notifications_db
 import utils.retrieval.tool_services.conversations as conversations_service
 from utils.conversations import day_rollup
+from utils.mcp_server.handlers import conversations as mcp_conversations
 
 REVIEWS = {
     '2026-11-16': {
@@ -93,3 +94,26 @@ def test_chat_search_reads_a_rolled_up_conversation(monkeypatch):
     assert 'Call with Gary the plumber' in result
     assert 'private dropped' not in result
     assert '1 conversations exist here but were not read: discarded' in result
+
+
+def test_mcp_search_reads_a_rolled_up_conversation(monkeypatch):
+    """Hermes asks through MCP's search_conversations: same rule as chat."""
+    calls = []
+
+    def rows(uid, ids, **kwargs):
+        calls.append(kwargs)
+        if not kwargs.get('include_discarded'):
+            return [{'id': 'visible'}] if 'visible' in ids else []
+        return [
+            {'id': 'gary-call', 'discarded': True, 'day_review_date': '2026-11-16'},
+            {'id': 'dropped', 'discarded': True, 'day_review_date': '2026-11-16'},
+        ]
+
+    monkeypatch.setattr(
+        mcp_conversations, 'resolve_mcp_conversation_search_ids', lambda *a, **k: ['gary-call', 'visible', 'dropped']
+    )
+    monkeypatch.setattr(mcp_conversations.conversations_db, 'get_mcp_conversations_by_id', rows)
+    monkeypatch.setattr(day_rollup.day_reviews_db, 'get_day_review', lambda uid, date: REVIEWS.get(date))
+    found = mcp_conversations.search_conversations_core('u1', 'Gary', limit=5, start_dt=None, end_dt=None)
+    assert [c['id'] for c in found] == ['gary-call', 'visible']
+    assert calls[1]['include_discarded'] is True and 'day_review_date' in calls[1]['extra_field_paths']
