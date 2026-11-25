@@ -433,11 +433,15 @@ def get_conversations_by_ids(
 _ROLLUP_FIELDS = ('discarded', 'day_review_date')
 
 
-def _search_rows(uid: str, ids: List[str], **read: Any) -> List[Dict[str, Any]]:
+def _search_rows(
+    uid: str, ids: List[str], *, include_transcript: bool, extra_field_paths: Optional[List[str]]
+) -> List[Dict[str, Any]]:
     """The visible rows for these ids, plus the discarded ones an approved day rolled up: they
     are part of that day (omi-local; utils/conversations/day_rollup.py). Every other hidden
     row (dropped, held, deleted) stays out."""
-    rows = conversations_db.get_mcp_conversations_by_id(uid, ids, **read)
+    rows = conversations_db.get_mcp_conversations_by_id(
+        uid, ids, include_transcript=include_transcript, extra_field_paths=extra_field_paths
+    )
     found = {str(row.get('id')) for row in rows}
     missing = [cid for cid in ids if str(cid) not in found]
     if not missing:
@@ -447,11 +451,9 @@ def _search_rows(uid: str, ids: List[str], **read: Any) -> List[Dict[str, Any]]:
         for row in conversations_db.get_mcp_conversations_by_id(
             uid,
             missing,
-            **{
-                **read,
-                'include_discarded': True,
-                'extra_field_paths': [*(read.get('extra_field_paths') or []), *_ROLLUP_FIELDS],
-            },
+            include_transcript=include_transcript,
+            include_discarded=True,
+            extra_field_paths=[*(extra_field_paths or []), *_ROLLUP_FIELDS],
         )
         if row.get('discarded') and row.get('day_review_date')
     ]
