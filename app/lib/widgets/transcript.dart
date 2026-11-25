@@ -1459,10 +1459,7 @@ class _TranscriptWidgetState extends State<TranscriptWidget> {
   }
 
   Widget _buildSegmentText(TranscriptSegment data, int segmentIdx, bool isUser, {TextStyle? style}) {
-    // RichText ignores the reader's text size (its textScaler defaults to no scaling) and the
-    // theme's font, so transcripts stayed small at large accessibility text: pass both. (Not
-    // Text.rich: one more element per line costs the detail scroll's rebuild budget.)
-    final richText = RichText(
+    return RichText(
       textAlign: TextAlign.left,
       textScaler: MediaQuery.textScalerOf(context),
       text: TextSpan(
@@ -1474,7 +1471,6 @@ class _TranscriptWidgetState extends State<TranscriptWidget> {
             : [TextSpan(text: _getDecodedText(data.text))],
       ),
     );
-    return richText;
   }
 
   Widget _buildSegmentFooter(TranscriptSegment data, bool isUser) {
