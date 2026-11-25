@@ -4,8 +4,10 @@ omi-host/demo/integrations_demo.py. Each records every request it gets (JSON lin
 and answers the way the real service's code does (paths in the Wizard815 repositories):
 
   hermes    gateway/platforms/api_server_runs.py: POST /v1/runs -> 202 {run_id,status,replayed};
-            GET /v1/runs/{id} -> waiting_for_approval (approval.request_id) until
-            POST /v1/runs/{id}/approval {choice,request_id}, then completed with output
+            GET /v1/runs/{id} -> waiting_for_approval (pending_controls[].prompt_id and
+            execution_generation, the session-authority shape api_server_authority_runs.py
+            serves) until POST /v1/runs/{id}/approval {request_id, execution_generation, choice}
+            (exactly those keys, as respond_run demands), then completed with output
   odysseus  routes/session_routes.py create_session (form: name, endpoint_id, model ->
             {id,name,model}); routes/chat_routes.py chat_endpoint ({message,session} -> {response})
   studio    controllers/orb.ts startWork ({work:{sessionId,...}}); then, like Studio's webhook
@@ -74,7 +76,9 @@ def hermes(state: State, method: str, path: str, headers: Dict[str, str], body: 
         run = state.runs[parts[2]]
         if method == 'POST' and parts[-1] == 'approval':
             answer = json.loads(body or b'{}')
-            if answer.get('request_id') != 'req-demo-1':
+            if set(answer) != {'request_id', 'execution_generation', 'choice'}:
+                return 400, {'error': {'message': 'invalid_params', 'code': 'invalid_params'}}
+            if answer.get('request_id') != 'req-demo-1' or answer.get('execution_generation') != 1:
                 return 409, {'error': {'message': 'approval_not_pending'}}
             run['approved'] = answer.get('choice')
             return 200, {'object': 'hermes.run.approval_response', 'run_id': parts[2], 'choice': run['approved'], 'resolved': 1}
@@ -82,12 +86,17 @@ def hermes(state: State, method: str, path: str, headers: Dict[str, str], body: 
         if run['approved'] is None:
             status.update(
                 status='waiting_for_approval',
-                approval={
-                    'request_id': 'req-demo-1',
-                    'command': 'python3 cutlist.py --boards 3',
-                    'description': 'Run the cut-list script',
-                    'choices': ['once', 'session', 'always', 'deny'],
-                },
+                execution_generation=1,
+                pending_controls=[
+                    {
+                        'kind': 'approval',
+                        'prompt_id': 'req-demo-1',
+                        'execution_generation': 1,
+                        'command': 'python3 cutlist.py --boards 3',
+                        'description': 'Run the cut-list script',
+                        'choices': ['once', 'deny', 'session', 'always'],
+                    }
+                ],
             )
         elif run['approved'] == 'deny':
             status.update(status='failed', error='denied')
