@@ -79,15 +79,14 @@ Each item is its own commit with a regression test; see `git log` on the branch.
 
 ## Open items, priority order
 
-### 1. `/_local/storage` serves files without authentication
-`backend/main.py` mounts the local blob store (`StaticFiles`) on the same port a Cloudflare Tunnel
-exposes, and `local_storage.py`'s `generate_signed_url()` returns plain, non-expiring paths. Paths
-contain random Firebase uids and conversation UUIDs (no directory listing), so this is
-capability-by-obscurity, not open browsing — but any leaked URL (logs, a shared screenshot) is a
-permanent link to a recording. Recommended fix: HMAC-sign `generate_signed_url()` with an expiry
-(`?exp=&sig=`, key from `ENCRYPTION_SECRET`) and verify it in a thin ASGI wrapper in front of
-`StaticFiles`, keeping `public_url` (stored long-term for app logos/thumbnails) unsigned for those
-buckets only. Not changed in this pass because URLs already stored in Firestore would break.
+### 1. `/_local/storage` serves files without authentication (fixed)
+Fixed on branch `studio-herder`. `backend/utils/other/local_storage_gate.py` now sits in front of
+the blob store: a request needs an HMAC-signed link with an expiry (`?exp=&sig=`, made by
+`LocalBlob.generate_signed_url`) or the owner's login for a path under their uid. Everything else
+is 401/403/404. Links stored before the change (chat thumbnails, cached playback URLs) stop working;
+reopening the item in the app gets a new one. Details: `OMI-LOCAL-SETUP.md`, "Recordings and files".
+Still open: links stored in Firestore expire after `OMI_LOCAL_STORAGE_URL_TTL_SECONDS` (7 days);
+re-signing them when the API returns them would remove that limit.
 
 ### 2. Local-login lockout through the tunnel
 `utils/local_auth.py` keys its attempt budget on `request.client.host`. Behind cloudflared every

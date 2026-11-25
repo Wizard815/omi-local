@@ -2,8 +2,13 @@
 
 from __future__ import annotations
 
+import datetime
+import hashlib
+import hmac
 import json
 import fcntl
+import secrets
+import time
 import uuid
 from dataclasses import dataclass
 import logging
@@ -23,6 +28,71 @@ from google.oauth2 import service_account
 LOCAL_STORAGE_ROOT_ENV = 'OMI_LOCAL_STORAGE_ROOT'
 LOCAL_STORAGE_BASE_URL_ENV = 'OMI_LOCAL_STORAGE_BASE_URL'
 HARNESS_STATE_ROOT_ENV = 'OMI_HARNESS_STATE_ROOT'
+LOCAL_STORAGE_SIGNING_SECRET_ENV = 'OMI_LOCAL_STORAGE_SIGNING_SECRET'
+LOCAL_STORAGE_URL_TTL_ENV = 'OMI_LOCAL_STORAGE_URL_TTL_SECONDS'
+# Stored URLs (public_url) last this long; GCS v4 signed URLs cap at 7 days too.
+DEFAULT_LOCAL_URL_TTL_SECONDS = 7 * 24 * 3600
+_SIGNING_CONTEXT = b'omi-local-storage-url-v1'
+_PROCESS_SIGNING_SECRET = secrets.token_bytes(32)
+_warned_process_secret = False
+
+logger = logging.getLogger(__name__)
+
+
+def _local_signing_key() -> bytes:
+    """Key for /_local/storage URL signatures, derived so it never equals a login or data key.
+
+    OMI_LOCAL_STORAGE_SIGNING_SECRET wins, then LOCAL_AUTH_JWT_SECRET (omi-host always has one),
+    then ENCRYPTION_SECRET (the dev harness). With none, a per-process key: URLs stop working
+    after a restart, which fails closed.
+    """
+
+    global _warned_process_secret
+    for env in (LOCAL_STORAGE_SIGNING_SECRET_ENV, 'LOCAL_AUTH_JWT_SECRET', 'ENCRYPTION_SECRET'):
+        value = os.environ.get(env, '').strip()
+        if value:
+            return hmac.new(value.encode(), _SIGNING_CONTEXT, hashlib.sha256).digest()
+    if not _warned_process_secret:
+        _warned_process_secret = True
+        logger.warning('local storage URLs signed with a per-process key; set %s', LOCAL_STORAGE_SIGNING_SECRET_ENV)
+    return _PROCESS_SIGNING_SECRET
+
+
+def local_storage_signature(bucket: str, name: str, expires: int) -> str:
+    """HMAC over the decoded bucket, blob name and expiry (unix seconds)."""
+
+    message = f'{bucket}\n{name}\n{int(expires)}'.encode()
+    return hmac.new(_local_signing_key(), message, hashlib.sha256).hexdigest()
+
+
+def verify_local_storage_signature(
+    bucket: str, name: str, expires: str, signature: str, *, now: float | None = None
+) -> bool:
+    try:
+        expires_at = int(expires)
+    except (TypeError, ValueError):
+        return False
+    if expires_at < (time.time() if now is None else now):
+        return False
+    return hmac.compare_digest(local_storage_signature(bucket, name, expires_at), signature or '')
+
+
+def _ttl_seconds(expiration: Any) -> int:
+    """Seconds a URL stays valid: the caller's GCS-style expiration, else the configured default."""
+
+    if isinstance(expiration, datetime.timedelta):
+        seconds = expiration.total_seconds()
+    elif isinstance(expiration, datetime.datetime):
+        when = expiration if expiration.tzinfo else expiration.replace(tzinfo=datetime.timezone.utc)
+        seconds = when.timestamp() - time.time()
+    elif isinstance(expiration, (int, float)) and not isinstance(expiration, bool):
+        seconds = float(expiration)
+    else:
+        try:
+            seconds = float(os.environ.get(LOCAL_STORAGE_URL_TTL_ENV, '') or DEFAULT_LOCAL_URL_TTL_SECONDS)
+        except ValueError:
+            seconds = DEFAULT_LOCAL_URL_TTL_SECONDS
+    return max(1, min(int(seconds), DEFAULT_LOCAL_URL_TTL_SECONDS))
 
 
 def _contained_path(root: Path, value: str, *, label: str) -> Path:
@@ -173,13 +243,20 @@ class LocalBlob:
             raise NotFound(f'Local storage blob not found: {self.bucket.name}/{self.name}')
         return self.path.open(mode)
 
-    def generate_signed_url(self, *_args, **_kwargs) -> str:
+    def generate_signed_url(self, *_args, expiration: Any = None, **_kwargs) -> str:
+        """A URL the /_local/storage gate accepts without a login, until it expires.
+
+        Players and image widgets in the app can't send an Authorization header,
+        so the signature (bound to this exact blob) is what lets them fetch it.
+        """
         base_url = os.environ.get(LOCAL_STORAGE_BASE_URL_ENV, '').strip().rstrip('/')
         if not base_url:
             raise RuntimeError(f'{LOCAL_STORAGE_BASE_URL_ENV} is required for local storage URLs')
+        expires = int(time.time()) + _ttl_seconds(expiration)
+        signature = local_storage_signature(self.bucket.name, self.name, expires)
         bucket = quote(self.bucket.name, safe='')
         name = quote(self.name, safe='/')
-        return f'{base_url}/{bucket}/{name}'
+        return f'{base_url}/{bucket}/{name}?exp={expires}&sig={signature}'
 
     def make_public(self, *_args, **_kwargs) -> None:
         return None
