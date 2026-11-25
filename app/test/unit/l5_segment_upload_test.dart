@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
+import 'package:omi/backend/http/api_result.dart';
+import 'package:omi/backend/http/shared.dart';
 import 'package:omi/backend/schema/transcript_segment.dart';
 import 'package:omi/services/on_device/on_device_segment_upload.dart';
 
@@ -38,6 +40,23 @@ void main() {
     expect(sent.map((r) => r['chunk_index']), [0, 1, 2, 0, 1, 2]);
     final combined = sent.take(3).expand((r) => r['transcript_segments'] as List).toList();
     expect(combined, segments.map((s) => s.toJson()).toList());
+  });
+  test('each chunk waits out a self-hosted server that writes the notes before it answers', () async {
+    final requests = <ApiRequest>[];
+    await uploadOnDeviceSegments(
+        baseUrl: 'http://localhost/',
+        sessionId: 'session',
+        segments: segments.take(3).toList(),
+        metadata: const {},
+        chunked: false,
+        canSend: () => true,
+        send: (request) async {
+          requests.add(request);
+          return http.Response('{"id":"conversation"}', 200);
+        });
+    expect(requests.single.timeout, ApiClient.slowModelRequestTimeout);
+    // The server's HTTP limit at the default OMI_LOCAL_LLM_TIMEOUT_SECONDS=300 is 3 x 300 s.
+    expect(ApiClient.slowModelRequestTimeout, greaterThan(const Duration(seconds: 900)));
   });
   test('flag off keeps refusal, and failure never returns a completion', () async {
     await expectLater(

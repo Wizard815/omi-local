@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:intl/intl.dart';
-
 import 'package:omi/backend/http/api/connections.dart';
 import 'package:omi/backend/schema/connections.dart';
 import 'package:omi/pages/connections/connections_page.dart' show connectionProblem;
@@ -104,7 +102,7 @@ class _SendToWikiSheetState extends State<SendToWikiSheet> {
               Padding(
                 padding: const EdgeInsets.only(top: OmiSpacing.xs),
                 child: Text(
-                  l10n.sendToWikiAlreadySent(DateFormat.yMMMd().add_jm().format(lastSent.sentAt!)),
+                  l10n.sendToWikiAlreadySent(OmiDateFormat.of(context).dateTime(lastSent.sentAt!.toLocal())),
                   key: const Key('send_to_wiki_already_sent'),
                   style: OmiType.footnote.copyWith(color: OmiColors.warning),
                 ),
@@ -119,6 +117,7 @@ class _SendToWikiSheetState extends State<SendToWikiSheet> {
           if (preview != null)
             OmiButton(
               key: const Key('send_to_wiki_send'),
+              expand: true,
               label: preview.alreadySent ? l10n.sendToWikiSendRevised : l10n.sendToWikiSend,
               onPressed: _busy ? null : _send,
             ),

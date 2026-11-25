@@ -280,6 +280,40 @@ void main() {
   });
 
   group('Saved conversation lines', () {
+    testWidgets('the words follow the reader\'s text size', (tester) async {
+      await setupSharedPreferences();
+      final line = TranscriptSegment(
+        id: 'line',
+        text: 'We ship the widgets first.',
+        speaker: 'SPEAKER_00',
+        isUser: true,
+        personId: null,
+        start: 0,
+        end: 2,
+        translations: [],
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: MediaQuery(
+            data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+            child: Scaffold(
+              body: TranscriptWidget(
+                segments: [line],
+                isConversationDetail: true,
+                startedAt: DateTime(2026, 9, 30, 12, 40),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final words = tester.widget<RichText>(find.text('We ship the widgets first.', findRichText: true));
+      expect(words.textScaler, const TextScaler.linear(2));
+    });
+
     testWidgets('name and clock time sit over the words, with no bubble or avatar', (tester) async {
       await setupSharedPreferences();
       final mine = TranscriptSegment(

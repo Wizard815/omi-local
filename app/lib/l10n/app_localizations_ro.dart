@@ -15878,7 +15878,7 @@ class AppLocalizationsRo extends AppLocalizations {
   String get heldForDayReview => 'Așteaptă recapitularea zilei';
 
   @override
-  String get dayReviewBundleButton => 'Bundle the day';
+  String get dayReviewBundleButton => 'Bundle the Day';
 
   @override
   String get dayReviewBundleHint =>
@@ -15940,7 +15940,7 @@ class AppLocalizationsRo extends AppLocalizations {
   String get conversationsNoTagsYet => 'No tags yet. They appear here once your conversations carry some.';
 
   @override
-  String get caldavSettingsTitle => 'Calendar & tasks (CalDAV)';
+  String get caldavSettingsTitle => 'Calendar & Tasks (CalDAV)';
 
   @override
   String get caldavSettingsIntro =>
@@ -15959,10 +15959,10 @@ class AppLocalizationsRo extends AppLocalizations {
   String get caldavPasswordKept => 'Leave empty to keep the stored password';
 
   @override
-  String get caldavTestConnection => 'Test connection';
+  String get caldavTestConnection => 'Test Connection';
 
   @override
-  String get caldavSyncNow => 'Sync now';
+  String get caldavSyncNow => 'Sync Now';
 
   @override
   String get caldavSave => 'Save';
@@ -16101,10 +16101,10 @@ class AppLocalizationsRo extends AppLocalizations {
   String get familyCalendarEditedNote => 'Edited';
 
   @override
-  String get familyCalendarDecline => 'Not this';
+  String get familyCalendarDecline => 'Not This';
 
   @override
-  String get familyCalendarApprove => 'Add to calendar';
+  String get familyCalendarApprove => 'Add to Calendar';
 
   @override
   String familyCalendarAdded(String title) {
@@ -16203,7 +16203,7 @@ class AppLocalizationsRo extends AppLocalizations {
   String get approvalApprove => 'Approve';
 
   @override
-  String get approvalApproveDay => 'Approve the day';
+  String get approvalApproveDay => 'Approve the Day';
 
   @override
   String get approvalApproving => 'Approving the day…';
@@ -16274,14 +16274,14 @@ class AppLocalizationsRo extends AppLocalizations {
   String get approvalDraftRowBody => 'Summary draft waiting for your OK';
 
   @override
-  String get approvalDraftSortAction => 'Sort by hand instead';
+  String get approvalDraftSortAction => 'Sort by Hand Instead';
 
   @override
   String get approvalDraftSortBody =>
       'The draft is discarded and the day\'s conversations wait to be sorted. Nothing was sent anywhere.';
 
   @override
-  String get approvalDraftSortTitle => 'Discard the draft?';
+  String get approvalDraftSortTitle => 'Discard the Draft?';
 
   @override
   String approvalDue(String date) {
@@ -16289,7 +16289,7 @@ class AppLocalizationsRo extends AppLocalizations {
   }
 
   @override
-  String get approvalEditApprove => 'Edit & approve';
+  String get approvalEditApprove => 'Edit & Approve';
 
   @override
   String get approvalEditTitle => 'Edit the task';
@@ -16318,7 +16318,7 @@ class AppLocalizationsRo extends AppLocalizations {
   String get approvalOperatorDisabled => 'Auto-approve is turned off on this server.';
 
   @override
-  String get approvalPageTitle => 'Waiting for your OK';
+  String get approvalPageTitle => 'Waiting for Your OK';
 
   @override
   String get approvalReopenBody =>
@@ -16343,7 +16343,7 @@ class AppLocalizationsRo extends AppLocalizations {
       'Omi heard these. They reach your task list and reminders only once you approve them.';
 
   @override
-  String get approvalWaitingTitle => 'Waiting for your OK';
+  String get approvalWaitingTitle => 'Waiting for Your OK';
 
   @override
   String get approvalYesterdaysSummary => 'yesterday\'s summary';
@@ -16454,12 +16454,12 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String approvalApproveAll(int count) {
-    return 'Approve all ($count)';
+    return 'Approve All ($count)';
   }
 
   @override
   String approvalApproveAllFromDay(int count) {
-    return 'Approve all from this day ($count)';
+    return 'Approve All from This Day ($count)';
   }
 
   @override
@@ -16470,7 +16470,7 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String approvalApproveSelected(int count) {
-    return 'Approve selected ($count)';
+    return 'Approve Selected ($count)';
   }
 
   @override
@@ -16512,7 +16512,7 @@ class AppLocalizationsRo extends AppLocalizations {
   }
 
   @override
-  String get dayReviewEditText => 'Edit text';
+  String get dayReviewEditText => 'Edit Text';
 
   @override
   String get dayReviewEditTitleField => 'Title';
@@ -16530,7 +16530,7 @@ class AppLocalizationsRo extends AppLocalizations {
   String get dayReviewEditedByYou => 'Edited by you';
 
   @override
-  String get dayReviewRewriteEditsTitle => 'Rewrite the summary?';
+  String get dayReviewRewriteEditsTitle => 'Rewrite the Summary?';
 
   @override
   String get dayReviewRewriteEditsBody => 'Rewrite will replace your edits — continue?';
@@ -16543,7 +16543,7 @@ class AppLocalizationsRo extends AppLocalizations {
       'New conversations came in since you edited this summary. Approving rewrites it, which will replace your edits — continue?';
 
   @override
-  String get agentJobsAllowOnce => 'Allow once';
+  String get agentJobsAllowOnce => 'Allow Once';
 
   @override
   String get agentJobsAnswerFailed => 'Could not send your answer';
@@ -16582,7 +16582,7 @@ class AppLocalizationsRo extends AppLocalizations {
   String get agentJobsStatusRunning => 'Working';
 
   @override
-  String get agentJobsTitle => 'Agent jobs';
+  String get agentJobsTitle => 'Agent Jobs';
 
   @override
   String get agentJobsUntitled => 'Agent job';
@@ -16602,7 +16602,7 @@ class AppLocalizationsRo extends AppLocalizations {
   }
 
   @override
-  String get connectionsClearToken => 'Remove saved token';
+  String get connectionsClearToken => 'Remove Saved Token';
 
   @override
   String get connectionsCoinpilePurpose =>
@@ -16713,7 +16713,7 @@ class AppLocalizationsRo extends AppLocalizations {
   String get connectionsStudioWorkspace => 'Workspace (optional)';
 
   @override
-  String get connectionsTest => 'Test connection';
+  String get connectionsTest => 'Test Connection';
 
   @override
   String get connectionsTestFailed => 'The test did not finish';
@@ -16841,7 +16841,7 @@ class AppLocalizationsRo extends AppLocalizations {
       'For something simple: a quick question, a short summary, a reminder, a look-up.';
 
   @override
-  String get sendToAgentPreviewAgain => 'Refresh preview';
+  String get sendToAgentPreviewAgain => 'Refresh Preview';
 
   @override
   String get sendToAgentPreviewFailed => 'Could not prepare the preview';
@@ -16866,7 +16866,7 @@ class AppLocalizationsRo extends AppLocalizations {
   }
 
   @override
-  String get sendToAgentShowPreview => 'Show what will be sent';
+  String get sendToAgentShowPreview => 'Show What Will Be Sent';
 
   @override
   String get sendToAgentStudioHint => 'For coding: a coding agent works on it in Studio.';
@@ -16877,7 +16877,7 @@ class AppLocalizationsRo extends AppLocalizations {
   }
 
   @override
-  String get sendToAgentTitle => 'Send to agent…';
+  String get sendToAgentTitle => 'Send to Agent…';
 
   @override
   String sendToAgentUseSuggested(String agent) {
@@ -16944,16 +16944,16 @@ class AppLocalizationsRo extends AppLocalizations {
   String get sendToWikiFailed => 'Could not send it to the wiki';
 
   @override
-  String get sendToWikiSend => 'Send to wiki';
+  String get sendToWikiSend => 'Send to Wiki';
 
   @override
-  String get sendToWikiSendRevised => 'Send revised copy';
+  String get sendToWikiSendRevised => 'Send Revised Copy';
 
   @override
   String get sendToWikiSent => 'Sent to the wiki';
 
   @override
-  String get sendToWikiTitle => 'Send to wiki';
+  String get sendToWikiTitle => 'Send to Wiki';
 
   @override
   String sendToWikiWhere(String destination) {
@@ -16963,4 +16963,13 @@ class AppLocalizationsRo extends AppLocalizations {
   @override
   String get connectionsNotReady =>
       'This connection is off or has no address or token. Set it up in Settings > Connections.';
+
+  @override
+  String get chatReplyStillWorking => 'Still working on it. This can take a few minutes.';
+
+  @override
+  String get dayReviewsLoadFailed => 'Couldn\'t load your day reviews.';
+
+  @override
+  String get conversationWritingNotesTranscriptReady => 'Writing notes… The transcript is ready to read now.';
 }

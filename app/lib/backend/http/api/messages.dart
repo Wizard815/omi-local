@@ -298,6 +298,9 @@ Stream<ServerMessageChunk> sendMessageStreamServer(
     body: jsonEncode(body),
     seams: seams,
     cancelSignal: cancelSignal,
+    // A self-hosted model can be silent for minutes before the first answer event.
+    inactivityTimeout: ApiClient.chatStreamInactivityTimeout,
+    totalTimeout: ApiClient.chatStreamTotalTimeout,
   )) {
     if (_isIgnorableStreamFrame(line)) continue;
     if (line.startsWith('error:402:')) {

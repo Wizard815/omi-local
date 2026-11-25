@@ -190,6 +190,10 @@ class OmiSettingsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final titleColor = isDestructive ? OmiColors.danger : OmiColors.textPrimary;
     final chevron = showChevron ?? (onTap != null && trailing == null);
+    // Large accessibility text: a trailing value would squeeze the title until it breaks inside a
+    // word, so the value moves under the title instead.
+    final stackValue =
+        value != null && trailing == null && !_isToggle && MediaQuery.textScalerOf(context).scale(1) >= 1.5;
 
     Widget? trailingWidget;
     if (_isToggle) {
@@ -230,10 +234,14 @@ class OmiSettingsRow extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(subtitle!, style: OmiType.footnote.copyWith(color: OmiColors.textTertiary)),
                       ],
+                      if (stackValue) ...[
+                        const SizedBox(height: 2),
+                        Text(value!, style: OmiType.subhead.copyWith(color: OmiColors.textSecondary)),
+                      ],
                     ],
                   ),
                 ),
-                if (value != null && trailingWidget == null) ...[
+                if (value != null && trailingWidget == null && !stackValue) ...[
                   const SizedBox(width: OmiSpacing.xs),
                   ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.6),

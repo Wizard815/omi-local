@@ -52,6 +52,79 @@ String? parseAppIdFromThinking(String thinkingText) {
   return null;
 }
 
+/// The server's keep-alive step while a long tool call or a slow model works (backend
+/// `utils/retrieval/agentic.py`, `AGENT_STREAM_PROGRESS_HEARTBEAT`). It is not a step of its own:
+/// [ChatSlowReplyNotice] says the reply is still working instead.
+const chatProgressHeartbeat = 'Still working…';
+
+/// The reply's steps as the reader sees them: decoded, without blanks and keep-alives, and without
+/// a step repeated back to back (a slow server can resend the same step while it waits).
+List<String> visibleChatSteps(List<String> thinkings) {
+  final steps = <String>[];
+  for (final raw in thinkings) {
+    final step = raw.decodeString;
+    if (step.trim().isEmpty || getThinkingDisplayText(step).trim() == chatProgressHeartbeat) continue;
+    if (steps.isNotEmpty && steps.last == step) continue;
+    steps.add(step);
+  }
+  return steps;
+}
+
+/// Under a reply that is still working: after [after] without an answer, one quiet line says Omi is
+/// still on it, so a slow model (minutes on a self-hosted server) never looks stuck or failed.
+class ChatSlowReplyNotice extends StatefulWidget {
+  const ChatSlowReplyNotice({super.key, required this.startedAt, this.after = const Duration(seconds: 20)});
+
+  /// When the question was sent.
+  final DateTime startedAt;
+  final Duration after;
+
+  @override
+  State<ChatSlowReplyNotice> createState() => _ChatSlowReplyNoticeState();
+}
+
+class _ChatSlowReplyNoticeState extends State<ChatSlowReplyNotice> {
+  Timer? _timer;
+
+  bool get _due => DateTime.now().difference(widget.startedAt) >= widget.after;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!_due) {
+      _timer = Timer.periodic(const Duration(seconds: 2), (timer) {
+        if (!mounted) return timer.cancel();
+        if (_due) {
+          timer.cancel();
+          setState(() {});
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_due) return const SizedBox.shrink();
+    return Padding(
+      key: const ValueKey('chat_slow_reply_notice'),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: OmiSpacing.xs),
+      child: Semantics(
+        liveRegion: true,
+        child: Text(
+          context.l10n.chatReplyStillWorking,
+          style: OmiType.footnote.copyWith(color: OmiColors.textSecondary),
+        ),
+      ),
+    );
+  }
+}
+
 /// Get the display text from thinking (removes app_id suffix if present)
 String getThinkingDisplayText(String thinkingText) {
   int index = thinkingText.indexOf('|app_id:');
@@ -564,7 +637,8 @@ class _NormalMessageWidgetState extends State<NormalMessageWidget> {
 
   @override
   Widget build(BuildContext context) {
-    var thinkingTextRaw = widget.message.thinkings.isNotEmpty ? widget.message.thinkings.last.decodeString : null;
+    final steps = visibleChatSteps(widget.message.thinkings);
+    var thinkingTextRaw = steps.isNotEmpty ? steps.last : null;
 
     // Parse app_id and display text from thinking messages
     String? currentAppId = thinkingTextRaw != null ? parseAppIdFromThinking(thinkingTextRaw) : null;
@@ -583,7 +657,7 @@ class _NormalMessageWidgetState extends State<NormalMessageWidget> {
       children: [
         FilesHandlerWidget(message: widget.message),
         // Tool steps: one line each while the reply works, folded into one line above the answer.
-        if (widget.message.thinkings.isNotEmpty)
+        if (steps.isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
             child: ChatActivitySteps(thinkings: widget.message.thinkings, working: working),
@@ -593,6 +667,7 @@ class _NormalMessageWidgetState extends State<NormalMessageWidget> {
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
             child: shouldShowThinking ? _ThinkingLine(text: displayThinkingText) : const TypingIndicator(),
           ),
+        if (working) ChatSlowReplyNotice(startedAt: widget.message.createdAt),
         // !(showTypingIndicator && messageText.isEmpty)
         //     ? Container(
         //         margin: const EdgeInsets.only(bottom: 4.0),
@@ -711,7 +786,8 @@ class _MemoriesMessageWidgetState extends State<MemoriesMessageWidget> {
 
   @override
   Widget build(BuildContext context) {
-    var thinkingTextRaw = widget.message.thinkings.isNotEmpty ? widget.message.thinkings.last.decodeString : null;
+    final steps = visibleChatSteps(widget.message.thinkings);
+    var thinkingTextRaw = steps.isNotEmpty ? steps.last : null;
 
     var thinkingText = thinkingTextRaw != null ? getThinkingDisplayText(thinkingTextRaw) : null;
 
@@ -733,7 +809,7 @@ class _MemoriesMessageWidgetState extends State<MemoriesMessageWidget> {
         //     ),
         //   ),
         // ),
-        if (widget.message.thinkings.isNotEmpty)
+        if (steps.isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
             child: ChatActivitySteps(
@@ -742,12 +818,18 @@ class _MemoriesMessageWidgetState extends State<MemoriesMessageWidget> {
             ),
           ),
         widget.showTypingIndicator && widget.messageText == '…'
-            ? (widget.message.thinkings.isNotEmpty
-                ? const SizedBox.shrink()
-                : Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                    child: shouldShowThinking ? _ThinkingLine(text: displayThinkingText) : const TypingIndicator(),
-                  ))
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (steps.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                      child: shouldShowThinking ? _ThinkingLine(text: displayThinkingText) : const TypingIndicator(),
+                    ),
+                  ChatSlowReplyNotice(startedAt: widget.message.createdAt),
+                ],
+              )
             : widget.showTypingIndicator
                 ? const Row(
                     mainAxisSize: MainAxisSize.min,
@@ -931,7 +1013,7 @@ class ChatActivitySteps extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final steps = thinkings.map((t) => t.decodeString).where((t) => t.trim().isNotEmpty).toList();
+    final steps = visibleChatSteps(thinkings);
     if (steps.isEmpty) return const SizedBox.shrink();
     void open() => showChatActivitySheet(context, steps: steps, working: working);
     if (!working) {

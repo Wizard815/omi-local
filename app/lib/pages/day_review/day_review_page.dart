@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'package:intl/intl.dart';
 
@@ -156,7 +155,8 @@ class _DayReviewPageState extends State<DayReviewPage> {
         _groups.clear();
         _selected.clear();
       } else {
-        _error = result.error ?? context.l10n.dayReviewLoadFailed;
+        // A failed read is never the server's own words: they are not written for the reader.
+        _error = context.l10n.dayReviewLoadFailed;
       }
     });
   }
@@ -188,7 +188,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
 
   String get _prettyDate {
     final parsed = DateTime.tryParse(widget.date);
-    return parsed == null ? widget.date : DateFormat.yMMMMEEEEd().format(parsed);
+    return parsed == null ? widget.date : DateFormat.yMMMMEEEEd(OmiDateFormat.of(context).localeName).format(parsed);
   }
 
   // ---------------------------------------------------------------- actions
@@ -450,16 +450,14 @@ class _DayReviewPageState extends State<DayReviewPage> {
       backgroundColor: OmiColors.surface0,
       appBar: AppBar(
         backgroundColor: OmiColors.surface0,
+        leading: const OmiBackButton(),
         title: Text(l10n.dayReviewTitle),
         actions: [
           if (review != null && review.finalText.isNotEmpty)
-            IconButton(
-              tooltip: l10n.dayReviewCopy,
+            OmiIconButton(
               icon: const Icon(Icons.copy_rounded),
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: '${review.title}\n\n${review.finalText}'));
-                AppSnackbar.showSnackbar(l10n.dayReviewCopied);
-              },
+              label: l10n.dayReviewCopy,
+              onPressed: () => OmiClipboard.copy(context, '${review.title}\n\n${review.finalText}'),
             ),
           if (review != null)
             PopupMenuButton<String>(
@@ -481,21 +479,9 @@ class _DayReviewPageState extends State<DayReviewPage> {
       body: Stack(
         children: [
           if (_error != null)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(_error!, textAlign: TextAlign.center, style: TextStyle(color: OmiColors.textSecondary)),
-                    const SizedBox(height: 12),
-                    TextButton(onPressed: _load, child: Text(l10n.retry)),
-                  ],
-                ),
-              ),
-            )
+            OmiErrorState(message: _error!, onRetry: _load)
           else if (_day == null)
-            const Center(child: CircularProgressIndicator())
+            const OmiLoadingState()
           else if (review == null)
             _buildSortView(_day!)
           else
@@ -507,7 +493,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const CircularProgressIndicator(),
+                    const OmiSpinner(),
                     const SizedBox(height: 16),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -524,9 +510,11 @@ class _DayReviewPageState extends State<DayReviewPage> {
   }
 
   String _timeRange(DayReviewConversation c) {
-    final f = DateFormat.jm();
+    // Server times are UTC: show them on the reader's clock, in their locale and 12/24-hour setting.
+    final dates = OmiDateFormat.of(context);
     if (c.startedAt == null) return '';
-    return c.finishedAt == null ? f.format(c.startedAt!) : '${f.format(c.startedAt!)} – ${f.format(c.finishedAt!)}';
+    final start = c.startedAt!.toLocal();
+    return c.finishedAt == null ? dates.time(start) : dates.timeRange(start, c.finishedAt!.toLocal());
   }
 
   Widget _conversationTile(DayReviewConversation c, {Widget? trailing, Color? color, VoidCallback? onTap}) {
@@ -612,10 +600,10 @@ class _DayReviewPageState extends State<DayReviewPage> {
       final String text;
       Color color = OmiColors.textSecondary;
       if (r.sent) {
-        text = l10n.dayReviewSentTo(where, DateFormat.MMMd().add_jm().format(r.sentAt!)) +
+        text = l10n.dayReviewSentTo(where, OmiDateFormat.of(context).timestamp(r.sentAt!.toLocal())) +
             (r.revision > 0 ? ' · ${l10n.dayReviewSentRevision(r.revision)}' : '');
       } else if (r.scheduled) {
-        text = l10n.dayReviewSendsAt(where, DateFormat.jm().format(r.scheduledAt!));
+        text = l10n.dayReviewSendsAt(where, OmiDateFormat.of(context).time(r.scheduledAt!.toLocal()));
       } else if (r.error.isNotEmpty) {
         text = l10n.dayReviewNotSentTo(where, r.error);
         color = OmiColors.warning;
@@ -734,20 +722,16 @@ class _DayReviewPageState extends State<DayReviewPage> {
               Text(l10n.dayReviewBundleHint, style: TextStyle(color: OmiColors.textSecondary, height: 1.4)),
               if (day.conversations.isNotEmpty) ...[
                 const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    key: const Key('day_review_bundle'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: OmiColors.textPrimary,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(OmiRadius.lg)),
-                    ),
-                    onPressed: _bundle,
-                    icon: const Icon(Icons.auto_awesome_rounded, size: 18),
-                    label: Text(l10n.dayReviewBundleButton),
-                  ),
+                // The shared primary button: a hand-coloured one drew black on black in the light theme.
+                OmiButton(
+                  key: const Key('day_review_bundle'),
+                  expand: true,
+                  icon: Icons.auto_awesome_rounded,
+                  label: l10n.dayReviewBundleButton,
+                  // Not awaited: a confirmation opens first, then the page shows its own progress.
+                  onPressed: () {
+                    _bundle();
+                  },
                 ),
                 const SizedBox(height: 16),
                 Text(l10n.dayReviewOrSortManually,
@@ -787,15 +771,15 @@ class _DayReviewPageState extends State<DayReviewPage> {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
             child: SizedBox(
               width: double.infinity,
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: OmiColors.textPrimary,
-                  side: BorderSide(color: OmiColors.textSecondary),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(OmiRadius.md)),
-                ),
-                onPressed: _selected.length < 2 ? null : _mergeSelected,
-                icon: const Icon(Icons.call_merge_rounded),
-                label: Text(l10n.dayReviewMergeSelected(_selected.length)),
+              child: OmiButton.secondary(
+                key: const Key('day_review_merge_selected'),
+                icon: Icons.call_merge_rounded,
+                label: l10n.dayReviewMergeSelected(_selected.length),
+                onPressed: _selected.length < 2
+                    ? null
+                    : () {
+                        _mergeSelected();
+                      },
               ),
             ),
           ),
@@ -806,17 +790,15 @@ class _DayReviewPageState extends State<DayReviewPage> {
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
               child: SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: OmiColors.textPrimary,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  ),
-                  onPressed: _finalize,
-                  child: Text(_groups.isEmpty && _drop.isEmpty
+                child: OmiButton(
+                  key: const Key('day_review_finalize'),
+                  maxLines: 2,
+                  label: _groups.isEmpty && _drop.isEmpty
                       ? l10n.dayReviewFinalizeButton(_keep.length, rolled)
-                      : l10n.dayReviewFinalizeButtonFull(_keep.length, _groups.length, _drop.length, rolled)),
+                      : l10n.dayReviewFinalizeButtonFull(_keep.length, _groups.length, _drop.length, rolled),
+                  onPressed: () {
+                    _finalize();
+                  },
                 ),
               ),
             ),
@@ -988,8 +970,7 @@ class _DayReviewPageState extends State<DayReviewPage> {
       if (end != null && (last == null || end.isAfter(last))) last = end;
     }
     if (first == null || last == null) return '';
-    final fmt = DateFormat.jm();
-    return '${fmt.format(first.toLocal())} – ${fmt.format(last.toLocal())}';
+    return OmiDateFormat.of(context).timeRange(first.toLocal(), last.toLocal());
   }
 
   Widget _sectionCard(
@@ -1314,15 +1295,12 @@ class _DayReviewPageState extends State<DayReviewPage> {
                                 _regenerate();
                               },
                             )
-                          : ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: OmiColors.accent,
-                                foregroundColor: OmiColors.surface0,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: const RoundedRectangleBorder(borderRadius: OmiRadius.lgAll),
-                              ),
-                              onPressed: _regenerate,
-                              child: Text(l10n.dayReviewApplyButton(review.pendingCorrectionCount)),
+                          : OmiButton(
+                              key: const Key('day_review_apply'),
+                              label: l10n.dayReviewApplyButton(review.pendingCorrectionCount),
+                              onPressed: () {
+                                _regenerate();
+                              },
                             ),
                     ),
                   if (review.pendingCorrectionCount > 0 && review.isDraft) const SizedBox(width: OmiSpacing.sm),

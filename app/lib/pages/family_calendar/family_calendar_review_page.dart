@@ -363,7 +363,12 @@ class _FamilyCalendarReviewPageState extends State<FamilyCalendarReviewPage> {
             ],
           ),
           const SizedBox(height: OmiSpacing.sm),
-          Row(
+          // Wraps rather than overflowing when the two labels do not fit on one line (large text).
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: OmiSpacing.sm,
+            runSpacing: OmiSpacing.xs,
             children: [
               OmiButton.tertiary(
                 key: Key('family_calendar_decline_${event.key}'),
@@ -371,7 +376,6 @@ class _FamilyCalendarReviewPageState extends State<FamilyCalendarReviewPage> {
                 size: OmiButtonSize.compact,
                 onPressed: busy ? null : () => _decline(event),
               ),
-              const Spacer(),
               OmiButton(
                 key: Key('family_calendar_approve_${event.key}'),
                 label: l10n.familyCalendarApprove,

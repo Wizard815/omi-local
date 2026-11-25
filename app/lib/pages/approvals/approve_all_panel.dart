@@ -5,8 +5,6 @@
 // should keep waiting and taps "Approve selected". Backend: POST /v1/approvals/batch (+ /undo).
 import 'package:flutter/material.dart';
 
-import 'package:intl/intl.dart';
-
 import 'package:omi/backend/http/api/approvals.dart';
 import 'package:omi/l10n/app_localizations.dart';
 import 'package:omi/providers/waiting_approval_controller.dart';
@@ -181,8 +179,7 @@ class _ApprovalChecklistState extends State<ApprovalChecklist> {
     final tasks = {for (final t in controller.tasks) t.id: t};
     final events = {for (final e in controller.events) e.key.replaceFirst(':', '#'): e};
     final chosen = _chosen;
-    final dateFormat = DateFormat.MMMEd();
-    final timeFormat = DateFormat.MMMEd().add_jm();
+    final dates = OmiDateFormat.of(context);
     return Column(
       key: const Key('approval_checklist'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -206,7 +203,9 @@ class _ApprovalChecklistState extends State<ApprovalChecklist> {
             child: OmiCheckboxRow(
               label: () {
                 final event = events[_eventKey(ref)];
-                return event == null ? _eventKey(ref) : '${event.title} · ${timeFormat.format(event.start)}';
+                return event == null
+                    ? _eventKey(ref)
+                    : '${event.title} · ${dates.weekdayDate(event.start.toLocal())} ${dates.time(event.start.toLocal())}';
               }(),
               value: _events.contains(_eventKey(ref)),
               onChanged: (on) => _toggle(_events, _eventKey(ref), on),
@@ -217,32 +216,29 @@ class _ApprovalChecklistState extends State<ApprovalChecklist> {
             key: ValueKey('approval_pick_day_$date'),
             child: OmiCheckboxRow(
               label: l10n.approvalSummaryItem(
-                  DateTime.tryParse(date) == null ? date : dateFormat.format(DateTime.parse(date))),
+                  DateTime.tryParse(date) == null ? date : dates.weekdayDate(DateTime.parse(date))),
               value: _days.contains(date),
               onChanged: (on) => _toggle(_days, date, on),
             ),
           ),
         const SizedBox(height: OmiSpacing.sm),
-        Row(
-          children: [
-            Expanded(
-              child: OmiButton.secondary(
-                key: const Key('approval_pick_cancel'),
-                label: l10n.cancel,
-                onPressed: widget.onCancel,
-              ),
-            ),
-            const SizedBox(width: OmiSpacing.sm),
-            Expanded(
-              flex: 2,
-              child: OmiButton(
-                key: const Key('approval_pick_approve'),
-                label: l10n.approvalApproveSelected(chosen.count),
-                isLoading: controller.batchBusy,
-                onPressed: chosen.isEmpty || controller.batchBusy ? null : () => widget.onApprove(chosen),
-              ),
-            ),
-          ],
+        // Stacked on a narrow screen or at large text, where "Approve Selected (6)" was cut short.
+        OmiButtonPair(
+          secondIsPrimary: true,
+          secondFlex: 2,
+          firstMinWidth: 90,
+          secondMinWidth: 200,
+          first: OmiButton.secondary(
+            key: const Key('approval_pick_cancel'),
+            label: l10n.cancel,
+            onPressed: widget.onCancel,
+          ),
+          second: OmiButton(
+            key: const Key('approval_pick_approve'),
+            label: l10n.approvalApproveSelected(chosen.count),
+            isLoading: controller.batchBusy,
+            onPressed: chosen.isEmpty || controller.batchBusy ? null : () => widget.onApprove(chosen),
+          ),
         ),
       ],
     );

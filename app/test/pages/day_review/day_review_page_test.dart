@@ -226,7 +226,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('day_review_bundle')));
     await tester.pumpAndSettle();
-    expect(find.text('Build the day summary?'), findsOneWidget, reason: 'bundling asks first, like Summarize');
+    expect(find.text('Build the Day Summary?'), findsOneWidget, reason: 'bundling asks first, like Summarize');
     expect(api.finalized, isEmpty);
     await tester.tap(find.text('Summarize'));
     await tester.pumpAndSettle();
@@ -255,7 +255,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(api.added.single['text'], 'Grandma called about Sunday.');
     expect(api.added.single['type'], DayReviewCorrectionType.paragraph);
-    expect(find.text('Apply corrections (1)'), findsOneWidget);
+    expect(find.text('Apply Corrections (1)'), findsOneWidget);
   });
 
   testWidgets('removing a correction offers Undo, which sends the same correction again', (tester) async {
@@ -285,7 +285,7 @@ void main() {
       'text': 'Friday',
       'after': null,
     });
-    expect(find.text('Apply corrections (1)'), findsOneWidget);
+    expect(find.text('Apply Corrections (1)'), findsOneWidget);
   });
 
   testWidgets('a reviewed day links on to its tasks and the calendar check', (tester) async {
@@ -330,7 +330,7 @@ void main() {
     await _open(tester, api);
     await tester.tap(find.byKey(const Key('day_review_edit_text')));
     await tester.pumpAndSettle();
-    expect(find.text('Edit text'), findsWidgets);
+    expect(find.text('Edit Text'), findsWidgets);
     expect(find.widgetWithText(TextField, 'Mia had swim at four.'), findsOneWidget, reason: 'prefilled');
 
     await tester.enterText(find.byKey(const Key('day_review_edit_title')), 'Swim and the doctor');
@@ -415,7 +415,7 @@ void main() {
     await tester.scrollUntilVisible(all, 200, scrollable: find.byType(Scrollable).first);
     await tester.ensureVisible(all);
     await tester.pumpAndSettle();
-    expect(find.text('Approve all from this day (2)'), findsOneWidget);
+    expect(find.text('Approve All from This Day (2)'), findsOneWidget);
     await tester.tap(all);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:intl/intl.dart';
+import 'package:omi/ui/ui.dart';
 
 import 'package:omi/backend/http/api/approvals.dart';
 import 'package:omi/backend/http/api/day_reviews.dart';
@@ -80,14 +80,14 @@ class _DayReviewBannerState extends State<DayReviewBanner> {
     final label = waiting ??
         (_date == _today
             ? l10n.dayReviewBannerToday
-            : l10n.dayReviewBannerDay(parsed == null ? _date! : DateFormat.MMMEd().format(parsed)));
+            : l10n.dayReviewBannerDay(parsed == null ? _date! : OmiDateFormat.of(context).weekdayDate(parsed)));
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       child: Material(
-        color: const Color(0xFF1F1F25),
-        borderRadius: BorderRadius.circular(16),
+        color: OmiColors.surface1,
+        borderRadius: OmiRadius.lgAll,
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: OmiRadius.lgAll,
           key: const Key('day_review_banner'),
           onTap: () async {
             await routeToPage(context, waiting != null ? const ApprovalsPage() : DayReviewPage(date: _date!));
@@ -97,21 +97,23 @@ class _DayReviewBannerState extends State<DayReviewBanner> {
             padding: const EdgeInsets.fromLTRB(16, 12, 4, 12),
             child: Row(
               children: [
-                const Icon(Icons.auto_stories_outlined, color: Colors.white),
+                Icon(Icons.auto_stories_outlined, color: OmiColors.textPrimary),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                      Text(label,
+                          style: OmiType.subhead.copyWith(color: OmiColors.textPrimary, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 2),
                       Text(waiting != null ? l10n.approvalBannerBody : l10n.dayReviewBannerBody,
-                          style: TextStyle(color: Colors.grey.shade400, fontSize: 12.5)),
+                          style: OmiType.footnote.copyWith(color: OmiColors.textSecondary)),
                     ],
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white38, size: 18),
+                OmiIconButton(
+                  icon: Icon(Icons.close, color: OmiColors.textTertiary, size: 18),
+                  label: l10n.dismiss,
                   onPressed: () => setState(() => _dismissed = true),
                 ),
               ],

@@ -188,7 +188,9 @@ final dayReviewScenarios = <AuditScenario>[
       await a.shot('Open the bundled day', step: 'top');
       await a.tap(find.byKey(const Key('day_review_section_clips_s1')));
       await a.shot('Unfold the clips behind the first "Small moments" section', step: 'clips-open');
-      await a.tester.ensureVisible(find.byKey(const Key('day_review_section_favorite_s2')));
+      // Scroll it into view: the list builds a section only near the screen.
+      await a.tester.scrollUntilVisible(find.byKey(const Key('day_review_section_favorite_s2')), 300,
+          scrollable: find.byType(Scrollable).first);
       await a.settle();
       await a.tap(find.byKey(const Key('day_review_section_favorite_s2')));
       await a.shot('Favorite the standup section: it is kept as its own conversation', step: 'favorited');
@@ -360,7 +362,7 @@ final dayReviewFamilyScenarios = <AuditScenario>[
       await a.settle();
       await a.tap(find.byKey(const Key('day_review_bundle')));
       await a.shot('Bundle the day: it now asks first and uses these choices', step: 'bundle-confirm');
-      expect(find.text('Build the day summary?'), findsOneWidget);
+      expect(find.text('Build the Day Summary?'), findsOneWidget);
     },
   ),
   AuditScenario(

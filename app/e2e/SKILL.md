@@ -504,6 +504,12 @@ PNGs named `<id>.png` or `<id>-<step>.png`, per-side `capture.log`, `INDEX.md` w
 capture times, and a static `gallery.html`. A scenario that throws on one side is reported as failed
 there and the rest still capture. **Never commit screenshots.**
 
+**Edge states** come from the same scenarios through environment variables (they pass through the
+script to both sides): `OMI_AUDIT_TEXT_SCALE=2.0` (accessibility text), `OMI_AUDIT_WIDTH=320` (a
+small phone, logical px), `OMI_AUDIT_BRIGHTNESS=light`. `OMI_AUDIT_REPORT_LAYOUT=1` prints each
+layout error (overflow) with the widget that caused it and keeps capturing, instead of failing the
+scenario at its first one; the PNG shows the overflow stripes.
+
 **Add a scenario** in `app/integration_test/visual_audit/scenarios/<area>.dart` (new areas are
 spread into `registry.dart`). Put `id` first; it is lowercase-hyphenated, starts with the area, and
 names the PNGs:
