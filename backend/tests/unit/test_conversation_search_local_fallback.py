@@ -28,6 +28,17 @@ ROWS = [
         'transcript_segments': [],
     },
     {
+        'id': 'rolled-into-day',
+        'discarded': True,
+        'day_review_date': '2026-11-16',
+        'structured': {'title': 'Gary the plumber, second call', 'overview': 'sink'},
+    },
+    {
+        'id': 'dropped-noise',
+        'discarded': True,
+        'structured': {'title': 'plumber ad on the radio', 'overview': ''},
+    },
+    {
         'id': 'locked',
         'is_locked': True,
         'structured': {'title': 'Plumber invoice', 'overview': 'Gary'},
@@ -35,18 +46,21 @@ ROWS = [
 ]
 
 
+KEPT = [row for row in ROWS if not row.get('discarded')]
+
+
 def test_matches_title_before_transcript_and_skips_unrelated_and_locked():
-    page = search.local_text_search(iter(ROWS), 'What did Gary the plumber say?', page=1, per_page=10)
+    page = search.local_text_search(iter(KEPT), 'What did Gary the plumber say?', page=1, per_page=10)
     assert [r['id'] for r in page['items']] == ['title-hit', 'transcript-only']
     assert page['total_pages'] == 1
-    with_locked = search.local_text_search(iter(ROWS), 'plumber', page=1, per_page=10, include_locked=True)
+    with_locked = search.local_text_search(iter(KEPT), 'plumber', page=1, per_page=10, include_locked=True)
     assert 'locked' in [r['id'] for r in with_locked['items']]
 
 
 def test_paging_and_filter_only_browse():
-    first = search.local_text_search(iter(ROWS), 'plumber', page=1, per_page=1)
+    first = search.local_text_search(iter(KEPT), 'plumber', page=1, per_page=1)
     assert [r['id'] for r in first['items']] == ['title-hit'] and first['total_pages'] == 2
-    browse = search.local_text_search(iter(ROWS), '', page=1, per_page=2)
+    browse = search.local_text_search(iter(KEPT), '', page=1, per_page=2)
     assert [r['id'] for r in browse['items']] == ['new-unrelated', 'transcript-only']
 
 
@@ -61,11 +75,18 @@ def test_search_conversations_uses_the_local_scan_without_typesense(monkeypatch)
 
     monkeypatch.setattr(search, 'iter_conversations', fake_iter)
     monkeypatch.setattr(search, 'conversation_scan_budget', lambda request, route: 'budget')
-    result = search.search_conversations('u1', 'plumber', page=1, per_page=10, start_date=1763600000)
-    assert [r['id'] for r in result['items']] == ['title-hit', 'transcript-only']
-    assert seen['uid'] == 'u1' and seen['budget'] == 'budget'
+    result = search.search_conversations(
+        'u1', 'plumber', page=1, per_page=10, start_date=1763600000, include_discarded=False
+    )
+    # a conversation rolled into an approved day is still found (its caller admits it on hydration)
+    assert [r['id'] for r in result['items']] == ['title-hit', 'rolled-into-day', 'transcript-only']
+    assert seen['uid'] == 'u1' and seen['budget'] == 'budget' and seen['include_discarded'] is True
     assert seen['start_date'] == datetime.fromtimestamp(1763600000, tz=timezone.utc)
-    assert search.keyword_search_conversation_ids('u1', 'plumber') == ['title-hit', 'transcript-only']
+    assert search.keyword_search_conversation_ids('u1', 'plumber') == [
+        'title-hit',
+        'rolled-into-day',
+        'transcript-only',
+    ]
 
 
 def test_a_configured_server_is_still_used(monkeypatch):
