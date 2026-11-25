@@ -1,8 +1,10 @@
 import 'package:omi/backend/http/api/approvals.dart';
+import 'package:omi/backend/schema/family_calendar.dart';
 import 'package:omi/backend/schema/schema.dart';
 import 'package:omi/l10n/app_localizations.dart';
 import 'package:omi/ui/format/omi_date_format.dart';
 import 'package:omi/utils/enums.dart';
+import 'package:omi/widgets/extensions/string.dart';
 
 /// What the Android home-screen widgets show (android/app/src/main/kotlin/com/friend/ios/widgets),
 /// as the JSON documents they read. Every label is already in the app's language; the widgets only
@@ -14,9 +16,28 @@ abstract final class AndroidWidgetDocuments {
   static const listeningKey = 'widget_listening';
   static const translationKey = 'widget_translation';
   static const approvalsKey = 'widget_approvals';
+  static const familyDayKey = 'widget_family_day';
+  static const nextEventKey = 'widget_next_event';
+  static const memoryKey = 'widget_memory';
 
   /// The Android-only documents (the task list shares the iOS Up next document).
-  static const keys = [todayKey, summaryKey, captureKey, listeningKey, translationKey, approvalsKey];
+  static const keys = [
+    todayKey,
+    summaryKey,
+    captureKey,
+    listeningKey,
+    translationKey,
+    approvalsKey,
+    familyDayKey,
+    nextEventKey,
+    memoryKey,
+  ];
+
+  /// Memories the Memory widget rotates through, one a day, without the app running.
+  static const maxMemories = 31;
+
+  /// Longest memory text the Memory widget is given (it shows a few lines).
+  static const maxMemoryChars = 280;
 
   /// Rows a widget lists at most.
   static const maxRows = 3;
@@ -143,4 +164,73 @@ abstract final class AndroidWidgetDocuments {
       'items': items,
     };
   }
+
+  /// Family day: what is still ahead today on the family calendar (ALLGlance), tasks due and
+  /// overdue chores. `events` carries the timed blocks' start times for the Next event widget.
+  /// [day] is the server's answer; the widget drops rows from another day.
+  static Map<String, Object?> familyDay(FamilyDay day, AppLocalizations l10n, {required DateTime now}) {
+    final owner = day.ownerName.trim();
+    final rows = [
+      for (final block in day.next)
+        if (block.title.trim().isNotEmpty) {'title': block.title.trim(), 'detail': block.timeLabel.trim()},
+    ].take(maxRows).toList();
+    final footer = [
+      if (day.tasksDue > 0) l10n.widgetFamilyTasksDue(day.tasksDue),
+      if (day.choresOverdue > 0) l10n.widgetFamilyChoresOverdue(day.choresOverdue),
+    ].join(' · ');
+    final remaining = day.remaining < rows.length ? rows.length : day.remaining;
+    return {
+      'title': owner.isEmpty ? l10n.widgetFamilyDayTitle : l10n.widgetFamilyDayFor(owner),
+      'day': day.date.isNotEmpty ? day.date : dayKey(now),
+      'configured': day.configured,
+      'count': remaining,
+      'count_label': remaining > 0 ? l10n.widgetFamilyBlocksLeft(remaining) : '',
+      'empty': !day.configured
+          ? l10n.widgetFamilyNotSetUp
+          : (day.error.trim().isNotEmpty && !day.reachable ? day.error.trim() : l10n.widgetFamilyNothingLeft),
+      'footer': footer,
+      'rows': rows,
+      'events': [
+        for (final block in day.next)
+          if (!block.allDay && block.start != null && block.title.trim().isNotEmpty)
+            {'title': block.title.trim(), 'start_ms': block.start!.millisecondsSinceEpoch},
+      ],
+    };
+  }
+
+  /// Next event: only labels. The widget reads the phone's calendars itself (when Omi may) and the
+  /// family calendar's timed blocks from the Family day document, and shows the soonest.
+  static Map<String, Object?> nextEvent(AppLocalizations l10n) => {
+        'title': l10n.widgetNextEventTitle,
+        'none': l10n.widgetNextEventNone,
+        'family_label': l10n.widgetFamilyCalendarLabel,
+      };
+
+  /// Memory: up to [maxMemories] of the user's current memories, oldest first so the order stays
+  /// put as new ones arrive. The widget shows a different one each day.
+  static Map<String, Object?> memory(List<Memory> memories, AppLocalizations l10n) {
+    final current =
+        memories.where((m) => m.isUsefulNow && !m.isDismissed && !m.isLocked && _memoryText(m).isNotEmpty).toList()
+          ..sort((a, b) {
+            final byDate = a.createdAt.compareTo(b.createdAt);
+            return byDate != 0 ? byDate : a.id.compareTo(b.id);
+          });
+    final picked = current.length > maxMemories ? current.sublist(current.length - maxMemories) : current;
+    return {
+      'title': l10n.widgetMemoryTitle,
+      'empty': l10n.widgetMemoryEmpty,
+      'memories': [
+        for (final m in picked)
+          {
+            'id': m.id,
+            'text': switch (_memoryText(m)) {
+              final text when text.length > maxMemoryChars => '${text.substring(0, maxMemoryChars - 1).trimRight()}…',
+              final text => text,
+            },
+          },
+      ],
+    };
+  }
+
+  static String _memoryText(Memory memory) => memory.content.decodeString.trim();
 }

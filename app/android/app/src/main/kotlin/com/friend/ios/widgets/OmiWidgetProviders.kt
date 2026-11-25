@@ -10,10 +10,12 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.CalendarContract
 import android.text.format.DateFormat
+import android.text.format.DateUtils
 import android.view.View
 import android.widget.RemoteViews
 import com.friend.ios.R
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.Date
 import java.util.Locale
 
@@ -53,6 +55,9 @@ abstract class OmiWidgetProvider : AppWidgetProvider() {
             OmiWidgetKeys.TRANSLATION to listOf(OmiTranslationWidget::class.java),
             OmiWidgetKeys.TASKS to listOf(OmiTasksWidget::class.java),
             OmiWidgetKeys.APPROVALS to listOf(OmiApprovalsWidget::class.java),
+            OmiWidgetKeys.FAMILY_DAY to listOf(OmiFamilyDayWidget::class.java, OmiNextEventWidget::class.java),
+            OmiWidgetKeys.NEXT_EVENT to listOf(OmiNextEventWidget::class.java),
+            OmiWidgetKeys.MEMORY to listOf(OmiMemoryWidget::class.java),
         )
 
         /** Redraws the widgets that read [key], or every widget when [key] is null. */
@@ -195,8 +200,17 @@ internal object OmiListViews {
     /** Rows the size shows: two on the small size, three on the medium one. */
     fun visibleRows(medium: Boolean): Int = if (medium) OmiWidgetData.MAX_ROWS else 2
 
-    fun build(context: Context, data: ListData, medium: Boolean, rowRoute: (WidgetRow) -> String?, codeBase: Int): RemoteViews {
+    fun build(
+        context: Context,
+        data: ListData,
+        medium: Boolean,
+        rowRoute: (WidgetRow) -> String?,
+        codeBase: Int,
+        footer: String? = null,
+    ): RemoteViews {
         val views = RemoteViews(context.packageName, R.layout.omi_widget_list)
+        views.setViewVisibility(R.id.omi_widget_footer, if (footer.isNullOrBlank()) View.GONE else View.VISIBLE)
+        views.setTextViewText(R.id.omi_widget_footer, footer ?: "")
         views.setTextViewText(R.id.omi_widget_title, data.title)
         views.setTextViewText(R.id.omi_widget_count, if (data.count > 0) data.countLabel else "")
         val shown = data.rows.take(visibleRows(medium))
@@ -217,9 +231,10 @@ internal object OmiListViews {
         return views
     }
 
-    fun empty(context: Context, nameRes: Int, route: String, code: Int): RemoteViews {
+    fun empty(context: Context, nameRes: Int, route: String, code: Int, title: String? = null): RemoteViews {
         val views = RemoteViews(context.packageName, R.layout.omi_widget_list)
-        views.setTextViewText(R.id.omi_widget_title, context.getString(nameRes))
+        views.setTextViewText(R.id.omi_widget_title, title ?: context.getString(nameRes))
+        views.setViewVisibility(R.id.omi_widget_footer, View.GONE)
         views.setTextViewText(R.id.omi_widget_count, "")
         views.setViewVisibility(R.id.omi_widget_empty, View.VISIBLE)
         views.setTextViewText(R.id.omi_widget_empty, context.getString(R.string.omi_widget_open))
@@ -251,11 +266,89 @@ class OmiApprovalsWidget : OmiWidgetProvider() {
     }
 }
 
+/**
+ * Family day: what is still ahead today on the family calendar, then tasks due and overdue
+ * chores. Rows from an earlier day are dropped until the app writes today's.
+ */
+class OmiFamilyDayWidget : OmiWidgetProvider() {
+    override fun render(context: Context, medium: Boolean): RemoteViews {
+        val data = OmiWidgetData.familyDay(OmiWidgetStore.read(context, OmiWidgetKeys.FAMILY_DAY))
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+        if (data == null || data.day != today) {
+            return OmiListViews.empty(context, R.string.omi_widget_family_day_name, "/conversations", 30, data?.title)
+        }
+        val views = OmiListViews.build(context, data.list, medium, { null }, 31, footer = data.footer)
+        views.setOnClickPendingIntent(R.id.omi_widget_root, OmiWidgetLinks.open(context, "/conversations", 30))
+        return views
+    }
+}
+
+/**
+ * Next event: the soonest of the phone's next event (when Omi may read the calendars) and the
+ * family calendar's next timed block. A phone event opens the calendar app at that time.
+ */
+class OmiNextEventWidget : OmiWidgetProvider() {
+    override fun render(context: Context, medium: Boolean): RemoteViews {
+        val labels = OmiWidgetData.nextEventLabels(OmiWidgetStore.read(context, OmiWidgetKeys.NEXT_EVENT))
+            ?: return OmiStatusViews.empty(context, R.string.omi_widget_next_event_name)
+        val now = System.currentTimeMillis()
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(now))
+        val phone = OmiNextEvent.read(context, now)?.let { TimedEvent(it.title, it.startMs) }
+        val family = OmiWidgetData.nextFamilyEvent(
+            OmiWidgetData.familyDay(OmiWidgetStore.read(context, OmiWidgetKeys.FAMILY_DAY)), today, now,
+        )
+        val picked = OmiWidgetData.soonest(phone, family)
+        if (picked == null) {
+            val views = OmiStatusViews.build(context, labels.title, labels.none, null, valueLines = 2)
+            views.setOnClickPendingIntent(R.id.omi_widget_root, OmiWidgetLinks.open(context, "/conversations", 40))
+            return views
+        }
+        val (event, fromFamily) = picked
+        var flags = DateUtils.FORMAT_SHOW_TIME
+        if (!DateUtils.isToday(event.startMs)) flags = flags or DateUtils.FORMAT_SHOW_WEEKDAY or DateUtils.FORMAT_ABBREV_WEEKDAY
+        val time = DateUtils.formatDateTime(context, event.startMs, flags)
+        val detail = if (fromFamily && labels.familyLabel.isNotBlank()) "$time · ${labels.familyLabel}" else time
+        val views = OmiStatusViews.build(
+            context, labels.title, event.title, detail, valueLines = if (medium) 2 else 3, detailLines = 1,
+        )
+        val tap = if (fromFamily) OmiWidgetLinks.open(context, "/conversations", 40) else OmiNextEvent.openAt(context, event.startMs, 41)
+        views.setOnClickPendingIntent(R.id.omi_widget_root, tap)
+        return views
+    }
+}
+
+/** Memory: one of the user's memories, a different one each day; a tap opens it in Omi. */
+class OmiMemoryWidget : OmiWidgetProvider() {
+    override fun render(context: Context, medium: Boolean): RemoteViews {
+        val data = OmiWidgetData.memory(OmiWidgetStore.read(context, OmiWidgetKeys.MEMORY))
+            ?: return OmiStatusViews.empty(context, R.string.omi_widget_memory_name)
+        val item = OmiWidgetData.memoryOfDay(data, LocalDate.now().toEpochDay())
+        val views = OmiStatusViews.build(
+            context, data.title, item?.text ?: data.empty, null, valueLines = if (medium) 4 else 5,
+        )
+        val route = item?.id?.let { "/memory/${android.net.Uri.encode(it)}" } ?: "/new-memory"
+        views.setOnClickPendingIntent(R.id.omi_widget_root, OmiWidgetLinks.open(context, route, 50))
+        return views
+    }
+}
+
 /** The next event in the phone's calendars within a day, only when Omi already may read them. */
 internal object OmiNextEvent {
     data class Event(val title: String, val startMs: Long)
 
     private const val WINDOW_MS = 24L * 60 * 60 * 1000
+
+    /** Opens the phone's calendar app at [timeMs]. */
+    fun openAt(context: Context, timeMs: Long, requestCode: Int): android.app.PendingIntent {
+        val uri = CalendarContract.CONTENT_URI.buildUpon().appendPath("time").appendPath(timeMs.toString()).build()
+        val intent = Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        return android.app.PendingIntent.getActivity(
+            context,
+            requestCode,
+            intent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
 
     fun read(context: Context, nowMs: Long): Event? {
         if (context.checkSelfPermission(Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) return null

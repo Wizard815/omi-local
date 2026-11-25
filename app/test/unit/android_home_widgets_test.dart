@@ -156,8 +156,110 @@ void main() {
       AndroidWidgetDocuments.listening(RecordingState.pause, en),
       AndroidWidgetDocuments.translation(on: true, language: 'Deutsch', l10n: en),
       AndroidWidgetDocuments.approvals(const WaitingForApproval(), en, dates),
+      AndroidWidgetDocuments.familyDay(const FamilyDay(configured: false), en, now: now),
+      AndroidWidgetDocuments.nextEvent(en),
+      AndroidWidgetDocuments.memory(const [], en),
     ]) {
       expect(jsonDecode(jsonEncode(doc)), doc);
     }
+  });
+
+  group('Family day', () {
+    final now = DateTime(2026, 11, 25, 13);
+    final start = DateTime.utc(2026, 11, 25, 19, 30);
+
+    test('lists what is left, counts the rest and carries timed blocks for Next event', () {
+      final doc = AndroidWidgetDocuments.familyDay(
+        FamilyDay(
+          configured: true,
+          reachable: true,
+          date: '2026-11-25',
+          next: [
+            const FamilyDayBlock(title: 'Swim meet', timeLabel: 'All day', allDay: true),
+            FamilyDayBlock(title: ' Dentist ', start: start, timeLabel: '14:30'),
+            const FamilyDayBlock(title: '  '),
+          ],
+          remaining: 5,
+          tasksDue: 2,
+          choresOverdue: 1,
+        ),
+        en,
+        now: now,
+      );
+      expect(doc['title'], 'Family day');
+      expect(doc['day'], '2026-11-25');
+      expect(doc['count_label'], '5 left');
+      expect(doc['rows'], [
+        {'title': 'Swim meet', 'detail': 'All day'},
+        {'title': 'Dentist', 'detail': '14:30'},
+      ]);
+      expect(doc['footer'], '2 tasks due today · 1 chore overdue');
+      expect(doc['events'], [
+        {'title': 'Dentist', 'start_ms': start.millisecondsSinceEpoch},
+      ]);
+    });
+
+    test('names the member, and says why it is empty', () {
+      final forMaya = AndroidWidgetDocuments.familyDay(
+        const FamilyDay(configured: true, reachable: true, date: '2026-11-25', ownerName: 'Maya'),
+        en,
+        now: now,
+      );
+      expect(forMaya['title'], 'Day for Maya');
+      expect(forMaya['count_label'], '');
+      expect(forMaya['empty'], 'Nothing else on the calendar today');
+      expect(forMaya['footer'], '');
+
+      final down = AndroidWidgetDocuments.familyDay(
+        const FamilyDay(configured: true, error: 'The family calendar did not answer'),
+        en,
+        now: now,
+      );
+      expect(down['empty'], 'The family calendar did not answer');
+      expect(down['day'], '2026-11-25');
+
+      final none = AndroidWidgetDocuments.familyDay(const FamilyDay(configured: false), en, now: now);
+      expect(none['empty'], 'No family calendar is set up on your Omi server');
+    });
+  });
+
+  group('Memory', () {
+    Memory memory(String id, String content, {DateTime? at, bool deleted = false, bool dismissed = false}) => Memory(
+          id: id,
+          uid: 'user-1',
+          content: content,
+          category: MemoryCategory.manual,
+          createdAt: at ?? DateTime.utc(2026, 1, 1),
+          updatedAt: at ?? DateTime.utc(2026, 1, 1),
+          visibility: MemoryVisibility.private,
+          deleted: deleted,
+          isDismissed: dismissed,
+        );
+
+    test('current memories, oldest first, trimmed and shortened', () {
+      final doc = AndroidWidgetDocuments.memory([
+        memory('new', 'Likes oat milk', at: DateTime.utc(2026, 3)),
+        memory('old', '  Allergic to peanuts ', at: DateTime.utc(2026, 1)),
+        memory('gone', 'Deleted', deleted: true),
+        memory('hidden', 'Dismissed', dismissed: true),
+        memory('blank', '   '),
+        memory('long', 'x' * 400, at: DateTime.utc(2026, 5)),
+      ], en);
+      final items = (doc['memories'] as List).cast<Map<String, Object?>>();
+      expect(items.map((m) => m['id']), ['old', 'new', 'long']);
+      expect(items.first['text'], 'Allergic to peanuts');
+      expect((items.last['text'] as String).length, AndroidWidgetDocuments.maxMemoryChars);
+      expect(doc['empty'], 'No memories yet');
+    });
+
+    test('keeps only the newest ones when there are many', () {
+      final many = [
+        for (var i = 0; i < AndroidWidgetDocuments.maxMemories + 5; i++)
+          memory('m$i', 'Memory $i', at: DateTime.utc(2026, 1, 1).add(Duration(days: i))),
+      ];
+      final items = (AndroidWidgetDocuments.memory(many, en)['memories'] as List).cast<Map<String, Object?>>();
+      expect(items, hasLength(AndroidWidgetDocuments.maxMemories));
+      expect(items.first['id'], 'm5');
+    });
   });
 }

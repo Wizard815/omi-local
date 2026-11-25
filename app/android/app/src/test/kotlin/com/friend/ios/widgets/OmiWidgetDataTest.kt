@@ -79,4 +79,63 @@ class OmiWidgetDataTest {
         assertEquals(2, OmiListViews.visibleRows(false))
         assertEquals(3, OmiListViews.visibleRows(true))
     }
+
+    private val familyJson =
+        """{"title":"Family day","day":"2026-11-25","configured":true,"count":4,"count_label":"4 left",""" +
+            """"empty":"Nothing else on the calendar today","footer":"2 tasks due today",""" +
+            """"rows":[{"title":"Swim","detail":"All day"},{"title":"  "},{"title":"Dentist","detail":"14:30"},""" +
+            """{"title":"Pickup","detail":"15:15"},{"title":"Dinner","detail":"18:00"}],""" +
+            """"events":[{"title":"Pickup","start_ms":3000},{"title":"Dentist","start_ms":2000},{"title":"","start_ms":2500}]}"""
+
+    @Test
+    fun familyDayKeepsThreeRowsAndSortsTimedEvents() {
+        val day = OmiWidgetData.familyDay(familyJson)!!
+        assertEquals(listOf("Swim", "Dentist", "Pickup"), day.list.rows.map { it.title })
+        assertEquals("4 left", day.list.countLabel)
+        assertEquals("2 tasks due today", day.footer)
+        assertEquals(listOf("Dentist", "Pickup"), day.events.map { it.title })
+        assertNull(OmiWidgetData.familyDay("""{"title":"Family day"}"""))
+    }
+
+    @Test
+    fun nextFamilyEventSkipsPassedBlocksAndOtherDays() {
+        val day = OmiWidgetData.familyDay(familyJson)
+        assertEquals("Dentist", OmiWidgetData.nextFamilyEvent(day, "2026-11-25", 1500)?.title)
+        assertEquals("Pickup", OmiWidgetData.nextFamilyEvent(day, "2026-11-25", 2001)?.title)
+        assertNull(OmiWidgetData.nextFamilyEvent(day, "2026-11-25", 3001))
+        assertNull(OmiWidgetData.nextFamilyEvent(day, "2026-11-26", 0))
+        assertNull(OmiWidgetData.nextFamilyEvent(null, "2026-11-25", 0))
+    }
+
+    @Test
+    fun soonestPrefersThePhoneOnATie() {
+        val phone = TimedEvent("Phone", 2000)
+        val family = TimedEvent("Family", 2000)
+        assertEquals(phone to false, OmiWidgetData.soonest(phone, family))
+        assertEquals(TimedEvent("Early", 1000) to true, OmiWidgetData.soonest(phone, TimedEvent("Early", 1000)))
+        assertEquals(family to true, OmiWidgetData.soonest(null, family))
+        assertNull(OmiWidgetData.soonest(null, null))
+    }
+
+    @Test
+    fun memoryTurnsOncePerDayInAFixedOrder() {
+        val data = OmiWidgetData.memory(
+            """{"title":"Memory","empty":"No memories yet","memories":[{"id":"a","text":"One"},""" +
+                """{"id":"b","text":" "},{"id":"c","text":"Two"},{"text":"Three"}]}""",
+        )!!
+        assertEquals(listOf("One", "Two", "Three"), data.memories.map { it.text })
+        assertEquals("One", OmiWidgetData.memoryOfDay(data, 0)?.text)
+        assertEquals("Two", OmiWidgetData.memoryOfDay(data, 1)?.text)
+        assertEquals("One", OmiWidgetData.memoryOfDay(data, 3)?.text)
+        assertEquals("Three", OmiWidgetData.memoryOfDay(data, -1)?.text)
+        assertNull(OmiWidgetData.memoryOfDay(data, 2)?.id)
+        assertNull(OmiWidgetData.memoryOfDay(OmiWidgetData.memory("""{"title":"Memory","memories":[]}""")!!, 5))
+    }
+
+    @Test
+    fun nextEventLabelsNeedATitle() {
+        assertNull(OmiWidgetData.nextEventLabels("""{"none":"Nothing"}"""))
+        val labels = OmiWidgetData.nextEventLabels("""{"title":"Next event","none":"Nothing","family_label":"Family calendar"}""")!!
+        assertEquals("Family calendar", labels.familyLabel)
+    }
 }

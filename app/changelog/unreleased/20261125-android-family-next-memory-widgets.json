@@ -1,0 +1,4 @@
+{
+  "change": "Three more home screen widgets: Family day, Next event and Memory. Links from widgets and notifications to a task, memory or conversation now open on a self-hosted server",
+  "platforms": ["android"]
+}
