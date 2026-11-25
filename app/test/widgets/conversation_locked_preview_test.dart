@@ -154,16 +154,6 @@ void main() {
     expect(find.text(_upgrade), findsNothing);
   });
 
-  testWidgets('the waiting preview opens a sheet with its choices, not a page', (tester) async {
-    final routes = _Routes();
-    await pumpRow(tester, observer: routes);
-    await tester.tap(find.byKey(const Key('locked_preview_action')));
-    expect(routes.pushed, hasLength(2));
-    expect(routes.pushed.last, isA<OmiSheetRoute>());
-    // Check navigation without building the network-backed plans sheet.
-    await tester.pumpWidget(const SizedBox.shrink());
-  });
-
   testWidgets('the upgrade action respects the row selection mode', (tester) async {
     final routes = _Routes();
     await pumpRow(tester, observer: routes);
@@ -201,9 +191,9 @@ void main() {
         findsOneWidget,
       );
     }
+    // omi-local: a self-hosted server offers no plans, so the action opens nothing.
     await tester.tap(find.byKey(const Key('locked_preview_action')));
-    expect(routes.pushed, hasLength(2));
-    expect(routes.pushed.last, isA<OmiSheetRoute>());
+    expect(routes.pushed, hasLength(1));
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
@@ -246,7 +236,8 @@ void main() {
     expect(conversations.selectedConversationIds, isEmpty);
     expect(tester.takeException(), isNull);
   });
-  for (final visible in [true, false]) {
+  // omi-local: no plans to offer, so only the hidden-subscription arm applies.
+  for (final visible in [false]) {
     for (final grouped in [true, false]) {
       testWidgets('frost tap on ${grouped ? 'grouped' : 'single'} held conversation visibility $visible',
           (tester) async {
@@ -272,7 +263,7 @@ void main() {
       });
     }
   }
-  for (final visible in [true, false]) {
+  for (final visible in [false]) {
     testWidgets('gap in held conversation run uses guarded action visibility $visible', (tester) async {
       usage.dispose();
       usage = _Usage(visible);

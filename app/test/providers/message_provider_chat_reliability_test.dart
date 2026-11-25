@@ -195,41 +195,6 @@ void main() {
       expect(provider.sendingMessage, isFalse);
     });
 
-    test('shared-budget 402 keeps backend composer state and stops subsequent sends', () async {
-      var sends = 0;
-      final provider = MessageProvider(sessionsApi: _FakeSessions())
-        ..replyStreamOverride = (text, {appId, filesId, context, chatSessionId}) async* {
-          sends++;
-          yield ServerMessageChunk(
-              'reply',
-              jsonEncode({
-                'detail': {
-                  'error': 'usage_budget_exhausted',
-                  'chat_at_cap': {
-                    'state': 'paused',
-                    'trigger': 'usage_budget',
-                    'title': 'Chat is paused',
-                    'body': 'Capture continues.',
-                    'reset_line': 'Chat is back on Nov 1.',
-                    'reset_at': DateTime.now().millisecondsSinceEpoch ~/ 1000 + 3600,
-                    'upgrade_label': 'Upgrade to Architect'
-                  },
-                }
-              }),
-              MessageChunkType.error,
-              errorCode: 'quota_exceeded');
-        };
-      await provider.sendMessageStreamToServer('question');
-      expect(provider.chatAtCap?.title, 'Chat is paused');
-      expect(provider.chatAtCap?.resetLine, 'Chat is back on Nov 1.');
-      expect(provider.messages.last.text, 'Chat is paused');
-      await provider.sendMessageStreamToServer('another question');
-      expect(sends, 1);
-      provider.clearUserData();
-      expect(provider.chatAtCap, isNull);
-      provider.dispose();
-    });
-
     test('quota keeps the localized reply instead of a failure marker', () async {
       final provider = MessageProvider(sessionsApi: _FakeSessions())
         ..replyStreamOverride = (text, {appId, filesId, context, chatSessionId}) async* {
@@ -521,18 +486,6 @@ final class _EnvFields implements EnvFields {
 
   @override
   String? get googleClientSecret => null;
-
-  @override
-  String? get intercomAppId => null;
-
-  @override
-  String? get intercomIOSApiKey => null;
-
-  @override
-  String? get intercomAndroidApiKey => null;
-
-  @override
-  String? get posthogApiKey => null;
 
   @override
   bool? get useAuthCustomToken => false;

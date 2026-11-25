@@ -1,50 +1,23 @@
-import 'package:omi/utils/analytics/analytics_adapter.dart';
-import 'package:omi/utils/analytics/analytics_manager.dart';
-import 'package:package_info_plus/package_info_plus.dart';
+import 'package:omi/services/experiments/client_refactor_flags.dart';
 
-class RefactorFlagAdapter
-    implements AnalyticsAdapter, AnalyticsIdentityAdapter, AnalyticsFeatureFlagAdapter, AnalyticsBooleanFlagAdapter {
+/// Switches upstream's client refactor paths for a test. Keys are the upstream cohort names; any
+/// key not given is off, the self-hosted default.
+class RefactorFlagAdapter {
   RefactorFlagAdapter(this.flags);
   final Map<String, bool> flags;
-  bool initialized = false;
-  void Function()? onCachedRead;
-  @override
-  bool get isInitialized => initialized;
-  @override
-  Future<void> init() async {
-    initialized = true;
-  }
-
-  @override
-  Future<String> settleIdentity(String? identity, {required bool reset}) async => identity ?? 'synthetic-owner';
-  @override
-  bool isBooleanFeatureEnabledCached(String key) {
-    onCachedRead?.call();
-    return flags[key] == true;
-  }
-
-  @override
-  Future<bool> isBooleanFeatureEnabled(String key) async => flags[key] == true;
-  @override
-  Future<bool> isFeatureEnabled(String key) async => flags[key] == true;
-  @override
-  Future<bool> reloadFeatureFlags() async => true;
-  @override
-  Future<Object?> getFeatureFlagPayload(String key) async => null;
-  @override
-  Future<String?> getFeatureFlagVariant(String key) async => null;
-  @override
-  dynamic noSuchMethod(Invocation invocation) => null;
 }
 
 Future<RefactorFlagAdapter> setRefactorFlags(Map<String, bool> flags) async {
-  AnalyticsManager.resetForTesting();
-  PackageInfo.setMockInitialValues(
-      appName: 'Test', packageName: 'test', version: '1', buildNumber: '1', buildSignature: '');
-  final adapter = RefactorFlagAdapter(flags);
-  AnalyticsManager.configure(adapter);
-  await AnalyticsManager.init();
-  AnalyticsManager().bindIdentity('synthetic-owner');
+  ClientRefactorFlags.debugServing = flags['clients_refactor'] ?? false;
+  ClientRefactorFlags.debugChunkUploads = flags['clients_from_segments_chunks'] ?? false;
+  ClientRefactorFlags.debugCustodyRelease = flags['custody_capture_committed_release'] ?? false;
   await Future<void>.delayed(Duration.zero);
-  return adapter;
+  return RefactorFlagAdapter(flags);
+}
+
+/// Back to the self-hosted defaults (every refactor path off).
+void resetRefactorFlags() {
+  ClientRefactorFlags.debugServing = false;
+  ClientRefactorFlags.debugChunkUploads = false;
+  ClientRefactorFlags.debugCustodyRelease = false;
 }

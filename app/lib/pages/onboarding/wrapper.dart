@@ -25,12 +25,6 @@ import 'package:omi/pages/onboarding/permissions/permissions_widget.dart';
 import 'package:omi/pages/onboarding/primary_language/primary_language_widget.dart';
 import 'package:omi/pages/onboarding/complete_screen.dart';
 import 'package:omi/pages/onboarding/variants/pocket/pocket_onboarding_flow.dart';
-import 'package:omi/pages/onboarding/variants/yinka/yinka_onboarding_flow.dart';
-import 'package:omi/pages/paywall/trial_upsell_sheet.dart';
-import 'package:omi/pages/onboarding/web_onboarding_page.dart';
-import 'package:omi/pages/paywall/paywall_router.dart';
-import 'package:omi/services/experiments/onboarding_variant_gate.dart';
-import 'package:omi/services/experiments/paywall_experiment.dart';
 import 'package:omi/pages/onboarding/setup_page.dart';
 import 'package:omi/pages/onboarding/speech_profile_widget.dart';
 import 'package:omi/pages/onboarding/guided_voice_controller.dart';
@@ -128,7 +122,6 @@ class _OnboardingWrapperState extends State<OnboardingWrapper> with TickerProvid
   bool? _setupPageEnabledResolved;
   ProductAttempt? _onboardingAttempt;
   bool _finishing = false;
-  bool _signupPaywallShown = false;
   late final _stepTelemetry = MobileOnboardingStepTelemetry(
     emit: const TypedEvents().emit,
     platform: () => switch (Theme.of(context).platform) {
@@ -251,11 +244,10 @@ class _OnboardingWrapperState extends State<OnboardingWrapper> with TickerProvid
     }
   }
 
-  /// Marks first-run onboarding complete and routes home. Shared by the native completion screen,
-  /// the web onboarding page and Yinka's flow, so only the wrapper ever owns completion. False when
-  /// the save failed (the step stays, so the reader can tap again). [paywallShown] skips the
-  /// end-of-onboarding paywall placement when the arm already offered a plan.
-  Future<bool> _finishOnboarding({bool paywallShown = false}) async {
+  /// Marks first-run onboarding complete and routes home. Shared by the native completion screen
+  /// and Pocket's flow, so only the wrapper ever owns completion. False when the save failed (the
+  /// step stays, so the reader can tap again).
+  Future<bool> _finishOnboarding() async {
     if (_finishing) return false;
     _finishing = true;
     final saved = await OnboardingSyncRuntime.enqueue(completed: true);
@@ -272,88 +264,18 @@ class _OnboardingWrapperState extends State<OnboardingWrapper> with TickerProvid
     _completeOnboardingTelemetry();
     PlatformManager.instance.analytics.onboardingCompleted();
     PaintingBinding.instance.imageCache.clear();
-    if (!paywallShown) await _maybeShowOnboardingPaywall();
-    if (!mounted) return true;
-    // Sign-in happened inside onboarding, after the app shell's launch-time fetch, so Home and
-    // Settings (Upgrade row, first-tap trial paywall) would otherwise have no subscription.
+    // Sign-in happened inside onboarding, after the app shell's launch-time fetch, so Home would
+    // otherwise have no subscription (the server's plan flags).
     unawaited(context.read<UsageProvider>().fetchSubscription());
     routeToPage(context, const HomePageWrapper(), replace: true);
     return true;
   }
 
-  /// The experiment's end-of-onboarding placement: only arms whose payload asks for it, never
-  /// control, and never when subscription UI is hidden (the router checks that). The `trial` arm
-  /// has its placement right after sign-up instead ([_maybeShowSignupPaywall]).
-  Future<void> _maybeShowOnboardingPaywall() async {
-    final config = PaywallExperiment.current;
-    if (!mounted || config.isControl || !config.onboardingPaywall) return;
-    if (config.variant == PaywallVariant.trial) return;
-    await PaywallRouter.openVariant(context, source: 'onboarding', config: config);
-  }
-
-  /// The `trial` arm's placement: once, right after sign-up and consent, before the first step.
-  /// Dismissing it (close button) just continues onboarding.
-  bool _signupPaywallPurchased = false;
-
-  Future<void> _maybeShowSignupPaywall() async {
-    if (_signupPaywallShown) return;
-    final config = PaywallExperiment.current;
-    if (!mounted || config.variant != PaywallVariant.trial || !config.onboardingPaywall) return;
-    _signupPaywallShown = true;
-    // The router needs the subscription (trial eligibility) that sign-in only started fetching.
-    final usage = context.read<UsageProvider>();
-    if (usage.subscription == null) await usage.fetchSubscription();
-    if (!mounted) return;
-    await PaywallRouter.openVariant(
-      context,
-      source: 'onboarding',
-      config: config,
-      onResult: (result) => _signupPaywallPurchased = result == true,
-    );
-  }
-
-  /// Enters the steps after sign-in and consent: Pocket's flow. The other arms are debug-only: Reid's
-  /// web page, Yinka's flow, or the native step the reader left off at. A web page that falls back
-  /// lands on that same native step.
+  /// Enters the steps after sign-in and consent: Pocket's flow, which owns the remaining steps and
+  /// completion. There is no plan offer on the way: a self-hosted server has no billing.
   Future<void> _enterSteps() async {
-    await _maybeShowSignupPaywall();
     if (!mounted) return;
-    final arm = OnboardingVariantGate.arm;
-    PlatformManager.instance.analytics.track('Onboarding Variant Shown', properties: {
-      'variant': arm.variant.wireName,
-      '\$feature/${OnboardingVariantGate.enabledFlag}': arm.variant.wireName,
-    });
-    switch (arm.variant) {
-      case OnboardingVariant.pocket:
-        // Closing the sign-up trial paywall earns the 30-day downsell, once.
-        if (_signupPaywallShown && !_signupPaywallPurchased) {
-          await TrialUpsellSheet.show(context, source: 'onboarding');
-          if (!mounted) return;
-        }
-        // The flow offers no plan itself: skip the end placement only when sign-up already showed one.
-        await routeToPage(
-          context,
-          PocketOnboardingFlow(
-              onComplete: ({required bool paywallShown}) =>
-                  _finishOnboarding(paywallShown: paywallShown || _signupPaywallShown)),
-        );
-        return;
-      case OnboardingVariant.yinka:
-        await routeToPage(context, YinkaOnboardingFlow(onComplete: _finishOnboarding));
-        return;
-      case OnboardingVariant.reid:
-        const TypedEvents().emit(const OnboardingWebviewShown());
-        final result = await routeToPage(context, WebOnboardingPage(url: arm.webUrl!));
-        if (!mounted) return;
-        if (result == WebOnboardingResult.completed) {
-          const TypedEvents().emit(const OnboardingWebviewCompleted());
-          await _finishOnboarding();
-          return;
-        }
-      case OnboardingVariant.control:
-        break;
-    }
-    _controller!.animateTo(_resumeStep());
+    await routeToPage(context, PocketOnboardingFlow(onComplete: _finishOnboarding));
   }
 
   void _goNext() {

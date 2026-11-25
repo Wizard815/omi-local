@@ -33,8 +33,6 @@ import 'package:omi/services/audio_sources/audio_source.dart';
 import 'package:omi/services/devices/connectors/device_connection.dart';
 import 'package:omi/services/services.dart';
 import 'package:omi/services/wals/wal_frame_encoder.dart';
-import 'package:omi/services/wals/wal_backlog_telemetry.dart';
-import 'package:omi/services/telemetry/client_telemetry.dart';
 import 'package:omi/utils/analytics/analytics_manager.dart';
 import 'package:omi/services/experiments/wal_delta_index_gate.dart';
 import 'package:omi/services/wals/pendant_ring_custody.dart';
@@ -264,9 +262,12 @@ class LocalWalSyncImpl with WidgetsBindingObserver implements LocalWalSync {
     listener.onWalUpdated();
   }
 
+  /// Pendant frames refused while storage admission blocks, for the local debug log only.
+  int _pendantFramesDropped = 0;
+
   @override
   void clearUserData() {
-    _backlogTelemetry.clearUserData();
+    _pendantFramesDropped = 0;
     _sessionGeneration++;
     _drainGroupBatchCounts.clear();
     _drainGroupCountedAt.clear();
@@ -323,7 +324,6 @@ class LocalWalSyncImpl with WidgetsBindingObserver implements LocalWalSync {
   DateTime? _lastStaleWalReportAt;
   final Future<int?> Function()? _freeDiskBytesOverride;
   final Future<void> Function(Duration duration)? _sleepOverride;
-  final WalBacklogTelemetry _backlogTelemetry;
   final PendantRingCustody _custody;
   final Future<DeviceConnection?> Function(String deviceId)? _connectionResolver;
 
@@ -352,7 +352,6 @@ class LocalWalSyncImpl with WidgetsBindingObserver implements LocalWalSync {
     this.listener, {
     SyncUploadGate? uploadGate,
     SyncJobPoller? jobPoller,
-    WalBacklogTelemetry? backlogTelemetry,
     DateTime Function()? now,
     Timer Function(Duration, void Function(Timer))? periodic,
     Future<SyncJobFetch> Function(String jobId)? jobStatusFetcher,
@@ -366,7 +365,6 @@ class LocalWalSyncImpl with WidgetsBindingObserver implements LocalWalSync {
     PendantRingCustody? custody,
     Future<DeviceConnection?> Function(String deviceId)? connectionResolver,
   })  : _jobPollerOverride = jobPoller,
-        _backlogTelemetry = backlogTelemetry ?? WalBacklogTelemetry(),
         _uploadGateOverride = uploadGate,
         _nowOverride = now,
         _periodicOverride = periodic,
@@ -1078,7 +1076,6 @@ class LocalWalSyncImpl with WidgetsBindingObserver implements LocalWalSync {
   }
 
   Future _flush(int generation) async {
-    _backlogTelemetry.flushPendantDrops();
     Logger.debug("_flushing");
     int flushedCount = 0;
     final durableWals = <Wal>[];
@@ -1509,11 +1506,6 @@ class LocalWalSyncImpl with WidgetsBindingObserver implements LocalWalSync {
 
   String _durableKey(Wal wal) => '${wal.id}|${wal.filePath ?? wal.getFileName()}';
 
-  String _uploadTelemetrySource(List<Wal> wals) => ClientTelemetry.uploadSourceForBatch([
-        for (final wal in wals)
-          (storage: wal.storage.name, originalStorage: wal.originalStorage?.name, device: wal.device),
-      ]);
-
   /// In the `upload` phase [kept] holds only the members an upload accepted (HTTP 200/202).
   void _emitWalTranscriptCoverage({
     required int generation,
@@ -1942,8 +1934,10 @@ class LocalWalSyncImpl with WidgetsBindingObserver implements LocalWalSync {
       if (debugRefusePendantFrames ||
           ((_pendantBlockedByStorage || (_retentionRisk != null && _retentionRisk!.reason != 'count_cap')) &&
               _countPendantBuffered() >= _maxPendantBufferedFrames)) {
-        _backlogTelemetry.pendantFrameDropped(
-            retentionReason: _retentionRisk?.reason, storageWriteBlocked: _pendantBlockedByStorage);
+        _pendantFramesDropped++;
+        DebugLogManager.logWarning('LocalWalSync: pendant frame dropped, storage admission blocked', {
+          'dropped_count': _pendantFramesDropped,
+        });
         _lastFrameAccepted = false;
         return frame;
       }
@@ -2286,7 +2280,6 @@ class LocalWalSyncImpl with WidgetsBindingObserver implements LocalWalSync {
           audioEndSeconds: audioBounds.end,
           claimLiveCapture: claimLiveCapture,
           geolocation: batchWals.first.geolocation,
-          telemetrySource: _uploadTelemetrySource(batchWals),
         );
 
         _observeNativeUpload(batchWals);
@@ -2605,7 +2598,6 @@ class LocalWalSyncImpl with WidgetsBindingObserver implements LocalWalSync {
         audioEndSeconds: audioBounds.end,
         claimLiveCapture: claimLiveCapture,
         geolocation: walToSync.geolocation,
-        telemetrySource: _uploadTelemetrySource([walToSync]),
       );
       // The server took it: a later retry of this file starts a fresh trace.
       UploadTrace.instance.accepted(walToSync.id);

@@ -9,9 +9,6 @@ import 'package:omi/services/on_device/on_device_background.dart';
 import 'package:omi/services/onboarding_sync_runtime.dart';
 import 'package:omi/env/physical_qualification.dart';
 import 'dart:async';
-import 'package:omi/services/telemetry/client_telemetry.dart';
-import 'package:omi/services/telemetry/client_telemetry_flags.dart';
-import 'package:omi/services/telemetry/client_telemetry_transport.dart';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
@@ -111,18 +108,12 @@ import 'package:omi/services/notifications/merge_notification_handler.dart';
 import 'package:omi/services/devices/connectors/limitless_connection.dart';
 import 'package:omi/services/services.dart';
 import 'package:omi/services/wals.dart';
-import 'package:omi/utils/analytics/app_session_telemetry.dart';
-import 'package:omi/utils/analytics/phone_battery_sample_telemetry.dart';
-import 'package:omi/utils/analytics/mobile_performance_telemetry.dart';
 import 'package:omi/utils/analytics/analytics_manager.dart';
 import 'package:omi/utils/debug_log_manager.dart';
 import 'package:omi/utils/debugging/crashlytics_manager.dart';
 import 'package:omi/utils/environment_detector.dart';
-import 'package:omi/utils/analytics/rage_click_context_tracker.dart';
-import 'package:omi/utils/analytics/session_replay.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 import 'package:omi/utils/logger.dart';
-import 'package:omi/utils/platform/platform_service.dart';
 import 'package:omi/utils/platform/platform_manager.dart';
 import 'package:omi/utils/notification_channel_strings.dart';
 
@@ -285,7 +276,6 @@ Future _init() async {
         }
         unawaited(_reportBootCrash('flutter_error', details.exception, details.stack, details: details));
         try {
-          AnalyticsManager().recordProductError(ProductErrorKind.flutterFramework);
           Logger.instance.talker.handle(details.exception, details.stack);
           DebugLogManager.logError(details.exception, details.stack, 'FlutterError');
         } catch (_) {}
@@ -295,9 +285,6 @@ Future _init() async {
           unawaited(PhysicalQualification.runtimeEvent('platform_error', error: error, stack: stack));
         } else {
           _startupErrorRouter.handlePlatformError(error, stack);
-          try {
-            AnalyticsManager().recordProductError(ProductErrorKind.uncaughtDart);
-          } catch (_) {}
         }
         return true;
       },
@@ -447,9 +434,6 @@ Future<void> _start({bool forceFull = false}) async {
       if (BootRecovery.safeModeActive) {
         await BootJournal.instance.record('safe_boot', 'begin');
         await BootJournal.instance.record('full_startup', 'paused');
-        try {
-          AnalyticsManager().track('Mobile Recovery Mode Entered', properties: {'stage': recovery.failingStage});
-        } catch (_) {}
         await BootJournal.instance.record('safe_boot', 'completed');
         await BootJournal.instance.record('boot', 'completed');
         runApp(BootRecoveryApp(onRetry: () => _start(forceFull: true)));
@@ -473,11 +457,6 @@ Future<void> _start({bool forceFull = false}) async {
     // day of investigation for exactly this reason — the app looked hung
     // when it had in fact thrown a precise, actionable StateError.
     if (!PhysicalQualification.enabled) unawaited(_reportBootCrash('startup_error', error, stack));
-    if (!PhysicalQualification.enabled) {
-      try {
-        AnalyticsManager().recordProductError(ProductErrorKind.startup);
-      } catch (_) {}
-    }
     if (!PhysicalQualification.enabled && BootRecovery.countsFailure(error)) {
       try {
         recovery ??= BootRecovery(await SharedPreferences.getInstance());
@@ -487,9 +466,6 @@ Future<void> _start({bool forceFull = false}) async {
           BootRecovery.safeModeActive = true;
           await BootJournal.instance.record('safe_boot', 'begin');
           await BootJournal.instance.record('full_startup', 'paused');
-          try {
-            AnalyticsManager().track('Mobile Recovery Mode Entered', properties: {'stage': stage});
-          } catch (_) {}
           await BootJournal.instance.record('safe_boot', 'completed');
           await BootJournal.instance.record('boot', 'completed');
           runApp(BootRecoveryApp(onRetry: () => _start(forceFull: true)));
@@ -537,10 +513,7 @@ void main() {
         unawaited(PhysicalQualification.runtimeEvent('zone_error', error: error, stack: stack));
       } else {
         _startupErrorRouter.handleZoneError(error, stack);
-        try {
-          debugPrint('Uncaught error: $error\n$stack');
-          AnalyticsManager().recordProductError(ProductErrorKind.uncaughtDart);
-        } catch (_) {}
+        debugPrint('Uncaught error: $error\n$stack');
       }
     },
   );
@@ -560,44 +533,11 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-  final AppSessionTelemetry _appSessionTelemetry = AppSessionTelemetry();
-  late final PhoneBatterySampleTelemetry _phoneBatteryTelemetry = PhoneBatterySampleTelemetry(
-    captureContext: () {
-      final context = globalNavigatorKey.currentContext;
-      if (context == null) return (source: 'unknown', mode: 'unknown');
-      final capture = context.read<CaptureProvider>();
-      if (capture.isPhoneMicBatchRecording) return (source: 'phone_mic', mode: 'batch');
-      if (capture.isPendantBatchRecording) return (source: 'pendant', mode: 'batch');
-      final source = capture.liveCaptureSource;
-      if (source == null) return (source: 'none', mode: 'none');
-      if (source == 'phone') return (source: 'phone_mic', mode: 'live');
-      if (source == 'apple_watch') return (source: 'watch', mode: 'live');
-      if (source == 'omi' || source == 'friend') return (source: 'pendant', mode: 'live');
-      return (source: 'other', mode: 'live');
-    },
-  );
-  late final MobilePerformanceTelemetry _performanceTelemetry = MobilePerformanceTelemetry(
-    emit: (name, properties) {
-      DebugLogManager.logEvent('mobile_render_diagnostic', {
-        for (final entry in properties.entries) entry.key: entry.value,
-      });
-    },
-    identityEpoch: () => AnalyticsManager.identityEpoch,
-    diagnosticsEnabled: () => SharedPreferencesUtil().devLogsToFileEnabled,
-  );
-
   @override
   void initState() {
     NotificationUtil.initializeNotificationsEventListeners();
     NotificationUtil.initializeIsolateReceivePort();
     WidgetsBinding.instance.addObserver(this);
-    if (!PhysicalQualification.enabled) {
-      _appSessionTelemetry.recordColdStart();
-      _performanceTelemetry.attach();
-      unawaited(_phoneBatteryTelemetry.start());
-      PlatformManager.instance.analytics.recordTelemetryHealth();
-      if (ClientTelemetryFlags.migrationEnabled) installClientTelemetryTransport();
-    }
     if (SharedPreferencesUtil().devLogsToFileEnabled) {
       DebugLogManager.setEnabled(true);
     }
@@ -608,8 +548,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    if (!PhysicalQualification.enabled) _performanceTelemetry.dispose();
-    _phoneBatteryTelemetry.dispose();
     super.dispose();
   }
 
@@ -645,30 +583,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
     if (state == AppLifecycleState.resumed) {
       OnboardingSyncRuntime.setActive(true);
-      if (!PhysicalQualification.enabled) {
-        _appSessionTelemetry.recordResumed();
-        _performanceTelemetry.onLifecycleState(state);
-        PlatformManager.instance.analytics.recordTelemetryHealth();
-      }
       unawaited(_refreshAccountCutoverThenWakeUploads());
-    } else if (state == AppLifecycleState.inactive || state == AppLifecycleState.hidden) {
-      // Dart timers are throttled before `paused` arrives, so the lag
-      // watchdog must already be stopped here or the background gap reads as
-      // UI stalls on the last visible surface.
-      if (!PhysicalQualification.enabled) {
-        _performanceTelemetry.onLifecycleState(state);
-      }
     } else if (state == AppLifecycleState.paused) {
       OnboardingSyncRuntime.setActive(false);
-      ClientTelemetry.instance.onBackground();
-      if (!PhysicalQualification.enabled) {
-        _appSessionTelemetry.recordBackgrounded();
-        _performanceTelemetry.onLifecycleState(state);
-      }
       SyncReconciler.instance.onBackground();
       _onAppPaused();
     } else if (state == AppLifecycleState.detached) {
-      ClientTelemetry.instance.onBackground();
       _deinit();
     }
   }
@@ -779,7 +699,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             debugShowCheckedModeBanner: false,
             title: F.title,
             navigatorKey: MyApp.navigatorKey,
-            navigatorObservers: [if (!PhysicalQualification.enabled) _performanceTelemetry],
             locale: context.watch<LocaleProvider>().locale,
             localizationsDelegates: const [
               AppLocalizations.delegate,
@@ -801,11 +720,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 child: KeyedSubtree(key: ValueKey(brightness), child: child!),
               );
               final guidedContent = BluetoothGuidanceListener(child: content);
-              return SessionReplayScope(
-                child: PlatformService.isIOS && Env.posthogApiKey != null
-                    ? RageClickContextTracker(child: guidedContent)
-                    : guidedContent,
-              );
+              return guidedContent;
             },
             home: TalkerWrapper(
               talker: Logger.instance.talker,

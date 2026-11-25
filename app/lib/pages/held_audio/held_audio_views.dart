@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:omi/models/subscription.dart';
-import 'package:omi/pages/settings/widgets/plans/contextual_plans.dart';
 import 'package:omi/providers/usage_provider.dart';
 import 'package:omi/services/on_device/on_device_transcription_controller.dart';
 import 'package:omi/ui/ui.dart';
@@ -15,10 +14,6 @@ import 'package:omi/utils/l10n_extensions.dart';
 bool heldAudioPhoneEligible(OnDeviceTranscriptionController controller) {
   if (!controller.isActive || !controller.model.engineResolved || controller.model.detectionFailed) return false;
   return controller.model.status.isSupported;
-}
-
-void openHeldAudioPlans(BuildContext context) {
-  unawaited(openContextualPlans(context, source: 'held_audio', trigger: 'usage_budget'));
 }
 
 /// Recordings still waiting for a plan or an allowance, as locked rows. A running release shows none.
@@ -48,7 +43,7 @@ class HeldRecordingLockedRow extends StatelessWidget {
           OmiLockedPreview(
             key: Key('held_recording_locked_${recording.id}'),
             label: l10n.upgrade,
-            onPressed: onPressed ?? () => openHeldAudioPlans(context),
+            onPressed: onPressed ?? () {},
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: OmiSpacing.md, vertical: OmiSpacing.sm),
               decoration: BoxDecoration(color: OmiColors.surface1, borderRadius: OmiRadius.lgAll),

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:omi/utils/error_message.dart';
 import 'package:omi/utils/platform/platform_manager.dart';
 import 'package:flutter/material.dart';
 
@@ -31,7 +30,6 @@ import 'package:omi/providers/message_provider.dart';
 import 'package:omi/utils/other/temp.dart';
 import 'package:omi/widgets/extensions/string.dart';
 import 'package:omi/utils/l10n_extensions.dart';
-import 'package:omi/backend/http/api/payment.dart';
 import 'package:omi/backend/schema/app.dart';
 import 'package:omi/pages/apps/app_detail/app_detail_config.dart';
 import 'package:omi/pages/apps/widgets/show_app_options_sheet.dart';
@@ -86,8 +84,6 @@ class _AppDetailPageState extends State<AppDetailPage> with WidgetsBindingObserv
   bool isLoading = false;
   bool chatButtonLoading = false;
   bool _reEnabling = false;
-  Map<String, dynamic>? _subscriptionData;
-  bool _isCancelingSubscription = false;
   Timer? _paymentCheckTimer;
   Timer? _openHomeTimer;
   bool _paymentCheckInFlight = false;
@@ -122,53 +118,6 @@ class _AppDetailPageState extends State<AppDetailPage> with WidgetsBindingObserv
     if (mounted && isLoading != value) {
       setState(() => isLoading = value);
     }
-  }
-
-  @override
-  Future<void> _loadSubscriptionData() async {
-    if (widget.app.isPaid) {
-      final subscriptionResponse = await getAppSubscription(widget.app.id);
-      if (mounted) {
-        setState(() {
-          _subscriptionData = subscriptionResponse;
-        });
-      }
-    }
-  }
-
-  Future<void> _cancelSubscription() async {
-    setState(() => _isCancelingSubscription = true);
-
-    try {
-      final result = await cancelAppSubscription(widget.app.id);
-      if (result != null && result['status'] == 'success') {
-        // Track subscription cancellation
-        PlatformManager.instance.analytics.appDetailSubscriptionCancelled(
-          appId: widget.app.id,
-          appName: widget.app.name,
-        );
-
-        await _loadSubscriptionData();
-
-        if (mounted) OmiFeedback.confirm(context, context.l10n.subscriptionCancelledSuccessfully);
-      } else {
-        if (mounted) OmiFeedback.error(context, context.l10n.failedToCancelSubscription);
-      }
-    } catch (e) {
-      if (mounted) OmiFeedback.error(context, context.l10n.errorWithMessage(readableError(e)));
-    } finally {
-      if (mounted) {
-        setState(() => _isCancelingSubscription = false);
-      }
-    }
-  }
-
-  bool _hasActiveSubscription() {
-    if (_subscriptionData == null || _subscriptionData!['subscription'] == null) {
-      return false;
-    }
-    final subscription = _subscriptionData!['subscription'];
-    return subscription['status'] == 'active' && subscription['cancel_at_period_end'] == false;
   }
 
   @override
@@ -455,18 +404,6 @@ class _AppDetailPageState extends State<AppDetailPage> with WidgetsBindingObserv
                     ],
                   ),
                   const SizedBox(height: 16),
-                  if (!isLoading && !app.private && app.isPaid && _hasActiveSubscription() && !appProvider.isAppOwner)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(OmiSpacing.lg, OmiSpacing.md, OmiSpacing.lg, 0),
-                      child: OmiButton.destructive(
-                        label: l10n.cancelSubscriptionButton,
-                        isLoading: _isCancelingSubscription,
-                        expand: true,
-                        onPressed: () {
-                          _confirmCancelSubscription();
-                        },
-                      ),
-                    ),
                   if ((app.isUnderReview() || app.private) && !app.isOwner(SharedPreferencesUtil().uid))
                     AppDetailNotice(icon: FontAwesomeIcons.circleInfo, text: l10n.betaTesterMessage),
                   if (app.isUnderReview() && !app.private && app.isOwner(SharedPreferencesUtil().uid))
@@ -893,19 +830,6 @@ class _AppDetailPageState extends State<AppDetailPage> with WidgetsBindingObserv
     }
     _checkPaymentStatus(app.id);
     await _launchUrlSafely(uri);
-  }
-
-  Future<void> _confirmCancelSubscription() async {
-    final l10n = context.l10n;
-    final confirmed = await showOmiConfirm(
-      context,
-      title: l10n.cancelSubscriptionQuestion,
-      message: l10n.cancelSubscriptionKeepAccessMessage,
-      confirmLabel: l10n.cancelSubscriptionButton,
-      cancelLabel: l10n.keepSubscription,
-      destructive: true,
-    );
-    if (confirmed) await _cancelSubscription();
   }
 
   Future<void> _openChatWithApp() async {

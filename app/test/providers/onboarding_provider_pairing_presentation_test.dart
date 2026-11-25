@@ -111,8 +111,6 @@ void main() {
     expect(find.byKey(const Key('find_devices_scan_again')), findsOneWidget);
     expect(find.byType(PairingFailureCard), findsNothing);
     await AnalyticsManager.flushPending(force: true);
-    expect(adapter.names, contains('Device Scan Empty'));
-    expect(adapter.names, isNot(contains('Device Connect Failure Shown')));
     provider.onDevices([BtDevice(id: 'omi-appeared', name: 'Omi Appeared', type: DeviceType.omi, rssi: -50)]);
     await tester.pump();
     expect(find.text(l10n.findDeviceNoneTitle), findsNothing);
@@ -157,9 +155,6 @@ void main() {
     expect(find.byKey(const Key('find_devices_scan_again')), findsOneWidget);
     expect(find.byKey(const Key('find_devices_contact_support')), findsOneWidget);
     await AnalyticsManager.flushPending(force: true);
-    expect(adapter.names, contains('Device Pairing Blocked'));
-    // Discovery never ran, so the funnel must not also count it as an empty scan.
-    expect(adapter.names, isNot(contains('Device Scan Empty')));
     await tester.pumpWidget(const SizedBox());
   }
 

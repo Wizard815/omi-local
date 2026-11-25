@@ -147,11 +147,6 @@ void main() {
       Env.clearApiBaseUrlOverrideForTesting();
       await fixture.stop();
     });
-    expect(
-        [Env.posthogApiKey, Env.intercomAppId, Env.intercomIOSApiKey, Env.intercomAndroidApiKey]
-            .every((key) => key == null || key.isEmpty),
-        isTrue,
-        reason: 'Heavy harness requires local_dev without external analytics credentials');
 
     // 1. Seed the heavy account: preferences cache + WAL index + audio files.
     await seedHeavyPreferences();
@@ -576,14 +571,6 @@ class _HeavyEnv implements EnvFields {
   const _HeavyEnv();
   @override
   String? get apiBaseUrl => null;
-  @override
-  String? get posthogApiKey => null;
-  @override
-  String? get intercomAppId => null;
-  @override
-  String? get intercomIOSApiKey => null;
-  @override
-  String? get intercomAndroidApiKey => null;
   @override
   String? get googleClientId => null;
   @override

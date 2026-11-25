@@ -14,7 +14,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:omi/pages/paywall/trial_paywall_page.dart';
 import 'package:flutter/scheduler.dart';
 
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
@@ -30,7 +29,6 @@ import 'package:omi/backend/preferences.dart';
 import 'package:omi/providers/home_feed_provider.dart';
 import 'package:omi/backend/schema/bt_device/bt_device.dart';
 import 'package:omi/backend/schema/geolocation.dart';
-import 'package:omi/gen/pigeon_communicator.g.dart';
 import 'package:omi/pages/action_items/action_items_page.dart';
 import 'package:omi/pages/chat/chat_route.dart';
 import 'package:omi/pages/chat/page.dart';
@@ -53,6 +51,7 @@ import 'package:omi/providers/device_provider.dart';
 import 'package:omi/providers/local_recordings_provider.dart';
 import 'package:omi/providers/announcement_provider.dart';
 import 'package:omi/providers/home_provider.dart';
+import 'package:omi/providers/user_provider.dart';
 import 'package:omi/providers/message_provider.dart';
 import 'package:omi/providers/sync_provider.dart';
 import 'package:omi/providers/task_integration_provider.dart';
@@ -66,13 +65,9 @@ import 'package:omi/services/notifications.dart';
 import 'package:omi/services/wals/recording_transfer_coordinator.dart';
 import 'package:omi/utils/other/temp.dart';
 import 'package:omi/utils/audio/foreground.dart';
-import 'package:omi/utils/analytics/background_resource_telemetry.dart';
-import 'package:omi/utils/analytics/background_checkpoint_store.dart';
-import 'package:omi/utils/analytics/analytics_manager.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 import 'package:omi/utils/logger.dart';
 import 'package:omi/utils/platform/platform_manager.dart';
-import 'package:omi/widgets/freemium_switch_dialog.dart';
 import 'package:omi/widgets/shimmer_with_timeout.dart';
 import 'package:omi/widgets/home_bottom_bar.dart';
 import 'package:omi/widgets/calendar_date_picker_sheet.dart';
@@ -115,35 +110,6 @@ class _HomePageProduct extends StatefulWidget {
 
 class _HomePageProductState extends State<_HomePageProduct> {
   String? _navigateToRoute;
-  bool _homeTrialSheetArmed = SharedPreferencesUtil().homeTrialSheetPending;
-  bool _homeTrialSheetChecking = false;
-
-  /// Pocket's placement: the trial paywall once more, on the first tap in Home, for a reader who
-  /// declined both sign-up offers. Fires at most once per device; a paid or ineligible reader
-  /// never sees it.
-  Future<void> _showHomeTrialSheetOnce() async {
-    if (!_homeTrialSheetArmed || _homeTrialSheetChecking) return;
-    final usage = context.read<UsageProvider>();
-    if (usage.subscription == null) {
-      // Eligibility is unknown until the subscription loads: wait for it rather than spend the offer.
-      _homeTrialSheetChecking = true;
-      await usage.fetchSubscription().timeout(const Duration(seconds: 6), onTimeout: () {});
-      _homeTrialSheetChecking = false;
-      if (!mounted) return;
-      // Still unknown (the request failed or is slow): stay armed so the next tap tries again.
-      if (usage.subscription == null) return;
-    }
-    setState(() => _homeTrialSheetArmed = false);
-    SharedPreferencesUtil().homeTrialSheetPending = false;
-    if (!usage.showSubscriptionUI) return;
-    if (usage.subscription?.subscription.plan.isPaid == true) return;
-    if (usage.subscription?.trialEligible != true) return;
-    PlatformManager.instance.analytics.track('Home Trial Sheet Shown', properties: {'source': 'home_first_tap'});
-    await Future<void>.delayed(const Duration(milliseconds: 250));
-    if (!mounted) return;
-    await routeToPage(context, const TrialPaywallPage(source: 'home_first_tap'));
-  }
-
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -166,13 +132,7 @@ class _HomePageProductState extends State<_HomePageProduct> {
 
   @override
   Widget build(BuildContext context) {
-    final home = HomePage(navigateToRoute: _navigateToRoute);
-    if (!_homeTrialSheetArmed) return home;
-    return Listener(
-      behavior: HitTestBehavior.translucent,
-      onPointerDown: (_) => _showHomeTrialSheetOnce(),
-      child: home,
-    );
+    return HomePage(navigateToRoute: _navigateToRoute);
   }
 }
 
@@ -202,23 +162,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, Ticker
   OnDeviceRunner? _onDeviceRunner;
   UsageProvider? _overflowUsage;
   VoidCallback? _overflowEntitlementListener;
-  final FreemiumSwitchHandler _freemiumHandler = FreemiumSwitchHandler();
 
   // Holds startup prompts while recording, on a call or during a firmware update.
   final HomePromptGate _promptGate = HomePromptGate();
 
-  late final BackgroundResourceTelemetry _backgroundResourceTelemetry = BackgroundResourceTelemetry(
-    checkpointStore: PreferencesBackgroundCheckpointStore(),
-    ownerKey: () => AnalyticsManager.currentIdentity ?? '',
-    identityEpoch: () => AnalyticsManager.identityEpoch,
-    enabled: () => AnalyticsManager.identityKnown && AnalyticsManager.trackingEnabled,
-    emit: (eventName, properties) => PlatformManager.instance.analytics.track(eventName, properties: properties),
-    // PackageInfo build number, cached before UI start. Same source as the
-    // app_build super-property, readable before AnalyticsManager finishes init.
-    currentBuild: () => PlatformManager.instance.appBuild,
-  );
-
-  CaptureProvider? _captureProvider;
   DeviceProvider? _deviceProviderForQuickActions;
   CaptureProvider? _captureProviderForQuickActions;
   late final VoidCallback _releaseFeedbackClearance;
@@ -276,114 +223,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, Ticker
     }
   }
 
-  BackgroundResourceSnapshot _captureBackgroundResourceSnapshot({
-    CaptureProvider? captureProvider,
-    DeviceProvider? deviceProvider,
-    bool foregroundTaskRunning = false,
-    int backgroundDisconnectCount = 0,
-    int connectionTimeoutCount = 0,
-    int failToConnectCount = 0,
-    int reconnectCount = 0,
-    int maxReconnectDurationMs = 0,
-    int reconnectionCountTotal = 0,
-    int failToConnectCountTotal = 0,
-    bool bleHistorySaturated = false,
-    int nativeBackgroundBytesConsumed = 0,
-    int nativeBackgroundPacketsConsumed = 0,
-  }) {
-    final capture = captureProvider ?? Provider.of<CaptureProvider>(context, listen: false);
-    final devices = deviceProvider ?? Provider.of<DeviceProvider>(context, listen: false);
-    final device = devices.connectedDevice ?? devices.pairedDevice;
-    return BackgroundResourceSnapshot(
-      bleBytesReceived: capture.lifetimeBleBytesReceived,
-      websocketBytesSent: capture.lifetimeWsSocketBytesSent,
-      recordingState: capture.recordingState.name,
-      deviceConnected: devices.isConnected,
-      deviceType: device?.type.name ?? 'none',
-      batchModeEnabled: SharedPreferencesUtil().batchModeEnabled,
-      foregroundTaskRunning: foregroundTaskRunning,
-      backgroundDisconnectCount: backgroundDisconnectCount,
-      connectionTimeoutCount: connectionTimeoutCount,
-      failToConnectCount: failToConnectCount,
-      reconnectCount: reconnectCount,
-      maxReconnectDurationMs: maxReconnectDurationMs,
-      reconnectionCountTotal: reconnectionCountTotal,
-      failToConnectCountTotal: failToConnectCountTotal,
-      bleHistorySaturated: bleHistorySaturated,
-      nativeBackgroundBytesConsumed: nativeBackgroundBytesConsumed,
-      nativeBackgroundPacketsConsumed: nativeBackgroundPacketsConsumed,
-      diagnosticsDeviceId: device?.id,
-    );
-  }
-
-  Future<BackgroundResourceSnapshot> _loadBackgroundResourceSnapshot(
-    DateTime backgroundStartedAt,
-    BackgroundResourceSnapshot startSnapshot,
-  ) async {
-    final captureProvider = Provider.of<CaptureProvider>(context, listen: false);
-    final deviceProvider = Provider.of<DeviceProvider>(context, listen: false);
-    final diagnosticsDeviceId = startSnapshot.diagnosticsDeviceId;
-    var foregroundTaskRunning = false;
-    try {
-      foregroundTaskRunning = await FlutterForegroundTask.isRunningService;
-    } catch (_) {}
-
-    var backgroundDisconnectCount = 0;
-    var connectionTimeoutCount = 0;
-    var failToConnectCount = 0;
-    var reconnectCount = 0;
-    var maxReconnectDurationMs = 0;
-    var reconnectionCountTotal = 0;
-    var failToConnectCountTotal = 0;
-    var bleHistorySaturated = false;
-    var nativeBackgroundBytesConsumed = 0;
-    var nativeBackgroundPacketsConsumed = 0;
-
-    if (Platform.isIOS && diagnosticsDeviceId != null) {
-      try {
-        final diagnostics = await BleHostApi().getDeviceDiagnostics(diagnosticsDeviceId);
-        final startMs = backgroundStartedAt.millisecondsSinceEpoch;
-        final recentEvents =
-            diagnostics.disconnectHistory.where((event) => event.timestamp >= startMs && !event.isManual).toList();
-        final backgroundEvents =
-            recentEvents.where((event) => event.appState == 'background' || event.appState == 'inactive').toList();
-        backgroundDisconnectCount = backgroundEvents.where((event) => event.eventType == 'disconnect').length;
-        failToConnectCount = backgroundEvents.where((event) => event.eventType == 'fail_to_connect').length;
-        connectionTimeoutCount =
-            backgroundEvents.where((event) => event.reason.toLowerCase().contains('timeout')).length;
-        final reconnectedEvents = backgroundEvents.where((event) => event.timeToReconnectMs > 0).toList();
-        reconnectCount = reconnectedEvents.length;
-        for (final event in reconnectedEvents) {
-          if (event.timeToReconnectMs > maxReconnectDurationMs) {
-            maxReconnectDurationMs = event.timeToReconnectMs;
-          }
-        }
-        reconnectionCountTotal = diagnostics.reconnectionCount;
-        failToConnectCountTotal = diagnostics.failToConnectCount;
-        bleHistorySaturated = diagnostics.disconnectHistory.length >= 20 &&
-            diagnostics.disconnectHistory.every((event) => event.timestamp >= startMs);
-        nativeBackgroundBytesConsumed = diagnostics.nativeBackgroundBytesConsumed;
-        nativeBackgroundPacketsConsumed = diagnostics.nativeBackgroundPacketsConsumed;
-      } catch (_) {}
-    }
-
-    return _captureBackgroundResourceSnapshot(
-      captureProvider: captureProvider,
-      deviceProvider: deviceProvider,
-      foregroundTaskRunning: foregroundTaskRunning,
-      backgroundDisconnectCount: backgroundDisconnectCount,
-      connectionTimeoutCount: connectionTimeoutCount,
-      failToConnectCount: failToConnectCount,
-      reconnectCount: reconnectCount,
-      maxReconnectDurationMs: maxReconnectDurationMs,
-      reconnectionCountTotal: reconnectionCountTotal,
-      failToConnectCountTotal: failToConnectCountTotal,
-      bleHistorySaturated: bleHistorySaturated,
-      nativeBackgroundBytesConsumed: nativeBackgroundBytesConsumed,
-      nativeBackgroundPacketsConsumed: nativeBackgroundPacketsConsumed,
-    );
-  }
-
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
@@ -392,7 +231,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, Ticker
     if (state == AppLifecycleState.paused) {
       event = 'App is paused';
       if (mounted) {
-        _backgroundResourceTelemetry.onPaused(_captureBackgroundResourceSnapshot());
         Provider.of<CaptureProvider>(context, listen: false).setMetricsAppActive(false);
       }
     } else if (state == AppLifecycleState.resumed) {
@@ -403,7 +241,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, Ticker
         Provider.of<ConversationProvider>(context, listen: false).refreshConversations();
         final captureProvider = Provider.of<CaptureProvider>(context, listen: false);
         captureProvider.setMetricsAppActive(true);
-        unawaited(_backgroundResourceTelemetry.onResumed(_loadBackgroundResourceSnapshot));
         captureProvider.refreshInProgressConversations();
         // Heal phone-mic sessions that went silent while another app played
         // audio (Stage Manager / YouTube) without an AVAudioSession interrupt.
@@ -460,13 +297,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, Ticker
   @override
   void initState() {
     ListenClientState.startSurfaceReporting();
-    unawaited(
-      _backgroundResourceTelemetry.recoverInterrupted(
-        launchContext: classifyBackgroundInterruptLaunch(
-          processAlreadyObserved: BackgroundInterruptProcessLaunch.peek(),
-        ),
-      ),
-    );
     SharedPreferencesUtil().onboardingCompleted = true;
     if (!SharedPreferencesUtil().permissionsCompleted) {
       SharedPreferencesUtil().permissionsCompleted = true;
@@ -524,7 +354,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, Ticker
 
     HomeNavigation.register(_openRoute);
     _listenToMessagesFromNotification();
-    _listenToFreemiumThreshold();
+    _listenToOnDeviceEntitlement();
     _checkForAnnouncements();
     _registerAutoSyncCallback();
     _initQuickActions();
@@ -682,7 +512,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, Ticker
     });
   }
 
-  /// The iOS Home Screen widgets (Devices, Up next, Latest) follow what this Home shows.
+  /// The Home Screen widgets (iOS: Devices, Up next, Latest; Android: those plus Today, Summary,
+  /// Quick capture, Mute, Live translation, Waiting for your OK) follow what this Home shows.
   HomeWidgetsPublisher? _homeWidgets;
 
   void _startHomeWidgets() {
@@ -694,6 +525,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, Ticker
         devices: context.read<DeviceProvider>(),
         tasks: tasks,
         conversations: context.read<ConversationProvider>(),
+        capture: context.read<CaptureProvider>(),
+        user: context.read<UserProvider>(),
+        home: context.read<HomeProvider>(),
         l10n: () => context.l10n,
         dates: () => OmiDateFormat.of(context),
       )..start();
@@ -758,13 +592,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, Ticker
     );
   }
 
-  void _listenToFreemiumThreshold() {
-    // Listen to capture provider for freemium threshold events
+  void _listenToOnDeviceEntitlement() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
-      _captureProvider = Provider.of<CaptureProvider>(context, listen: false);
-      _captureProvider!.addListener(_onCaptureProviderChanged);
       final onDevice = OnDeviceTranscriptionController.instance;
       final usage = context.read<UsageProvider>();
       void updateEntitlement() {
@@ -779,7 +610,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, Ticker
       _overflowUsage = usage;
       _overflowEntitlementListener = () {
         updateEntitlement();
-        if (mounted) _freemiumHandler.checkAndShowPaywall(context, _captureProvider!);
       };
       usage.addListener(_overflowEntitlementListener!);
       onDevice.ensureLoaded().then((_) {
@@ -800,17 +630,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, Ticker
           unawaited(_onDeviceRunner!.start());
         }
       });
-      // Connect freemium session reset callback
-      _captureProvider!.onFreemiumSessionReset = () {
-        _freemiumHandler.resetDialogFlag();
-      };
     });
-  }
-
-  void _onCaptureProviderChanged() {
-    if (!mounted || _captureProvider == null) return;
-
-    _freemiumHandler.checkAndShowPaywall(context, _captureProvider!);
   }
 
   void _listenToMessagesFromNotification() {
@@ -975,11 +795,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, Ticker
       ),
     );
     // The widget tree constructed without throwing: Home built successfully.
-    // Marking here (not in initState, not in a post-frame callback) means a
-    // build exception skips the mark — Flutter catches rebuild errors and
-    // post-frame callbacks still fire after them, so neither of those proves
-    // success. A later Home then truthfully classifies as cold_start.
-    BackgroundInterruptProcessLaunch.mark();
     return content;
   }
 
@@ -1122,12 +937,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, Ticker
     WidgetsBinding.instance.removeObserver(this);
     // Cancel stream subscription to prevent memory leak
     _notificationStreamSubscription?.cancel();
-    // Remove capture provider listener using stored reference
-    if (_captureProvider != null) {
-      _captureProvider!.removeListener(_onCaptureProviderChanged);
-      _captureProvider!.onFreemiumSessionReset = null;
-      _captureProvider = null;
-    }
     // Remove device provider callback
     try {
       final deviceProvider = Provider.of<DeviceProvider>(context, listen: false);
@@ -1140,10 +949,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, Ticker
     _captureProviderForQuickActions = null;
     QuickActionsService.instance.reset();
     _homeWidgets?.dispose();
-    // Clean up freemium handler
     if (_overflowEntitlementListener != null) _overflowUsage?.removeListener(_overflowEntitlementListener!);
     _onDeviceRunner?.dispose();
-    _freemiumHandler.dispose();
     // Remove foreground task callback to prevent memory leak
     FlutterForegroundTask.removeTaskDataCallback(_onReceiveTaskData);
     if (Platform.isAndroid) {

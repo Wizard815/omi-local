@@ -5,7 +5,7 @@ part of 'conversation_provider.dart';
 
 /// Reconcile pending Home rows through the provider's existing page/detail owner.
 extension _ConversationProcessingLifecycle on ConversationProvider {
-  void _addProcessingConversation(ServerConversation conversation, {bool freshProcessingAttempt = false}) {
+  void _addProcessingConversation(ServerConversation conversation) {
     if (SharedPreferencesUtil().isConversationDeleteConfirmed(_processingTargetId(conversation))) return;
     if (conversation.homeStep == 'failed') _failedHomeProcessingIds.add(conversation.id);
     if (_hasFailedHomeProcessing(conversation)) {
@@ -26,9 +26,6 @@ extension _ConversationProcessingLifecycle on ConversationProvider {
       });
     }
     _bumpProcessingStateRevision(conversation.id);
-    if (conversation.id != '0' && _isActiveProcessingStatus(conversation.status)) {
-      _clientTelemetry.noteProcessingVisible(conversation.id, freshAttempt: freshProcessingAttempt);
-    }
     final existingIndex = processingConversations.indexWhere((item) => item.id == conversation.id);
     if (existingIndex == -1) {
       processingConversations.add(conversation);
@@ -254,15 +251,7 @@ extension _ConversationProcessingLifecycle on ConversationProvider {
     });
 
     for (final existing in processingConversations.where((conversation) => conversation.id != '0')) {
-      if (_hasFailedHomeProcessing(existing)) {
-        _clientTelemetry.noteProcessingRowLeft(
-          id: existing.id,
-          lifecycleOk: lifecycleResults[existing.id]?.ok ?? false,
-          lifecycleStatus: lifecycleResults[existing.id]?.item?.status.name,
-          pageStatus: pageRowsById[existing.id]?.status.name,
-        );
-        continue;
-      }
+      if (_hasFailedHomeProcessing(existing)) continue;
       // A row added or replaced by websocket after this refresh began is newer
       // than the page/detail snapshot. Preserve that live object for this pass;
       // unrelated websocket events must not block reconciliation of this ID.
@@ -279,15 +268,6 @@ extension _ConversationProcessingLifecycle on ConversationProvider {
       if (current != null && _isActiveProcessingRow(current) && _matchesActiveConversationFilters(current)) {
         if (reconciled.every((row) => row.id != current.id)) reconciled.add(current);
         continue;
-      }
-      if (processingIdsAtStart.contains(existing.id)) {
-        final pageStatus = pageRowsById[existing.id]?.status.name;
-        _clientTelemetry.noteProcessingRowLeft(
-          id: existing.id,
-          lifecycleOk: true,
-          lifecycleStatus: current?.status.name,
-          pageStatus: pageStatus,
-        );
       }
     }
 

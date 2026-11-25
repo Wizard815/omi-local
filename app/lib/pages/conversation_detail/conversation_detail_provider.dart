@@ -1200,15 +1200,7 @@ class ConversationDetailProvider extends ChangeNotifier
   /// Crash-reporting seam for [reprocessConversation]; tests override it.
   @visibleForTesting
   Future<void> reportReprocessCrash(Object error, StackTrace stackTrace, ServerConversation target) async {
-    final conversationReporting = PlatformManager.instance.analytics.getConversationEventProperties(target);
-    await PlatformManager.instance.crashReporter.reportCrash(
-      error,
-      stackTrace,
-      userAttributes: {
-        'conversation_transcript_length': conversationReporting['transcript_length'].toString(),
-        'conversation_transcript_word_count': conversationReporting['transcript_word_count'].toString(),
-      },
-    );
+    await PlatformManager.instance.crashReporter.reportCrash(error, stackTrace);
   }
 
   void _finishReprocessLoading() {

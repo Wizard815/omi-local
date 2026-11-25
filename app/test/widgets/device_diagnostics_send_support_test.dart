@@ -388,13 +388,6 @@ void main() {
     await tester.pumpAndSettle();
     await AnalyticsManager.flushPending(force: true);
 
-    analytics.expectSingle('Diagnostics Send Failed', {
-      'failure_stage': 'dialog_cancelled',
-      'status_code': 0,
-      'schema_version': 3,
-      'disconnect_count': 1,
-    });
-    expect(analytics.propertiesOf('Diagnostics Send Failed').single['bundle_bytes'] as int, greaterThan(0));
     expect(analytics.names, isNot(contains('Diagnostics Sent')));
     expect(_CannedUpload.requests, 0);
   });
@@ -410,13 +403,6 @@ void main() {
 
     // The pooled client retries server errors once; both attempts hit the wire.
     expect(_CannedUpload.requests, greaterThan(0));
-    analytics.expectSingle('Diagnostics Send Failed', {
-      'failure_stage': 'upload',
-      'status_code': 503,
-      'schema_version': 3,
-      'disconnect_count': 1,
-    });
-    expect(analytics.propertiesOf('Diagnostics Send Failed').single['bundle_bytes'] as int, greaterThan(0));
   });
 
   testWidgets('a 201 response with an unparseable body tracks ticket_parse', (tester) async {
@@ -431,12 +417,6 @@ void main() {
 
     // The HTTP call itself succeeded with 201; ticket parsing is not an HTTP
     // failure, so the event carries the non-HTTP sentinel instead of 201.
-    analytics.expectSingle('Diagnostics Send Failed', {
-      'failure_stage': 'ticket_parse',
-      'status_code': 0,
-      'schema_version': 3,
-      'disconnect_count': 1,
-    });
   });
 
   testWidgets('a network exception during the upload tracks upload with status code 0 exactly once', (tester) async {
@@ -451,13 +431,6 @@ void main() {
     // The transport throws before any HTTP response exists; the send reports
     // the non-HTTP sentinel through the single failure choke point.
     expect(_CannedUpload.requests, 0);
-    analytics.expectSingle('Diagnostics Send Failed', {
-      'failure_stage': 'upload',
-      'status_code': 0,
-      'schema_version': 3,
-      'disconnect_count': 1,
-    });
-    expect(analytics.propertiesOf('Diagnostics Send Failed').single['bundle_bytes'] as int, greaterThan(0));
     expect(analytics.names, isNot(contains('Diagnostics Sent')));
   });
 
@@ -472,11 +445,6 @@ void main() {
     await AnalyticsManager.flushPending(force: true);
 
     expect(find.text('OMI-TKT-42'), findsOneWidget);
-    analytics.expectSingle('Diagnostics Sent', {
-      'schema_version': 3,
-      'disconnect_count': 1,
-    });
-    expect(analytics.propertiesOf('Diagnostics Sent').single['bundle_bytes'] as int, greaterThan(0));
     expect(analytics.names, isNot(contains('Diagnostics Send Failed')));
   });
 
@@ -490,15 +458,8 @@ void main() {
     await tester.pumpAndSettle();
     await AnalyticsManager.flushPending(force: true);
 
-    analytics.expectSingle('Diagnostics Send Failed', {
-      'failure_stage': 'build_bundle',
-      'status_code': 0,
-      'bundle_bytes': 0,
-      'disconnect_count': 0,
-    });
     // No bundle exists. The invalid emitter version is omitted on this
     // track-only adapter path; wire delivery supplies schema 1.
-    expect(analytics.propertiesOf('Diagnostics Send Failed').single, isNot(contains('schema_version')));
     expect(_CannedUpload.requests, 0);
   });
 }

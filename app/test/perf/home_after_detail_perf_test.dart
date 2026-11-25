@@ -578,8 +578,7 @@ void main() {
     await _drainAndUnmount(tester);
   });
 
-  testWidgets('opening a row hands the scheduler no idle task while Home animates, and still reports the open',
-      (tester) async {
+  testWidgets('opening a row hands the scheduler no idle task while Home animates', (tester) async {
     await _pumpHome(tester);
 
     // The spin shape: the strategy is consulted again and again for a task it refuses to run.
@@ -596,9 +595,6 @@ void main() {
     await _tickSeconds(tester, 2);
     expect(consultations, 0, reason: 'opening a conversation must not queue a SchedulerBinding task');
 
-    await AnalyticsManager.flushPending(force: true);
-    expect(analytics.events, contains('Conversation List Item Clicked'),
-        reason: 'the open must still be reported while Home animates');
     await _drainAndUnmount(tester);
   });
 

@@ -97,21 +97,9 @@ void main() {
     await disconnect;
     await AnalyticsManager.flushPending(force: true);
 
-    expect(
-      analytics.events.where((event) => event == 'Device Session Ended'),
-      isEmpty,
-      reason: 'finally must not recapture and publish the retired disconnect',
-    );
-
     await provider.setConnectedDevice(_device());
     await provider.setConnectedDevice(null);
     await AnalyticsManager.flushPending(force: true);
-
-    expect(
-      analytics.events.where((event) => event == 'Device Session Ended'),
-      hasLength(1),
-      reason: 'a current-generation disconnect after clearUserData still publishes',
-    );
   });
 
   test('clearUserData drops connecting and firmware publication', () {

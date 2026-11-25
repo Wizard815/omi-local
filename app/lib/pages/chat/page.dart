@@ -6,7 +6,6 @@
 // accepted. List/layout changes must keep
 // app/test/widgets/chat_scroll_layout_test.dart green -- it pins the
 // scroll-extent behavior single-message pumps miss.
-import 'package:omi/pages/chat/widgets/chat_budget_pause.dart';
 import 'dart:async';
 
 import 'package:omi/utils/platform/platform_manager.dart';
@@ -34,8 +33,6 @@ import 'package:omi/pages/day_review/day_review_page.dart';
 import 'package:omi/utils/chat/slash_commands.dart';
 import 'package:omi/pages/chat/widgets/ai_message.dart';
 import 'package:omi/pages/chat/widgets/jump_to_latest_button.dart';
-import 'package:omi/pages/paywall/paywall_router.dart';
-import 'package:omi/pages/settings/widgets/plans_sheet.dart';
 import 'package:omi/pages/chat/widgets/user_message.dart';
 import 'package:omi/pages/chat/widgets/voice_recorder_widget.dart';
 import 'package:omi/pages/settings/integrations_page.dart';
@@ -46,7 +43,6 @@ import 'package:omi/providers/integration_provider.dart';
 import 'package:omi/providers/message_provider.dart';
 import 'package:omi/providers/memories_provider.dart';
 import 'package:omi/pages/chat/widgets/chat_starters.dart';
-import 'package:omi/providers/usage_provider.dart';
 import 'package:omi/providers/voice_recorder_provider.dart';
 import 'package:omi/services/integrations/apple_health_service.dart';
 import 'package:omi/utils/l10n_extensions.dart';
@@ -111,7 +107,6 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   String? _selectedContext;
-  bool _quotaSheetShown = false;
   ChatPageContext? _chatScope;
   Timer? _draftSaveTimer;
 
@@ -144,7 +139,7 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
       var provider = context.read<MessageProvider>();
       _messageProvider = provider;
       provider.readAloud.active = true;
-      // Listen for quota exceeded from any send path (text or voice)
+      // Keep the transcript following new messages from any send path (text or voice).
       provider.addListener(_onMessageProviderChanged);
       _observeMessagesForAutoScroll(provider);
       // Every entry resumes the current conversation, including while a reply or voice send is active.
@@ -204,12 +199,6 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
   void _onMessageProviderChanged() {
     final provider = context.read<MessageProvider>();
     _observeMessagesForAutoScroll(provider);
-    if (mounted && provider.isChatQuotaExceeded && !_quotaSheetShown) {
-      _quotaSheetShown = true;
-      if (provider.chatAtCap == null) _showPlansSheetOnQuotaExceeded();
-    } else if (!provider.isChatQuotaExceeded) {
-      _quotaSheetShown = false;
-    }
   }
 
   /// Coalesce draft writes; SharedPreferences on every keystroke is wasteful.
@@ -315,7 +304,6 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
           provider.canSwitchChat,
           provider.chatApps,
           provider.chatApps.length,
-          provider.chatAtCap,
           provider.chatMutationInProgress,
           provider.canStopReply,
           provider.sendingMessage,
@@ -380,7 +368,6 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
                                   ? ChatGreeting(isConnected: connectivityProvider.isConnected, name: prefs.givenName)
                                   : _buildTranscript(provider),
                     ),
-                    const ChatBudgetPause(),
                     _buildSlashCommandPopup(provider),
                     _buildStickyShortcutChip(provider),
                     _buildComposer(context, provider, connectivityProvider),
@@ -474,7 +461,6 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
   /// The composer card: the field (or the voice waveform) on top; attach, who answers, and the
   /// mic or send button underneath.
   Widget _buildComposer(BuildContext context, MessageProvider provider, ConnectivityProvider connectivityProvider) {
-    if (provider.chatAtCap != null) return const SizedBox.shrink();
     return Consumer<VoiceRecorderProvider>(
       builder: (context, voiceRecorderProvider, child) {
         final voiceActive = voiceRecorderProvider.isActive;
@@ -1063,27 +1049,6 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin, 
     await provider.retryFailedReply(failed);
   }
 
-  Future<void> _showPlansSheetOnQuotaExceeded() async {
-    if (!mounted) return;
-    final usage = context.read<UsageProvider>();
-    // Refresh subscription data so the plans sheet is up-to-date
-    usage.fetchSubscription();
-    if (await PaywallRouter.openVariant(context, source: 'chat_quota_exceeded')) return;
-    if (!mounted) return;
-    PlatformManager.instance.analytics.paywallOpened(
-      'chat_quota_exceeded',
-      currentPlan: usage.subscription?.subscription.plan.wireName ?? 'unknown',
-    );
-    final title = await plansSheetTitle(context);
-    if (!mounted) return;
-    showOmiSheet<void>(
-      context: context,
-      title: title,
-      padding: EdgeInsets.zero,
-      builder: (_) => const _PlansSheetWrapper(analyticsSource: 'chat_quota_exceeded'),
-    );
-  }
-
   sendInitialAppMessage(App? app) async {
     // The provider outlives this page: release the composer even if the page closes mid-request.
     final provider = context.read<MessageProvider>();
@@ -1485,53 +1450,6 @@ class _SelectedTextChip extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _PlansSheetWrapper extends StatefulWidget {
-  const _PlansSheetWrapper({this.analyticsSource = 'chat_quota_exceeded'});
-
-  final String analyticsSource;
-
-  @override
-  State<_PlansSheetWrapper> createState() => _PlansSheetWrapperState();
-}
-
-class _PlansSheetWrapperState extends State<_PlansSheetWrapper> with TickerProviderStateMixin {
-  late AnimationController _waveController;
-  late AnimationController _arrowController;
-  late AnimationController _notesController;
-  late Animation<double> _arrowAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _waveController = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat();
-    _arrowController = AnimationController(vsync: this, duration: const Duration(milliseconds: 800))..repeat();
-    _notesController = AnimationController(vsync: this, duration: const Duration(seconds: 3))..repeat();
-    _arrowAnimation = Tween<double>(
-      begin: 0,
-      end: 10,
-    ).animate(CurvedAnimation(parent: _arrowController, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _waveController.dispose();
-    _arrowController.dispose();
-    _notesController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return PlansSheet(
-      waveController: _waveController,
-      notesController: _notesController,
-      arrowController: _arrowController,
-      arrowAnimation: _arrowAnimation,
-      analyticsSource: widget.analyticsSource,
     );
   }
 }

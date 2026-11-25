@@ -29420,6 +29420,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Writing notes… The transcript is ready to read now.'**
   String get conversationWritingNotesTranscriptReady;
+
+  /// Settings row and page title: the signed-in person's own usage counts, kept on their self-hosted server
+  ///
+  /// In en, this message translates to:
+  /// **'Your usage on this server'**
+  String get serverUsageTitle;
+
+  /// Usage page: what this page shows and that it stays local
+  ///
+  /// In en, this message translates to:
+  /// **'Counted and kept on your own server. Only you see this, and nothing is sent anywhere else.'**
+  String get serverUsageIntro;
+
+  /// Usage page: the server does not count usage
+  ///
+  /// In en, this message translates to:
+  /// **'Usage counting is turned off on this server.'**
+  String get serverUsageOff;
+
+  /// Usage page: no usage in the window
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing counted yet.'**
+  String get serverUsageEmpty;
+
+  /// Usage page summary line
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 action in the last {days} days} other{{count} actions in the last {days} days}}'**
+  String serverUsageTotal(int count, int days);
+
+  /// Usage page section: actions by count
+  ///
+  /// In en, this message translates to:
+  /// **'Most used'**
+  String get serverUsageMostUsed;
+
+  /// Usage page section: the newest counted actions
+  ///
+  /// In en, this message translates to:
+  /// **'Recent activity'**
+  String get serverUsageRecent;
+
+  /// Usage page: the request failed
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your usage.'**
+  String get serverUsageLoadFailed;
+
+  /// Transcription source choice: an engine the user hosts (a Whisper server or a custom endpoint)
+  ///
+  /// In en, this message translates to:
+  /// **'Your own engine'**
+  String get transcriptionSourceOwnEngine;
+
+  /// Help text under the own-engine transcription choice
+  ///
+  /// In en, this message translates to:
+  /// **'Runs on an engine you host, such as a Whisper server. Nothing goes to a cloud provider.'**
+  String get transcriptionOwnEngineHelp;
+
+  /// Android home-screen Today widget: how many conversations started today
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No conversations today} =1{1 conversation today} other{{count} conversations today}}'**
+  String widgetConversationsToday(int count);
+
+  /// Android home-screen Quick capture widget button: opens a new memory
+  ///
+  /// In en, this message translates to:
+  /// **'New Note'**
+  String get widgetNewNote;
+
+  /// Android home-screen Live translation widget: the language transcripts are translated into
+  ///
+  /// In en, this message translates to:
+  /// **'Into {language}'**
+  String widgetTranslationInto(String language);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -29,19 +29,16 @@ import 'package:omi/pages/settings/transcription/stt_language.dart';
 import 'package:omi/pages/settings/transcription/transcription_dialogs.dart';
 import 'package:omi/pages/settings/transcription/transcription_fields.dart';
 import 'package:omi/pages/settings/transcription/transcription_sections.dart';
-import 'package:omi/pages/settings/usage_page.dart';
 import 'package:omi/providers/capture_provider.dart';
 import 'package:omi/providers/home_provider.dart';
-import 'package:omi/providers/usage_provider.dart';
 import 'package:omi/services/services.dart';
 import 'package:omi/services/sockets/transcription_service.dart';
 import 'package:omi/ui/ui.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 import 'package:omi/utils/logger.dart';
-import 'package:omi/utils/other/temp.dart';
 
 /// Top-level transcription source the user picks from the single dropdown.
-enum TranscriptionMode { omi, onDevice, cloudProvider, omiParakeet }
+enum TranscriptionMode { omi, onDevice, ownEngine, omiParakeet }
 
 class TranscriptionSettingsPage extends StatefulWidget {
   const TranscriptionSettingsPage({super.key});
@@ -55,7 +52,7 @@ class _TranscriptionSettingsPageState extends State<TranscriptionSettingsPage> {
   // "Omi Parakeet" is an Omi-hosted engine (not custom STT): _useCustomStt stays false and the
   // backend is told via transcriptionModel='parakeet'. This flag distinguishes it from plain Omi.
   bool _omiParakeet = false;
-  SttProvider _selectedProvider = SttProvider.openai;
+  SttProvider _selectedProvider = SttProvider.localWhisper;
   bool _showAdvanced = false;
   bool _isSaving = false;
   bool _sendRawAudioToOmi = true;
@@ -180,7 +177,7 @@ class _TranscriptionSettingsPageState extends State<TranscriptionSettingsPage> {
     setState(() {
       _useCustomStt = activeConfig.isEnabled;
       _omiParakeet = !_useCustomStt && SharedPreferencesUtil().transcriptionModel == 'parakeet';
-      _selectedProvider = activeConfig.provider == SttProvider.omi ? SttProvider.openai : activeConfig.provider;
+      _selectedProvider = activeConfig.provider == SttProvider.omi ? SttProvider.localWhisper : activeConfig.provider;
 
       // Load all provider configs from preferences
       _loadAllProviderConfigs();
@@ -820,7 +817,7 @@ class _TranscriptionSettingsPageState extends State<TranscriptionSettingsPage> {
   TranscriptionMode get _currentMode {
     if (!_useCustomStt) return _omiParakeet ? TranscriptionMode.omiParakeet : TranscriptionMode.omi;
     if (_selectedProvider == SttProvider.onDeviceWhisper) return TranscriptionMode.onDevice;
-    return TranscriptionMode.cloudProvider;
+    return TranscriptionMode.ownEngine;
   }
 
   String _modeLabel(TranscriptionMode mode) {
@@ -829,8 +826,8 @@ class _TranscriptionSettingsPageState extends State<TranscriptionSettingsPage> {
         return context.l10n.transcriptionSourceOmi;
       case TranscriptionMode.onDevice:
         return context.l10n.onDevice;
-      case TranscriptionMode.cloudProvider:
-        return context.l10n.cloudProvider;
+      case TranscriptionMode.ownEngine:
+        return context.l10n.transcriptionSourceOwnEngine;
       case TranscriptionMode.omiParakeet:
         return SttProviderConfig.get(SttProvider.omiParakeet).displayName;
     }
@@ -848,7 +845,7 @@ class _TranscriptionSettingsPageState extends State<TranscriptionSettingsPage> {
       case TranscriptionMode.onDevice:
         await _switchToOnDevice();
         break;
-      case TranscriptionMode.cloudProvider:
+      case TranscriptionMode.ownEngine:
         if (_selectedProvider == SttProvider.onDeviceWhisper) {
           await _saveCurrentProviderConfig();
           if (!mounted) return;
@@ -856,9 +853,9 @@ class _TranscriptionSettingsPageState extends State<TranscriptionSettingsPage> {
         setState(() {
           _useCustomStt = true;
           _omiParakeet = false;
-          // Leaving on-device: fall back to a real BYO cloud provider.
+          // Leaving on-device: fall back to a self-hosted Whisper server.
           if (_selectedProvider == SttProvider.onDeviceWhisper) {
-            _selectedProvider = SttProvider.openai;
+            _selectedProvider = SttProvider.localWhisper;
             _populateUIFromConfig(_configsPerProvider[_selectedProvider]);
           }
         });
@@ -879,50 +876,14 @@ class _TranscriptionSettingsPageState extends State<TranscriptionSettingsPage> {
   Widget _buildSourceSelector() {
     final mode = _currentMode;
     final l10n = context.l10n;
-    final secondary = OmiType.footnote.copyWith(color: OmiColors.textTertiary);
 
     Widget? description;
-    if (mode == TranscriptionMode.omi && context.watch<UsageProvider>().showSubscriptionUI) {
-      description = Semantics(
-        link: true,
-        child: InkWell(
-          onTap: () {
-            final plan = context.read<UsageProvider>().subscription?.subscription.plan.wireName ?? 'unknown';
-            PlatformManager.instance.analytics.paywallOpened('transcription_settings', currentPlan: plan);
-            routeToPage(
-              context,
-              const UsagePage(showUpgradeDialog: true, paywallSource: 'transcription_settings'),
-            );
-          },
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 44),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text.rich(
-                TextSpan(
-                  children: [
-                    TextSpan(text: l10n.premiumMinutesMonth, style: secondary),
-                    TextSpan(
-                      text: l10n.viewUsage,
-                      style: secondary.copyWith(
-                        color: OmiColors.textSecondary,
-                        decoration: TextDecoration.underline,
-                      ),
-                    ),
-                    TextSpan(text: '.', style: secondary),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    } else if (mode == TranscriptionMode.onDevice) {
+    if (mode == TranscriptionMode.onDevice) {
       description = TranscriptionHelpText(l10n.audioProcessedLocally);
     } else if (mode == TranscriptionMode.omiParakeet) {
       description = TranscriptionHelpText(SttProviderConfig.get(SttProvider.omiParakeet).description);
-    } else if (mode == TranscriptionMode.cloudProvider) {
-      description = TranscriptionHelpText(l10n.payYourSttProvider);
+    } else if (mode == TranscriptionMode.ownEngine) {
+      description = TranscriptionHelpText(l10n.transcriptionOwnEngineHelp);
     }
 
     return Column(
@@ -1006,7 +967,12 @@ class _TranscriptionSettingsPageState extends State<TranscriptionSettingsPage> {
         TranscriptionDropdown<SttProvider>(
           value: _selectedProvider,
           items: [
-            for (final config in SttProviderConfig.allProviders)
+            // A cloud vendor chosen before this build stays listed until the reader switches away.
+            for (final config in [
+              ...SttProviderConfig.selfHostedChoices,
+              if (!SttProviderConfig.selfHostedProviders.contains(_selectedProvider))
+                SttProviderConfig.get(_selectedProvider),
+            ])
               if (config.provider != SttProvider.onDeviceWhisper)
                 DropdownMenuItem<SttProvider>(
                   value: config.provider,

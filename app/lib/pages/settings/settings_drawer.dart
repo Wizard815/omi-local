@@ -6,8 +6,6 @@ import 'package:provider/provider.dart';
 import 'package:omi/backend/preferences.dart';
 import 'package:omi/pages/settings/settings_destinations.dart';
 import 'package:omi/pages/settings/settings_groups.dart';
-import 'package:omi/providers/usage_provider.dart';
-import 'package:omi/pages/settings/widgets/plans/plan_display_name.dart';
 import 'package:omi/pages/settings/settings_search_index.dart';
 import 'package:omi/providers/device_provider.dart';
 import 'package:omi/ui/ui.dart';
@@ -79,7 +77,6 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
         supportLinks: PlatformService.isIntercomSupported,
         android: PlatformService.isAndroid,
         rememberedDevice: context.read<DeviceProvider>().hasRememberedDevice,
-        upgradeOffered: _showUpgradeRow(context.read<UsageProvider>()),
       );
 
   // ---------------------------------------------------------------------------------------------
@@ -108,26 +105,8 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
     );
   }
 
-  /// Show the subscriber's actual tier on the Plan & Usage row.
-  String? _planValue(UsageProvider usage) {
-    final plan = usage.subscription?.subscription.plan;
-    if (plan == null || !plan.isPaid) return null;
-    return currentPlanDisplayName(context, usage.subscription);
-  }
-
-  /// Free readers who can still start a trial get Pocket's Upgrade row above Plan & Usage.
-  bool _showUpgradeRow(UsageProvider usage) {
-    final subscription = usage.subscription;
-    if (subscription == null || subscription.subscription.plan.isPaid) return false;
-    if (subscription.trialEligible != true) return false;
-    return usage.showSubscriptionUI;
-  }
-
   Widget _buildSettings(BuildContext context) {
     final l10n = context.l10n;
-    final usage = context.watch<UsageProvider>();
-    final planValue = _planValue(usage);
-    final showUpgrade = _showUpgradeRow(usage);
     final prefs = SharedPreferencesUtil();
     final name = prefs.givenName;
     final email = prefs.email;
@@ -146,24 +125,15 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
           ],
         ),
         const SizedBox(height: OmiSpacing.xl),
-        // Plan and feedback stay one tap from the sheet (David, 2026-09-24). The referral row is
-        // gone: an affiliate program means nothing to a self-hosted single user.
+        // No plans or upgrade rows: a self-hosted server has no billing. The reader's own usage
+        // counts stay one tap from the sheet; they live on their server only.
         OmiSettingsGroup(
           children: [
-            if (showUpgrade)
-              _row(
-                SettingsDestination.upgrade,
-                key: 'settings_row_upgrade',
-                icon: FontAwesomeIcons.crown,
-                title: l10n.upgrade,
-                subtitle: l10n.settingsUpgradeTrialSubtitle(7),
-              ),
             _row(
-              SettingsDestination.planAndUsage,
-              key: 'settings_row_planAndUsage',
+              SettingsDestination.serverUsage,
+              key: 'settings_row_serverUsage',
               icon: FontAwesomeIcons.chartLine,
-              title: l10n.planAndUsage,
-              value: planValue,
+              title: l10n.serverUsageTitle,
             ),
           ],
         ),

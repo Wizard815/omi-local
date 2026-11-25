@@ -353,15 +353,7 @@ class _TrackingSocket implements IPureSocket {
 /// config reading Env.apiBaseUrl) don't hit a LateInitializationError.
 class _TestEnvFields implements EnvFields {
   @override
-  String? get posthogApiKey => null;
-  @override
   String? get apiBaseUrl => null;
-  @override
-  String? get intercomAppId => null;
-  @override
-  String? get intercomIOSApiKey => null;
-  @override
-  String? get intercomAndroidApiKey => null;
   @override
   String? get googleClientId => null;
   @override
@@ -1346,32 +1338,6 @@ void main() {
       provider.updateExternalActions(mockExternalActions);
 
       expect(provider.topConversationId, 'conversation-1');
-    });
-
-    test('bare provider does not reset freemium threshold when usage state is unknown', () async {
-      final provider = CaptureProvider();
-      provider.onMessageEventReceived(
-        FreemiumThresholdReachedEvent(remainingSeconds: 120, action: FreemiumAction.setupOnDeviceStt),
-      );
-
-      expect(provider.freemiumThresholdReached, isTrue);
-      await provider.checkCreditsAndResetThresholdIfNeeded();
-
-      expect(provider.freemiumThresholdReached, isTrue);
-    });
-
-    test('resets freemium threshold when wired usage state reports credits restored', () async {
-      final provider = CaptureProvider();
-      final mockExternalActions = MockCaptureExternalActions()..outOfCreditsOverride = false;
-      provider.updateExternalActions(mockExternalActions);
-      provider.onMessageEventReceived(
-        FreemiumThresholdReachedEvent(remainingSeconds: 120, action: FreemiumAction.setupOnDeviceStt),
-      );
-
-      await provider.checkCreditsAndResetThresholdIfNeeded();
-
-      expect(mockExternalActions.fetchSubscriptionCallCount, 1);
-      expect(provider.freemiumThresholdReached, isFalse);
     });
   });
 

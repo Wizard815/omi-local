@@ -127,16 +127,6 @@ void main() {
     await AnalyticsManager.flushPending(force: true);
   }
 
-  List<Map<String, Object>> playbackEvents() =>
-      adapter.events.where((event) => event.$1 == 'Voice Reply Playback').map((event) => event.$2).toList();
-
-  void expectFields(Map<String, Object> event, Map<String, Object> expected) {
-    for (final entry in expected.entries) {
-      expect(event[entry.key], entry.value, reason: entry.key);
-    }
-    expect(event.values.any((value) => '$value'.contains('sentence')), isFalse);
-  }
-
   Future<void> finishPlayback() async {
     await pumpEventQueue();
     service.debugNotifyPlaybackCompleted();
@@ -247,23 +237,9 @@ void main() {
     await flush();
 
     expect(probed, isFalse);
-    expect(playbackEvents(), hasLength(1));
-    expectFields(playbackEvents().single, {
-      'outcome': 'skipped',
-      'skip_reason': 'mode_off',
-      'mode': 'off',
-      'output_route': 'unknown',
-      'chunks_requested': 0,
-      'chunks_played': 0,
-      'chunks_dropped': 0,
-      'fallback_reason': 'none',
-      'first_audio_latency_ms': -1,
-      'interrupt_source': 'none',
-    });
 
     await service.interrupt(source: VoiceReplyPlaybackInterruptSource.userTyped);
     await flush();
-    expect(playbackEvents(), hasLength(1));
   });
 
   test('preview plays without telemetry and does not interrupt a real reply lifecycle', () async {
@@ -273,19 +249,14 @@ void main() {
     await service.playPreview('A settings preview answer.');
     await flush();
     expect(plays, [_mp3]);
-    expect(playbackEvents(), isEmpty);
 
     await service.beginResponse(messageId: 'real-reply');
     await service.playPreview('A second settings preview answer.');
     await flush();
     expect(plays, [_mp3]);
-    expect(playbackEvents(), isEmpty);
 
     await service.interrupt(source: VoiceReplyPlaybackInterruptSource.userTyped);
     await flush();
-    expect(playbackEvents(), hasLength(1));
-    expect(playbackEvents().single['outcome'], 'interrupted');
-    expect(playbackEvents().single['interrupt_source'], 'user_typed');
   });
 
   test('no headphones emits skipped and does not synthesize', () async {
@@ -309,11 +280,6 @@ void main() {
     expect(probed, isTrue);
     expect(synthesized, isFalse);
     expect(plays, isEmpty);
-    expect(playbackEvents().single['outcome'], 'skipped');
-    expect(playbackEvents().single['skip_reason'], 'no_headphones');
-    expect(playbackEvents().single['mode'], 'headphones_only');
-    expect(playbackEvents().single['output_route'], 'speaker');
-    expect(playbackEvents().single['first_audio_latency_ms'], -1);
   });
 
   test('headphone check failure is its own skip reason', () async {
@@ -329,10 +295,6 @@ void main() {
 
     await service.beginResponse(messageId: 'probe-failed');
     await flush();
-
-    expect(playbackEvents().single['outcome'], 'skipped');
-    expect(playbackEvents().single['skip_reason'], 'headphone_check_failed');
-    expect(playbackEvents().single['output_route'], 'unknown');
   });
 
   test('played reports chunk counts, route, and latency to first play', () async {
@@ -346,17 +308,6 @@ void main() {
 
     expect(plays, [_mp3]);
     expect(spoken, isEmpty);
-    final event = playbackEvents().single;
-    expect(event['outcome'], 'played');
-    expect(event['skip_reason'], 'none');
-    expect(event['mode'], 'always');
-    expect(event['output_route'], 'bluetooth');
-    expect(event['chunks_requested'], 1);
-    expect(event['chunks_played'], 1);
-    expect(event['chunks_dropped'], 0);
-    expect(event['fallback_reason'], 'none');
-    expect(event['first_audio_latency_ms'], 320);
-    expect(event['interrupt_source'], 'none');
   });
 
   test('a synthesis error drops that chunk and still plays the next', () async {
@@ -376,12 +327,6 @@ void main() {
 
     expect(calls, 2);
     expect(plays, hasLength(1));
-    final event = playbackEvents().single;
-    expect(event['outcome'], 'played');
-    expect(event['chunks_requested'], 2);
-    expect(event['chunks_played'], 1);
-    expect(event['chunks_dropped'], 1);
-    expect(event['fallback_reason'], 'none');
   });
 
   test('429 falls back to on-device speech and emits fallback_only', () async {
@@ -397,14 +342,6 @@ void main() {
 
     expect(plays, isEmpty);
     expect(spoken, [_firstSentence]);
-    final event = playbackEvents().single;
-    expect(event['outcome'], 'fallback_only');
-    expect(event['chunks_requested'], 1);
-    expect(event['chunks_played'], 0);
-    expect(event['chunks_dropped'], 0);
-    expect(event['fallback_reason'], 'rate_limited_429');
-    expect(event['first_audio_latency_ms'], 80);
-    expect(event['interrupt_source'], 'none');
   });
 
   test('interrupt mid-play records the caller source', () async {
@@ -418,12 +355,6 @@ void main() {
 
     await service.interrupt(source: VoiceReplyPlaybackInterruptSource.userTyped);
     await flush();
-
-    final event = playbackEvents().single;
-    expect(event['outcome'], 'interrupted');
-    expect(event['interrupt_source'], 'user_typed');
-    expect(event['chunks_played'], 1);
-    expect(event['chunks_requested'], 1);
   });
 
   test('a lifecycle emits exactly once across finish, interrupt, and a rapid double-call', () async {
@@ -436,14 +367,11 @@ void main() {
     expect(service.isSpeaking, isTrue);
     await service.beginResponse(messageId: 'once');
     await finishPlayback();
-    expect(playbackEvents(), hasLength(1));
-    expect(playbackEvents().single['outcome'], 'played');
 
     await service.interrupt(source: VoiceReplyPlaybackInterruptSource.newVoiceQuery);
     service.debugNotifyPlaybackCompleted();
     await releaseDelays();
     await flush();
-    expect(playbackEvents(), hasLength(1));
 
     await service.beginResponse(messageId: 'again');
     service.updateStreamingResponse(messageId: 'again', fullText: _firstSentence, isFinal: true);
@@ -454,8 +382,6 @@ void main() {
     await pumpEventQueue();
     await releaseDelays();
     await flush();
-    expect(playbackEvents(), hasLength(2));
-    expect(playbackEvents().last['outcome'], 'played');
   });
 
   test('idle before isFinal stays open and counts the later chunk', () async {
@@ -471,7 +397,6 @@ void main() {
     await flush();
 
     expect(plays, hasLength(1));
-    expect(playbackEvents(), isEmpty);
 
     service.updateStreamingResponse(messageId: 'slow', fullText: _twoChunkReply, isFinal: true);
     await pumpEventQueue();
@@ -481,9 +406,6 @@ void main() {
     await flush();
 
     expect(plays, hasLength(2));
-    expect(playbackEvents(), hasLength(1));
-    expect(playbackEvents().single['outcome'], 'played');
-    expect(playbackEvents().single['chunks_played'], 2);
   });
 
   test('interrupt during the first chunk keeps first-audio latency', () async {
@@ -507,14 +429,6 @@ void main() {
     if (!playing.isCompleted) playing.complete();
     await pumpEventQueue();
     await flush();
-
-    expect(playbackEvents(), hasLength(1));
-    final event = playbackEvents().single;
-    expect(event['outcome'], 'interrupted');
-    expect(event['interrupt_source'], 'user_typed');
-    expect(event['chunks_played'], 0);
-    expect(event['first_audio_latency_ms'], greaterThanOrEqualTo(0));
-    expect(event['first_audio_latency_ms'], 40);
   });
 
   test('progressive playback starts after prebuffer before the response completes', () async {
@@ -539,7 +453,6 @@ void main() {
 
     await playbackStarted.future.timeout(const Duration(seconds: 1));
     expect(bytes.isClosed, isFalse, reason: 'playback must begin while HTTP bytes are still arriving');
-    expect(playbackEvents(), isEmpty);
 
     bytes.add(Uint8List(progressiveTtsPrebufferBytes));
     await bytes.close();
@@ -548,7 +461,6 @@ void main() {
     await flush();
 
     expect(spoken, isEmpty);
-    expect(playbackEvents().single['outcome'], 'played');
   });
 
   test('mid-stream failure plays buffered audio then speaks only the remaining suffix', () async {
@@ -577,10 +489,6 @@ void main() {
     expect(spoken, hasLength(1));
     expect(spoken.single, isNot(_firstSentence));
     expect(_firstSentence.endsWith(spoken.single), isTrue);
-    final event = playbackEvents().single;
-    expect(event['outcome'], 'played_with_fallback');
-    expect(event['chunks_played'], 1);
-    expect(event['fallback_reason'], 'no_response');
   });
 
   test('interrupt cancels the response subscription and abort trigger without fallback', () async {
@@ -610,7 +518,6 @@ void main() {
     expect(subscriptionCancelled, isTrue);
     expect(requestCancelled, isTrue);
     expect(spoken, isEmpty);
-    expect(playbackEvents().single['outcome'], 'interrupted');
   });
 
   test('a stream with no bytes times out and falls back instead of hanging', () async {
@@ -635,8 +542,6 @@ void main() {
 
     expect(playCalled, isFalse);
     expect(spoken, [_firstSentence]);
-    expect(playbackEvents().single['outcome'], 'fallback_only');
-    expect(playbackEvents().single['fallback_reason'], 'no_response');
   });
 
   test('multiple progressive chunks preserve synthesis and playback order', () async {
@@ -668,7 +573,6 @@ void main() {
 
     expect(synthesized, [_firstSentence, _twoChunkReply.substring(_firstSentence.length).trim()]);
     expect(playedIds, [1, 2]);
-    expect(playbackEvents().single['chunks_played'], 2);
   });
 
   test('a superseded in-flight synthesis cannot enter the next lifecycle', () async {
@@ -691,14 +595,10 @@ void main() {
     oldSynthesis.complete(_mp3);
     await pumpEventQueue();
     expect(plays, isEmpty);
-    expect(playbackEvents(), hasLength(1));
-    expect(playbackEvents().single['outcome'], 'interrupted');
 
     service.updateStreamingResponse(messageId: 'new', fullText: _firstSentence, isFinal: true);
     await finishPlayback();
 
     expect(plays, [_mp3]);
-    expect(playbackEvents(), hasLength(2));
-    expect(playbackEvents().last['outcome'], 'played');
   });
 }

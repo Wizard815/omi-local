@@ -11,7 +11,6 @@ import 'package:omi/pages/settings/chat_apps/chat_app_widgets.dart';
 import 'package:omi/pages/settings/chat_apps/chat_apps_problem.dart';
 import 'package:omi/providers/messaging_channels_provider.dart';
 import 'package:omi/ui/ui.dart';
-import 'package:omi/utils/analytics/chat_apps_analytics.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 
 /// Connect Telegram: mint a one-time token, open `t.me/<bot>?start=<token>`, and wait for the
@@ -52,7 +51,6 @@ class _TelegramConnectSheetState extends State<TelegramConnectSheet>
 
   @override
   void onLinked(ChannelLink link) {
-    ChatAppsAnalytics.connected(ChatChannel.telegram);
     Navigator.of(context).pop(link);
   }
 
@@ -88,7 +86,6 @@ class _TelegramConnectSheetState extends State<TelegramConnectSheet>
       setState(() => _problem = ChatAppsProblem.unavailable);
       return;
     }
-    ChatAppsAnalytics.connectStarted(ChatChannel.telegram);
     final proof = await _token();
     if (proof == null || !mounted) return;
     final opened = await openChatAppProof(

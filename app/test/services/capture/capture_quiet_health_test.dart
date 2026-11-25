@@ -7,7 +7,6 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:omi/services/capture/capture_ingress_health.dart';
-import 'package:omi/services/telemetry/client_telemetry_schema.dart';
 
 void main() {
   final now = DateTime.utc(2026, 10, 26, 3, 25);
@@ -132,26 +131,6 @@ void main() {
       }));
       expect(failed!.actionable, isTrue);
       expect(failed.verifiedAt(now), isFalse);
-    });
-  });
-
-  group('ClientTelemetrySchema ingress phases', () {
-    test('every native OmiCaptureHealth phase maps to itself (wire snake case)', () {
-      const native = ['inactive', 'unverified', 'flowing', 'repairing', 'reconnecting', 'quiet'];
-      for (final phase in native) {
-        expect(ClientTelemetrySchema.mapIngressPhase(phase), phase);
-        expect(ClientTelemetrySchema.ingressPhaseMapped(phase), isTrue, reason: phase);
-      }
-      expect(ClientTelemetrySchema.mapIngressPhase('actionRequired'), 'action_required');
-      expect(ClientTelemetrySchema.ingressPhaseMapped('actionRequired'), isTrue);
-    });
-
-    test('legacy emitters stay accepted and unknown phases still report unmapped', () {
-      for (final legacy in ['subscribing', 'awaiting_audio', 'recovering', 'disconnected', 'flowing']) {
-        expect(ClientTelemetrySchema.ingressPhaseMapped(legacy), isTrue, reason: legacy);
-      }
-      expect(ClientTelemetrySchema.mapIngressPhase('nonsense'), 'unknown');
-      expect(ClientTelemetrySchema.ingressPhaseMapped('nonsense'), isFalse);
     });
   });
 }

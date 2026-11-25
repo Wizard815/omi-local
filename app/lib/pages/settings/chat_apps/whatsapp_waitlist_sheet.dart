@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:omi/pages/settings/chat_apps/chat_app_widgets.dart';
 import 'package:omi/providers/messaging_channels_provider.dart';
 import 'package:omi/ui/ui.dart';
-import 'package:omi/utils/analytics/chat_apps_analytics.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 
 /// What the WhatsApp waitlist sheet asked the page to do next.
@@ -51,7 +50,6 @@ class WhatsAppWaitlistSheet extends StatelessWidget {
                 ? null
                 : () async {
                     await provider.joinWhatsAppWaitlist();
-                    ChatAppsAnalytics.waitlistJoined();
                     if (context.mounted) OmiFeedback.confirm(context, l10n.chatAppsWaitlistConfirmed);
                   },
           ),

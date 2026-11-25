@@ -709,18 +709,6 @@ class _SyntheticEnvFields implements EnvFields {
   String? get apiBaseUrl => 'http://127.0.0.1:0/';
 
   @override
-  String? get posthogApiKey => null;
-
-  @override
-  String? get intercomAppId => null;
-
-  @override
-  String? get intercomIOSApiKey => null;
-
-  @override
-  String? get intercomAndroidApiKey => null;
-
-  @override
   String? get googleClientId => null;
 
   @override

@@ -5,15 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:omi/models/local_recording.dart';
-import 'package:omi/models/plan_storefront.dart';
 import 'package:omi/pages/on_device/on_device_components.dart';
-import 'package:omi/pages/on_device/on_device_queue_banner.dart';
 import 'package:omi/pages/on_device/on_device_schedule_page.dart';
 import 'package:omi/pages/on_device/on_device_setup_page.dart';
-import 'package:omi/pages/settings/widgets/plans/contextual_plans.dart';
 import 'package:omi/providers/local_recordings_provider.dart';
 import 'package:omi/providers/usage_provider.dart';
-import 'package:omi/services/experiments/plan_storefront_gate.dart';
 import 'package:omi/services/on_device/on_device_model.dart';
 import 'package:omi/services/on_device/on_device_transcription_controller.dart';
 import 'package:omi/ui/ui.dart';
@@ -29,51 +25,25 @@ DateTime onDeviceUsageResetsOn(DateTime now) {
 
 /// Settings › Transcription › On-Device Transcription, reading the app's providers.
 class OnDeviceSettingsPage extends StatefulWidget {
-  const OnDeviceSettingsPage({super.key, this.controller, this.loadUsage});
+  const OnDeviceSettingsPage({super.key, this.controller});
 
   final OnDeviceTranscriptionController? controller;
-  final Future<StorefrontUsage?> Function(String locale)? loadUsage;
 
   @override
   State<OnDeviceSettingsPage> createState() => _OnDeviceSettingsPageState();
 }
 
 class _OnDeviceSettingsPageState extends State<OnDeviceSettingsPage> {
-  StorefrontUsage? _usage;
-  bool _plansSheet = false;
-  Future<void>? _loading;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _loading ??= _load();
-  }
-
-  Future<void> _load() async {
-    final provider = context.read<UsageProvider>();
-    final sheet = provider.showSubscriptionUI && await PlanStorefrontGate.sheetEnabled();
-    if (!mounted) return;
-    final usage = await (widget.loadUsage ?? loadOnDeviceUsage)(context.l10n.localeName);
-    if (!mounted) return;
-    setState(() {
-      _plansSheet = sheet;
-      _usage = usage;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final subscription = context.watch<UsageProvider>().subscription;
     final recordings =
         context.watch<LocalRecordingsProvider>().recordings.where((r) => r.state == LocalRecordingState.pending);
     return OnDeviceSettingsView(
-      usage: _usage,
-      plansSheetAvailable: _plansSheet,
       showSaveUsage: subscription?.subscription.plan.isPaid ?? false,
       pendingSeconds: recordings.fold<int>(0, (sum, r) => sum + r.seconds) +
           (widget.controller ?? OnDeviceTranscriptionController.instance).pendingSeconds,
       pendingBytes: recordings.fold(0, (sum, r) => sum + r.sizeBytes),
-      onGetMoreUsage: () => unawaited(openOnDeviceUsagePlans(context)),
       controller: widget.controller,
     );
   }
@@ -82,26 +52,16 @@ class _OnDeviceSettingsPageState extends State<OnDeviceSettingsPage> {
 class OnDeviceSettingsView extends StatelessWidget {
   const OnDeviceSettingsView({
     super.key,
-    required this.usage,
-    required this.plansSheetAvailable,
     required this.showSaveUsage,
     required this.pendingSeconds,
     required this.pendingBytes,
-    required this.onGetMoreUsage,
     this.controller,
   });
-
-  /// Backend usage payload. The meter and the get-more label are its strings; absent means no meter.
-  final StorefrontUsage? usage;
-
-  /// The contextual plans sheet can open. The get-more row stays hidden otherwise.
-  final bool plansSheetAvailable;
 
   /// Paid plans can transcribe on the phone before the shared budget runs out.
   final bool showSaveUsage;
   final int pendingSeconds;
   final int pendingBytes;
-  final VoidCallback onGetMoreUsage;
   final OnDeviceTranscriptionController? controller;
 
   @override
@@ -115,14 +75,6 @@ class OnDeviceSettingsView extends StatelessWidget {
         builder: (context, _) {
           final settings = controller.settings;
           final status = controller.model.status;
-          final meter = usage;
-          final meterLine = meter == null ? null : onDeviceMeterLine(meter);
-          final showMeter = meter != null && meterLine != null && meterLine.isNotEmpty;
-          final moreTitle = onDeviceMoreUsageTitle(
-            plansSheetAvailable: plansSheetAvailable,
-            moreLabel: meter?.moreLabel,
-          );
-          final showMore = moreTitle != null;
           final modelKnown = controller.model.engineResolved;
           final detectionFailed = controller.model.detectionFailed;
           final showModelRows = modelKnown && !detectionFailed && !controller.model.isOsManaged;
@@ -131,21 +83,6 @@ class OnDeviceSettingsView extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.fromLTRB(OmiSpacing.md, OmiSpacing.xs, OmiSpacing.md, OmiSpacing.xxl),
             children: [
-              if (showMeter || showMore) ...[
-                OmiSettingsGroup(
-                  children: [
-                    if (showMeter) StorefrontUsageMeter(usage: meter.withMeterLine(meterLine), embedded: true),
-                    if (showMore)
-                      OmiSettingsRow(
-                        key: const Key('on_device_settings_more_usage'),
-                        leading: const Icon(Icons.bolt),
-                        title: moreTitle,
-                        onTap: onGetMoreUsage,
-                      ),
-                  ],
-                ),
-                const SizedBox(height: OmiSpacing.lg),
-              ],
               if (detectionFailed) ...[
                 OmiSettingsGroup(
                   children: [

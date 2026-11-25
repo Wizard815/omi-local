@@ -396,6 +396,13 @@ class SttProviderConfig {
 
   static List<SttProviderConfig> get allProviders => _visibleProviders.map((p) => get(p)).toList();
 
+  /// What Settings offers as a transcription engine on a self-hosted server: engines the reader
+  /// runs themselves (a Whisper server, on-device Whisper, a custom endpoint). Cloud vendors
+  /// (OpenAI, Deepgram, Gemini) are not offered.
+  static const selfHostedProviders = [SttProvider.localWhisper, SttProvider.onDeviceWhisper, SttProvider.customLive];
+
+  static List<SttProviderConfig> get selfHostedChoices => selfHostedProviders.map((p) => get(p)).toList();
+
   /// Template names that are live/streaming
   static const Set<String> liveRequestTemplates = {'Deepgram', 'Google Gemini'};
 

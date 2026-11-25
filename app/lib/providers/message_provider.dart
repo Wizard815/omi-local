@@ -6,7 +6,6 @@
 // conversation is current instead of each caller, keeping voice and typed chat
 // on one timeline.
 import 'package:omi/models/voice_question_result.dart';
-import 'package:omi/models/plan_storefront.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -182,12 +181,6 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
   // Chat quota exceeded — set transiently when backend returns 402
   bool _chatQuotaExceeded = false;
   bool get isChatQuotaExceeded => _chatQuotaExceeded;
-  ChatAtCap? _chatAtCap;
-  ChatAtCap? get chatAtCap => _chatAtCap?.active == true ? _chatAtCap : null;
-  void applyChatAtCap(ChatAtCap? state) {
-    _chatAtCap = state;
-    notifyListeners();
-  }
 
   // Replies that failed (network or server error), keyed by the placeholder message object —
   // placeholders share the id '0000', so the id cannot tell two failures apart.
@@ -604,7 +597,6 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
   }
 
   void clearUserData() {
-    _chatAtCap = null;
     _chatQuotaExceeded = false;
     _readAloud.revoke();
     messages = [];
@@ -750,7 +742,6 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
     BleAudioCodec? codec,
     bool playResponseAudio = false,
   }) async {
-    if (chatAtCap != null) return const VoiceQuestionResult.failed(VoiceQuestionFailure.quota);
     // Re-entry guard so a duplicated end-of-session signal from the device
     // button can't kick off two parallel voice replies.
     if (_voiceSendInFlight || sendingMessage || showTypingIndicator) {
@@ -925,8 +916,7 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
           if (_tryParseQuotaError(chunk.text) || chunk.errorCode == 'quota_exceeded') {
             _chatQuotaExceeded = true;
             final l10n = globalNavigatorKey.currentContext?.l10n;
-            message.text = chatAtCap?.title ??
-                l10n?.chatQuotaExceededReply ??
+            message.text = l10n?.chatQuotaExceededReply ??
                 "You've hit your monthly limit. Upgrade to keep chatting with Omi without restrictions.";
             stopPlayback(VoiceReplyPlaybackInterruptSource.quotaError);
             notifyListeners();
@@ -975,7 +965,6 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
     List<String>? retryFileIds,
     String? modelShortcut,
   }) async {
-    if (chatAtCap != null) return;
     _chatQuotaExceeded = false; // Clear stale quota state from previous sends
     aiStreamProgress = 0.0;
     beginChatTurn();
@@ -1118,8 +1107,7 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
               // Keep the user's message visible; replace AI placeholder with quota message
               _chatQuotaExceeded = true;
               final l10n = globalNavigatorKey.currentContext?.l10n;
-              message.text = chatAtCap?.title ??
-                  l10n?.chatQuotaExceededReply ??
+              message.text = l10n?.chatQuotaExceededReply ??
                   "You've hit your monthly limit. Upgrade to keep chatting with Omi without restrictions.";
               _logChatFailure(ChatStreamFailureClass.quota, stage: 'stream');
               completeChat(ProductOutcome.failure, failure: ProductFailure.quota);
@@ -1218,12 +1206,6 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
   /// and a new one streams in its place. No-op unless [canRetryReply]. The caller owns
   /// [sendingMessage] the same way it does for a normal send.
   Future<void> retryFailedReply(ServerMessage message) async {
-    // A paused chat sends nothing, so removing the failed reply here would lose its Try Again and
-    // leave the composer the caller locked; keep both until the pause ends.
-    if (chatAtCap != null) {
-      setSendingMessage(false);
-      return;
-    }
     final failed = _failedReplies.remove(message);
     if (failed == null || !failed.canRetry) {
       // The failure was cleared (a refresh) between build and tap: nothing to resend, so release the
@@ -1247,13 +1229,7 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
       if (json is! Map) return false;
       // FastAPI wraps HTTPException detail in {"detail": {...}}
       var detail = json['detail'] is Map ? json['detail'] as Map<String, dynamic> : json;
-      if (detail['chat_at_cap'] is Map) {
-        _chatAtCap = ChatAtCap.fromJson(Map<String, dynamic>.from(detail['chat_at_cap'] as Map));
-        _chatQuotaExceeded = true;
-        notifyListeners();
-        return true;
-      }
-      if (detail['error'] == 'quota_exceeded') {
+      if (detail['chat_at_cap'] is Map || detail['error'] == 'quota_exceeded') {
         detail['allowed'] = false;
         _chatQuotaExceeded = true;
         notifyListeners();

@@ -1,13 +1,10 @@
 // Derived by python3 tool/perf_shell.py from main.dart. Do not hand edit.
-// Extracted shell SHA256 (imports, telemetry field, builder chain): e413fa3910991ce192ddaf0d50bf4cba6f3100e1bed73abcbcc24258ca236de8
+// Extracted shell SHA256 (imports, builder chain): dec17e3acfeafb08745317b071aa3f38ce2d38b3488f3990b955dc02ed7b6dfa
 // ignore_for_file: unused_import, unnecessary_import
 import 'package:omi/services/on_device/on_device_background.dart';
 import 'package:omi/services/onboarding_sync_runtime.dart';
 import 'package:omi/env/physical_qualification.dart';
 import 'dart:async';
-import 'package:omi/services/telemetry/client_telemetry.dart';
-import 'package:omi/services/telemetry/client_telemetry_flags.dart';
-import 'package:omi/services/telemetry/client_telemetry_transport.dart';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -104,54 +101,25 @@ import 'package:omi/services/notifications/merge_notification_handler.dart';
 import 'package:omi/services/devices/connectors/limitless_connection.dart';
 import 'package:omi/services/services.dart';
 import 'package:omi/services/wals.dart';
-import 'package:omi/utils/analytics/app_session_telemetry.dart';
-import 'package:omi/utils/analytics/phone_battery_sample_telemetry.dart';
-import 'package:omi/utils/analytics/mobile_performance_telemetry.dart';
 import 'package:omi/utils/analytics/analytics_manager.dart';
 import 'package:omi/utils/debug_log_manager.dart';
 import 'package:omi/utils/debugging/crashlytics_manager.dart';
 import 'package:omi/utils/environment_detector.dart';
-import 'package:omi/utils/analytics/rage_click_context_tracker.dart';
-import 'package:omi/utils/analytics/session_replay.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 import 'package:omi/utils/logger.dart';
-import 'package:omi/utils/platform/platform_service.dart';
 import 'package:omi/utils/platform/platform_manager.dart';
 import 'package:omi/utils/notification_channel_strings.dart';
 import 'package:omi/main.dart' show MyApp, CustomErrorWidget;
 
 /// The exact production builder chain, with an inert seeded page boundary.
-/// Force the iOS + configured analytics arm on hosts; no analytics keys required.
 class PerfProductionShell extends StatefulWidget {
-  const PerfProductionShell({super.key, required this.page, this.iosAnalytics = true});
+  const PerfProductionShell({super.key, required this.page});
   final Widget page;
-  final bool iosAnalytics;
   @override
   State<PerfProductionShell> createState() => _PerfProductionShellState();
 }
 
 class _PerfProductionShellState extends State<PerfProductionShell> {
-  late final MobilePerformanceTelemetry _performanceTelemetry = MobilePerformanceTelemetry(
-    emit: (name, properties) {
-      DebugLogManager.logEvent('mobile_render_diagnostic', {
-        for (final entry in properties.entries) entry.key: entry.value,
-      });
-    },
-    identityEpoch: () => AnalyticsManager.identityEpoch,
-    diagnosticsEnabled: () => SharedPreferencesUtil().devLogsToFileEnabled,
-  );
-  @override
-  void initState() {
-    super.initState();
-    _performanceTelemetry.attach();
-  }
-
-  @override
-  void dispose() {
-    _performanceTelemetry.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) => MultiProvider(
         providers: [
@@ -168,7 +136,6 @@ class _PerfProductionShellState extends State<PerfProductionShell> {
               debugShowCheckedModeBanner: false,
               title: F.title,
               navigatorKey: MyApp.navigatorKey,
-              navigatorObservers: [if (!PhysicalQualification.enabled) _performanceTelemetry],
               locale: context.watch<LocaleProvider>().locale,
               localizationsDelegates: const [
                 AppLocalizations.delegate,
@@ -190,9 +157,7 @@ class _PerfProductionShellState extends State<PerfProductionShell> {
                   child: KeyedSubtree(key: ValueKey(brightness), child: child!),
                 );
                 final guidedContent = BluetoothGuidanceListener(child: content);
-                return SessionReplayScope(
-                  child: widget.iosAnalytics ? RageClickContextTracker(child: guidedContent) : guidedContent,
-                );
+                return guidedContent;
               },
               home: TalkerWrapper(
                 talker: Logger.instance.talker,

@@ -11,9 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:omi/backend/preferences.dart';
 import 'package:omi/l10n/app_localizations.dart';
-import 'package:omi/models/plan_storefront.dart';
 import 'package:omi/utils/platform/platform_manager.dart';
-import 'package:omi/pages/on_device/on_device_at_cap_sheet.dart';
 import 'package:omi/pages/on_device/on_device_provenance_section.dart';
 import 'package:omi/pages/on_device/on_device_queue_banner.dart';
 import 'package:omi/pages/on_device/on_device_schedule_page.dart';
@@ -121,39 +119,6 @@ void main() {
     return value;
   }
 
-  const usage = StorefrontUsage(
-    kind: 'usage_budget',
-    percent: 80,
-    resetLabel: 'resets Nov 1',
-    meterLine: '80% used · about 3 hours of recording left · resets Nov 1',
-    hoursLeft: 3,
-    moreLabel: 'Get more usage',
-  );
-
-  Widget conversationsBackdrop() {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Conversations')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: const [
-          Text('Today'),
-          SizedBox(height: 12),
-          ListTile(title: Text('Standup with the design team'), subtitle: Text('9:00 AM · 24m')),
-        ],
-      ),
-    );
-  }
-
-  testWidgets('at-cap sheet', (tester) async {
-    await shoot(tester, '01-at-cap-sheet-ios.png', home: conversationsBackdrop(), afterPump: (tester) async {
-      showOnDeviceAtCapSheet(tester.element(find.text('Conversations')), liveHoursReturnOn: DateTime(2026, 11, 1));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
-    });
-    expect(find.text("You've reached this month's limit"), findsOneWidget);
-    expect(find.text('Runs while your phone charges.'), findsOneWidget);
-  });
-
   testWidgets('parakeet setup not downloaded', (tester) async {
     final value = controller(
         status: const OnDeviceModelStatus(phase: OnDeviceModelPhase.notDownloaded, sizeBytes: 538 * 1024 * 1024));
@@ -191,8 +156,6 @@ void main() {
         pendingSeconds: 3900,
         atCap: true,
         onSetUp: () {},
-        moreLabel: 'Get more usage',
-        onGetMoreUsage: () {},
       )),
     );
   });
@@ -207,8 +170,6 @@ void main() {
         pendingSeconds: 3900,
         atCap: true,
         onSetUp: () {},
-        moreLabel: 'Get more usage',
-        onGetMoreUsage: () {},
       )),
     );
   });
@@ -238,15 +199,12 @@ void main() {
     expect(find.textContaining("doesn't count toward your usage"), findsOneWidget);
   });
 
-  Widget settings(OnDeviceTranscriptionController value, {StorefrontUsage? meter}) {
+  Widget settings(OnDeviceTranscriptionController value) {
     return OnDeviceSettingsView(
       controller: value,
-      usage: meter ?? usage,
-      plansSheetAvailable: true,
       showSaveUsage: true,
       pendingSeconds: 12000,
       pendingBytes: 180 * 1024 * 1024,
-      onGetMoreUsage: () {},
     );
   }
 
@@ -256,8 +214,6 @@ void main() {
 
   testWidgets('parakeet settings top', (tester) async {
     await shoot(tester, '10-settings-top-ios.png', home: settings(parakeetSettings()));
-    expect(find.text('80% used · about 3 hours of recording left · resets Nov 1'), findsOneWidget);
-    expect(find.text('Get more usage'), findsOneWidget);
     expect(find.text('Installed · 443 MB'), findsOneWidget);
     expect(find.text('Always transcribe on this phone'), findsOneWidget);
     expect(find.text('Saves your usage. No speaker labels.'), findsOneWidget);
@@ -271,30 +227,6 @@ void main() {
     expect(find.text('Remove Speech Model'), findsOneWidget);
   });
 
-  testWidgets('settings below 80 omit the hours estimate', (tester) async {
-    const low = StorefrontUsage(
-      kind: 'usage_budget',
-      percent: 40,
-      resetLabel: 'resets Nov 1',
-      meterLine: '40% used · resets Nov 1',
-      moreLabel: 'Get more usage',
-    );
-    await shoot(tester, '26-settings-40-percent-ios.png', home: settings(parakeetSettings(), meter: low));
-    expect(find.text('40% used · resets Nov 1'), findsOneWidget);
-    expect(find.textContaining('hours of recording left'), findsNothing);
-  });
-
-  testWidgets('spanish settings at 80 show the backend meter', (tester) async {
-    await shoot(
-      tester,
-      '27-settings-80-es.png',
-      locale: const Locale('es'),
-      home: settings(parakeetSettings()),
-    );
-    expect(find.text('80% used · about 3 hours of recording left · resets Nov 1'), findsOneWidget);
-    expect(find.text('Get more usage'), findsOneWidget);
-  });
-
   testWidgets('unsupported banner', (tester) async {
     await shoot(
       tester,
@@ -305,8 +237,6 @@ void main() {
         pendingSeconds: 3900,
         atCap: true,
         onSetUp: () {},
-        moreLabel: 'Get more usage',
-        onGetMoreUsage: () {},
       )),
     );
   });
@@ -322,8 +252,6 @@ void main() {
         pendingSeconds: 3900,
         atCap: true,
         onSetUp: () {},
-        moreLabel: 'Get more usage',
-        onGetMoreUsage: () {},
       )),
     );
   });
@@ -340,8 +268,6 @@ void main() {
         pendingSeconds: 3900,
         atCap: true,
         onSetUp: () {},
-        moreLabel: 'Get more usage',
-        onGetMoreUsage: () {},
       )),
     );
   });
@@ -400,14 +326,6 @@ void main() {
     );
   });
 
-  testWidgets('free at cap', (tester) async {
-    await shoot(tester, '20-free-user-at-cap.png', home: conversationsBackdrop(), afterPump: (tester) async {
-      showOnDeviceAtCapSheet(tester.element(find.text('Conversations')), liveHoursReturnOn: DateTime(2026, 11, 1));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
-    });
-  });
-
   testWidgets('transcribing progress', (tester) async {
     await shoot(
       tester,
@@ -418,8 +336,6 @@ void main() {
         pendingSeconds: 900,
         atCap: true,
         onSetUp: () {},
-        moreLabel: 'Get more usage',
-        onGetMoreUsage: () {},
       )),
     );
   });
@@ -441,7 +357,6 @@ void main() {
     final value =
         controller(engine: 'speech_analyzer', status: const OnDeviceModelStatus(phase: OnDeviceModelPhase.installed));
     await shoot(tester, '23-ios26-settings-top.png', home: settings(value));
-    expect(find.text('80% used · about 3 hours of recording left · resets Nov 1'), findsOneWidget);
     expect(find.text('Speech model'), findsNothing);
     await shoot(tester, '24-ios26-settings-scrolled.png', home: settings(value), afterPump: (tester) async {
       await tester.drag(find.byType(ListView), const Offset(0, -400));

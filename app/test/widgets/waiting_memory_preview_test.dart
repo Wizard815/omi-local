@@ -5,7 +5,6 @@ import 'package:omi/backend/schema/memory.dart';
 import 'package:omi/l10n/app_localizations.dart';
 import 'package:omi/pages/memories/widgets/memory_item.dart';
 import 'package:omi/pages/memories/widgets/memory_edit_sheet.dart';
-import 'package:omi/pages/settings/usage_page.dart';
 import 'package:omi/providers/memories_provider.dart';
 import 'package:omi/providers/usage_provider.dart';
 import 'package:omi/ui/ui.dart';
@@ -67,9 +66,10 @@ void main() {
     expect(preview.contains(action.bottomRight), isTrue);
     expect(tester.takeException(), isNull);
   });
-  for (final visible in [true, false]) {
+  // A self-hosted server shows no plans: a held memory opens read-only from any tap target.
+  for (final visible in [false]) {
     for (final target in ['frost', 'padding', 'button']) {
-      testWidgets('held memory $target tap obeys subscription visibility $visible', (tester) async {
+      testWidgets('held memory $target tap opens it read-only', (tester) async {
         final provider = MemoriesProvider();
         final usage = _Usage(visible);
         final routes = _Routes();
@@ -114,24 +114,11 @@ void main() {
         }
         expect(editCalls, 0);
         expect(routes.pushed, hasLength(2));
-        if (visible) {
-          final destination =
-              (routes.pushed.last as MaterialPageRoute).builder(tester.element(find.byType(MemoryItem)));
-          expect(destination, isA<UsagePage>());
-          expect((destination as UsagePage).showUpgradeDialog, isTrue);
-          expect(find.byType(MemoryEditSheet), findsNothing);
-          expect(find.byType(SelectableText), findsNothing);
-          expect(find.bySemanticsLabel('Private held memory'), findsNothing);
-          // Do not build the network-backed usage page.
-          await tester.pumpWidget(const SizedBox.shrink());
-        } else {
-          await tester.pumpAndSettle();
-          expect(tester.widget<MemoryEditSheet>(find.byType(MemoryEditSheet)).readOnly, isTrue);
-          expect(find.widgetWithText(SelectableText, 'Private held memory'), findsOneWidget);
-          expect(find.byKey(const ValueKey('memory_edit_field')), findsNothing);
-          expect(find.byType(UsagePage), findsNothing);
-          expect(tester.takeException(), isNull);
-        }
+        await tester.pumpAndSettle();
+        expect(tester.widget<MemoryEditSheet>(find.byType(MemoryEditSheet)).readOnly, isTrue);
+        expect(find.widgetWithText(SelectableText, 'Private held memory'), findsOneWidget);
+        expect(find.byKey(const ValueKey('memory_edit_field')), findsNothing);
+        expect(tester.takeException(), isNull);
       });
     }
   }

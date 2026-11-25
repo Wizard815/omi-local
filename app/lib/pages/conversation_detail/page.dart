@@ -20,11 +20,9 @@ import 'package:omi/pages/chat/chat_route.dart';
 import 'package:omi/pages/chat/page.dart';
 import 'package:omi/pages/conversations/conversation_action_analytics.dart';
 import 'package:omi/pages/conversations/conversation_actions.dart';
-import 'package:omi/pages/paywall/value_moment_paywall.dart';
 import 'package:omi/providers/connectivity_provider.dart';
 import 'package:omi/providers/conversation_provider.dart';
 import 'package:omi/providers/integration_provider.dart';
-import 'package:omi/providers/usage_provider.dart';
 import 'package:omi/pages/settings/integrations_page.dart' show IntegrationApp, IntegrationsPage;
 import 'package:omi/services/audio_download_service.dart';
 import 'package:omi/services/experiments/summary_generation_gate.dart';
@@ -159,10 +157,6 @@ class ConversationDetailPageState extends State<ConversationDetailPage>
   bool _didInitialSeek = false;
   bool _hasExplicitTabSelection = false;
   bool _resultViewedRecorded = false;
-
-  /// When the summary of this conversation first showed; leaving after [ValueMomentPaywall.summaryDwell]
-  /// is the first-summary moment.
-  DateTime? _summaryShownAt;
 
   // Search functionality
   bool _isSearching = false;
@@ -391,11 +385,6 @@ class ConversationDetailPageState extends State<ConversationDetailPage>
         return;
       }
       _resultViewedRecorded = true;
-      final usage = context.read<UsageProvider?>();
-      if (selectedTab == ConversationTab.summary &&
-          (usage == null || ValueMomentPaywall.mayOffer(usage, PaywallMoment.ahaFirstSummary))) {
-        _summaryShownAt = DateTime.now();
-      }
       ProductTelemetry.instance.value(
         ProductValue.resultViewed,
         surface: ProductSurface.conversationDetail,
@@ -484,11 +473,6 @@ class ConversationDetailPageState extends State<ConversationDetailPage>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    final summaryShownAt = _summaryShownAt;
-    if (summaryShownAt != null && DateTime.now().difference(summaryShownAt) >= ValueMomentPaywall.summaryDwell) {
-      ValueMomentPaywall.offer(PaywallMoment.ahaFirstSummary,
-          conversation: _detailProvider.conversationOrNull ?? widget.conversation);
-    }
     // Leaving mid-pass auto-confirms it: one summary update for the labels already saved.
     _detailProvider.leaveSpeakerLabelingSession(widget.conversation.id);
     unawaited(SiriIntegration.instance.setCurrentScreen("", null));

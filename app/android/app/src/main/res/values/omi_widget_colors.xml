@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Home-screen widgets: the app's dark palette (lib/ui/omi_tokens.dart, OmiPalette.dark). -->
+<resources>
+    <color name="omi_widget_surface">#FF1C1C1E</color>
+    <color name="omi_widget_surface_raised">#FF2C2C2E</color>
+    <color name="omi_widget_text_primary">#FFFFFFFF</color>
+    <color name="omi_widget_text_secondary">#FFAEAEB2</color>
+    <color name="omi_widget_text_tertiary">#FF8E8E93</color>
+    <color name="omi_widget_on_accent">#FF000000</color>
+    <color name="omi_widget_accent">#FFFFFFFF</color>
+</resources>

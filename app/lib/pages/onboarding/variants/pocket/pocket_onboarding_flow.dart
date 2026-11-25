@@ -14,7 +14,6 @@ import 'package:omi/pages/onboarding/permissions/permissions_widget.dart';
 import 'package:omi/pages/onboarding/primary_language/primary_language_widget.dart';
 import 'package:omi/pages/onboarding/variants/pocket/pocket_pairing_step.dart';
 import 'package:omi/providers/device_provider.dart';
-import 'package:omi/providers/usage_provider.dart';
 import 'package:omi/utils/device.dart';
 import 'package:omi/utils/other/temp.dart';
 import 'package:omi/utils/platform/platform_manager.dart';
@@ -27,7 +26,7 @@ import 'package:omi/utils/platform/platform_manager.dart';
 class PocketOnboardingFlow extends StatefulWidget {
   const PocketOnboardingFlow({super.key, required this.onComplete});
 
-  final Future<bool> Function({required bool paywallShown}) onComplete;
+  final Future<bool> Function() onComplete;
 
   @override
   State<PocketOnboardingFlow> createState() => _PocketOnboardingFlowState();
@@ -91,15 +90,11 @@ class _PocketOnboardingFlowState extends State<PocketOnboardingFlow> {
   Future<void> _finish() async {
     if (_finishing) return;
     _finishing = true;
-    final usage = context.read<UsageProvider>();
-    if (usage.subscription?.subscription.plan.isPaid != true) {
-      SharedPreferencesUtil().homeTrialSheetPending = true;
-    }
     // The first conversation should be on Home when it opens; a slow or failed seed never holds
     // onboarding.
     await seedOnboardingConversation().timeout(const Duration(seconds: 4), onTimeout: () => false);
     if (!mounted) return;
-    final saved = await widget.onComplete(paywallShown: false);
+    final saved = await widget.onComplete();
     if (saved) SharedPreferencesUtil().remove(resumeKey(SharedPreferencesUtil().uid));
     _finishing = false;
   }

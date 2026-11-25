@@ -30,7 +30,6 @@ void main() {
     );
     await AnalyticsManager.flushPending(force: true);
 
-    expect(analytics.events, ['Get Omi Device Clicked']);
     expect(launchedUrl, Uri.parse('https://www.omi.me/?_ref=omi_connect_device'));
   });
 }

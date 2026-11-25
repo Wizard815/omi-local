@@ -77,15 +77,15 @@ void main() {
       expect(find.byKey(const ValueKey('chat_apps_what_omi_does')), findsNothing);
     });
 
-    testWidgets('free plan: rows locked, Pro card, connected links still open', (tester) async {
+    testWidgets('free plan on a self-hosted server: nothing locked, no plans card', (tester) async {
       final backend = FakeMessagingBackend()
         ..links = [linkJson(id: linkIdIMessage, channel: 'imessage', externalId: '+15550100')];
       await pumpPage(tester, backend: backend, plan: PlanType.basic);
-      expect(find.byKey(const ValueKey('chat_apps_pro_card')), findsOneWidget);
-      expect(find.text('Chat apps are part of Omi Pro'), findsOneWidget);
-      expect(find.byIcon(Icons.lock_outline_rounded), findsOneWidget); // Telegram is locked.
+      // omi-local: no plans to offer, so no Pro card.
+      expect(find.byKey(const ValueKey('chat_apps_pro_card')), findsNothing);
+      expect(find.byIcon(Icons.lock_outline_rounded), findsNothing);
       expect(find.text('Connected as +15550100'), findsOneWidget);
-      expect(find.text('Connect'), findsNothing);
+      expect(find.text('Connect'), findsOneWidget);
     });
 
     testWidgets('a channel without an address is coming soon', (tester) async {
@@ -322,7 +322,7 @@ void main() {
       expect(find.text('Connect'), findsNothing);
     });
 
-    testWidgets('channel_plan: iMessage offers an upgrade, Telegram still connects', (tester) async {
+    testWidgets('channel_plan: iMessage says so without a plans link, Telegram still connects', (tester) async {
       await pumpWith(
           tester,
           {
@@ -332,7 +332,7 @@ void main() {
           plan: PlanType.plus);
       expect(find.text('Available on Omi Pro'), findsOneWidget);
       expect(find.text('Upgrade'), findsOneWidget);
-      expect(row(tester, 'imessage').onTap, isNotNull);
+      expect(row(tester, 'imessage').onTap, isNull, reason: 'omi-local has no plans page to open');
       expect(find.text('Connect'), findsOneWidget);
       expect(find.byIcon(Icons.lock_outline_rounded), findsNothing);
     });

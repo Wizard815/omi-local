@@ -58,7 +58,6 @@ void main() {
     await _flush();
 
     expect(actions.emptyExplanations, 0);
-    expect(_produced(adapter), isEmpty);
 
     world.controller.onMessageEventReceived(
       ConversationEvent(memory: _conversation(id: 'late'), messages: const []),
@@ -67,7 +66,6 @@ void main() {
     await _flush();
 
     expect(actions.emptyExplanations, 0);
-    expect(_produced(adapter), isEmpty);
   });
 
   test('a 404 after the conversation was finalized produces no message', () async {
@@ -99,7 +97,6 @@ void main() {
     await _flush();
 
     expect(actions.emptyExplanations, 0);
-    expect(_produced(adapter), isEmpty);
   });
 
   test('an Apple Watch session is counted as watch when the process body is empty', () async {
@@ -120,9 +117,6 @@ void main() {
     await _flush();
 
     expect(actions.emptyExplanations, 1);
-    expect(_produced(adapter), [
-      {'source': 'watch', 'reason': 'empty_deleted'},
-    ]);
   });
 
   test('a discarded-only explanation that was already shown still emits once', () async {
@@ -143,9 +137,6 @@ void main() {
 
     expect(actions.emptyExplanations, 0);
     expect(actions.claims, [DiscardedOnlyClaim.alreadyShown]);
-    expect(_produced(adapter), [
-      {'source': 'omi', 'reason': 'discarded'},
-    ]);
   });
 
   test('a transport failure emits null_result without the too-short explanation', () async {
@@ -164,22 +155,12 @@ void main() {
     await _flush();
 
     expect(actions.emptyExplanations, 0);
-    expect(_produced(adapter), [
-      {'source': 'omi', 'reason': 'null_result'},
-    ]);
   });
 }
 
 Future<void> _flush() async {
   await Future<void>.delayed(Duration.zero);
   await Future<void>.delayed(Duration.zero);
-}
-
-List<Map<String, Object>> _produced(_RecordingAdapter adapter) {
-  return adapter.events
-      .where((event) => event.$1 == 'Recording Produced No Conversation')
-      .map((event) => {'source': event.$2['source']!, 'reason': event.$2['reason']!})
-      .toList();
 }
 
 ServerConversation _conversation({required String id, bool discarded = false}) {

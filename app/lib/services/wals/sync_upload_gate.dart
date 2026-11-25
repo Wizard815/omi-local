@@ -7,8 +7,6 @@ import 'package:omi/backend/http/api/users.dart';
 import 'package:omi/backend/http/shared.dart';
 import 'package:omi/backend/schema/geolocation.dart';
 import 'package:omi/services/account_cutover/account_cutover_runtime.dart';
-import 'package:omi/services/telemetry/client_telemetry.dart';
-import 'package:omi/services/telemetry/client_telemetry_flags.dart';
 import 'package:omi/services/wals/sync_rate_limit_reconciliation.dart';
 import 'package:omi/services/wals/sync_rate_limiter.dart';
 import 'package:omi/services/wals/sync_job_poller.dart';
@@ -46,14 +44,12 @@ class SyncUploadGate {
     UploadTelemetryEmitter? telemetryEmitter,
     UploadAttemptIdFactory? attemptIdFactory,
     UploadClock? clock,
-    ClientTelemetry? clientTelemetry,
   })  : _limiter = limiter,
         _uploader = uploader,
         _fairUseStatusLoader = fairUseStatusLoader,
         _telemetryEmitter = telemetryEmitter,
         _attemptIdFactory = attemptIdFactory ?? _defaultAttemptId,
-        _clock = clock ?? DateTime.now,
-        _clientTelemetry = clientTelemetry;
+        _clock = clock ?? DateTime.now;
 
   static final SyncUploadGate instance = SyncUploadGate(
     limiter: SyncRateLimiter.instance,
@@ -70,14 +66,12 @@ class SyncUploadGate {
   final UploadTelemetryEmitter? _telemetryEmitter;
   final UploadAttemptIdFactory _attemptIdFactory;
   final UploadClock _clock;
-  final ClientTelemetry? _clientTelemetry;
   final Mutex _uploadMutex = Mutex();
   Future<bool>? _reconciliation;
 
   static String _defaultAttemptId() => const Uuid().v4();
 
   static void _emitProductionTelemetry(String eventName, Map<String, dynamic> properties) {
-    if (ClientTelemetryFlags.posthogRetirementEnabled) return;
     final analytics = AnalyticsManager();
     switch (eventName) {
       case RecordingUploadTelemetry.startedEvent:
@@ -166,7 +160,6 @@ class SyncUploadGate {
     double? audioEndSeconds,
     bool claimLiveCapture = false,
     Geolocation? geolocation,
-    String telemetrySource = 'unknown',
   }) async {
     await _uploadMutex.acquire();
     try {
@@ -206,12 +199,6 @@ class SyncUploadGate {
           claimsLiveCapture: claimLiveCapture,
         ),
       );
-      _mirrorUpload(
-        attemptId: attemptId,
-        phase: 'started',
-        source: telemetrySource,
-        occurredAt: startedAt,
-      );
 
       try {
         final result = await _uploader(
@@ -240,15 +227,6 @@ class SyncUploadGate {
             result: queued ? 'accepted' : 'completed',
           ),
         );
-        _mirrorUpload(
-          attemptId: attemptId,
-          phase: queued ? 'accepted' : 'completed',
-          source: telemetrySource,
-          occurredAt: _clock(),
-          latencyMs: _latencyMs(startedAt),
-          httpStatus: queued ? 202 : 200,
-          jobId: result.jobId,
-        );
         return result;
       } on SyncRateLimitedException catch (error) {
         if (error.reasonCode == 'dispatch_hold') {
@@ -271,16 +249,6 @@ class SyncUploadGate {
             totalBytes: totalBytes,
             claimsLiveCapture: claimLiveCapture,
             startedAt: startedAt,
-            telemetrySource: telemetrySource,
-          );
-        } else {
-          _mirrorUpload(
-            attemptId: attemptId,
-            phase: 'deferred',
-            source: telemetrySource,
-            occurredAt: _clock(),
-            latencyMs: _latencyMs(startedAt),
-            httpStatus: error.statusCode ?? 429,
           );
         }
         rethrow;
@@ -303,17 +271,8 @@ class SyncUploadGate {
             reason: RateLimitReason.backendBusy,
           );
         }
-        if (error is SyncUploadHttpException && isRecordingScopedSyncWaitReasonCode(error.reasonCode)) {
-          // The WAL stays pending until its record is complete: a wait, not a failure.
-          _mirrorUpload(
-            attemptId: attemptId,
-            phase: 'deferred',
-            source: telemetrySource,
-            occurredAt: _clock(),
-            latencyMs: _latencyMs(startedAt),
-            httpStatus: error.statusCode,
-          );
-        } else {
+        // A recording-scoped wait keeps the WAL pending until its record is complete: not a failure.
+        if (!(error is SyncUploadHttpException && isRecordingScopedSyncWaitReasonCode(error.reasonCode))) {
           _recordUploadFailure(
             error,
             attemptId: attemptId,
@@ -322,7 +281,6 @@ class SyncUploadGate {
             totalBytes: totalBytes,
             claimsLiveCapture: claimLiveCapture,
             startedAt: startedAt,
-            telemetrySource: telemetrySource,
           );
         }
         rethrow;
@@ -338,9 +296,7 @@ class SyncUploadGate {
   }
 
   int? _latencyMs(DateTime startedAt) {
-    // sol blocker: wall-clock deltas fabricate latency across NTP steps. The
-    // gate records latency only when it is within the credible window
-    // (ClientTelemetrySchema.maxLatencyMs); otherwise omit it.
+    // Wall-clock deltas fabricate latency across NTP steps: keep only a credible window.
     final milliseconds = _clock().difference(startedAt).inMilliseconds;
     if (milliseconds < 0 || milliseconds > 86400000) return null;
     return milliseconds;
@@ -354,7 +310,6 @@ class SyncUploadGate {
     required int totalBytes,
     required bool claimsLiveCapture,
     required DateTime startedAt,
-    required String telemetrySource,
   }) {
     _emitTelemetry(
       RecordingUploadTelemetry.failedEvent,
@@ -368,47 +323,6 @@ class SyncUploadGate {
         failureClass: RecordingUploadTelemetry.failureClass(error),
       ),
     );
-    _mirrorUpload(
-      attemptId: attemptId,
-      phase: 'failed',
-      source: telemetrySource,
-      occurredAt: _clock(),
-      latencyMs: _latencyMs(startedAt),
-      httpStatus: error is SyncUploadHttpException
-          ? error.statusCode
-          : error is SyncRateLimitedException
-              ? error.statusCode
-              : null,
-      failureClass: RecordingUploadTelemetry.failureClass(error),
-    );
-  }
-
-  void _mirrorUpload({
-    required String attemptId,
-    required String phase,
-    required String source,
-    required DateTime occurredAt,
-    int? latencyMs,
-    int? httpStatus,
-    String? failureClass,
-    String? jobId,
-  }) {
-    try {
-      (_clientTelemetry ?? ClientTelemetry.instance).observeUpload(
-        UploadMirror(
-          attemptId: attemptId,
-          phase: phase,
-          source: source,
-          occurredAt: occurredAt,
-          latencyMs: latencyMs,
-          httpStatus: httpStatus,
-          failureClass: failureClass,
-          jobId: jobId,
-        ),
-      );
-    } catch (_) {
-      // Replacement telemetry must never change upload admission or retry.
-    }
   }
 
   void _emitTelemetry(String eventName, Map<String, dynamic> properties) {

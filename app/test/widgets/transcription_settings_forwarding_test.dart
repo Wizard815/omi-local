@@ -65,7 +65,7 @@ void main() {
     final sourceDropdown = tester.widget<DropdownButton<TranscriptionMode>>(
       find.byType(DropdownButton<TranscriptionMode>),
     );
-    sourceDropdown.onChanged!(TranscriptionMode.cloudProvider);
+    sourceDropdown.onChanged!(TranscriptionMode.ownEngine);
     await tester.pumpAndSettle(const Duration(milliseconds: 100));
 
     expect(forwardingTile().value, isTrue);

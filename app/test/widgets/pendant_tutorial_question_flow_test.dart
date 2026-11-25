@@ -13,7 +13,6 @@ import 'package:omi/backend/schema/bt_device/bt_device.dart';
 import 'package:omi/env/env.dart';
 import 'package:omi/l10n/app_localizations.dart';
 import 'package:omi/models/voice_question_result.dart';
-import 'package:omi/models/plan_storefront.dart';
 import 'package:omi/pages/onboarding/interactive_device_onboarding/steps/single_press_step.dart';
 import 'package:omi/providers/app_provider.dart';
 import 'package:omi/providers/device_onboarding_provider.dart';
@@ -223,7 +222,7 @@ void main() {
     h.dispose();
     await tester.pump();
   });
-  for (final failure in ['busy', 'local quota', 'audio save']) {
+  for (final failure in ['busy', 'audio save']) {
     testWidgets('$failure reports a terminal result and permits a new question', (tester) async {
       var failSave = failure == 'audio save';
       final m = MessageProvider(
@@ -234,13 +233,6 @@ void main() {
         voiceReplyStreamer: (_, {language, abort}) => answered(),
       );
       if (failure == 'busy') m.sendingMessage = true;
-      if (failure == 'local quota') {
-        m.applyChatAtCap(ChatAtCap(
-            title: 'Limit',
-            body: 'Fixture',
-            resetLine: 'Later',
-            resetAt: DateTime.now().millisecondsSinceEpoch ~/ 1000 + 300));
-      }
       final h = PendantTutorialHarness(m);
       addTearDown(h.dispose);
       await tester.pumpWidget(questionStep(h));
@@ -249,7 +241,6 @@ void main() {
       expect(h.tutorial.questionFailed, isTrue);
       expect(find.textContaining('Processing your question'), findsNothing);
       m.sendingMessage = false;
-      m.applyChatAtCap(null);
       failSave = false;
       h.submit();
       await flush(tester);

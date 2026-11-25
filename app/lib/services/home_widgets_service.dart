@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:omi/backend/schema/bt_device/bt_device.dart';
 import 'package:omi/backend/schema/schema.dart';
 import 'package:omi/gen/assets.gen.dart';
+import 'package:omi/services/android_home_widgets.dart';
 import 'package:omi/l10n/app_localizations.dart';
 import 'package:omi/ui/format/omi_date_format.dart';
 import 'package:omi/ui/format/omi_duration.dart';
@@ -133,8 +134,10 @@ abstract final class HomeWidgetsPayload {
   }
 }
 
-/// Writes the widget documents to the App Group through the battery widget's channel, only when
-/// one changed, and asks iOS to redraw that widget. Nothing happens off iOS.
+/// Writes the widget documents through the widget channel, only when one changed, and asks the
+/// system to redraw that widget: the iOS App Group (ios/BatteryWidget) or the Android widgets
+/// (android/app/src/main/kotlin/com/friend/ios/widgets, the same channel name). Nothing happens on
+/// other platforms.
 class HomeWidgetsService {
   HomeWidgetsService._();
 
@@ -150,7 +153,7 @@ class HomeWidgetsService {
 
   /// Publishes [document] under [key]; null clears it (the widget then asks to open Omi).
   Future<void> publish(String key, Map<String, Object?>? document) async {
-    if (!Platform.isIOS) return;
+    if (!Platform.isIOS && !Platform.isAndroid) return;
     final json = document == null ? null : jsonEncode(document);
     if (_published.containsKey(key) && _published[key] == json) return;
     _published[key] = json;
@@ -164,6 +167,12 @@ class HomeWidgetsService {
 
   /// Signing out: no tasks or conversation titles stay on the Home Screen.
   Future<void> clear() async {
-    await Future.wait([publish(upNextKey, null), publish(latestKey, null), publish(devicesKey, null)]);
+    await Future.wait([
+      publish(upNextKey, null),
+      publish(latestKey, null),
+      publish(devicesKey, null),
+      if (Platform.isAndroid)
+        for (final key in AndroidWidgetDocuments.keys) publish(key, null),
+    ]);
   }
 }
