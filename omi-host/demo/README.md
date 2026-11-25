@@ -149,3 +149,34 @@ Ports default to 8100, 8185, 9199, 6490, 4510 (stack) and 27223, 8742, 7100, 874
 | egress | the backend's interpreter | the guard is on (block), a public address is refused, no LAN call was |
 
 Last run here (this branch): 35 passed, 0 failed.
+
+# Hermes demo: Hermes uses Omi over MCP, Omi hands work to Hermes
+
+`hermes_demo.sh` starts the CalDAV demo's stack and runs `hermes_demo.py` with
+hermes-agent's own MCP client (`hermes_mcp_probe.py` registers `mcp_servers.omi` and calls
+the tools through Hermes' dispatcher) and, with `OMI_HERMES_URL`, a real Hermes API server
+for Send to agent. Setup and what flows where: `omi-host/examples/hermes/README.md`.
+
+```
+OMI_HERMES_PYTHON=<hermes venv>/bin/python OMI_HERMES_SRC=<hermes-agent copy> \
+OMI_HERMES_URL=http://<lan-ip>:8642 OMI_HERMES_KEY=<API_SERVER_KEY> \
+OMI_RADICALE_BIN=/tmp/radicale/bin/radicale omi-host/demo/hermes_demo.sh
+```
+
+Rows: Hermes connects with an Omi MCP key; reads a draft day as not reviewed and the
+approved one with its summary; finds a conversation rolled into the approved day; its tasks
+and events wait for the user's OK (and stay out of agents' reads), then reach Radicale once
+approved; a phone completion comes back; Hermes completes a task; a real Hermes run's
+approval is answered in Omi and its result lands on the conversation.
+
+# Peers demo: ALLGlance and FAITH read Omi
+
+`peers_demo.sh` runs ALLGlance's Omi connector and FAITH's generic MCP connector (with
+`omi-host/examples/faith/omi-connector.yaml`, one Omi key per person, no household key)
+against the same stack: no drafts and no waiting tasks reach either, FAITH's household view
+has no Omi tools, and what FAITH writes waits in that person's Waiting for your OK.
+
+```
+OMI_ALLGLANCE_REPO=<ALLGlance checkout> OMI_FAITH_SERVER=<F.A.I.T.H/server copy, npm installed> \
+OMI_RADICALE_BIN=/tmp/radicale/bin/radicale omi-host/demo/peers_demo.sh
+```

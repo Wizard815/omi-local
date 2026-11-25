@@ -47,6 +47,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 import pytz
 
 import database.conversations as conversations_db
+from utils.agent_calendar import AGENT_REQUEST_FIELD
 import database.day_bundle_users as day_bundle_users_db
 import database.day_reviews as day_reviews_db
 import database.notifications as notification_db
@@ -185,6 +186,8 @@ def load_day(uid: str, day: date_cls, tz_name: Optional[str]) -> DayConversation
     for data in raw:
         if data.get('is_locked') or data.get('deleted'):
             continue
+        if data.get(AGENT_REQUEST_FIELD):
+            continue  # an agent's proposed event (utils/agent_calendar.py), not part of the day
         conversation = deserialize_conversation(data)
         if data.get('discarded'):
             if data.get(DAY_REVIEW_DATE_FIELD) == date_str:

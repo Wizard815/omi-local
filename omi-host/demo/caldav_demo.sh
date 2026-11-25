@@ -17,6 +17,7 @@
 #   OMI_DEMO_BACKEND_PORT=8000 OMI_DEMO_FIRESTORE_PORT=8085 OMI_DEMO_AUTH_PORT=9099
 #   OMI_DEMO_CALDAV_PORT=5232 OMI_DEMO_REDIS_PORT=6390 OMI_DEMO_HUB_PORT=4410
 #   OMI_DEMO_ALLGLANCE_PORT=8791
+# Driver: OMI_DEMO_DRIVER (default caldav_demo.py; hermes_demo.sh runs hermes_demo.py on this stack).
 # Binaries: OMI_RADICALE_BIN (radicale 3.5.x), OMI_DEMO_PYTHON (backend venv
 # python, default backend/.venv/bin/python), FIREBASE_BIN (default the repo's
 # node_modules/.bin/firebase; `npm ci` at the repo root installs it).
@@ -167,7 +168,7 @@ wait_port backend "$BACKEND_PORT" 180
 # Seeding runs in-process with the backend's own modules and environment.
 SEED_CMD="cd '$REPO/backend' && PYTHONPATH=. '$PY' -"
 set +e
-"$PY" "$HERE/caldav_demo.py" \
+"$PY" "$HERE/${OMI_DEMO_DRIVER:-caldav_demo.py}" \
   --backend "http://127.0.0.1:$BACKEND_PORT" \
   --caldav "http://127.0.0.1:$CALDAV_PORT/" --caldav-user "$CALDAV_USER" --caldav-password "$CALDAV_PASSWORD" \
   --seed-cmd "$SEED_CMD" \

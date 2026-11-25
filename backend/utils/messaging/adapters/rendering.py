@@ -9,8 +9,11 @@ from markdown_it import MarkdownIt
 from utils.observability.fallback import record_fallback
 from utils.share_links import build_share_url
 
-_CITATION_LIST = r'#?\s*+\d++(?:\s*+[,;–-]\s*+#?\s*+\d++)*+'
-# ASCII [1]/[#1]/[1][2], fullwidth 【1】, and markdown footnotes [^1].
+# The conversation tool renders its records as "Conversation #N", and models copy that
+# heading into the marker: [Conversation #1] cites card 1 like [1] does.
+_CITATION_NUMBER = r'(?:[Cc]onversations?\s*+)?#?\s*+\d++'
+_CITATION_LIST = _CITATION_NUMBER + r'(?:\s*+[,;–-]\s*+' + _CITATION_NUMBER + r')*+'
+# ASCII [1]/[#1]/[1][2]/[Conversation #1], fullwidth 【1】, and markdown footnotes [^1].
 # Possessive quantifiers keep an unclosed marker from backtracking.
 CITATION_PATTERN = (
     rf'(?:\[\s*+{_CITATION_LIST}\s*+\](?!\()|【\s*+{_CITATION_LIST}\s*+】|\[\^\s*+{_CITATION_LIST}\s*+\])'

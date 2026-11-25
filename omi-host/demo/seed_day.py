@@ -22,6 +22,9 @@ object back. What it does, by "op":
                 build the state an existing install has -> the old code's report
   auto_approve  what the hourly scheduler runs for one user: their auto-approve, if it is
                 on and due (utils/auto_approve.run_for_user) -> the outcome
+  day_draft     a day summary draft as the overnight job writes it (utils/day_review_service
+                .prepare_draft), with the text the model would have written, so approving it
+                needs no model call -> {"date"}
 
 There is no local LLM in the demo, so conversations are seeded with their extraction
 results instead of being processed; everything after this goes through the HTTP API.
@@ -152,6 +155,34 @@ def auto_approve(spec):
     return job.run_for_user(spec['uid']) or {}
 
 
+def day_draft(spec):
+    import database.day_reviews as day_reviews_db
+
+    now = datetime.now(timezone.utc)
+    sections = [
+        {'id': f's{i + 1}', 'title': s['title'], 'text': s['text'], 'tags': s.get('tags', []),
+         'conversation_ids': s['conversation_ids'], 'favorited': False}
+        for i, s in enumerate(spec['sections'])
+    ]
+    day_reviews_db.set_day_review(spec['uid'], spec['date'], {
+        'status': 'draft',
+        'title': spec['title'],
+        'summary_text': '\n\n'.join(f"## {s['title']}\n{s['text']}" for s in sections),
+        'sections': sections,
+        'corrections': [],
+        'kept_conversation_ids': spec.get('kept', []),
+        'rolled_up_conversation_ids': spec['rolled_up'],
+        'merged_groups': [],
+        'dropped_conversation_ids': [],
+        'time_zone': spec.get('time_zone', 'UTC'),
+        'created_at': now,
+        'updated_at': now,
+        'generated_at': now,
+        'generation_count': 1,
+    })
+    return {'date': spec['date']}
+
+
 def main():
     spec = json.loads(os.environ['OMI_DEMO_SEED'])
     ops = {
@@ -161,6 +192,7 @@ def main():
         'tasks': tasks,
         'auto_approve': auto_approve,
         'legacy_sync': legacy_sync,
+        'day_draft': day_draft,
     }
     result = ops[spec['op']](spec)
     # Last line of stdout is the answer (the backend's imports may log above it).
