@@ -3229,6 +3229,28 @@ export interface FamilyCalendarResponse {
   recent?: Array<FamilyCalendarEvent>;
 }
 
+export interface FamilyDayBlock {
+  all_day?: boolean;
+  duration_minutes?: number | null;
+  owner_id?: string | null;
+  start?: string | null;
+  time_label?: string;
+  title: string;
+}
+
+export interface FamilyDayResponse {
+  chores?: Array<string>;
+  chores_overdue?: number;
+  configured: boolean;
+  date?: string;
+  error?: string;
+  next?: Array<FamilyDayBlock>;
+  owner_name?: string;
+  reachable?: boolean;
+  remaining?: number;
+  tasks_due?: number;
+}
+
 export interface FavoriteDayReviewSectionRequest {
   favorited?: boolean;
 }
@@ -7866,6 +7888,8 @@ export interface OmiApiSchemas {
   "FamilyCalendarEventResponse": FamilyCalendarEventResponse;
   "FamilyCalendarMember": FamilyCalendarMember;
   "FamilyCalendarResponse": FamilyCalendarResponse;
+  "FamilyDayBlock": FamilyDayBlock;
+  "FamilyDayResponse": FamilyDayResponse;
   "FavoriteDayReviewSectionRequest": FavoriteDayReviewSectionRequest;
   "FcmTokenResponse": FcmTokenResponse;
   "FeedbackCreate": FeedbackCreate;
@@ -10805,6 +10829,16 @@ export interface OmiApiPaths {
       operationId: "set_family_calendar_owner_v1_family_calendar_owner_put";
       responses: {
         "200": FamilyCalendarResponse;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/family-calendar/today": {
+    get: {
+      operationId: "get_family_calendar_today_v1_family_calendar_today_get";
+      responses: {
+        "200": FamilyDayResponse;
         "401": void;
         "422": HTTPValidationError;
       };
@@ -19143,6 +19177,25 @@ export async function set_family_calendar_owner_v1_family_calendar_owner_put(hea
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
+export async function get_family_calendar_today_v1_family_calendar_today_get(header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<FamilyDayResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/family-calendar/today`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "GET",
+    headers: {
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
 export async function client_flags_v1_flags_get(query: { surface: "macos" | "mobile" | "web-app" | "windows" }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<ClientFlagsResponse> {
   const _base = init?.baseURL ?? "";
   const _path = `/v1/flags`;
@@ -26471,4 +26524,4 @@ export async function get_speech_profile_v4_speech_profile_get(header: { authori
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
-// Total: 601 client methods generated.
+// Total: 602 client methods generated.
