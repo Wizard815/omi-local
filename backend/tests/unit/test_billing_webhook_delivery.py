@@ -143,20 +143,16 @@ def test_trial_to_active_is_not_another_start(captures):
     assert captures == []
 
 
-@pytest.fixture
-def isolated_clients(monkeypatch):
-    for name in ('POSTHOG_PROJECT_API_KEY', 'POSTHOG_API_KEY', 'POSTHOG_BILLING_API_KEY'):
-        monkeypatch.delenv(name, raising=False)
-    monkeypatch.setattr(product_telemetry, '_posthog_clients', {})
-    monkeypatch.setattr(product_telemetry, '_invalid_key_logged', False)
+def test_no_store_configured_drops_billing_events(monkeypatch):
+    # omi-local: no third-party sink; with the local store off the event is dropped.
+    monkeypatch.setattr(product_telemetry, '_injected_client', None)
+    monkeypatch.setenv('OMI_LOCAL_USAGE', 'off')
+    assert (
+        product_telemetry.emit_product_event(uid='user', event='Billing Subscription Started', properties={}) is False
+    )
 
 
-def test_no_key_never_constructs_sdk(isolated_clients, monkeypatch):
-    monkeypatch.setattr(product_telemetry.importlib, 'import_module', lambda _: pytest.fail('must not construct SDK'))
-    product_telemetry.emit_product_event(uid='user', event='Billing Subscription Started', properties={})
-
-
-def test_billing_uses_shared_client_and_preserves_delivery_metadata(isolated_clients, monkeypatch):
+def test_billing_uses_shared_client_and_keeps_its_own_properties(monkeypatch):
     client = SimpleNamespace(capture=Mock())
     monkeypatch.setattr(product_telemetry, '_injected_client', client)
     product_telemetry.emit_product_event(
@@ -167,9 +163,9 @@ def test_billing_uses_shared_client_and_preserves_delivery_metadata(isolated_cli
             'occurred_at': '2026-10-15T12:00:00Z',
         },
     )
-    assert client.capture.call_args.kwargs['uuid'] == 'uuid-fixture'
-    assert client.capture.call_args.kwargs['timestamp'].isoformat() == '2026-10-15T12:00:00+00:00'
-    assert client.capture.call_args.kwargs['properties']['emitter'] == 'server'
+    properties = client.capture.call_args.kwargs['properties']
+    assert properties['occurred_at'] == '2026-10-15T12:00:00Z'
+    assert properties['emitter'] == 'server'
 
 
 def test_capture_failure_after_response_preserves_entitlement(monkeypatch):

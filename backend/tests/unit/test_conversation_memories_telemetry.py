@@ -268,20 +268,21 @@ def test_durable_claim_outage_skips_telemetry_and_retry_never_duplicates(monkeyp
     assert fake.calls == []
 
 
-def test_posthog_constructor_failure_is_fail_open_at_public_extraction_boundary(monkeypatch):
+def test_usage_store_failure_is_fail_open_at_public_extraction_boundary(monkeypatch):
     result = ConversationMemoryExtractionResult(count=1, source=SOURCE_TRANSCRIPTION, path=PATH_CANONICAL)
     monkeypatch.setattr(process_conversation, '_extract_memories_inner', lambda _uid, _conversation: result)
     monkeypatch.setattr(process_conversation, '_sweep_owned_writer_mode', lambda _uid: None)
     monkeypatch.setattr(process_conversation, 'track_usage', lambda *_args: nullcontext())
-    monkeypatch.setenv('POSTHOG_PROJECT_API_KEY', 'phc_configured-test-key')
-    constructor = []
+    monkeypatch.setenv('OMI_LOCAL_USAGE', 'on')
+    attempts = []
 
-    def broken(_name):
-        constructor.append(True)
+    def broken(*_args, **_kwargs):
+        attempts.append(True)
         raise RuntimeError('private')
 
-    monkeypatch.setattr(product_telemetry.importlib, 'import_module', broken)
+    monkeypatch.setattr(product_telemetry, 'submit_with_context', broken)
+    # The broken store write must not raise out of extraction.
     process_conversation.extract_memories(
         'uid-1', SimpleNamespace(id='conv-1', source=ConversationSource.external_integration)
     )
-    assert constructor == [True]
+    assert attempts == [True]

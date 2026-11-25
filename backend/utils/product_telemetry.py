@@ -1,36 +1,28 @@
 """Shared fail-open server capture seam; no content or raw identity properties.
 
-Credential admission stays family-scoped: product/integration/extraction prefer
-POSTHOG_PRODUCT_CAPTURE_TOKEN, then use POSTHOG_PROJECT_API_KEY (legacy
-POSTHOG_API_KEY only when project is absent); billing uses
-POSTHOG_BILLING_API_KEY, and MCP uses POSTHOG_EVENTS_API_KEY.
-An absent/invalid family key disables that family: no cross-family fallback.
-In particular, project=disabled plus a valid billing key enables billing only.
-At most one lazy SDK per family holds its own immutable capture key. Product
-and MCP use bounded SDK queues; billing stays synchronous in its post-response
-worker so webhook delivery can settle only after capture returns. No capture
-lock spans network I/O. Queued acceptance does not prove ingestion.
-Flag-only clients retain separate credentials and never emit events.
+omi-local: there is no third-party analytics. An event either lands in this
+server's own usage store (database/local_usage.py: per-day counts and recent
+events, readable by the person and, aggregated, by the server admin) or is
+dropped. OMI_LOCAL_USAGE switches the store off (config/local_usage.py).
+The write runs on the DB pool, so callers never wait on it, and a failure
+never fails the owning operation.
 """
 
 from __future__ import annotations
 
-import importlib
 import logging
 import os
 from contextlib import contextmanager
 from contextvars import ContextVar
-from datetime import datetime
-from threading import Lock
+from datetime import datetime, timezone
 from typing import Any, Mapping, Optional
 
+from config.local_usage import retention_days, usage_enabled
+from utils.executors import db_executor, submit_with_context
 from utils.observability.fallback import record_fallback
 
 logger = logging.getLogger(__name__)
-_posthog_clients: dict[str, Any] = {}
 _injected_client: Optional[Any] = None
-_client_lock = Lock()
-_invalid_key_logged = False
 _context: ContextVar[Mapping[str, Any]] = ContextVar('server_product_telemetry', default={})
 SOURCE_PLATFORMS = frozenset({'macos', 'ios', 'android', 'windows', 'web', 'mcp', 'server', 'unknown'})
 BUILD_CHANNELS = frozenset(
@@ -48,45 +40,6 @@ BUILD_CHANNELS = frozenset(
         'unknown',
     }
 )
-_CAPTURE_KEYS = (
-    'POSTHOG_PRODUCT_CAPTURE_TOKEN',
-    'POSTHOG_PROJECT_API_KEY',
-    'POSTHOG_EVENTS_API_KEY',
-    'POSTHOG_BILLING_API_KEY',
-    'POSTHOG_API_KEY',
-)
-BILLING_EVENTS = frozenset(
-    {
-        'Billing Subscription Started',
-        'Billing Subscription Churned',
-        'Billing Subscription Cancellation Scheduled',
-        'Billing Subscription Plan Changed',
-    }
-)
-
-MCP_EVENTS = frozenset({'MCP Active', 'MCP Tool Call', 'MCP Tool Use Succeeded'})
-
-
-def _capture_project_key(event: str) -> Optional[str]:
-    """Resolve only the owning family's configuration; invalid is not absent."""
-    global _invalid_key_logged
-    if event in BILLING_EVENTS:
-        raw = os.getenv('POSTHOG_BILLING_API_KEY')
-    elif event in MCP_EVENTS:
-        raw = os.getenv('POSTHOG_EVENTS_API_KEY')
-    else:
-        raw = (
-            os.getenv('POSTHOG_PRODUCT_CAPTURE_TOKEN')
-            or os.getenv('POSTHOG_PROJECT_API_KEY')
-            or os.getenv('POSTHOG_API_KEY')
-        )
-    key = raw.strip() if raw else ''
-    if key.startswith('phc_'):
-        return key
-    if key and not _invalid_key_logged:
-        _invalid_key_logged = True
-        logger.warning('server telemetry disabled: invalid family project key')
-    return None
 
 
 def normalize_source_platform(value: Any) -> str:
@@ -123,17 +76,11 @@ def bind_websocket_telemetry_context(headers: Mapping[str, str]) -> None:
     )
 
 
-def _roster_contains(name: str, uid: str) -> bool:
-    # Owner-supplied UID rosters only, never email/domain inference or network IO.
-    return uid in {value.strip() for value in os.getenv(name, '').split(',') if value.strip()}
-
-
 def server_event_properties(uid: str, properties: Mapping[str, Any]) -> dict[str, Any]:
     """Enrich the emitter's closed dictionary, rejecting raw IDs and content.
 
     Explicit source metadata wins over request context (e.g. a background
     conversation was captured on a different device than the current viewer).
-    Missing roster membership is unknown, never proof of external status.
     """
     forbidden = {
         'uid',
@@ -182,48 +129,45 @@ def server_event_properties(uid: str, properties: Mapping[str, Any]) -> dict[str
         safe['build_channel'] = channel.strip().lower()
     if type(safe.get('internal')) is not bool:
         safe.pop('internal', None)
-    if _roster_contains('POSTHOG_INTERNAL_UIDS', uid):
-        safe['internal'] = True
     synthetic = uid == 'omi-release-probe' or uid.startswith('cfc_')
-    safe['test'] = synthetic or _roster_contains('POSTHOG_TEST_UIDS', uid) or safe.get('test') is True
+    safe['test'] = synthetic or safe.get('test') is True
     return safe
 
 
 def _fallback(reason: str = 'other') -> None:
-    record_fallback(component='other', from_mode='posthog', to_mode='none', reason=reason, outcome='degraded')
+    record_fallback(component='other', from_mode='local_usage', to_mode='none', reason=reason, outcome='degraded')
 
 
-def _capture_error(error: Exception, batch: Any) -> None:
-    # SDK callbacks receive content-bearing batches; never log or retain them.
-    logger.warning('server telemetry delivery failed error_type=%s', type(error).__name__)
-    _fallback()
+class LocalUsageSink:
+    """Writes accepted events to this server's usage store, off the caller's thread."""
+
+    def capture(
+        self, *, distinct_id: str, event: str, properties: Mapping[str, Any], timestamp: Optional[datetime] = None
+    ) -> bool:
+        # Import at call time: this seam is imported by dozens of modules, including
+        # ones tests load fresh under import stubs; pulling the Firestore client stack
+        # in at import would make every importer load it (and re-register its protos).
+        from database import local_usage as local_usage_db
+
+        submit_with_context(
+            db_executor,
+            local_usage_db.record_event,
+            distinct_id,
+            event,
+            properties,
+            at=timestamp or datetime.now(timezone.utc),
+            retention_days=retention_days(),
+        )
+        return True
 
 
-def get_server_posthog_client(event: str = '') -> Optional[Any]:
+_local_sink = LocalUsageSink()
+
+
+def get_usage_sink() -> Optional[Any]:
     if _injected_client is not None:
         return _injected_client
-    api_key = _capture_project_key(event)
-    if api_key is None:
-        return None
-    family = 'billing' if event in BILLING_EVENTS else 'mcp' if event in MCP_EVENTS else 'product'
-    if family in _posthog_clients:
-        return _posthog_clients[family]
-    # Construction only: captures and consumer network I/O never hold this lock.
-    with _client_lock:
-        if family not in _posthog_clients:
-            try:
-                _posthog_clients[family] = importlib.import_module('posthog').Posthog(
-                    project_api_key=api_key,
-                    host=os.getenv('POSTHOG_HOST', 'https://app.posthog.com'),
-                    sync_mode=family == 'billing',
-                    max_queue_size=1000,
-                    on_error=_capture_error,
-                    timeout=2,
-                    max_retries=0,
-                )
-            except Exception as error:
-                logger.warning('server telemetry unavailable error_type=%s', type(error).__name__)
-        return _posthog_clients.get(family)
+    return _local_sink if usage_enabled() else None
 
 
 def emit_product_event(
@@ -233,25 +177,19 @@ def emit_product_event(
     properties: Mapping[str, Any],
     timestamp: Optional[datetime] = None,
 ) -> bool:
-    """Return capture acceptance; telemetry failures never fail the owning operation."""
+    """Return acceptance; usage-store failures never fail the owning operation."""
     if not uid:
         return False
     try:
-        client = get_server_posthog_client(event)
-        if client is None:
-            _fallback('config_incomplete')
+        sink = get_usage_sink()
+        if sink is None:
             return False
         capture_args: dict[str, Any] = dict(
             distinct_id=uid, event=event, properties=server_event_properties(uid, properties)
         )
         if timestamp is not None:
             capture_args['timestamp'] = timestamp
-        if event in BILLING_EVENTS and properties.get('$insert_id'):
-            capture_args['uuid'] = properties['$insert_id']
-            if properties.get('occurred_at'):
-                capture_args['timestamp'] = datetime.fromisoformat(properties['occurred_at'].replace('Z', '+00:00'))
-        result = client.capture(**capture_args)
-        if result is False or (isinstance(result, tuple) and result[0] is False):
+        if sink.capture(**capture_args) is False:
             _fallback('enqueue_failed')
             return False
         return True
@@ -262,7 +200,5 @@ def emit_product_event(
 
 
 def set_product_telemetry_client_for_tests(client: Optional[Any]) -> None:
-    global _injected_client, _invalid_key_logged
-    _posthog_clients.clear()
+    global _injected_client
     _injected_client = client
-    _invalid_key_logged = False

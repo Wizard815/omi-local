@@ -185,10 +185,11 @@ Phone → server, no STT on the phone: the phone streams raw 16 kHz PCM over
 `/v4/listen`; the backend forwards it to `omi-audio`. To use it, set
 **Settings → Transcription → "Omi Parakeet"** in the app.
 
-Nothing is forced to the cloud: with no `MODULATE_API_KEY`,
-`DEEPGRAM_API_KEY`, or `ELEVENLABS_API_KEY` set, the provider policy selects the
-local audio service for every surface (verified). Set any of those keys and the
-corresponding cloud path becomes available again — that's the optional fallback.
+Nothing is forced to the cloud: the provider policy selects the local audio
+service for every surface (verified). Cloud STT is switched off while the local
+audio service is configured: `omi-host/audio-env.sh` drops `MODULATE_API_KEY`,
+`SONIOX_API_KEY` and `DEEPGRAM_API_KEY` then. They are used only with
+`OMI_AUDIO_URL=off` or in a `STT_SERVICE_MODELS` chain you set yourself.
 
 ### GPU memory: what idle unload frees
 
@@ -371,10 +372,11 @@ cutover fence, the Cloud Tasks queue for historical sync (backfill runs inline) 
 this: upstream's own test stacks run with it and still expect those gates.
 
 ### Settings the entrypoint now derives (upstream sync, October 2026)
-- `STT_SERVICE_MODELS`: built from the keys you set (`MODULATE_API_KEY`, `SONIOX_API_KEY`,
-  `DEEPGRAM_API_KEY`), ending in the local `parakeet` from omi-audio unless `OMI_AUDIO_URL=off`.
-  Upstream's default chain lists Soniox, and the backend refuses to start when Soniox is listed
-  without its key. Set `STT_SERVICE_MODELS` yourself to override. The logic lives in
+- `STT_SERVICE_MODELS`: the local `parakeet` from omi-audio. Cloud STT keys
+  (`MODULATE_API_KEY`, `SONIOX_API_KEY`, `DEEPGRAM_API_KEY`) are dropped while omi-audio is
+  configured (cloud STT is off, November 2026); with `OMI_AUDIO_URL=off` the chain is built from
+  the keys you set. Upstream's default chain lists Soniox, and the backend refuses to start when
+  Soniox is listed without its key. Set `STT_SERVICE_MODELS` yourself to override. The logic lives in
   `omi-host/audio-env.sh`, which also points `HOSTED_PARAKEET_API_URL`,
   `HOSTED_SPEAKER_EMBEDDING_API_URL` and `TTS_LOCAL_BASE_URL` at `OMI_AUDIO_URL`.
 - `MEMORY_ENABLED=on`: upstream's single memory switch. The old `MEMORY_MODE` and

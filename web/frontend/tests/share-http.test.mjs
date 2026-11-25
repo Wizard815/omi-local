@@ -76,7 +76,6 @@ test(
           API_URL: `http://127.0.0.1:${backend.address().port}`,
           WEB_URL: base,
           NEXT_TELEMETRY_DISABLED: '1',
-          NEXT_PUBLIC_POSTHOG_KEY: '',
           NEXT_FONT_GOOGLE_MOCKED_RESPONSES: fileURLToPath(
             new URL('./font-mock.cjs', import.meta.url),
           ),
@@ -117,7 +116,11 @@ test(
       assert.equal(html.status, 200, logs);
       assert.match(html.headers.get('content-type'), /text\/html/);
       assert.match(html.headers.get('vary'), /accept/i);
-      assert.match(html.headers.get('link'), /synthetic-share.md.*rel="alternate"/, `headers=${JSON.stringify(Object.fromEntries(html.headers))}\n${logs}`);
+      assert.match(
+        html.headers.get('link'),
+        /synthetic-share.md.*rel="alternate"/,
+        `headers=${JSON.stringify(Object.fromEntries(html.headers))}\n${logs}`,
+      );
       const document = await html.text();
       assert.match(document, /View transcript source 1 of 2/);
       assert.match(document, /View transcript source 2 of 2/);

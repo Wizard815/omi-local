@@ -117,6 +117,11 @@ services:
       # Finished clips wait for the end-of-day review with no model call (on by
       # default when self-hosted; "off" processes each clip as it ends).
       OMI_CONVERSATION_HOLD: ${OMI_CONVERSATION_HOLD:-}
+      # Usage data stays on this server: per-day event counts and recent events
+      # in its own Firestore, shown on the dashboard (all people) and at
+      # /v1/users/me/local-usage (each person, their own). No analytics service.
+      OMI_LOCAL_USAGE: ${OMI_LOCAL_USAGE:-on}
+      OMI_LOCAL_USAGE_RETENTION_DAYS: ${OMI_LOCAL_USAGE_RETENTION_DAYS:-90}
       # End-of-day review: how long one day summary may take on the local model,
       # and how much of the day's material (chars) it reads — lower the latter
       # for small-context models.

@@ -3,11 +3,8 @@ import { Mulish } from 'next/font/google';
 import './globals.css';
 import AppHeader from '../components/shared/app-header';
 import ConditionalFooter from '../components/shared/conditional-footer';
-import AnnouncementBar from '../components/shared/announcement-bar';
 import envConfig from '../constants/envConfig';
-import { GoogleAnalytics } from '@/src/components/shared/google-analytics';
 import { PublicBuildCanary } from '../components/public-build-canary';
-import { ShareAnalytics } from '../components/shared/share-analytics';
 
 const inter = Mulish({
   subsets: ['latin'],
@@ -31,21 +28,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <script src="https://elfsightcdn.com/platform.js" async></script>
-      </head>
       <body className={inter.className}>
         <PublicBuildCanary />
-        <ShareAnalytics />
         <AppHeader />
-        {/* Elfsight Announcement Bar */}
-        <AnnouncementBar />
         <main className="flex min-h-screen flex-col">
           <div className="w-full flex-grow">{children}</div>
         </main>
         <ConditionalFooter />
       </body>
-      <GoogleAnalytics />
     </html>
   );
 }

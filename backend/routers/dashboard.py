@@ -18,6 +18,8 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel, Field
 
+from config.local_usage import retention_days, usage_enabled
+from database import local_usage as local_usage_db
 from utils.executors import db_executor, run_blocking
 
 router = APIRouter()
@@ -610,6 +612,16 @@ async def dashboard(request: Request):
   </div>
 
   <div class="card">
+    <h2>📊 Usage on this server</h2>
+    <p style="font-size: 13px; color: #AAA; line-height: 1.6; margin-bottom: 12px;">
+      Counts of what people did here (syncs, chats, tasks, MCP calls), kept in this server's own
+      database for <code>OMI_LOCAL_USAGE_RETENTION_DAYS</code> days. Nothing is sent to any analytics
+      service. Each person can read their own at <code>/v1/users/me/local-usage</code>.
+    </p>
+    <div id="usage-summary">Loading…</div>
+  </div>
+
+  <div class="card">
     <h2>📱 Phone Setup</h2>
     <p style="font-size: 13px; color: #AAA; line-height: 1.6;">
       1. Install <strong>Omi Local</strong> on your Android phone (no Google account needed — Google Sign-In has been removed)<br>
@@ -773,6 +785,43 @@ async def dashboard(request: Request):
       }}
     }}
 
+    async function loadUsage() {{
+      const el = document.getElementById("usage-summary");
+      const row = (label, value) => {{
+        const div = document.createElement("div");
+        div.style.cssText = "display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; border-bottom: 1px solid #2A2A2E;";
+        const a = document.createElement("span"); a.textContent = label;
+        const b = document.createElement("span"); b.textContent = value; b.style.color = "#AAA";
+        div.append(a, b);
+        return div;
+      }};
+      const section = (title) => {{
+        const h = document.createElement("div");
+        h.textContent = title;
+        h.style.cssText = "font-size: 12px; color: #64D2FF; margin: 12px 0 4px; font-weight: 600;";
+        return h;
+      }};
+      try {{
+        const data = await fetch("/dashboard/usage?days=30").then(r => r.json());
+        el.replaceChildren();
+        if (!data.enabled) {{
+          el.textContent = "Off (OMI_LOCAL_USAGE=off). Nothing is recorded.";
+          return;
+        }}
+        const total = data.days.reduce((n, d) => n + d.total, 0);
+        el.append(row(`Last ${{data.window_days}} days`, `${{total}} events · ${{Object.keys(data.events_per_person).length}} people · kept ${{data.retention_days}} days`));
+        el.append(section("Most frequent"));
+        Object.entries(data.totals).slice(0, 12).forEach(([k, v]) => el.append(row(k, v)));
+        el.append(section("Per person"));
+        Object.entries(data.events_per_person).forEach(([k, v]) => el.append(row(k, v)));
+        el.append(section("Per day"));
+        data.days.slice(0, 14).forEach(d => el.append(row(d.day, `${{d.total}} events · ${{d.active_people}} people`)));
+        if (!total) el.append(row("No events yet", ""));
+      }} catch (e) {{
+        el.textContent = "Error loading: " + e.message;
+      }}
+    }}
+
     async function retryConversation(id, uid, btn) {{
       btn.disabled = true;
       btn.textContent = "Retrying…";
@@ -849,6 +898,7 @@ async def dashboard(request: Request):
     loadModels().then(loadShortcuts);
     loadAllowlist();
     loadRetryList();
+    loadUsage();
   </script>
 
   <p style="text-align: center; color: #444; font-size: 11px; margin-top: 32px;">
@@ -1173,6 +1223,19 @@ def dashboard_conversations(limit: int = 20):
             }
         )
     return {"conversations": items, "count": len(items)}
+
+
+@router.get("/dashboard/usage", response_class=JSONResponse)
+def dashboard_usage(days: int = 30):
+    """Usage on this server, all people aggregated (read-only; omi-local's local usage store)."""
+    enabled = usage_enabled()
+    window = min(max(days, 1), retention_days())
+    data = local_usage_db.get_server_summary() if enabled else {}
+    return {
+        "enabled": enabled,
+        "retention_days": retention_days(),
+        **local_usage_db.server_view(data, now=datetime.now(timezone.utc), window_days=window),
+    }
 
 
 @router.post("/dashboard/conversations/{conversation_id}/retry", response_class=JSONResponse)

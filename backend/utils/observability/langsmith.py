@@ -10,6 +10,8 @@ import os
 from typing import Optional, List, Any, Dict
 import logging
 
+from utils.self_hosting import is_self_hosted
+
 logger = logging.getLogger(__name__)
 
 
@@ -22,6 +24,10 @@ def is_langsmith_enabled() -> bool:
     Returns:
         True if tracing is enabled, False otherwise
     """
+    # omi-local: a self-hosted server sends no traces to a third party.
+    if is_self_hosted():
+        return False
+
     # Check new-style env vars first
     langsmith_tracing = os.environ.get("LANGSMITH_TRACING", "").lower()
     if langsmith_tracing == "true":
@@ -66,6 +72,8 @@ def has_langsmith_api_key() -> bool:
     Returns:
         True if an API key is set (doesn't validate the key)
     """
+    if is_self_hosted():
+        return False
     api_key = os.environ.get("LANGSMITH_API_KEY") or os.environ.get("LANGCHAIN_API_KEY")
     return bool(api_key and len(api_key) > 0 and api_key != "lsv2_pt_REPLACE_WITH_YOUR_KEY")
 

@@ -108,7 +108,11 @@ def _emit(
 
 
 def emit_posthog_event(distinct_id: Optional[str], event: str, properties: Dict[str, Any]) -> None:
-    """Route the integration's closed property dictionary through server capture."""
+    """Route the integration's closed property dictionary through server capture.
+
+    omi-local: the name is upstream's; the event goes only to this server's
+    local usage store (utils/product_telemetry.py), never to PostHog.
+    """
     emit_product_event(uid=distinct_id or '', event=event, properties=properties)
 
 

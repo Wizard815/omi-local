@@ -82,6 +82,7 @@ from utils.user_language import PRIMARY_LANGUAGE_OPTIONS, normalize_user_languag
 from utils.feedback import record_chat_message_feedback
 from utils.product_metrics import sanitize_app_build
 from utils.marketplace_reviewers import is_marketplace_reviewer
+from utils.self_hosting import is_self_hosted
 from database.users import *
 from models.conversation import Conversation
 from models.geolocation import Geolocation, GeolocationInput, validated_geolocation_or_none
@@ -89,7 +90,7 @@ from utils.conversations.factory import deserialize_conversation, deserialize_co
 from models.other import Person, CreatePerson
 from typing import Optional
 from models.user_usage import UserUsageResponse, UsagePeriod
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, timezone
 
 from models.users import (
     TranscriptionAllowanceSnapshot,
@@ -138,6 +139,8 @@ from utils.subscription import (
     get_trial_metadata,
 )
 from database import user_usage as user_usage_db
+from database import local_usage as local_usage_db
+from config.local_usage import retention_days as local_usage_retention_days, usage_enabled as local_usage_enabled
 from utils import stripe as stripe_utils
 from utils.cloud_tasks import (
     AccountDeletionTaskAuthentication,
@@ -1377,6 +1380,25 @@ def process_waiting_recordings(
     return snapshot
 
 
+def _unlimited_subscription_response(phone_call_quota: PhoneCallQuota) -> UserSubscriptionResponse:
+    return UserSubscriptionResponse(
+        subscription=Subscription(
+            plan=PlanType.unlimited,
+            status=SubscriptionStatus.active,
+            limits=PlanLimits(transcription_seconds=None, words_transcribed=None, insights_gained=None),
+        ),
+        transcription_seconds_used=0,
+        transcription_seconds_limit=0,
+        words_transcribed_used=0,
+        words_transcribed_limit=0,
+        insights_gained_used=0,
+        insights_gained_limit=0,
+        available_plans=[],
+        show_subscription_ui=False,
+        phone_call_quota=phone_call_quota,
+    )
+
+
 def _user_subscription_response(
     uid: str,
     x_app_platform: Optional[str],
@@ -1390,6 +1412,12 @@ def _user_subscription_response(
     # Synthetic paid-tier quota for BYOK / marketplace-reviewer overrides so
     # these users aren't surprised by a disabled phone-call feature.
     unlimited_phone_quota = PhoneCallQuota(has_access=True, is_paid=True)
+
+    # omi-local: a self-hosted server has no billing plane, so every person is
+    # on an unlimited local plan and released clients hide their plan/paywall UI.
+    if is_self_hosted():
+        already_read['byok_active'] = False
+        return _unlimited_subscription_response(unlimited_phone_quota)
 
     byok_active = users_db.is_byok_active(uid)
     already_read['byok_active'] = byok_active
@@ -1435,27 +1463,7 @@ def _user_subscription_response(
         )
 
     if is_marketplace_reviewer(uid):
-        unlimited_sub = Subscription(
-            plan=PlanType.unlimited,
-            status=SubscriptionStatus.active,
-            limits=PlanLimits(
-                transcription_seconds=None,
-                words_transcribed=None,
-                insights_gained=None,
-            ),
-        )
-        return UserSubscriptionResponse(
-            subscription=unlimited_sub,
-            transcription_seconds_used=0,
-            transcription_seconds_limit=0,
-            words_transcribed_used=0,
-            words_transcribed_limit=0,
-            insights_gained_used=0,
-            insights_gained_limit=0,
-            available_plans=[],
-            show_subscription_ui=False,
-            phone_call_quota=unlimited_phone_quota,
-        )
+        return _unlimited_subscription_response(unlimited_phone_quota)
     # First, reconcile any "basic but actually unlimited" inconsistencies against Stripe once.
     is_mobile = x_app_platform in ('ios', 'android')
     raw_subscription = get_user_subscription(uid)
@@ -1665,6 +1673,19 @@ def get_user_chat_usage_quota(
 
     Used by the desktop app. Mobile uses the subscription endpoint instead.
     """
+    if is_self_hosted():
+        # omi-local: no billing plane, so no chat cap to show.
+        return ChatUsageQuota(
+            plan='Unlimited (this server)',
+            plan_type=PlanType.unlimited.value,
+            unit=ChatQuotaUnit.questions,
+            used=0.0,
+            limit=None,
+            percent=0.0,
+            allowed=True,
+            reset_at=None,
+            is_overage_plan=False,
+        )
     # Match enforce_desktop_chat_quota: only the provider actually used by
     # desktop chat can exempt it. Other enrolled keys still use managed chat.
     customer_client = get_customer_firestore_client()
@@ -2474,6 +2495,26 @@ def get_llm_usage(
         'summary': summary,
         'top_features': top_features,
         'period_days': days,
+    }
+
+
+@router.get('/v1/users/me/local-usage', tags=['users'])
+def get_my_local_usage(
+    days: int = Query(default=30, ge=1, le=365),
+    uid: str = Depends(auth.get_current_user_uid),
+):
+    """Your own usage on this server (omi-local): event counts per day and your recent events.
+
+    Read-only, and only ever the caller's own data. Kept on this server
+    (database/local_usage.py); nothing is sent anywhere else.
+    """
+    enabled = local_usage_enabled()
+    window = min(days, local_usage_retention_days())
+    data = local_usage_db.get_user_summary(uid) if enabled else {}
+    return {
+        'enabled': enabled,
+        'retention_days': local_usage_retention_days(),
+        **local_usage_db.user_view(data, now=datetime.now(timezone.utc), window_days=window),
     }
 
 

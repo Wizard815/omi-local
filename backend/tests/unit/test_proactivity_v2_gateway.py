@@ -29,24 +29,19 @@ from tests.support.synthetic_proactivity_producers import synthetic_producers  #
 
 
 @pytest.mark.asyncio
-async def test_admission_flag_unavailable_logs_sdk_type_and_status(monkeypatch, caplog):
-    from collections import OrderedDict
+async def test_admission_flag_unavailable_logs_type_without_content(monkeypatch, caplog):
     from unittest.mock import Mock
 
-    from posthog.request import APIError
-
     flags = proactivity.proactivity_flags
-    monkeypatch.setattr(flags, '_flag_cache', OrderedDict())
     monkeypatch.setattr(flags, '_next_warning_at', 0.0)
-    client = Mock()
-    client.get_feature_variants.side_effect = APIError(503, 'PRIVATE_RESPONSE_AND_KEY')
-    monkeypatch.setattr(flags, 'flag_client', lambda: client)
+    resolve = Mock(side_effect=ConnectionError('PRIVATE_RESPONSE_AND_KEY'))
+    monkeypatch.setattr(flags.omi_flags, 'resolve', resolve)
     with caplog.at_level('INFO'):
         for _ in range(2):
             with pytest.raises(ProactivityDenied, match='flag_unavailable'):
                 await proactivity.ensure_admitted('PRIVATE_UID', 'conversation_mentor_v2')
-    client.get_feature_variants.assert_called_once_with('PRIVATE_UID')
-    assert 'error_type=APIError http_status=503' in caplog.text
+    assert resolve.call_count == 2
+    assert 'error_type=ConnectionError' in caplog.text
     assert 'result=denied reason=flag_unavailable' in caplog.text
     assert 'PRIVATE' not in caplog.text
 

@@ -4,16 +4,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const createCheckoutSession = vi.fn();
 const upgradeSubscription = vi.fn();
 
-vi.mock('posthog-js', () => ({
-  default: {
-    init: vi.fn(),
-    capture: vi.fn(),
-    identify: vi.fn(),
-    reset: vi.fn(),
-    setPersonProperties: vi.fn(),
-  },
-}));
-
 vi.mock('@/lib/api', () => ({
   getAvailablePlans: vi.fn(),
   createCheckoutSession: (...args: unknown[]) => createCheckoutSession(...args),

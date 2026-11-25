@@ -93,11 +93,6 @@ export default function MemoryWithTabs({
             transcript={memory.transcript_segments}
             onClearChatRef={handleClearChatRef}
             onMessagesChange={setHasMessages}
-            onChatEvent={(event) =>
-              document.dispatchEvent(
-                new CustomEvent('omi:shared-chat-action', { detail: event }),
-              )
-            }
           />
         </div>
       </div>
