@@ -14,6 +14,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Iterable
 from urllib.parse import quote
 from utils.other.owned_paths import owned_scratch_path
+from utils.other.local_storage_urls import signed_query
 
 from google.cloud import storage
 from google.cloud.exceptions import NotFound
@@ -173,13 +174,16 @@ class LocalBlob:
             raise NotFound(f'Local storage blob not found: {self.bucket.name}/{self.name}')
         return self.path.open(mode)
 
-    def generate_signed_url(self, *_args, **_kwargs) -> str:
+    def generate_signed_url(self, *_args, expiration=None, **_kwargs) -> str:
         base_url = os.environ.get(LOCAL_STORAGE_BASE_URL_ENV, '').strip().rstrip('/')
         if not base_url:
             raise RuntimeError(f'{LOCAL_STORAGE_BASE_URL_ENV} is required for local storage URLs')
         bucket = quote(self.bucket.name, safe='')
         name = quote(self.name, safe='/')
-        return f'{base_url}/{bucket}/{name}'
+        # Signed so the /_local/storage mount serves only links this server handed out
+        # (utils/other/local_storage_urls.py). public_url has no expiry: it is saved in Firestore.
+        query = signed_query(self.bucket.name, self.name, expiration)
+        return f'{base_url}/{bucket}/{name}' + (f'?{query}' if query else '')
 
     def make_public(self, *_args, **_kwargs) -> None:
         return None
