@@ -246,27 +246,27 @@ def test_helper_kill_switch_budget_entries_match_the_live_registry():
         assert flags[name]['owner'].strip().casefold() != 'dazheng'
     pump_name = 'BATCH_PIPELINE_PROJECTION_PUMP_ENABLED'
     assert names[pump_name]['owner'] == 'omi-pipeline / lead2'
-    assert names[pump_name]['review_by'] == '2026-12-05'
+    assert names[pump_name]['review_by'] == '2027-03-01'
     assert flags[pump_name]['kind'] == 'env'
     assert flags[pump_name]['lifecycle'] == 'config_switch'
     assert 'review_by' not in flags[pump_name]
     assert flags[pump_name]['fail'] == 'closed'
     sweep_name = 'BATCH_PIPELINE_SERVING_PROJECTION_SWEEP'
     assert names[sweep_name]['owner'] == 'omi-pipeline / lead2'
-    assert names[sweep_name]['review_by'] == '2026-12-05'
+    assert names[sweep_name]['review_by'] == '2027-03-01'
     assert flags[sweep_name]['owner'] == 'lead2'
     assert flags[sweep_name]['kind'] == 'env'
     assert flags[sweep_name]['lifecycle'] == 'ops_kill'
     assert flags[sweep_name]['fail'] == 'open'
     unsupported = names['SERVER_BATCH_UNSUPPORTED_LANGUAGES']
     assert unsupported['owner'] == 'planscost'
-    assert unsupported['review_by'] == '2026-11-30'
+    assert unsupported['review_by'] == '2027-03-01'
     assert flags['SERVER_BATCH_UNSUPPORTED_LANGUAGES']['lifecycle'] == 'config_switch'
     assert 'review_by' not in flags['SERVER_BATCH_UNSUPPORTED_LANGUAGES']
     assert 'SERVER_BATCH_UNSUPPORTED_LANGUAGES' in set(env_reads((BACKEND_DIR / 'config/server_batch.py').read_text()))
     rollout = flags[rollout_name]
     assert names[rollout_name]['owner'] == rollout['owner'] == 'planscost'
-    assert names[rollout_name]['review_by'] == '2026-11-30'
+    assert names[rollout_name]['review_by'] == '2027-03-01'
     assert rollout['kind'] == 'env'
     # omi-local fixed this cloud rollout at its default (no registry review date).
     assert rollout['lifecycle'] == 'config_switch'
@@ -274,7 +274,7 @@ def test_helper_kill_switch_budget_entries_match_the_live_registry():
     assert rollout_name in env_reads((BACKEND_DIR / 'config/server_batch.py').read_text(encoding='utf-8'))
     held = names['BATCH_HELD_DEAD_LETTER_ENABLED']
     assert held['owner'] == 'uicleanup / omi-lifecycle'
-    assert held['review_by'] == '2026-12-06'
+    assert held['review_by'] == '2027-03-01'
     assert flags['BATCH_HELD_DEAD_LETTER_ENABLED']['lifecycle'] == 'ops_kill'
     for name in sorted(HELPER_KILL_SWITCHES):
         entry = names[name]
@@ -282,28 +282,28 @@ def test_helper_kill_switch_budget_entries_match_the_live_registry():
         assert entry['registry'] == 'config/feature-flags.yaml'
         if name == 'BATCH_PIPELINE_FRESH_GUARD_ENABLED':
             assert entry['owner'] == 'Goal: Pipeline'
-            assert entry['review_by'] == '2026-12-13'
+            assert entry['review_by'] == '2027-03-01'
         elif name == 'PROJECTION_PRIVACY_REFUSAL_RESUME':
             assert entry['owner'] == 'omi-pipeline / refusal-resume'
-            assert entry['review_by'] == '2026-12-06'
+            assert entry['review_by'] == '2027-03-01'
         elif name == 'PROJECTION_DRAIN_PRIVACY_BACKOFF':
             assert entry['owner'] == 'omi-pipeline / privblock'
-            assert entry['review_by'] == '2026-12-06'
+            assert entry['review_by'] == '2027-03-01'
         elif name == 'PROJECTION_DRAIN_CLAIM_AWARE':
             assert entry['owner'] == 'two-lane lead'
-            assert entry['review_by'] == '2026-12-05'
+            assert entry['review_by'] == '2027-03-01'
         elif name == 'PROJECTION_DRAIN_LIVE_TARGET_BACKOFF':
             assert entry['replaces'] == 'SYNC_BACKFILL_INFLIGHT_LIMIT'
             assert 'SYNC_BACKFILL_INFLIGHT_LIMIT' not in names
             assert data['retired']['SYNC_BACKFILL_INFLIGHT_LIMIT']['replaced_by'] == name
             assert entry['owner'] == 'omi-pipeline'
-            assert entry['review_by'] == '2026-12-08'
+            assert entry['review_by'] == '2027-03-01'
         elif name.startswith('PUSHER_RECORD_CLOSE_') or name == 'PUSHER_RECORD_SEAL_WAKE_ENABLED':
             assert entry['owner'] == flag['owner'] == 'quality-12h/Q12-A'
-            assert entry['review_by'] == '2026-12-15'
+            assert entry['review_by'] == '2027-03-01'
         elif name == 'BATCH_PIPELINE_DELIVERED_SHARE_ENABLED':
             assert entry['owner'] == 'Goal: Pipeline'
-            assert entry['review_by'] == '2026-12-13'
+            assert entry['review_by'] == '2027-03-01'
         elif name in {
             'EPISODE_COMPOSER_THRIFT',
             'SUMMARY_PROJECTION_DEBT_ENABLED',
@@ -311,14 +311,14 @@ def test_helper_kill_switch_budget_entries_match_the_live_registry():
             'EPISODE_COMPOSER_REUSE',
         }:
             assert entry['owner'] == 'refactor-lead'
-            assert entry['review_by'] == '2026-12-10'
+            assert entry['review_by'] == '2027-03-01'
         elif name.startswith('RECORD_'):
             assert entry['owner'] == 'q12-post-seal'
-            assert entry['review_by'] == '2026-12-14'
+            assert entry['review_by'] == '2027-03-01'
         else:
             striped = name == 'BATCH_PIPELINE_PROJECTION_STRIPING_ENABLED'
             assert entry['owner'] == ('omi-pipeline' if striped else 'rollout-meetings / occasion architecture')
-            assert entry['review_by'] == ('2026-12-06' if striped else '2026-11-28')
+            assert entry['review_by'] == '2027-03-01'
         assert flag['kind'] == 'env'
         assert 'backend' in flag['surfaces']
         if name in {'RECORD_FRESH_MERGE_ENABLED', 'RECORD_NOTES_EAGER_ENABLED'}:
