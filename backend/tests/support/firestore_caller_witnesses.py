@@ -37,6 +37,7 @@ import routers.support as support_router
 import routers.users as users_router
 import utils.apps as apps_utils
 import utils.conversations.meeting_context_pack as meeting_context_pack
+import utils.conversations.search as conversation_search
 import utils.day_review_service as day_review_service
 import utils.family_calendar as family_calendar
 import utils.imports.limitless as limitless
@@ -330,6 +331,23 @@ def _run_speaker_browse_recipe(monkeypatch: pytest.MonkeyPatch, capture: HelperC
             )
 
 
+def _run_local_conversation_search(monkeypatch: pytest.MonkeyPatch, capture: HelperCapture) -> None:
+    for start, end in _DATE_PAIRS:
+        trial(
+            capture,
+            conversation_search._local_search_conversations,
+            'u1',
+            'plumber',
+            page=1,
+            per_page=10,
+            include_discarded=False,
+            start_date=int(start.timestamp()) if start else None,
+            end_date=int(end.timestamp()) if end else None,
+            speaker_id=None,
+            include_locked=False,
+        )
+
+
 def _run_day_review_load(monkeypatch: pytest.MonkeyPatch, capture: HelperCapture) -> None:
     trial(capture, day_review_service.load_day, 'u1', date(2026, 1, 1), 'UTC')
 
@@ -600,6 +618,14 @@ WITNESSES: dict[str, CallerWitness] = {
             ('speaker-search-fallback',),
             1,
             _run_speaker_browse_recipe,
+        ),
+        CallerWitness(
+            'utils/conversations/search.py:_local_search_conversations:database.conversation_scan.iter_conversations',
+            'database.conversation_scan.iter_conversations',
+            'utils.conversations.search.iter_conversations',
+            ('conversation-local-search',),
+            1,
+            _run_local_conversation_search,
         ),
         CallerWitness(
             'routers/developer.py:get_conversations:database.conversations.get_conversations_without_photos',
