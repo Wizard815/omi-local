@@ -405,6 +405,38 @@ async def _follow_odysseus(uid: str, job: Dict[str, Any], settings: Dict[str, An
     return 'completed'
 
 
+def hermes_approval(status: Dict[str, Any]) -> Dict[str, Any]:
+    """The question a waiting Hermes run asks, from either status shape.
+
+    Hermes' session-authority runs (the gateway default) list it in ``pending_controls``
+    (``kind: approval``, ``prompt_id``, ``execution_generation``) and answer only
+    ``{request_id: prompt_id, execution_generation, choice}``; the legacy in-process runs put
+    an ``approval`` object (``request_id``) on the status and take ``{choice, request_id}``."""
+    controls = [c for c in (status.get('pending_controls') or []) if isinstance(c, dict)]
+    control = next((c for c in controls if c.get('kind') == 'approval'), None)
+    raw = control if control is not None else (status.get('approval') or {})
+    approval: Dict[str, Any] = {
+        'request_id': str(raw.get('prompt_id') or raw.get('request_id') or ''),
+        'command': str(raw.get('command') or ''),
+        'description': str(raw.get('description') or ''),
+        'choices': [c for c in (raw.get('choices') or []) if c in ('once', 'deny')] or ['once', 'deny'],
+    }
+    generation = raw.get('execution_generation', status.get('execution_generation') if control else None)
+    if type(generation) is int:
+        approval['execution_generation'] = generation
+    return approval
+
+
+def hermes_approval_answer(approval: Dict[str, Any], choice: str) -> Dict[str, Any]:
+    """The body for POST /v1/runs/{id}/approval, in the shape the run's question came in."""
+    body: Dict[str, Any] = {'choice': choice}
+    if approval.get('request_id'):
+        body['request_id'] = approval['request_id']
+    if type(approval.get('execution_generation')) is int:
+        body['execution_generation'] = approval['execution_generation']
+    return body
+
+
 async def _follow_hermes(uid: str, job: Dict[str, Any], settings: Dict[str, Any]) -> str:
     status = await request_ok(
         'GET',
@@ -415,14 +447,7 @@ async def _follow_hermes(uid: str, job: Dict[str, Any], settings: Dict[str, Any]
         raise OutboundError('http', 'Hermes answered no run status')
     state = str(status.get('status') or '')
     if state == 'waiting_for_approval':
-        raw = status.get('approval') or {}
-        approval = {
-            'request_id': str(raw.get('request_id') or ''),
-            'command': str(raw.get('command') or ''),
-            'description': str(raw.get('description') or ''),
-            'choices': [c for c in (raw.get('choices') or []) if c in ('once', 'deny')] or ['once', 'deny'],
-        }
-        await _ask(uid, job, approval)
+        await _ask(uid, job, hermes_approval(status))
         return 'waiting_for_approval'
     if state == 'completed':
         await _finish(uid, job['id'], 'completed', result=str(status.get('output') or ''))
@@ -529,9 +554,7 @@ async def answer_approval(uid: str, job_id: str, choice: str) -> Dict[str, Any]:
     if job['target'] != 'hermes':
         raise AgentJobError(409, 'Answer this one in Studio')
     settings = await run_blocking(db_executor, _settings, uid, 'hermes')
-    body: Dict[str, Any] = {'choice': choice}
-    if job['approval'].get('request_id'):
-        body['request_id'] = job['approval']['request_id']
+    body = hermes_approval_answer(job['approval'], choice)
     try:
         await request_ok(
             'POST',

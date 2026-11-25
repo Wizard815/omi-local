@@ -23,6 +23,7 @@ from utils.conversations.mcp_transcript_search import (
     merge_chat_conversation_ids,
     search_chat_transcript_chunks,
 )
+from utils.conversations.day_rollup import hidden_from_chat, rolled_up_ids
 from utils.conversations.render import conversation_to_citation_card, conversations_to_string
 from utils.conversations.search import (
     conversation_matches_date_range,
@@ -752,12 +753,13 @@ def search_conversations_tool(
             conversations_data = [
                 c for c in conversations_data if conversation_matches_date_range(c, starts_at, ends_at)
             ]
+            rolled_up = rolled_up_ids(uid, conversations_data)
             withheld_locked = sum(
-                1 for row in conversations_data if row.get('is_locked', False) and not row.get('discarded', False)
+                1 for row in conversations_data if row.get('is_locked', False) and not hidden_from_chat(row, rolled_up)
             )
-            withheld_discarded = sum(1 for row in conversations_data if row.get('discarded', False))
+            withheld_discarded = sum(1 for row in conversations_data if hidden_from_chat(row, rolled_up))
             conversations_data = [
-                c for c in conversations_data if not c.get('is_locked', False) and not c.get('discarded', False)
+                c for c in conversations_data if not c.get('is_locked', False) and not hidden_from_chat(c, rolled_up)
             ]
             if not conversations_data:
                 record_path('firestore', 0)
@@ -847,12 +849,14 @@ def search_conversations_tool(
             conversations_data = [
                 c for c in conversations_data if conversation_matches_date_range(c, start_bound, end_bound)
             ]
+            # A conversation rolled into an approved day is part of that day, not dropped.
+            rolled_up = rolled_up_ids(uid, conversations_data)
             withheld_locked += sum(
-                1 for row in conversations_data if row.get('is_locked', False) and not row.get('discarded', False)
+                1 for row in conversations_data if row.get('is_locked', False) and not hidden_from_chat(row, rolled_up)
             )
-            withheld_discarded += sum(1 for row in conversations_data if row.get('discarded', False))
+            withheld_discarded += sum(1 for row in conversations_data if hidden_from_chat(row, rolled_up))
             conversations_data = [
-                c for c in conversations_data if not c.get('is_locked', False) and not c.get('discarded', False)
+                c for c in conversations_data if not c.get('is_locked', False) and not hidden_from_chat(c, rolled_up)
             ]
             if not conversations_data:
                 date_scope = f" in {_date_scope(start_dt, end_dt, display_clock)}" if start_dt or end_dt else ''

@@ -91,6 +91,15 @@ SCAN_PROFILES = (
         end_date=[None, FROZEN_LATER],
         field_paths=[None],
     ),
+    # omi-local: conversation search with no Typesense (utils/conversations/search.py). It reads
+    # discarded rows too, so conversations rolled into an approved day stay findable.
+    _scan_profile(
+        'conversation-local-search',
+        include_discarded=[True],
+        start_date=[None, FROZEN_NOW],
+        end_date=[None, FROZEN_LATER],
+        field_paths=[None],
+    ),
 )
 
 # The recipe helpers' own parameter surface: people_stats_scan carries no

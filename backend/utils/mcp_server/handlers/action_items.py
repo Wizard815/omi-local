@@ -8,7 +8,7 @@ import database.action_item_sync as action_item_sync_db
 import database.action_items as action_items_db
 import utils.mcp_action_items as mcp_action_items
 from utils.memory.product_authorization import ProductAuthorizationContext
-from utils.mcp_data import clean_action_item, end_of_day_utc
+from utils.mcp_data import clean_action_item, end_of_day_utc, hidden_from_agents
 from utils.mcp_memories import (
     parse_mcp_bool,
     parse_mcp_int,
@@ -37,8 +37,13 @@ def action_items_list_page_core(
     offset: int = 0,
     cursor_token: Optional[str] = None,
     cursor_kind: str,
+    include_waiting: bool = False,
 ) -> Tuple[List[Dict[str, Any]], Optional[str]]:
-    """Shared product-ordered action-item page for the MCP tool and REST list."""
+    """Shared product-ordered action-item page for the MCP tool and REST list.
+
+    Declined tasks, and tasks waiting for the user's OK unless ``include_waiting``, are left
+    out of the page after it is cut, so the offset cursor still counts stored rows (a page
+    can come back shorter than ``limit`` with ``next_cursor`` set)."""
     filters = {
         "completed": completed,
         "due_start": due_start.isoformat() if due_start else None,
@@ -68,7 +73,9 @@ def action_items_list_page_core(
             position={"offset": offset + consumed},
             filters=filters,
         )
-    return [clean_action_item(i) for i in page], next_cursor
+    return [
+        clean_action_item(i) for i in page if not hidden_from_agents(i, include_waiting=include_waiting)
+    ], next_cursor
 
 
 def action_items_sync_page_core(
@@ -102,6 +109,19 @@ def action_items_sync_page_core(
         raise_action_item_index_error(e)
     items: List[Dict[str, Any]] = []
     for row in rows:
+        if hidden_from_agents(row) and not row.get("deleted", False):
+            # Waiting for the user's OK or declined (omi-local): a sync client gets a tombstone, so
+            # an approval taken back (Undo) also leaves its copy.
+            items.append(
+                {
+                    "id": row.get("id", ""),
+                    "description": "",
+                    "completed": False,
+                    "updated_at": row.get("updated_at"),
+                    "deleted": True,
+                }
+            )
+            continue
         cleaned = clean_action_item(row)
         cleaned["updated_at"] = row.get("updated_at")
         if row.get("deleted", False):
@@ -127,6 +147,7 @@ def get_action_items(
         limit = parse_mcp_int(arguments.get("limit"), "limit", default=100, minimum=1, maximum=500)
         offset = parse_mcp_int(arguments.get("offset"), "offset", default=0, minimum=0, maximum=100000)
         completed = parse_optional_mcp_bool(arguments.get("completed"), "completed")
+        include_waiting = parse_mcp_bool(arguments.get("include_waiting"), "include_waiting", default=False)
     except ValueError as e:
         raise ToolExecutionError(str(e), code=-32602)
     due_start = parse_mcp_date(arguments.get("due_start_date"), "due_start_date")
@@ -166,6 +187,7 @@ def get_action_items(
         offset=offset,
         cursor_token=arguments.get("cursor"),
         cursor_kind="get_action_items",
+        include_waiting=include_waiting,
     )
     result = {"action_items": items}
     if next_cursor is not None:
@@ -179,7 +201,10 @@ def search_action_items(
     auth_context: Optional[ProductAuthorizationContext] = None,
 ) -> Dict[str, Any]:
     try:
-        items = mcp_action_items.search_action_items(uid, arguments.get("query"), limit=arguments.get("limit", 10))
+        include_waiting = parse_mcp_bool(arguments.get("include_waiting"), "include_waiting", default=False)
+        items = mcp_action_items.search_action_items(
+            uid, arguments.get("query"), limit=arguments.get("limit", 10), include_waiting=include_waiting
+        )
     except ValueError as e:
         raise ToolExecutionError(str(e), code=-32602)
     return {"action_items": items}

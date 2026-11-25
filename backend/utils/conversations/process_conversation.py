@@ -255,6 +255,7 @@ from utils.task_sync import auto_sync_action_items_batch
 from utils import task_approval
 from utils.task_intelligence import conversation_capture
 from utils.conversations.action_item_refresh import preserve as preserve_refresh_tasks
+from utils.conversations import task_merge
 from utils.conversations.action_item_extraction import action_items_for_write, filter_extracted_items
 from utils.conversations.action_item_identity import plan_replacement
 from utils.conversations.calendar_linking import get_overlapping_calendar_event
@@ -2017,6 +2018,9 @@ def _write_action_items(uid: str, conversation: Conversation, trigger: Optional[
         uid, conversation, now, conversation_capture.canonical_conversation_fields
     )
 
+    # omi-local: a re-extracted open task from another conversation becomes no new task
+    # (utils/conversations/task_merge.py); a due-date change to an approved one waits.
+    action_items_data = task_merge.merge_into_open_tasks(uid, conversation, action_items_data, now=now).kept
     # omi-local: extracted tasks wait for the user's OK (utils/task_approval.py). The refresh
     # path creates only new rows from these dicts and keeps existing rows as they are.
     task_approval.mark_extracted(action_items_data)

@@ -24,7 +24,7 @@ from utils.mcp_server.constants import (
     MCP_MEMORY_LIST_MAX_LIMIT,
 )
 from utils.mcp_server.errors import ToolExecutionError
-from utils.mcp_server.handlers import action_items, conversations, memories, other, profile
+from utils.mcp_server.handlers import action_items, calendar, conversations, memories, other, profile
 
 ToolHandler = Callable[[str, Dict[str, Any], Optional[ProductAuthorizationContext]], Dict[str, Any]]
 
@@ -876,6 +876,11 @@ TOOL_SPECS: Tuple[ToolSpec, ...] = (
             "type": "object",
             "properties": {
                 "completed": {"type": "boolean", "description": "Filter by completion status (omit for all)"},
+                "include_waiting": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "Also return tasks still waiting for the user's OK (approval: pending)",
+                },
                 "due_start_date": {"type": "string", "description": "Only items due on/after this date (yyyy-mm-dd)"},
                 "due_end_date": {"type": "string", "description": "Only items due on/before this date (yyyy-mm-dd)"},
                 "updated_since": {
@@ -928,6 +933,11 @@ TOOL_SPECS: Tuple[ToolSpec, ...] = (
             "type": "object",
             "properties": {
                 "query": {"type": "string", "description": "What to search the user's tasks for"},
+                "include_waiting": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "Also return tasks still waiting for the user's OK (approval: pending)",
+                },
                 "limit": {
                     "type": "integer",
                     "description": "Max number of tasks to return (1-50)",
@@ -1363,6 +1373,78 @@ TOOL_SPECS: Tuple[ToolSpec, ...] = (
         write_operation=_READ,
         rate_bucket=None,
         handler=other.get_day_review,
+    ),
+    ToolSpec(
+        name="get_calendar_events",
+        title="Get calendar events",
+        description=(
+            "The user's calendar for a date window (default: today and the next 7 days): the events on their "
+            "CalDAV calendar and the events they approved in Omi (status on_calendar). include_waiting adds "
+            "the ones heard in conversations or proposed by an agent that wait for the user's OK "
+            "(waiting_for_approval), and declined ones."
+        ),
+        annotations=_read_annotations("Get calendar events"),
+        input_schema={
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "start_date": {"type": "string", "description": "First day, YYYY-MM-DD in the user's time zone"},
+                "end_date": {"type": "string", "description": "Last day, YYYY-MM-DD (at most 62 days after start)"},
+                "include_waiting": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "Also return events waiting for the user's OK, and declined ones",
+                },
+                "timezone": _TIMEZONE_INPUT,
+            },
+        },
+        output_schema=_output_schema(
+            _object_schema(
+                ["events"],
+                events=_ARRAY_OF_OBJECTS,
+                window={"type": "object"},
+                timezone={"type": "string"},
+                waiting_for_approval={"type": "integer"},
+            )
+        ),
+        scope="conversations.read",
+        operation="calendar_events_read",
+        write_operation=_READ,
+        rate_bucket=None,
+        handler=calendar.get_calendar_events,
+    ),
+    ToolSpec(
+        name="create_calendar_event",
+        title="Propose calendar event",
+        description=(
+            "Propose an event for the user's calendar. It does not go to the calendar yet: it waits in Omi's "
+            "'Waiting for your OK' (Calendar check) and reaches the user's CalDAV calendar only after they "
+            "approve it, possibly with a corrected time. Tell the user it is waiting for their OK."
+        ),
+        annotations=_create_annotations("Propose calendar event", idempotent=False),
+        input_schema={
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "title": {"type": "string", "description": "What the event is"},
+                "start": {
+                    "type": "string",
+                    "description": "Start, ISO 8601 with an offset (2026-11-26T16:00:00-05:00)",
+                },
+                "duration": {"type": "integer", "minimum": 5, "maximum": 1440, "default": 30},
+                "description": {"type": "string"},
+                "requested_by": {"type": "string", "description": "Your name as the user knows you (e.g. Hermes)"},
+            },
+            "required": ["title", "start"],
+        },
+        output_schema=_output_schema(
+            _object_schema(["event"], success={"type": "boolean"}, event={"type": "object"}, message={"type": "string"})
+        ),
+        scope="action_items.write",
+        operation="other",
+        write_operation=_ACTION_ITEM_CREATE,
+        rate_bucket="action_items:write",
+        handler=calendar.create_calendar_event,
     ),
     ToolSpec(
         name="process_recent_conversations",

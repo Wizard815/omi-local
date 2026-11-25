@@ -11,6 +11,7 @@ imports the other (routers must never import from other routers).
 
 import hashlib
 import logging
+import os
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Union
 
@@ -21,7 +22,8 @@ from database.vector_db import (
     delete_action_item_vector,
     search_action_items_by_vector,
 )
-from utils.mcp_data import clean_action_item
+from utils import task_approval
+from utils.mcp_data import clean_action_item, hidden_from_agents
 from utils.notifications import sync_action_item_reminder
 
 logger = logging.getLogger(__name__)
@@ -126,7 +128,16 @@ def _reload(uid: str, action_item_id: str) -> Dict[str, Any]:
     return item
 
 
+def mcp_tasks_wait() -> bool:
+    """Tasks an agent creates over MCP wait for the user's OK (omi-local)."""
+    if not task_approval.approval_enabled():
+        return False
+    return os.getenv('OMI_MCP_TASK_APPROVAL', '').strip().lower() not in {'0', 'off', 'false', 'no'}
+
+
 def _sync_reminder(uid: str, item: Dict[str, Any]) -> Dict[str, Any]:
+    if task_approval.is_waiting(item) or task_approval.state(item) == task_approval.DECLINED:
+        return item  # no reminder before the user's OK; approving sends it
     try:
         sync_action_item_reminder(
             user_id=uid,
@@ -149,7 +160,11 @@ def create_action_item(
     completed: bool = False,
 ) -> Dict[str, Any]:
     """Create a task and return its cleaned MCP shape. Content-idempotent on
-    (uid, normalized description) while the matching task is still open."""
+    (uid, normalized description) while the matching task is still open.
+
+    omi-local: an agent's task waits for the user's OK (``approval = 'pending'``, see
+    utils/task_approval.py) like an extracted one: no reminder, no CalDAV copy and no task
+    app delivery until the user approves it. OMI_MCP_TASK_APPROVAL=off writes them approved."""
     text = _normalize_description(description)
     parsed_due = parse_due_at(due_at)
     data = {
@@ -158,6 +173,8 @@ def create_action_item(
         "due_at": parsed_due,
         "conversation_id": None,
     }
+    if not completed and mcp_tasks_wait():
+        data[task_approval.FIELD] = task_approval.PENDING
     key = content_idempotency_key(uid, text)
     # The key comes from the title, so every later task with the same title shares it.
     # A finished task holding it is an earlier task, not a retry of this call.
@@ -176,7 +193,7 @@ def create_action_item(
     except Exception:
         logger.exception("MCP create_action_item: vector upsert failed uid=%s id=%s (task saved)", uid, item_id)
 
-    if item.get("due_at") is not None and not item.get("completed"):
+    if item.get("due_at") is not None and not item.get("completed") and task_approval.deliverable(item):
         _sync_reminder(uid, item)
     return clean_action_item(item)
 
@@ -252,7 +269,9 @@ def delete_action_item(uid: str, action_item_id: str) -> None:
         )
 
 
-def search_action_items(uid: str, query: Optional[str], limit: int = 10) -> List[Dict[str, Any]]:
+def search_action_items(
+    uid: str, query: Optional[str], limit: int = 10, *, include_waiting: bool = False
+) -> List[Dict[str, Any]]:
     """Semantic search over the user's tasks, returned in relevance order."""
     if not isinstance(query, str) or not query.strip():
         raise ValueError("query is required")
@@ -270,4 +289,8 @@ def search_action_items(uid: str, query: Optional[str], limit: int = 10) -> List
     # does not guarantee ordering.
     order = {aid: i for i, aid in enumerate(ids)}
     items.sort(key=lambda it: order.get(it.get("id", ""), len(ids)))
-    return [clean_action_item(it) for it in items if not it.get("deleted", False)]
+    return [
+        clean_action_item(it)
+        for it in items
+        if not it.get("deleted", False) and not hidden_from_agents(it, include_waiting=include_waiting)
+    ]

@@ -94,7 +94,8 @@ def test_empty_embedding_does_not_query_vector_provider(core):
 def test_stale_vector_hydration_recovers_keywords(core):
     handler, db, vector, _, _ = core
     vector.query_vectors.return_value = ['deleted']
-    db.get_mcp_conversations_by_id.side_effect = [[], [row()]]
+    # visible read, then the rolled-up-day probe for the missing id (omi-local), then keywords
+    db.get_mcp_conversations_by_id.side_effect = [[], [], [row()]]
     assert (
         handler.search_conversations_core('owner', 'budget', limit=10, start_dt=None, end_dt=None)[0]['id'] == 'keyword'
     )

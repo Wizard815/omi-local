@@ -209,8 +209,8 @@ class Demo:
             bool(asking) and asking[0]['approval']['command'] == 'python3 cutlist.py --boards 3', json.dumps(asking[0]['approval']) if asking else 'none'))
         self.omi.call('POST', f"/v1/agent-jobs/{created['id']}/approval", {'choice': 'once'})
         relayed = [json.loads(r['body']) for r in self.agents('hermes') if r['path'].endswith('/approval')]
-        self.check('hermes', 'approve', 'Allow once relayed to /v1/runs/{id}/approval with the request_id', lambda: (
-            relayed == [{'choice': 'once', 'request_id': 'req-demo-1'}], json.dumps(relayed)))
+        self.check('hermes', 'approve', 'Allow once relayed to /v1/runs/{id}/approval with the prompt id and generation', lambda: (
+            relayed == [{'choice': 'once', 'request_id': 'req-demo-1', 'execution_generation': 1}], json.dumps(relayed)))
         done = self.wait(lambda: (lambda j: j if j['status'] == 'completed' else None)(self.job(created['id'])))
         self.check('hermes', 'result', 'the run result is stored on the job', lambda: (
             bool(done) and done['result'].startswith('Cut list'), (done or {}).get('result', '')))
