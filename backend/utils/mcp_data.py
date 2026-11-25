@@ -66,6 +66,9 @@ def clean_action_item(item: Dict[str, Any]) -> Dict[str, Any]:
     for field in ("due", "reminder_origin", "creation_receipt"):
         if item.get(field) is not None:
             result[field] = item[field]
+    if item.get("approval"):
+        # omi-local: 'pending' = waiting for the user's OK (utils/task_approval.py).
+        result["approval"] = item["approval"]
     return result
 
 
