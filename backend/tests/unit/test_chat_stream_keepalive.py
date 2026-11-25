@@ -55,25 +55,48 @@ def test_stream_wait_heartbeats_only_while_a_deadline_is_further_away():
     assert agentic.stream_wait(20.0, -3.0) == (0.0, False)
 
 
+def _scripted_next_chunk(script, waits):
+    """Stand-in for next_stream_chunk: a model silent for len(TimeoutError) waits, then answering.
+
+    Records each wait the stream asked for, so the test sees the keep-alive interval was used
+    while the first-event deadline was still far away. No real clock is involved.
+    """
+
+    async def fake(_callback, task, timeout_seconds):
+        waits.append(timeout_seconds)
+        item = script.pop(0)
+        if item is asyncio.TimeoutError:
+            raise asyncio.TimeoutError
+        if item is None:
+            await task
+        return item
+
+    return fake
+
+
 async def test_keep_alive_arrives_before_the_first_model_event():
     callback_data = {}
+    waits = []
+    script = [asyncio.TimeoutError] * 3 + ['data: hello', None]
 
-    async def slow_first_token(*args, **_kwargs):
-        callback, full_response = args[4], args[5]
-        await asyncio.sleep(0.08)  # a local model thinking, silent
-        await callback.put_data('hello')
-        full_response.append('hello')
-        await callback.end()
+    async def answering_producer(*args, **_kwargs):
+        args[5].append('hello')
 
-    with patch.object(agentic, 'AGENT_STREAM_PROGRESS_HEARTBEAT_SECONDS', 0.01), patch.object(
-        agentic, 'AGENT_STREAM_FIRST_EVENT_TIMEOUT_SECONDS', 5.0
-    ):
-        chunks = await _agentic_chunks(slow_first_token, callback_data)
+    # Production intervals: 20 s keep-alive, a local model's 300 s first-event deadline.
+    with patch.object(agentic, 'AGENT_STREAM_PROGRESS_HEARTBEAT_SECONDS', 20.0), patch.object(
+        agentic, 'AGENT_STREAM_FIRST_EVENT_TIMEOUT_SECONDS', 300.0
+    ), patch.object(agentic, 'next_stream_chunk', _scripted_next_chunk(script, waits)):
+        chunks = await _agentic_chunks(answering_producer, callback_data)
 
-    assert chunks[0] == f'think: {agentic.AGENT_STREAM_SETUP_PROGRESS}'
-    first_data = chunks.index('data: hello')
-    assert HEARTBEAT in chunks[1:first_data], chunks
-    assert chunks[-1] is None
+    assert chunks == [
+        f'think: {agentic.AGENT_STREAM_SETUP_PROGRESS}',
+        HEARTBEAT,
+        HEARTBEAT,
+        HEARTBEAT,
+        'data: hello',
+        None,
+    ]
+    assert waits[:3] == [20.0, 20.0, 20.0]
     assert callback_data['answer'] == 'hello'
     assert 'error' not in callback_data
 
@@ -84,9 +107,10 @@ async def test_keep_alives_do_not_extend_the_first_event_deadline():
     async def silent(*_args, **_kwargs):
         await asyncio.Event().wait()
 
-    with patch.object(agentic, 'AGENT_STREAM_PROGRESS_HEARTBEAT_SECONDS', 0.01), patch.object(
-        agentic, 'AGENT_STREAM_FIRST_EVENT_TIMEOUT_SECONDS', 0.06
-    ), patch.object(agentic, 'AGENT_STREAM_CANCEL_GRACE_SECONDS', 0.05):
+    # The producer never answers; the first-event deadline (>= 0.5 s, real clock) still ends it.
+    with patch.object(agentic, 'AGENT_STREAM_PROGRESS_HEARTBEAT_SECONDS', 0.2), patch.object(
+        agentic, 'AGENT_STREAM_FIRST_EVENT_TIMEOUT_SECONDS', 0.5
+    ), patch.object(agentic, 'AGENT_STREAM_CANCEL_GRACE_SECONDS', 0.5):
         chunks = await _agentic_chunks(silent, callback_data)
 
     assert HEARTBEAT in chunks
@@ -95,21 +119,16 @@ async def test_keep_alives_do_not_extend_the_first_event_deadline():
 
 
 async def test_drained_callback_streams_keep_alive_before_the_first_event_too():
-    callback = agentic.AsyncStreamingCallback()
+    waits = []
+    script = [asyncio.TimeoutError] * 2 + ['data: hi', None]
+    task = asyncio.create_task(asyncio.sleep(0))
 
-    async def slow_first_token():
-        await asyncio.sleep(0.08)
-        await callback.put_data('hi')
-        await callback.end()
-        # Still running while the consumer reads the queue, as a real producer unwinding.
-        await asyncio.sleep(0.02)
+    with patch.object(graph, 'AGENT_STREAM_PROGRESS_HEARTBEAT_SECONDS', 20.0), patch.object(
+        graph, 'AGENT_STREAM_FIRST_EVENT_TIMEOUT_SECONDS', 300.0
+    ), patch.object(graph, 'next_stream_chunk', _scripted_next_chunk(script, waits)):
+        chunks = [
+            chunk async for chunk in graph._drain_chat_callback(agentic.AsyncStreamingCallback(), task, route='persona')
+        ]
 
-    task = asyncio.create_task(slow_first_token())
-    with patch.object(graph, 'AGENT_STREAM_PROGRESS_HEARTBEAT_SECONDS', 0.01), patch.object(
-        graph, 'AGENT_STREAM_FIRST_EVENT_TIMEOUT_SECONDS', 5.0
-    ):
-        chunks = [chunk async for chunk in graph._drain_chat_callback(callback, task, route='persona')]
-
-    assert chunks[-1] == 'data: hi'
-    assert chunks[0] == HEARTBEAT
-    assert set(chunks[:-1]) == {HEARTBEAT}
+    assert chunks == [HEARTBEAT, HEARTBEAT, 'data: hi']
+    assert waits[:2] == [20.0, 20.0]
