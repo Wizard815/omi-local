@@ -36,10 +36,6 @@ const appHeaderSource = readFileSync(
   new URL('../components/shared/app-header.tsx', import.meta.url),
   'utf8',
 );
-const announcementSource = readFileSync(
-  new URL('../components/shared/announcement-bar.tsx', import.meta.url),
-  'utf8',
-);
 const layoutSource = readFileSync(new URL('../app/layout.tsx', import.meta.url), 'utf8');
 const cssSource = readFileSync(
   new URL('../app/memories/[id]/share-note.css', import.meta.url),
@@ -273,9 +269,15 @@ describe('action item rows', () => {
   });
 
   it('keeps tentative certainty and renders the date tentatively and accessibly', () => {
-    const due = actionItemFacts({ due_at: '2026-10-07T00:00:00Z', due_certainty: 'tentative' }).due;
+    const due = actionItemFacts({
+      due_at: '2026-10-07T00:00:00Z',
+      due_certainty: 'tentative',
+    }).due;
     assert.equal(due?.certainty, 'tentative');
-    const source = readFileSync(new URL('../components/memories/summary/action-items.tsx', import.meta.url), 'utf8');
+    const source = readFileSync(
+      new URL('../components/memories/summary/action-items.tsx', import.meta.url),
+      'utf8',
+    );
     assert.match(source, /Tentatively due/);
     assert.match(source, /certainty === 'tentative' \? '~'/);
   });
@@ -307,9 +309,11 @@ describe('share note page wiring', () => {
     assert.match(pageSource, /<ShareTopbar /);
     assert.match(pageSource, /<ShareInstallBar /);
     assert.match(appHeaderSource, /isShareNotePath\(pathname\)/);
-    assert.match(announcementSource, /isShareNotePath\(pathname\)/);
-    assert.match(layoutSource, /<AnnouncementBar \/>/);
-    assert.doesNotMatch(layoutSource, /elfsight-app-/);
+    // omi-local: no third-party scripts (analytics, Elfsight widgets) on any page.
+    assert.doesNotMatch(
+      layoutSource,
+      /elfsight|AnnouncementBar|GoogleAnalytics|ShareAnalytics|googletagmanager/,
+    );
     assert.match(cssSource, /\.sn-md ul\s*,[^}]*list-style-type:\s*disc/);
     assert.match(cssSource, /\.sn-md ol\s*,[^}]*list-style-type:\s*decimal/);
     assert.match(cssSource, /\.sn-md (?:ul|ol) ul\s*,[^}]*list-style-type:\s*circle/);

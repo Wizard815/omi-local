@@ -1,37 +1,32 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('posthog-js', () => ({
-  default: {
-    init: vi.fn(),
-    identify: vi.fn(),
-    capture: vi.fn(),
-    reset: vi.fn(),
-    setPersonProperties: vi.fn(),
-    isFeatureEnabled: vi.fn(() => true),
-    reloadFeatureFlags: vi.fn(),
-  },
-}));
 vi.mock('@/lib/omiFlags', () => ({ omiFlagEnabled: vi.fn(), resetOmiFlags: vi.fn() }));
-import posthog from 'posthog-js';
-import { omiFlagEnabled } from '@/lib/omiFlags';
+import { omiFlagEnabled, resetOmiFlags } from '@/lib/omiFlags';
 import { PostHogManager } from '@/lib/analytics/posthog';
 
-describe('Omi-only flags with PostHog capture', () => {
+describe('omi-local: no third-party analytics, Omi-only flags', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('disables SDK flag loading while capture and identify still reach the SDK', () => {
+  it('sends nothing anywhere: capture, identify and page views are no-ops', () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
     PostHogManager.init();
-    expect(posthog.init).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({ advanced_disable_feature_flags: true }),
-    );
-    PostHogManager.identify('test-user');
-    PostHogManager.track('Chat Message Sent');
-    expect(posthog.identify).toHaveBeenCalledWith('test-user', { Platform: 'web' });
-    expect(posthog.capture).toHaveBeenCalledWith('Chat Message Sent', undefined);
+    PostHogManager.identify('test-user', { email: 'private@example.com' });
+    PostHogManager.track('Chat Message Sent', { a: 1 });
+    PostHogManager.pageView('Home');
+    PostHogManager.setUserProperty('k', 'v');
+    expect(fetchSpy).not.toHaveBeenCalled();
+    fetchSpy.mockRestore();
   });
 
-  it('uses Omi; unknown, failed and throwing reads never consult PostHog', async () => {
+  it('a user switch or sign-out still clears cached flags', () => {
+    PostHogManager.identify('a');
+    PostHogManager.identify('a');
+    PostHogManager.identify('b');
+    PostHogManager.reset();
+    expect(resetOmiFlags).toHaveBeenCalledTimes(3);
+  });
+
+  it('uses Omi; unknown, failed and throwing reads fail closed', async () => {
     vi.mocked(omiFlagEnabled)
       .mockResolvedValueOnce(true)
       .mockResolvedValueOnce(false)
@@ -41,7 +36,5 @@ describe('Omi-only flags with PostHog capture', () => {
     expect(await PostHogManager.isFeatureEnabled('off')).toBe(false);
     expect(await PostHogManager.isFeatureEnabled('missing')).toBe(false);
     expect(await PostHogManager.isFeatureEnabled('failed')).toBe(false);
-    expect(posthog.isFeatureEnabled).not.toHaveBeenCalled();
-    expect(posthog.reloadFeatureFlags).not.toHaveBeenCalled();
   });
 });

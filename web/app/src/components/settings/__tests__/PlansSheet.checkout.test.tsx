@@ -5,18 +5,6 @@ const createCheckoutSession = vi.fn(async (_priceId: string) => ({
   url: 'https://checkout.stripe.test/pay',
 }));
 
-vi.mock('posthog-js', () => ({
-  default: {
-    init: vi.fn(),
-    capture: vi.fn(() => {
-      throw new Error('localStorage blocked');
-    }),
-    identify: vi.fn(),
-    reset: vi.fn(),
-    setPersonProperties: vi.fn(),
-  },
-}));
-
 vi.mock('@/lib/api', () => ({
   getAvailablePlans: vi.fn(),
   createCheckoutSession: (priceId: string) => createCheckoutSession(priceId),

@@ -13,10 +13,7 @@ import envConfig from '@/src/constants/envConfig';
 import { DEFAULT_TITLE_MEMORY } from '@/src/constants/memory';
 import { markdownToPlainText } from '@/src/lib/markdown-to-plain-text.mjs';
 import { getOmiInstallLink } from '@/src/lib/conversation-share-platform-link.mjs';
-import {
-  capturePreviewRequest,
-  previewAttribution,
-} from '@/src/lib/share-preview-analytics.mjs';
+import { previewAttribution } from '@/src/lib/share-preview-attribution.mjs';
 import { shareAlternates } from '@/src/lib/shared-export.mjs';
 import { firstSectionBulletPlainText } from '@/src/lib/shared-note.mjs';
 import {
@@ -40,15 +37,9 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const params = await props.params;
   const searchParams = await props.searchParams;
-  const requestHeaders = await headers();
   const attribution = new URLSearchParams();
   if (typeof searchParams.s === 'string') attribution.set('s', searchParams.s);
   if (typeof searchParams.sid === 'string') attribution.set('sid', searchParams.sid);
-  await capturePreviewRequest(
-    requestHeaders.get('user-agent') || '',
-    'metadata',
-    attribution,
-  );
   const prevData = (await parent) as Metadata;
   // Same uncached read as the page body. Caching this fetch keeps the title
   // and overview in the document head after the share is revoked.
