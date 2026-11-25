@@ -48,6 +48,14 @@ def date_only_to_utc_epoch(value: str, *, end_of_day: bool = False) -> float:
     return parsed.timestamp()
 
 
+def hidden_from_agents(item: Dict[str, Any], *, include_waiting: bool = False) -> bool:
+    """omi-local: what an agent reading over MCP does not see. A task the user declined, and
+    one still waiting for their OK (``approval = 'pending'``, utils/task_approval.py) unless the
+    agent asks for those (``include_waiting``, e.g. Hermes checking what it proposed)."""
+    state = str(item.get("approval") or "approved")
+    return state == "declined" or (state == "pending" and not include_waiting)
+
+
 def clean_action_item(item: Dict[str, Any]) -> Dict[str, Any]:
     """Shape an action_item doc for MCP output (locked descriptions truncated)."""
     description = item.get("description", "") or ""

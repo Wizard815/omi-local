@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 from utils import agent_calendar
 from utils.memory.product_authorization import ProductAuthorizationContext
 from utils.mcp_dates import local_date_window
-from utils.mcp_memories import parse_mcp_int
+from utils.mcp_memories import parse_mcp_bool, parse_mcp_int
 from utils.mcp_server.errors import ToolExecutionError
 
 DEFAULT_DAYS = 7
@@ -27,12 +27,19 @@ def get_calendar_events(
     end = end_dt or start + timedelta(days=DEFAULT_DAYS)
     if end - start > MAX_WINDOW:
         raise ToolExecutionError('The window is at most 62 days', code=-32602)
+    try:
+        include_waiting = parse_mcp_bool(arguments.get('include_waiting'), 'include_waiting', default=False)
+    except ValueError as error:
+        raise ToolExecutionError(str(error), code=-32602)
     events = agent_calendar.list_events(uid, start, end)
+    waiting = sum(1 for e in events if e.get('status') == 'waiting_for_approval')
+    if not include_waiting:
+        events = [e for e in events if e.get('status') == 'on_calendar']
     return {
         'events': events,
         'window': {'start': start.isoformat(), 'end': end.isoformat()},
         'timezone': str(zone),
-        'waiting_for_approval': sum(1 for e in events if e.get('status') == 'waiting_for_approval'),
+        'waiting_for_approval': waiting,
     }
 
 

@@ -48,10 +48,10 @@ mcp_servers:
 |---|---|
 | `search_conversations`, `get_conversation_by_id`, `get_conversations` | Find and read what was said. Conversations rolled into an approved day are still found. Works without Typesense (Firestore text search on omi-local). |
 | `get_day_review` | The approved summary of a day. A day still in draft returns `review: null`: drafts never leave Omi. |
-| `get_action_items`, `search_action_items` | Tasks, with `approval: pending` on the ones waiting for you. |
+| `get_action_items`, `search_action_items` | Approved tasks. Declined ones never; the ones waiting for you only with `include_waiting: true` (then marked `approval: pending`). |
 | `create_action_item` | A task that waits for your OK (no reminder, no CalDAV copy until you approve). `OMI_MCP_TASK_APPROVAL=off` on the Omi host makes MCP tasks approved on creation. |
 | `complete_action_item` | Tick off (or reopen) a task; the CalDAV VTODO follows. |
-| `get_calendar_events` | Your CalDAV calendar plus Omi's events, each `on_calendar`, `waiting_for_approval` or `declined`. |
+| `get_calendar_events` | Your CalDAV calendar plus the Omi events you approved (`on_calendar`); `include_waiting: true` adds the ones waiting for you and declined ones. |
 | `create_calendar_event` | Proposes an event; it waits in Omi's Calendar check and goes to CalDAV once you approve it. It shows in Omi as a small "Hermes asked to add: ..." conversation, left out of the day review. |
 | `search_memories`, `get_memories`, `create_memory` | Facts about you. |
 

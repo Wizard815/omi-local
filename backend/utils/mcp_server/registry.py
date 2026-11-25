@@ -876,6 +876,11 @@ TOOL_SPECS: Tuple[ToolSpec, ...] = (
             "type": "object",
             "properties": {
                 "completed": {"type": "boolean", "description": "Filter by completion status (omit for all)"},
+                "include_waiting": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "Also return tasks still waiting for the user's OK (approval: pending)",
+                },
                 "due_start_date": {"type": "string", "description": "Only items due on/after this date (yyyy-mm-dd)"},
                 "due_end_date": {"type": "string", "description": "Only items due on/before this date (yyyy-mm-dd)"},
                 "updated_since": {
@@ -928,6 +933,11 @@ TOOL_SPECS: Tuple[ToolSpec, ...] = (
             "type": "object",
             "properties": {
                 "query": {"type": "string", "description": "What to search the user's tasks for"},
+                "include_waiting": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "Also return tasks still waiting for the user's OK (approval: pending)",
+                },
                 "limit": {
                     "type": "integer",
                     "description": "Max number of tasks to return (1-50)",
@@ -1369,8 +1379,9 @@ TOOL_SPECS: Tuple[ToolSpec, ...] = (
         title="Get calendar events",
         description=(
             "The user's calendar for a date window (default: today and the next 7 days): the events on their "
-            "CalDAV calendar, and the events Omi heard in conversations or an agent proposed, each with a "
-            "status: on_calendar, waiting_for_approval or declined."
+            "CalDAV calendar and the events they approved in Omi (status on_calendar). include_waiting adds "
+            "the ones heard in conversations or proposed by an agent that wait for the user's OK "
+            "(waiting_for_approval), and declined ones."
         ),
         annotations=_read_annotations("Get calendar events"),
         input_schema={
@@ -1379,6 +1390,11 @@ TOOL_SPECS: Tuple[ToolSpec, ...] = (
             "properties": {
                 "start_date": {"type": "string", "description": "First day, YYYY-MM-DD in the user's time zone"},
                 "end_date": {"type": "string", "description": "Last day, YYYY-MM-DD (at most 62 days after start)"},
+                "include_waiting": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "Also return events waiting for the user's OK, and declined ones",
+                },
                 "timezone": _TIMEZONE_INPUT,
             },
         },

@@ -47,10 +47,10 @@ no scripts are needed.
 | Read one | `mcp__omi__get_conversation_by_id` `{conversation_id}` | Transcript included; `summary_only: true` for the card |
 | Browse a day | `mcp__omi__get_conversations` `{start_date, end_date}` | YYYY-MM-DD in the user's zone (`timezone: "profile"`) |
 | The day's summary | `mcp__omi__get_day_review` `{date}` | Only approved days have text; a draft day returns `review: null` |
-| Tasks | `mcp__omi__get_action_items`, `mcp__omi__search_action_items` | `approval: pending` = waiting for the user |
+| Tasks | `mcp__omi__get_action_items`, `mcp__omi__search_action_items` | Approved tasks; `include_waiting: true` adds the ones waiting for the user (`approval: pending`) |
 | New task | `mcp__omi__create_action_item` `{description, due_at}` | Waits for the user's OK, then syncs to CalDAV |
 | Done | `mcp__omi__complete_action_item` `{action_item_id}` | `completed: false` reopens |
-| Calendar | `mcp__omi__get_calendar_events` `{start_date, end_date}` | status: `on_calendar`, `waiting_for_approval`, `declined` |
+| Calendar | `mcp__omi__get_calendar_events` `{start_date, end_date}` | What is on the calendar; `include_waiting: true` adds proposals (`waiting_for_approval`) |
 | New event | `mcp__omi__create_calendar_event` `{title, start, duration, requested_by: "Hermes"}` | `start` needs an offset; waits for the user's OK |
 | Memories | `mcp__omi__search_memories`, `mcp__omi__create_memory` | Facts about the user |
 
@@ -63,8 +63,8 @@ no scripts are needed.
 2. **Days.** For "how did my day go", use `mcp__omi__get_day_review`. If `review` is null the
    day is not approved yet: tell the user it is waiting in Omi, and do not summarize the raw
    conversations as if they were the approved summary.
-3. **Follow-ups.** Before creating a task, `mcp__omi__search_action_items` for the same thing
-   (Omi also merges near-duplicates). Create it with a due date when one was said. Then tell
+3. **Follow-ups.** Before creating a task, `mcp__omi__search_action_items` with
+   `include_waiting: true` for the same thing (Omi also merges near-duplicates). Create it with a due date when one was said. Then tell
    the user: "Added to Omi; it is waiting for your OK."
 4. **Events.** Propose with `mcp__omi__create_calendar_event`, `requested_by: "Hermes"`, an exact
    start with its offset, and a length. Tell the user it waits in Omi's Calendar check.
@@ -108,7 +108,8 @@ event waiting for my OK; ask me nothing, just remind me what to approve."
 - `create_calendar_event` refuses a start without a UTC offset rather than guessing the zone.
 - Search is keyword plus vectors; try the words a person would have spoken ("sink", "Gary"),
   not abstractions ("household maintenance").
-- A task created here shows `approval: pending` until approved; `get_action_items` lists it.
+- A task created here shows `approval: pending` until approved; `get_action_items` lists it only
+  with `include_waiting: true`.
 
 ## Verification
 
