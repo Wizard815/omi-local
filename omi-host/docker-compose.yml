@@ -78,6 +78,18 @@ services:
       # container on this Docker network, same as HOSTED_PARAKEET_API_URL
       # above uses http://omi-audio:8790 rather than a host-facing address.
       OMI_LOCAL_STORAGE_BASE_URL: ${OMI_LOCAL_STORAGE_BASE_URL:-http://omi-local:8000/_local/storage}
+      # /_local/storage serves only links this server signed (recordings, speech
+      # profiles, chat files). The key is made on first start in
+      # /data/secrets/local_storage_url_key unless set here (32+ characters).
+      # ALLOW_UNSIGNED=1 keeps links saved before signing existed working, and
+      # turns the protection off; use it only until those links are re-made.
+      OMI_LOCAL_STORAGE_URL_KEY: ${OMI_LOCAL_STORAGE_URL_KEY:-}
+      OMI_LOCAL_STORAGE_ALLOW_UNSIGNED: ${OMI_LOCAL_STORAGE_ALLOW_UNSIGNED:-}
+      # Reverse proxies in front of this server (e.g. your cloudflared container),
+      # as IPs/CIDRs. Login attempts through them are counted per real caller
+      # (CF-Connecting-IP) instead of all sharing the proxy's address, so one
+      # stranger's bad passwords can't lock everyone out. Empty: trust no one.
+      OMI_TRUSTED_PROXY_NETWORKS: ${OMI_TRUSTED_PROXY_NETWORKS:-}
       # Named buckets storage.py treats as optional-if-unset (BUCKET_TEMPORAL_SYNC_LOCAL
       # already defaults in storage.py itself, since sync has no opt-out path;
       # these two do have one, e.g. get_user_has_speech_profile()'s bucket=None
