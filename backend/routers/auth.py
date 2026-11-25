@@ -20,7 +20,7 @@ from database.referrals import claim_referral_trial
 from database.redis_db import set_auth_session, get_auth_session, set_auth_code, get_auth_code, delete_auth_code
 from utils.executors import critical_executor, db_executor, run_blocking
 from utils.http_client import get_auth_client
-from utils.local_auth import authenticate_local_account
+from utils.local_auth import authenticate_local_account, login_client_ip
 from utils.log_sanitizer import sanitize
 from utils.metrics import AUTH_FLOW_DURATION_SECONDS, AUTH_FLOW_EVENTS
 from utils.observability.fallback import record_fallback
@@ -1290,7 +1290,7 @@ class LocalLoginResponse(BaseModel):
 
 @router.post('/local-login', response_model=LocalLoginResponse)
 def local_login(payload: LocalLoginRequest, request: Request) -> LocalLoginResponse:
-    client_ip = request.client.host if request.client else 'unknown'
+    client_ip = login_client_ip(request.client.host if request.client else None, request.headers)
     try:
         token = authenticate_local_account(payload.username, payload.password, client_ip=client_ip)
     except HTTPException as e:
