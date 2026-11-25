@@ -374,7 +374,7 @@ async def approve(
 DAY_LIMIT = 3
 
 
-def _block_of(raw: Dict[str, Any], day: str, zone) -> Optional[Dict[str, Any]]:
+def _block_of(raw: Any, day: str, zone) -> Optional[Dict[str, Any]]:
     """One dayGLANCE block as the widget shows it, or None when it is not a block on ``day``."""
     if not isinstance(raw, dict) or raw.get('completed'):
         return None
