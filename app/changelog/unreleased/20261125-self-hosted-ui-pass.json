@@ -1,0 +1,3 @@
+{
+  "change": "Chat waits for slow self-hosted models and says it is still working instead of showing an error, a conversation whose notes are still being written shows its transcript and updates when the notes land, and the day review, approvals, agent jobs and calendar settings read well with large text, on small phones and in the light theme"
+}
