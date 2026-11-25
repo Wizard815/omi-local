@@ -27,9 +27,7 @@ NOW = datetime(2026, 11, 24, 15, tzinfo=timezone.utc)
 @pytest.fixture
 def stored(monkeypatch):
     rows = []
-    monkeypatch.setattr(
-        agent_calendar.conversations_db, 'upsert_conversation_with_lifecycle', lambda uid, data: rows.append(data)
-    )
+    monkeypatch.setattr(agent_calendar.lifecycle, 'create_completed_conversation', lambda uid, data: rows.append(data))
     return rows
 
 

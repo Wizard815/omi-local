@@ -83,7 +83,7 @@ class HermesDemo:
     def sync(self) -> Dict[str, Any]:
         return self.omi.call('POST', '/v1/caldav/sync')
 
-    def todo(self, task_id: str):
+    def vtodo_of(self, task_id: str):
         return self.phone.objects(self.tasks_href, 'VTODO').get(f'omi-task-{self.tag}-{task_id}@omi-local')
 
     def event(self, conversation_id: str, idx: int = 0):
@@ -273,15 +273,15 @@ class HermesDemo:
             f"tasks={[t.get('description') for t in waiting.get('tasks') or []]} events={waiting.get('event_count')}"))
         self.sync()
         self.check('tasks', 'send', 'nothing Hermes asked for is on CalDAV before approval', lambda: (
-            self.todo(self.ids['task']) is None and self.event(self.ids['event']) is None, ''))
+            self.vtodo_of(self.ids['task']) is None and self.event(self.ids['event']) is None, ''))
 
         approved = self.omi.call('POST', f"/v1/approvals/tasks/{self.ids['task']}/approve", {})
         self.omi.call('POST', f"/v1/approvals/tasks/{self.ids['trap']}/approve", {})
         self.omi.call('POST', '/v1/family-calendar/events', {'conversation_id': self.ids['event'], 'event_idx': 0})
         self.sync()
-        todo = self.todo(self.ids['task'])
+        vtodo = self.vtodo_of(self.ids['task'])
         self.check('tasks', 'send', 'approved in Omi -> the VTODO is on the user\'s CalDAV list', lambda: (
-            todo is not None and 'State Farm' in todo.value('SUMMARY'), todo.value('SUMMARY') if todo else 'absent'))
+            vtodo is not None and 'State Farm' in vtodo.value('SUMMARY'), vtodo.value('SUMMARY') if vtodo else 'absent'))
         vevent = self.event(self.ids['event'])
         self.check('events', 'send', 'approved in Omi -> the VEVENT is on the user\'s calendar', lambda: (
             vevent is not None and 'dentist' in vevent.value('SUMMARY'), vevent.value('SUMMARY') if vevent else 'absent'))
@@ -289,7 +289,7 @@ class HermesDemo:
                    json.dumps(approved)[:200])
 
         # The phone (DAVx5 + Tasks.org) ticks the task off.
-        self.phone.edit(todo, {'STATUS': 'COMPLETED', 'PERCENT-COMPLETE': '100', 'COMPLETED': ical_utc(datetime.now(timezone.utc))})
+        self.phone.edit(vtodo, {'STATUS': 'COMPLETED', 'PERCENT-COMPLETE': '100', 'COMPLETED': ical_utc(datetime.now(timezone.utc))})
         self.sync()
         omi_task = self.omi.task(self.ids['task']) or {}
         self.check('tasks', 'receive', 'completed on the phone (VTODO STATUS:COMPLETED) -> Omi marks it done', lambda: (
@@ -309,9 +309,9 @@ class HermesDemo:
         self.check('tasks', 'receive', 'Hermes (get_action_items) sees the phone\'s completion', lambda: (
             self.ids['task'] in items and '"completed": true' in items.split(self.ids['task'])[1][:400], items[:300]))
         self.sync()
-        trap_todo = self.todo(self.ids['trap'])
+        trap_vtodo = self.vtodo_of(self.ids['trap'])
         self.check('tasks', 'send', 'Hermes completes an approved task -> VTODO STATUS:COMPLETED', lambda: (
-            trap_todo is not None and trap_todo.value('STATUS') == 'COMPLETED', trap_todo.value('STATUS') if trap_todo else 'absent'))
+            trap_vtodo is not None and trap_vtodo.value('STATUS') == 'COMPLETED', trap_vtodo.value('STATUS') if trap_vtodo else 'absent'))
         events = self.payload(later['by_tool']['get_calendar_events'][0]) or {}
         mine = [e for e in events.get('events') or [] if e.get('conversation_id') == self.ids['event']]
         self.check('events', 'receive', 'get_calendar_events: the approved event is on_calendar', lambda: (

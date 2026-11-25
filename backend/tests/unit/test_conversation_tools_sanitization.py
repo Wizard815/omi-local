@@ -95,6 +95,9 @@ _users_db_mod.get_people_by_ids = MagicMock(return_value=[])
 
 _vector_db_mod = _mod("database.vector_db")
 
+_day_reviews_db_mod = _mod("database.day_reviews")
+_day_reviews_db_mod.get_day_review = MagicMock(return_value=None)
+
 # This fixture tests semantic-search exception rendering; direct transcript
 # serving is exercised with real modules by test_direct_transcript_search and
 # the HTTP journey, rather than importing it through this legacy DB stub.

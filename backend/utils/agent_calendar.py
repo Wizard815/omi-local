@@ -18,10 +18,10 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
-import database.conversations as conversations_db
 import database.device_calendar as device_calendar_db
 from models.conversation import Conversation
 from utils import family_calendar
+from utils.conversations import lifecycle
 
 AGENT_REQUEST_FIELD = 'agent_request'
 MAX_TITLE = 200
@@ -120,7 +120,7 @@ def propose_event(
     )
     data = conversation.model_dump()
     data[AGENT_REQUEST_FIELD] = {'agent': who, 'kind': 'calendar_event', 'requested_at': now}
-    conversations_db.upsert_conversation_with_lifecycle(uid, data)
+    lifecycle.create_completed_conversation(uid, data)
     return {
         'conversation_id': conversation_id,
         'event_idx': 0,
