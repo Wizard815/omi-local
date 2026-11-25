@@ -13,6 +13,9 @@ import { isSignLanguageEnabled } from './integrations'
 import { ByokKeyStore } from '../agentKernel/byokStore'
 import { isByokActive, withByokHeaders } from '../../shared/byok'
 import { decodeUidFromIdToken } from '../auth/omiAuth'
+import { serverUrl } from '../omiLocal'
+import { DEFAULT_SERVER_URL } from '../omiLocal/serverSession'
+import { serverWebSocketUrl } from '../../shared/omiLocal'
 
 // Lazy so this module stays import-pure (ByokKeyStore's default path needs
 // app.getPath('userData'), only ready after the app is).
@@ -69,12 +72,16 @@ function byokSttHeaders(base: Record<string, string>): Record<string, string> {
 export function buildListenEndpoint(
   mode: ListenMode,
   language: string,
-  clientConversationId?: string
+  clientConversationId?: string,
+  serverBase: string = DEFAULT_SERVER_URL
 ): string {
   const lang = encodeURIComponent(language || 'en')
+  // omi-local: the user's own server (http → ws, https → wss). It forwards the
+  // audio to its local speech service (omi-audio), never to a cloud STT.
+  const ws = serverWebSocketUrl(serverBase)
   if (mode === 'ptt' || mode === 'transcribe') {
     return (
-      'wss://api.omi.me/v2/voice-message/transcribe-stream' +
+      `${ws}/v2/voice-message/transcribe-stream` +
       `?language=${lang}` +
       '&sample_rate=16000' +
       '&codec=linear16' +
@@ -82,7 +89,7 @@ export function buildListenEndpoint(
     )
   }
   return (
-    'wss://api.omi.me/v4/listen' +
+    `${ws}/v4/listen` +
     `?language=${lang}` +
     '&sample_rate=16000' +
     '&codec=pcm16' +
@@ -322,7 +329,7 @@ function startSession(args: ListenStartArgs, owner: WebContents): void {
     }
   }
 
-  const base = buildListenEndpoint(mode, args.language, args.clientConversationId)
+  const base = buildListenEndpoint(mode, args.language, args.clientConversationId, serverUrl())
   let url = base
   if (mode === 'conversation') {
     // Decode (not verify) the JWT to derive the uid for the query param; the
