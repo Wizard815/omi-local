@@ -19,7 +19,7 @@
 #   everything else                                                            -> log "omi-egress-drop", drop
 # Rules match each container's own address, so other containers on a shared
 # network keep their internet. Traffic to the Docker host itself (e.g. llama.cpp
-# on 192.168.1.5) goes through INPUT, not FORWARD, and is not affected.
+# on <server-ip>) goes through INPUT, not FORWARD, and is not affected.
 #
 # Container addresses change when a container is recreated: rerun this after
 # `docker compose up` (the run script does) and after a reboot.

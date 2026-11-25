@@ -22,7 +22,7 @@ Omi refuses private addresses unless the operator lists them (the same rule as t
 webhooks). List each service's address (or the LAN) in `.env`:
 
 ```
-OMI_WEBHOOK_ALLOWED_PRIVATE_NETWORKS=192.168.1.0/24
+OMI_WEBHOOK_ALLOWED_PRIVATE_NETWORKS=<lan-subnet>/24
 ```
 
 Loopback (`127.0.0.1`), link-local (cloud metadata) and unlisted private addresses are always
@@ -36,15 +36,15 @@ Addresses (and the Hermes and Odysseus household tokens) can come from the stack
 address and token in the app win. In `.env`:
 
 ```
-LLMWIKI_URL=http://192.168.1.5:27123        # Obsidian Local REST API port of the vault
-HERMES_API_URL=http://192.168.1.9:8642      # Hermes API server
+LLMWIKI_URL=http://<server-ip>:27123        # Obsidian Local REST API port of the vault
+HERMES_API_URL=http://<codebox-ip>:8642      # Hermes API server
 HERMES_API_KEY=...                           # its API_SERVER_KEY
-ODYSSEUS_URL=http://192.168.1.9:7000
+ODYSSEUS_URL=http://<codebox-ip>:7000
 ODYSSEUS_API_TOKEN=ody_...                   # Odysseus Settings → API tokens, scope "chat"
-STUDIO_URL=http://192.168.1.9:8648
+STUDIO_URL=http://<codebox-ip>:8648
 STUDIO_WEBHOOK_SECRET=...                    # the secret of the endpoint you register in Studio
-COINPILE_URL=http://192.168.1.11:8080
-ORB_URL=http://192.168.1.12:3000
+COINPILE_URL=http://<coinpile-ip>:8080
+ORB_URL=http://<orb-ip>:3000
 OMI_OUTBOUND_DAY_DELAY_SECONDS=600           # an approved day waits out Approve all's 10-minute Undo
 ```
 

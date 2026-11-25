@@ -58,7 +58,7 @@ On the ALLGlance host (`.env.allglance`):
 
 ```
 GATEWAY_TOKEN=<long random>         # what Omi sends as ALLGLANCE_TOKEN
-OMI_URL=http://192.168.1.5:8000    # omi-host's backend
+OMI_URL=http://<server-ip>:8000    # omi-host's backend
 OMI_MCP_TOKEN=omi_mcp_...           # Omi app -> Settings -> Developer -> MCP -> Create Key
 ```
 
