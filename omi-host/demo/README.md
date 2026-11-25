@@ -180,3 +180,28 @@ has no Omi tools, and what FAITH writes waits in that person's Waiting for your 
 OMI_ALLGLANCE_REPO=<ALLGlance checkout> OMI_FAITH_SERVER=<F.A.I.T.H/server copy, npm installed> \
 OMI_RADICALE_BIN=/tmp/radicale/bin/radicale omi-host/demo/peers_demo.sh
 ```
+
+# Home Assistant demo: events out, house context in, actions with the user's OK
+
+`ha_demo.sh` starts its own stack: redis, the Firestore and Auth emulators, the real backend,
+and `fake_home_assistant.py`. The fake is a small stand-in that answers Home Assistant's REST
+shapes; it is not a real HA. It listens on this machine's LAN address, because Omi refuses
+loopback, and that address is allowed through `OMI_WEBHOOK_ALLOWED_PRIVATE_NETWORKS` for the
+run. No Radicale is needed. Setup and safety rules: `../HOME-ASSISTANT.md`.
+
+```
+omi-host/demo/ha_demo.sh          # FIREBASE_BIN=<repo>/node_modules/.bin/firebase if this checkout has none
+```
+
+The demo checks these rows:
+
+- Settings come from the stack, and Test connection reaches HA with the token.
+- A seeded conversation goes through the pipeline's post-processing hook and fires
+  `omi_conversation_finished` and `omi_task_created`. The events carry the title, a short
+  overview and the person, and never the transcript.
+- An MCP agent reads only the allowed entities with `ha_get_states` (by domain and area),
+  `ha_whos_home` and `ha_area_summary`.
+- `ha_call_service light.turn_off` waits for the user's OK. Nothing reaches HA, and
+  `omi_waiting_for_approval` fires. When the user approves, HA runs it and the light is off.
+- `lock.unlock` is refused and never reaches HA.
+- The token appears in none of Omi's answers.

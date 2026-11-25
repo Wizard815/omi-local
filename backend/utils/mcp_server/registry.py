@@ -24,7 +24,7 @@ from utils.mcp_server.constants import (
     MCP_MEMORY_LIST_MAX_LIMIT,
 )
 from utils.mcp_server.errors import ToolExecutionError
-from utils.mcp_server.handlers import action_items, calendar, conversations, memories, other, profile
+from utils.mcp_server.handlers import action_items, calendar, conversations, home_assistant, memories, other, profile
 
 ToolHandler = Callable[[str, Dict[str, Any], Optional[ProductAuthorizationContext]], Dict[str, Any]]
 
@@ -1477,6 +1477,74 @@ TOOL_SPECS: Tuple[ToolSpec, ...] = (
         write_operation=_READ,
         rate_bucket=None,
         handler=other.process_recent_conversations,
+    ),
+    # omi-local: Home Assistant (utils/mcp_server/handlers/home_assistant.py, utils/home_assistant/).
+    ToolSpec(
+        name="ha_get_states",
+        title="Home Assistant states",
+        description=(
+            "Current states of the user's Home Assistant entities the operator allowed (OMI_HA_READ_ALLOW), "
+            "optionally of one domain (light, climate...) and/or one area (Living Room). Compact: id, name, "
+            "state and a few attributes."
+        ),
+        annotations=_read_annotations("Home Assistant states"),
+        input_schema=home_assistant.GET_STATES_INPUT,
+        output_schema=_output_schema(home_assistant.GET_STATES_OUTPUT),
+        scope="conversations.read",
+        operation="home_assistant_read",
+        write_operation=_READ,
+        rate_bucket=None,
+        handler=home_assistant.ha_get_states,
+    ),
+    ToolSpec(
+        name="ha_whos_home",
+        title="Who's home",
+        description=(
+            "Who is home and who is away, from Home Assistant's person entities (device trackers when there are "
+            "none). Only when the operator shares presence."
+        ),
+        annotations=_read_annotations("Who's home"),
+        input_schema=home_assistant.WHOS_HOME_INPUT,
+        output_schema=_output_schema(home_assistant.WHOS_HOME_OUTPUT),
+        scope="conversations.read",
+        operation="home_assistant_read",
+        write_operation=_READ,
+        rate_bucket=None,
+        handler=home_assistant.ha_whos_home,
+    ),
+    ToolSpec(
+        name="ha_area_summary",
+        title="Home Assistant areas",
+        description=(
+            "Per Home Assistant area: how many allowed entities, which lights are on, the temperature. With "
+            "area: that area's allowed states."
+        ),
+        annotations=_read_annotations("Home Assistant areas"),
+        input_schema=home_assistant.AREA_SUMMARY_INPUT,
+        output_schema=_output_schema(home_assistant.AREA_SUMMARY_OUTPUT),
+        scope="conversations.read",
+        operation="home_assistant_read",
+        write_operation=_READ,
+        rate_bucket=None,
+        handler=home_assistant.ha_area_summary,
+    ),
+    ToolSpec(
+        name="ha_call_service",
+        title="Ask Home Assistant to act",
+        description=(
+            "Ask for a Home Assistant service call (light.turn_off, scene.turn_on, climate.set_temperature...) "
+            "on named entities. Only allowed domains; locks, alarms, covers and garage doors are refused unless "
+            "the operator enabled them. Unless the operator auto-approved the entities, it waits for the user's "
+            "OK in Omi (status waiting_for_approval): tell the user it is waiting for their OK, not that it is done."
+        ),
+        annotations=_create_annotations("Ask Home Assistant to act", idempotent=False),
+        input_schema=home_assistant.CALL_SERVICE_INPUT,
+        output_schema=_output_schema(home_assistant.CALL_SERVICE_OUTPUT),
+        scope="action_items.write",
+        operation="other",
+        write_operation=_ACTION_ITEM_CREATE,
+        rate_bucket="action_items:write",
+        handler=home_assistant.ha_call_service,
     ),
 )
 

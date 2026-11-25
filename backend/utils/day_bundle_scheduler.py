@@ -30,6 +30,8 @@ import database.redis_db as redis_db
 from config import conversation_hold
 from utils import auto_approve
 from utils import day_review_service as service
+from utils.home_assistant import events as home_assistant_events
+from utils.home_assistant.runner import run_inline
 
 logger = logging.getLogger(__name__)
 
@@ -83,8 +85,10 @@ def bundle_user(uid: str, *, now: Optional[datetime] = None) -> Dict[str, str]:
         except Exception:  # noqa: BLE001 — no Redis answer: just try
             pass
         try:
-            service.prepare_draft(uid, date_str)
+            draft = service.prepare_draft(uid, date_str)
             outcomes[date_str] = 'drafted'
+            # omi-local: omi_day_summary_ready for Home Assistant, when the user turned it on (never raises).
+            run_inline(home_assistant_events.day_summary_ready(uid, date_str, str((draft or {}).get('title') or '')))
         except service.DayReviewError as error:
             outcomes[date_str] = f'error:{error.status_code}'
             logger.warning('day_bundle: uid=%s date=%s %s', uid, date_str, error.message)
