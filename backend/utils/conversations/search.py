@@ -350,6 +350,7 @@ def browse_conversations_by_speaker(
 # title, overview, tasks and transcript text.
 
 LOCAL_SEARCH_SCAN_CAP = 1000
+DAY_REVIEW_DATE_FIELD = 'day_review_date'
 LOCAL_SEARCH_BATCH = 100
 _LOCAL_STOPWORDS = frozenset(
     'a an and are about at be did do does for from had has have i in is it me my of on or our '
@@ -444,15 +445,19 @@ def _local_search_conversations(
     include_locked: bool,
 ) -> Dict[str, Any]:
     budget = conversation_scan_budget(None, route='conversation-search-local')
-    rows = iter_conversations(
+    # Discarded rows are read too: a conversation rolled into an approved day is discarded but
+    # still part of that day, and its caller (chat, MCP) admits it on hydration
+    # (utils/conversations/day_rollup.py). The scan keeps it only when it carries that day.
+    scanned = iter_conversations(
         uid,
         limit=LOCAL_SEARCH_SCAN_CAP,
         batch=LOCAL_SEARCH_BATCH,
-        include_discarded=include_discarded,
+        include_discarded=True,
         start_date=datetime.fromtimestamp(start_date, tz=timezone.utc) if start_date is not None else None,
         end_date=datetime.fromtimestamp(end_date, tz=timezone.utc) if end_date is not None else None,
         budget=budget,
     )
+    rows = (row for row in scanned if include_discarded or not row.get('discarded') or row.get(DAY_REVIEW_DATE_FIELD))
     return local_text_search(
         rows,
         query,
@@ -460,7 +465,6 @@ def _local_search_conversations(
         per_page=per_page,
         speaker_id=speaker_id,
         include_locked=include_locked,
-        include_discarded=include_discarded,
     )
 
 
