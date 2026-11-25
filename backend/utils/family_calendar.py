@@ -367,3 +367,116 @@ async def approve(
         raise RuntimeError(f'The family calendar refused it ({response.status_code}){": " + detail if detail else ""}')
     payload = response.json() or {}
     return await run_blocking(db_executor, _record, uid, conversation_id, event_idx, prepared, payload)
+
+
+# ---- Today, for a home-screen widget ----
+
+DAY_LIMIT = 3
+
+
+def _block_of(raw: Dict[str, Any], day: str, zone) -> Optional[Dict[str, Any]]:
+    """One dayGLANCE block as the widget shows it, or None when it is not a block on ``day``."""
+    if not isinstance(raw, dict) or raw.get('completed'):
+        return None
+    title = str(raw.get('title') or '').strip()
+    if not title:
+        return None
+    clock = raw.get('start_time')
+    duration = raw.get('duration_minutes') if isinstance(raw.get('duration_minutes'), int) else None
+    if raw.get('all_day') or not clock:
+        return {
+            'title': title,
+            'start': None,
+            'time_label': 'All day',
+            'duration_minutes': None,
+            'all_day': True,
+            'owner_id': raw.get('owner_id'),
+        }
+    try:
+        local = datetime.strptime(f'{day} {clock}', '%Y-%m-%d %H:%M').replace(tzinfo=zone)
+    except ValueError:
+        return None
+    return {
+        'title': title,
+        'start': local.astimezone(timezone.utc),
+        'time_label': clock,
+        'duration_minutes': duration,
+        'all_day': False,
+        'owner_id': raw.get('owner_id'),
+    }
+
+
+async def today(uid: str, *, now: Optional[datetime] = None, client: Optional[httpx.AsyncClient] = None):
+    """Today on the family calendar for a widget: the next blocks still ahead, tasks due, overdue
+    chores. Reads the gateway (GET /api/allglance/days/{date} and /chores) as the member Omi acts as,
+    or the whole family when none is set. Never raises: a down gateway answers reachable=False."""
+    from models.family_calendar import FamilyDayBlock, FamilyDayResponse
+    from utils.executors import db_executor, run_blocking
+
+    target, zone = await run_blocking(db_executor, lambda: (integration(uid), _zone(uid)))
+    if target is None:
+        return FamilyDayResponse(configured=False)
+    now = (now or datetime.now(timezone.utc)).astimezone(zone)
+    day = now.strftime('%Y-%m-%d')
+    owner = target.get('owner_id')
+    params = {'owner': owner} if owner else {}
+    headers = {'Authorization': f"Bearer {target['access_token']}"}
+    http = client or httpx.AsyncClient(timeout=8.0)
+    try:
+        day_resp = await http.get(f"{target['base_url']}/api/allglance/days/{day}", params=params, headers=headers)
+        chores_resp = await http.get(f"{target['base_url']}/api/allglance/chores", params=params, headers=headers)
+    except Exception as error:  # noqa: BLE001 — the gateway may be down; the widget keeps its last data
+        logger.info('family_calendar.today: gateway unreachable uid=%s: %s', uid, type(error).__name__)
+        return FamilyDayResponse(
+            configured=True, date=day, error="ALLGlance isn't answering. Check that its container is running."
+        )
+    finally:
+        if client is None:
+            await http.aclose()
+    if day_resp.status_code in (401, 403):
+        return FamilyDayResponse(
+            configured=True, date=day, error='ALLGlance refused Omi\'s token. Check ALLGLANCE_TOKEN in Omi\'s .env.'
+        )
+    if day_resp.status_code != 200:
+        return FamilyDayResponse(configured=True, date=day, error=f'ALLGlance answered {day_resp.status_code}.')
+
+    body = day_resp.json() or {}
+    blocks = [b for b in (_block_of(raw, day, zone) for raw in body.get('blocks') or []) if b]
+    ahead = []
+    for block in blocks:
+        if block['all_day']:
+            ahead.append(block)
+            continue
+        ends = block['start'] + timedelta(minutes=block['duration_minutes'] or 0)
+        if ends > now.astimezone(timezone.utc):
+            ahead.append(block)
+    ahead.sort(key=lambda b: (not b['all_day'], b['start'] or now))
+    tasks_due = sum(
+        1
+        for tasks in (body.get('tasks') or {}).values()
+        if isinstance(tasks, list)
+        for task in tasks
+        if isinstance(task, dict) and not task.get('completed')
+    )
+
+    overdue: List[str] = []
+    if chores_resp.status_code == 200:
+        for chore in (chores_resp.json() or {}).get('chores') or []:
+            if isinstance(chore, dict) and chore.get('overdue') is True and chore.get('title'):
+                overdue.append(str(chore['title']))
+
+    owner_name = ''
+    if owner:
+        roster = await members(target, client=client)
+        owner_name = next((m['name'] for m in roster if m['id'] == owner), owner)
+    return FamilyDayResponse(
+        configured=True,
+        reachable=True,
+        date=day,
+        owner_name=owner_name,
+        next=[FamilyDayBlock(**b) for b in ahead[:DAY_LIMIT]],
+        remaining=len(ahead),
+        tasks_due=tasks_due,
+        chores_overdue=len(overdue),
+        chores=overdue[:DAY_LIMIT],
+    )
