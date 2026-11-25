@@ -77,6 +77,8 @@ EXPECTED_TOOL_ORDER = [
     "get_screen_activity",
     "get_daily_summaries",
     "get_day_review",
+    "get_calendar_events",
+    "create_calendar_event",
     "process_recent_conversations",
 ]
 
@@ -125,6 +127,8 @@ FAKE_SUCCESS = {
         "processing_count": 0,
         "hold_enabled": True,
     },
+    "get_calendar_events": {"events": [], "waiting_for_approval": 0},
+    "create_calendar_event": {"success": True, "event": {"conversation_id": "c1", "event_idx": 0}},
 }
 
 
@@ -818,6 +822,7 @@ class TestUnknownsAndScope:
             "search_conversations",
             "get_daily_summaries",
             "get_day_review",
+            "get_calendar_events",
         }
 
 
