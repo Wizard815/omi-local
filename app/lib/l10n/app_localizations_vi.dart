@@ -16967,6 +16967,84 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get phoneLlmTitle => 'AI trên điện thoại này';
+
+  @override
+  String get phoneLlmHint =>
+      'Trả lời trò chuyện bằng một mô hình chạy trên điện thoại này, như llama-server trong Termux.';
+
+  @override
+  String get phoneLlmSource => 'Nguồn AI';
+
+  @override
+  String get phoneLlmModeServer => 'Máy chủ';
+
+  @override
+  String get phoneLlmModePhone => 'Điện thoại này';
+
+  @override
+  String get phoneLlmModeAuto => 'Điện thoại khi không kết nối được máy chủ';
+
+  @override
+  String get phoneLlmAddress => 'Địa chỉ mô hình trên điện thoại';
+
+  @override
+  String get phoneLlmNoModels => 'Không tìm thấy mô hình. Mô hình trên điện thoại có đang chạy không?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Đã trả lời trong $ms ms';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Mô hình trên điện thoại không trả lời.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Mô hình trên điện thoại đã từ chối khóa API.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Đưa các cuộc trò chuyện gần đây của tôi làm ngữ cảnh';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Trả lời trên điện thoại này ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Không lưu trên máy chủ của bạn. Giữ đến khi đóng Omi.';
+
+  @override
+  String get phoneLlmAskPhone => 'Hỏi điện thoại này';
+
+  @override
+  String get phoneLlmReplyFailed => 'Mô hình trên điện thoại không trả lời. Hãy kiểm tra xem nó có đang chạy không.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Mô hình trên điện thoại đang chạy';
+
+  @override
+  String get phoneLlmStatusLoading => 'Mô hình trên điện thoại đang tải';
+
+  @override
+  String get phoneLlmStatusOff => 'Mô hình trên điện thoại đang tắt';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Đã kiểm tra lúc $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'Nguồn AI: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Chuyển';
+
+  @override
+  String get sendToHermesTitle => 'Gửi tới Hermes';
+
+  @override
   String get widgetFamilyDayTitle => 'Family day';
 
   @override

@@ -16972,6 +16972,84 @@ class AppLocalizationsFi extends AppLocalizations {
   }
 
   @override
+  String get phoneLlmTitle => 'Tekoäly tässä puhelimessa';
+
+  @override
+  String get phoneLlmHint =>
+      'Vastaa keskusteluun tässä puhelimessa toimivalla mallilla, kuten llama-serverillä Termuxissa.';
+
+  @override
+  String get phoneLlmSource => 'Tekoälyn lähde';
+
+  @override
+  String get phoneLlmModeServer => 'Palvelin';
+
+  @override
+  String get phoneLlmModePhone => 'Tämä puhelin';
+
+  @override
+  String get phoneLlmModeAuto => 'Puhelin, kun palvelimeen ei saada yhteyttä';
+
+  @override
+  String get phoneLlmAddress => 'Puhelimen mallin osoite';
+
+  @override
+  String get phoneLlmNoModels => 'Malleja ei löytynyt. Onko puhelimen malli käynnissä?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Vastasi $ms ms:ssa';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Puhelimen malli ei vastannut.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Puhelimen malli hylkäsi API-avaimen.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Sisällytä viimeaikaiset keskusteluni kontekstiksi';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Vastattu tässä puhelimessa ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Ei tallenneta palvelimellesi. Säilyy, kunnes Omi suljetaan.';
+
+  @override
+  String get phoneLlmAskPhone => 'Kysy tältä puhelimelta';
+
+  @override
+  String get phoneLlmReplyFailed => 'Puhelimen malli ei vastannut. Tarkista, että se on käynnissä.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Puhelimen malli käynnissä';
+
+  @override
+  String get phoneLlmStatusLoading => 'Puhelimen malli latautuu';
+
+  @override
+  String get phoneLlmStatusOff => 'Puhelimen malli pois päältä';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Tarkistettu $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'Tekoälyn lähde: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Vaihda';
+
+  @override
+  String get sendToHermesTitle => 'Lähetä Hermesiin';
+
+  @override
   String get widgetFamilyDayTitle => 'Family day';
 
   @override

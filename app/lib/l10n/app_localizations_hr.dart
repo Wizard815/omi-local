@@ -17005,6 +17005,83 @@ class AppLocalizationsHr extends AppLocalizations {
   }
 
   @override
+  String get phoneLlmTitle => 'AI na ovom telefonu';
+
+  @override
+  String get phoneLlmHint => 'Odgovarajte u chatu modelom koji radi na ovom telefonu, npr. llama-server u Termuxu.';
+
+  @override
+  String get phoneLlmSource => 'Izvor AI-ja';
+
+  @override
+  String get phoneLlmModeServer => 'Poslužitelj';
+
+  @override
+  String get phoneLlmModePhone => 'Ovaj telefon';
+
+  @override
+  String get phoneLlmModeAuto => 'Telefon kada poslužitelj nije dostupan';
+
+  @override
+  String get phoneLlmAddress => 'Adresa modela na telefonu';
+
+  @override
+  String get phoneLlmNoModels => 'Nema pronađenih modela. Radi li model na telefonu?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Odgovor za $ms ms';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Model na telefonu nije odgovorio.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Model na telefonu odbio je API ključ.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Uključi moje nedavne razgovore kao kontekst';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Odgovoreno na ovom telefonu ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Nije spremljeno na vašem poslužitelju. Čuva se dok se Omi ne zatvori.';
+
+  @override
+  String get phoneLlmAskPhone => 'Pitaj ovaj telefon';
+
+  @override
+  String get phoneLlmReplyFailed => 'Model na telefonu nije odgovorio. Provjerite radi li.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Model na telefonu radi';
+
+  @override
+  String get phoneLlmStatusLoading => 'Model na telefonu se učitava';
+
+  @override
+  String get phoneLlmStatusOff => 'Model na telefonu je isključen';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Provjereno $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'Izvor AI-ja: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Promijeni';
+
+  @override
+  String get sendToHermesTitle => 'Pošalji u Hermes';
+
+  @override
   String get widgetFamilyDayTitle => 'Family day';
 
   @override

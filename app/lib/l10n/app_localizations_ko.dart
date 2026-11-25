@@ -16740,6 +16740,83 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get phoneLlmTitle => '이 휴대폰의 AI';
+
+  @override
+  String get phoneLlmHint => '이 휴대폰에서 실행되는 모델(예: Termux의 llama-server)로 채팅에 답합니다.';
+
+  @override
+  String get phoneLlmSource => 'AI 소스';
+
+  @override
+  String get phoneLlmModeServer => '서버';
+
+  @override
+  String get phoneLlmModePhone => '이 휴대폰';
+
+  @override
+  String get phoneLlmModeAuto => '서버에 연결할 수 없을 때 휴대폰';
+
+  @override
+  String get phoneLlmAddress => '휴대폰 모델 주소';
+
+  @override
+  String get phoneLlmNoModels => '모델을 찾을 수 없습니다. 휴대폰 모델이 실행 중인가요?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return '${ms}ms 만에 응답';
+  }
+
+  @override
+  String get phoneLlmTestFailed => '휴대폰 모델이 응답하지 않았습니다.';
+
+  @override
+  String get phoneLlmUnauthorized => '휴대폰 모델이 API 키를 거부했습니다.';
+
+  @override
+  String get phoneLlmIncludeConversations => '최근 대화를 컨텍스트로 포함';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return '이 휴대폰에서 답변함($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => '서버에 저장되지 않습니다. Omi를 닫을 때까지 유지됩니다.';
+
+  @override
+  String get phoneLlmAskPhone => '대신 이 휴대폰에 묻기';
+
+  @override
+  String get phoneLlmReplyFailed => '휴대폰 모델이 응답하지 않았습니다. 실행 중인지 확인하세요.';
+
+  @override
+  String get phoneLlmStatusRunning => '휴대폰 모델 실행 중';
+
+  @override
+  String get phoneLlmStatusLoading => '휴대폰 모델 로드 중';
+
+  @override
+  String get phoneLlmStatusOff => '휴대폰 모델 꺼짐';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return '$time에 확인함';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'AI 소스: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => '전환';
+
+  @override
+  String get sendToHermesTitle => 'Hermes로 보내기';
+
+  @override
   String get widgetFamilyDayTitle => 'Family day';
 
   @override

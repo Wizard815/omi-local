@@ -25,6 +25,8 @@
     <string name="omi_widget_next_event_description">Your next event, from your phone\'s calendars or the family calendar</string>
     <string name="omi_widget_memory_name">Memory</string>
     <string name="omi_widget_memory_description">One of your memories, a new one each day</string>
+    <string name="omi_widget_ai_source_name">AI source</string>
+    <string name="omi_widget_ai_source_description">Whether chat is answered by your server or this phone, and the phone model\'s state</string>
     <string name="omi_widget_preview_value">3 conversations today</string>
     <string name="omi_widget_preview_row">Send the slides to Maya</string>
 </resources>

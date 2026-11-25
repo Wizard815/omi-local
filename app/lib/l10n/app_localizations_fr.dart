@@ -17098,6 +17098,84 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get phoneLlmTitle => 'IA sur ce téléphone';
+
+  @override
+  String get phoneLlmHint =>
+      'Répondre au chat avec un modèle qui tourne sur ce téléphone, comme llama-server dans Termux.';
+
+  @override
+  String get phoneLlmSource => 'Source de l\'IA';
+
+  @override
+  String get phoneLlmModeServer => 'Serveur';
+
+  @override
+  String get phoneLlmModePhone => 'Ce téléphone';
+
+  @override
+  String get phoneLlmModeAuto => 'Le téléphone quand le serveur est injoignable';
+
+  @override
+  String get phoneLlmAddress => 'Adresse du modèle du téléphone';
+
+  @override
+  String get phoneLlmNoModels => 'Aucun modèle trouvé. Le modèle du téléphone est-il lancé ?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Réponse en $ms ms';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Le modèle du téléphone n\'a pas répondu.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Le modèle du téléphone a refusé la clé API.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Inclure mes conversations récentes comme contexte';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Répondu sur ce téléphone ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Non enregistré sur votre serveur. Conservé jusqu\'à la fermeture d\'Omi.';
+
+  @override
+  String get phoneLlmAskPhone => 'Demander à ce téléphone';
+
+  @override
+  String get phoneLlmReplyFailed => 'Le modèle du téléphone n\'a pas répondu. Vérifiez qu\'il est lancé.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Modèle du téléphone lancé';
+
+  @override
+  String get phoneLlmStatusLoading => 'Chargement du modèle du téléphone';
+
+  @override
+  String get phoneLlmStatusOff => 'Modèle du téléphone arrêté';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Vérifié à $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'Source de l\'IA : $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Changer';
+
+  @override
+  String get sendToHermesTitle => 'Envoyer à Hermes';
+
+  @override
   String get widgetFamilyDayTitle => 'Family day';
 
   @override

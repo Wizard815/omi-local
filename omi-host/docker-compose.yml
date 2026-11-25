@@ -480,6 +480,104 @@ services:
       driver: json-file
       options: { max-size: "10m", max-file: "3" }
 
+  # ── Backups (BACKUP.md) ── opt-in: OMI_BACKUP_ENABLED=1 (run-omi-local-host.sh) or
+  # `docker compose --profile backup up -d omi-backup`. Same image as omi-local (it has
+  # Java, firebase-tools, redis-server and age for the monthly test restore). Snapshots go
+  # to OMI_BACKUP_DIR on the host, e.g. a NAS share mounted at /mnt/nas/omi-backups.
+  # It asks omi-local for a fresh Firestore export and Redis snapshot through a file on
+  # the shared volume (maintenance.sh), so it needs no Docker socket.
+  omi-backup:
+    image: omi-local:latest
+    container_name: omi-backup
+    profiles:
+      - backup
+    restart: unless-stopped
+    entrypoint: ["/app/backend/.venv/bin/python", "/app/omi-host/backup/omi_backup.py", "schedule"]
+    environment:
+      TZ: ${TZ:-UTC}
+      PYTHONPATH: /app/omi-host/egress-guard
+      OMI_EGRESS_GUARD: ${OMI_EGRESS_GUARD:-block}
+      OMI_EGRESS_ALLOW: ${OMI_EGRESS_ALLOW:-}
+      OMI_BACKUP_SIDECAR: "1"
+      OMI_BACKUP_DIR: /backups
+      OMI_BACKUP_DATA_DIR: /data
+      OMI_BACKUP_CONFIG_DIR: /omi-host
+      OMI_BACKUP_QUIESCE: flag
+      OMI_BACKUP_FIRESTORE: omi-local:8085
+      OMI_GIT_COMMIT: ${OMI_GIT_COMMIT:-}
+      OMI_BACKUP_TIME: ${OMI_BACKUP_TIME:-03:30}
+      OMI_BACKUP_VERIFY_DAY: ${OMI_BACKUP_VERIFY_DAY:-1}
+      OMI_BACKUP_KEEP_DAILY: ${OMI_BACKUP_KEEP_DAILY:-7}
+      OMI_BACKUP_KEEP_WEEKLY: ${OMI_BACKUP_KEEP_WEEKLY:-4}
+      OMI_BACKUP_KEEP_MONTHLY: ${OMI_BACKUP_KEEP_MONTHLY:-6}
+      OMI_BACKUP_ENCRYPT: ${OMI_BACKUP_ENCRYPT:-none}
+      OMI_BACKUP_AGE_RECIPIENTS: ${OMI_BACKUP_AGE_RECIPIENTS:-}
+      OMI_BACKUP_INCLUDE_ENV: ${OMI_BACKUP_INCLUDE_ENV:-0}
+    volumes:
+      - omi-data:/data
+      - ${OMI_BACKUP_DIR:-./backups}:/backups
+      # .env and docker-compose.override.yml, only for OMI_BACKUP_INCLUDE_ENV=1 (encrypted).
+      - .:/omi-host:ro
+    depends_on:
+      - omi-local
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  # ── Health page and alerts (HEALTH.md) ── opt-in: OMI_HEALTH_ENABLED=1 or
+  # `docker compose --profile health up -d omi-health`. Checks every part of the stack
+  # each OMI_HEALTH_INTERVAL_S, serves http://<omi-host>:${OMI_HEALTH_PORT:-8099}/ on
+  # the LAN, and sends down/degraded/recovered alerts to your own ntfy, Gotify or a
+  # webhook. Its Python runs under the egress guard: LAN alert targets just work.
+  omi-health:
+    image: omi-local:latest
+    container_name: omi-health
+    profiles:
+      - health
+    restart: unless-stopped
+    entrypoint: ["/app/backend/.venv/bin/python", "/app/omi-host/health/watchdog.py"]
+    ports:
+      - "${BIND_IP:-0.0.0.0}:${OMI_HEALTH_PORT:-8099}:8099"
+    environment:
+      TZ: ${TZ:-UTC}
+      PYTHONPATH: /app/omi-host/egress-guard
+      OMI_EGRESS_GUARD: ${OMI_EGRESS_GUARD:-block}
+      OMI_EGRESS_ALLOW: ${OMI_EGRESS_ALLOW:-}
+      OMI_HEALTH_PORT: "8099"
+      OMI_HEALTH_NAME: ${OMI_HEALTH_NAME:-omi}
+      OMI_HEALTH_PUBLIC_URL: ${OMI_HEALTH_PUBLIC_URL:-}
+      OMI_HEALTH_INTERVAL_S: ${OMI_HEALTH_INTERVAL_S:-60}
+      OMI_HEALTH_FAIL_AFTER: ${OMI_HEALTH_FAIL_AFTER:-2}
+      OMI_HEALTH_COOLDOWN_S: ${OMI_HEALTH_COOLDOWN_S:-900}
+      OMI_HEALTH_DIGEST_AT: ${OMI_HEALTH_DIGEST_AT:-}
+      OMI_HEALTH_STATE_FILE: /tmp/omi-health-state.json
+      OMI_HEALTH_NTFY_URL: ${OMI_HEALTH_NTFY_URL:-}
+      OMI_HEALTH_NTFY_TOPIC: ${OMI_HEALTH_NTFY_TOPIC:-}
+      OMI_HEALTH_NTFY_TOKEN: ${OMI_HEALTH_NTFY_TOKEN:-}
+      OMI_HEALTH_GOTIFY_URL: ${OMI_HEALTH_GOTIFY_URL:-}
+      OMI_HEALTH_GOTIFY_TOKEN: ${OMI_HEALTH_GOTIFY_TOKEN:-}
+      OMI_HEALTH_WEBHOOK_URL: ${OMI_HEALTH_WEBHOOK_URL:-}
+      OMI_HEALTH_WEBHOOK_TOKEN: ${OMI_HEALTH_WEBHOOK_TOKEN:-}
+      OMI_HEALTH_BACKUP_MAX_AGE_H: ${OMI_HEALTH_BACKUP_MAX_AGE_H:-26}
+      OMI_HEALTH_DISK_WARN_PCT: ${OMI_HEALTH_DISK_WARN_PCT:-15}
+      OMI_HEALTH_DISK_CRIT_PCT: ${OMI_HEALTH_DISK_CRIT_PCT:-5}
+      # What it checks (defaults are this compose network's names):
+      OMI_AUDIO_URL: ${OMI_AUDIO_URL:-}
+      OMI_BUNDLED_CALDAV: ${OMI_BUNDLED_CALDAV:-1}
+      CALDAV_USER: ${CALDAV_USER:-omi}
+      CALDAV_PASSWORD: ${CALDAV_PASSWORD:-}
+      HERMES_API_URL: ${HERMES_API_URL:-}
+      HERMES_API_KEY: ${HERMES_API_KEY:-}
+      DASHBOARD_USERNAME: ${DASHBOARD_USERNAME:-}
+      DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD:-}
+    volumes:
+      # Read-only: disk free, the CalDAV password, the last backup's manifest.
+      - omi-data:/data:ro
+      - ${OMI_BACKUP_DIR:-./backups}:/backups:ro
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
 networks:
   ai_net:
     external: true

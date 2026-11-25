@@ -17,12 +17,15 @@ import 'package:omi/providers/memories_provider.dart';
 import 'package:omi/providers/user_provider.dart';
 import 'package:omi/services/android_home_widgets.dart';
 import 'package:omi/services/home_widgets_service.dart';
+import 'package:omi/services/phone_llm/phone_llm_settings.dart';
+import 'package:omi/services/phone_llm/phone_llm_status.dart';
 import 'package:omi/ui/format/omi_date_format.dart';
 import 'package:omi/utils/enums.dart';
 
 /// Keeps the Home Screen widgets in step with the app. iOS: the wearables (Devices), the next open
 /// tasks (Up next) and the latest conversation (Latest). Android adds Today, Summary, Quick capture,
-/// Mute, Live translation, Waiting for your OK, Family day, Next event and Memory. Changes are gathered for a moment and written
+/// Mute, Live translation, Waiting for your OK, Family day, Next event, Memory and AI source. Changes are
+/// gathered for a moment and written
 /// only when a document changed; leaving the app writes at once.
 class HomeWidgetsPublisher with WidgetsBindingObserver {
   HomeWidgetsPublisher({
@@ -37,6 +40,9 @@ class HomeWidgetsPublisher with WidgetsBindingObserver {
     this.memories,
     Future<FamilyDay?> Function()? loadFamilyDay,
     this.familyDayEvery = const Duration(minutes: 15),
+    this.phoneLlm,
+    this.phoneStatus,
+    this.phoneCheckEvery = const Duration(minutes: 1),
     HomeWidgetsService? service,
     this.delay = const Duration(milliseconds: 800),
     bool? android,
@@ -65,6 +71,13 @@ class HomeWidgetsPublisher with WidgetsBindingObserver {
 
   /// How often the family calendar is asked again while the app is open.
   final Duration familyDayEvery;
+
+  /// Android only: the AI source and the phone model's state, checked every [phoneCheckEvery]
+  /// while the app is in front (never in the background).
+  final PhoneLlmSettings? phoneLlm;
+  final PhoneLlmStatus? phoneStatus;
+  final Duration phoneCheckEvery;
+  Timer? _phoneTimer;
   final HomeWidgetsService service;
   final Duration delay;
   final bool android;
@@ -84,6 +97,8 @@ class HomeWidgetsPublisher with WidgetsBindingObserver {
           if (user case final user?) user,
           if (home case final home?) home,
           if (memories case final memories?) memories,
+          if (phoneLlm case final phoneLlm?) phoneLlm,
+          if (phoneStatus case final phoneStatus?) phoneStatus,
         ],
       ];
 
@@ -99,12 +114,25 @@ class HomeWidgetsPublisher with WidgetsBindingObserver {
       _familyTimer = Timer.periodic(familyDayEvery, (_) => unawaited(refreshFamilyDay()));
     }
     WidgetsBinding.instance.addObserver(this);
+    if (android) {
+      unawaited(phoneLlm?.ensureLoaded());
+      _checkPhone();
+    }
     _schedule();
+  }
+
+  void _checkPhone() {
+    final status = phoneStatus;
+    if (status == null) return;
+    unawaited(status.check());
+    _phoneTimer?.cancel();
+    _phoneTimer = Timer.periodic(phoneCheckEvery, (_) => unawaited(status.check()));
   }
 
   void dispose() {
     _timer?.cancel();
     _familyTimer?.cancel();
+    _phoneTimer?.cancel();
     for (final source in _sources) {
       source.removeListener(_schedule);
     }
@@ -115,10 +143,12 @@ class HomeWidgetsPublisher with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) publishNow();
+    if (state == AppLifecycleState.paused) _phoneTimer?.cancel();
     // Coming back may be a new day for Today, and approvals may have changed on the server.
     if (state == AppLifecycleState.resumed && android) {
       unawaited(tasks.waiting?.load());
       unawaited(refreshFamilyDay());
+      _checkPhone();
       _schedule();
     }
   }
@@ -188,6 +218,19 @@ class HomeWidgetsPublisher with WidgetsBindingObserver {
       _put(
         AndroidWidgetDocuments.translationKey,
         AndroidWidgetDocuments.translation(on: !user.singleLanguageMode, language: language, l10n: words),
+      );
+    }
+    final phone = phoneLlm;
+    if (phone != null && phone.loaded) {
+      _put(
+        AndroidWidgetDocuments.aiSourceKey,
+        AndroidWidgetDocuments.aiSource(
+          mode: phone.mode,
+          health: phoneStatus?.health,
+          checkedAt: phoneStatus?.checkedAt,
+          l10n: words,
+          dates: dates(),
+        ),
       );
     }
     final waiting = tasks.waiting;

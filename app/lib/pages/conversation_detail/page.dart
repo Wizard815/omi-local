@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -26,6 +27,7 @@ import 'package:omi/providers/integration_provider.dart';
 import 'package:omi/pages/settings/integrations_page.dart' show IntegrationApp, IntegrationsPage;
 import 'package:omi/services/audio_download_service.dart';
 import 'package:omi/services/experiments/summary_generation_gate.dart';
+import 'package:omi/services/studio_own_link.dart';
 import 'package:omi/services/siri_integration.dart';
 import 'package:omi/ui/ui.dart';
 import 'package:omi/utils/audio/conversation_playback_controller.dart';
@@ -1009,6 +1011,12 @@ class ConversationDetailPageState extends State<ConversationDetailPage>
           iconWidget: const FaIcon(FontAwesomeIcons.bookOpen, size: 16),
           onTap: () => showSendToWikiSheet(context, conversation.id),
         ),
+        if (Platform.isAndroid)
+          PullDownMenuItem(
+            title: l10n.sendToHermesTitle,
+            iconWidget: const FaIcon(FontAwesomeIcons.paperPlane, size: 16),
+            onTap: () => StudioOwnLink.send(conversation.structured.title, conversation.structured.overview),
+          ),
         PullDownMenuItem(
           title: l10n.sendToAgentTitle,
           iconWidget: const FaIcon(FontAwesomeIcons.robot, size: 16),

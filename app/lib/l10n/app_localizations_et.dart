@@ -16960,6 +16960,83 @@ class AppLocalizationsEt extends AppLocalizations {
   }
 
   @override
+  String get phoneLlmTitle => 'AI selles telefonis';
+
+  @override
+  String get phoneLlmHint => 'Vasta vestluses selles telefonis töötava mudeliga, näiteks llama-server Termuxis.';
+
+  @override
+  String get phoneLlmSource => 'AI allikas';
+
+  @override
+  String get phoneLlmModeServer => 'Server';
+
+  @override
+  String get phoneLlmModePhone => 'See telefon';
+
+  @override
+  String get phoneLlmModeAuto => 'Telefon, kui server pole kättesaadav';
+
+  @override
+  String get phoneLlmAddress => 'Telefoni mudeli aadress';
+
+  @override
+  String get phoneLlmNoModels => 'Mudeleid ei leitud. Kas telefoni mudel töötab?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Vastas $ms ms-ga';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Telefoni mudel ei vastanud.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Telefoni mudel lükkas API-võtme tagasi.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Lisa mu hiljutised vestlused kontekstiks';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Vastatud selles telefonis ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Ei salvestata sinu serverisse. Säilib, kuni Omi suletakse.';
+
+  @override
+  String get phoneLlmAskPhone => 'Küsi hoopis sellelt telefonilt';
+
+  @override
+  String get phoneLlmReplyFailed => 'Telefoni mudel ei vastanud. Kontrolli, kas see töötab.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Telefoni mudel töötab';
+
+  @override
+  String get phoneLlmStatusLoading => 'Telefoni mudel laadib';
+
+  @override
+  String get phoneLlmStatusOff => 'Telefoni mudel on väljas';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Kontrollitud $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'AI allikas: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Vaheta';
+
+  @override
+  String get sendToHermesTitle => 'Saada Hermesele';
+
+  @override
   String get widgetFamilyDayTitle => 'Family day';
 
   @override

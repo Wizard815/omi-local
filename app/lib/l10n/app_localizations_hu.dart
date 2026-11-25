@@ -17028,6 +17028,84 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
+  String get phoneLlmTitle => 'MI ezen a telefonon';
+
+  @override
+  String get phoneLlmHint =>
+      'Válaszoljon a csevegésben egy ezen a telefonon futó modell, például a llama-server a Termuxban.';
+
+  @override
+  String get phoneLlmSource => 'MI forrása';
+
+  @override
+  String get phoneLlmModeServer => 'Szerver';
+
+  @override
+  String get phoneLlmModePhone => 'Ez a telefon';
+
+  @override
+  String get phoneLlmModeAuto => 'A telefon, ha a szerver nem érhető el';
+
+  @override
+  String get phoneLlmAddress => 'A telefonos modell címe';
+
+  @override
+  String get phoneLlmNoModels => 'Nem található modell. Fut a telefonos modell?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Válasz $ms ms alatt';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'A telefonos modell nem válaszolt.';
+
+  @override
+  String get phoneLlmUnauthorized => 'A telefonos modell elutasította az API-kulcsot.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Legutóbbi beszélgetéseim felhasználása kontextusként';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Ezen a telefonon megválaszolva ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Nem kerül a szerveredre. Az Omi bezárásáig megmarad.';
+
+  @override
+  String get phoneLlmAskPhone => 'Kérdezd inkább ezt a telefont';
+
+  @override
+  String get phoneLlmReplyFailed => 'A telefonos modell nem válaszolt. Ellenőrizd, hogy fut-e.';
+
+  @override
+  String get phoneLlmStatusRunning => 'A telefonos modell fut';
+
+  @override
+  String get phoneLlmStatusLoading => 'A telefonos modell betöltődik';
+
+  @override
+  String get phoneLlmStatusOff => 'A telefonos modell ki van kapcsolva';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Ellenőrizve: $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'MI forrása: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Váltás';
+
+  @override
+  String get sendToHermesTitle => 'Küldés a Hermesnek';
+
+  @override
   String get widgetFamilyDayTitle => 'Family day';
 
   @override

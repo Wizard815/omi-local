@@ -16,6 +16,8 @@
 !omi-host/maintenance.sh
 !omi-host/caldav-env.sh
 !omi-host/egress-guard/
+!omi-host/backup/omi_backup.py
+!omi-host/health/watchdog.py
 # Not needed at runtime: tests and evals (145M+), scratch audio (_temp, hundreds
 # of MB), tool venvs, caches, docs.
 backend/tests/

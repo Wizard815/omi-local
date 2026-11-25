@@ -17003,6 +17003,84 @@ class AppLocalizationsMs extends AppLocalizations {
   }
 
   @override
+  String get phoneLlmTitle => 'AI pada telefon ini';
+
+  @override
+  String get phoneLlmHint =>
+      'Jawab sembang dengan model yang berjalan pada telefon ini, seperti llama-server dalam Termux.';
+
+  @override
+  String get phoneLlmSource => 'Sumber AI';
+
+  @override
+  String get phoneLlmModeServer => 'Pelayan';
+
+  @override
+  String get phoneLlmModePhone => 'Telefon ini';
+
+  @override
+  String get phoneLlmModeAuto => 'Telefon apabila pelayan tidak dapat dicapai';
+
+  @override
+  String get phoneLlmAddress => 'Alamat model telefon';
+
+  @override
+  String get phoneLlmNoModels => 'Tiada model ditemui. Adakah model telefon sedang berjalan?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Dijawab dalam $ms ms';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Model telefon tidak menjawab.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Model telefon menolak kunci API.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Sertakan perbualan terkini saya sebagai konteks';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Dijawab pada telefon ini ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Tidak disimpan pada pelayan anda. Disimpan sehingga Omi ditutup.';
+
+  @override
+  String get phoneLlmAskPhone => 'Tanya Telefon Ini';
+
+  @override
+  String get phoneLlmReplyFailed => 'Model telefon tidak menjawab. Pastikan ia sedang berjalan.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Model telefon berjalan';
+
+  @override
+  String get phoneLlmStatusLoading => 'Model telefon sedang dimuatkan';
+
+  @override
+  String get phoneLlmStatusOff => 'Model telefon dimatikan';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Disemak $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'Sumber AI: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Tukar';
+
+  @override
+  String get sendToHermesTitle => 'Hantar ke Hermes';
+
+  @override
   String get widgetFamilyDayTitle => 'Family day';
 
   @override

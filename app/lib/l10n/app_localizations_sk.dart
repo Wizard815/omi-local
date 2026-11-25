@@ -16968,6 +16968,84 @@ class AppLocalizationsSk extends AppLocalizations {
   }
 
   @override
+  String get phoneLlmTitle => 'AI v tomto telefóne';
+
+  @override
+  String get phoneLlmHint =>
+      'Odpovedať v chate modelom, ktorý beží v tomto telefóne, napríklad llama-server v Termuxe.';
+
+  @override
+  String get phoneLlmSource => 'Zdroj AI';
+
+  @override
+  String get phoneLlmModeServer => 'Server';
+
+  @override
+  String get phoneLlmModePhone => 'Tento telefón';
+
+  @override
+  String get phoneLlmModeAuto => 'Telefón, keď server nie je dostupný';
+
+  @override
+  String get phoneLlmAddress => 'Adresa modelu v telefóne';
+
+  @override
+  String get phoneLlmNoModels => 'Nenašli sa žiadne modely. Beží model v telefóne?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Odpoveď za $ms ms';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Model v telefóne neodpovedal.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Model v telefóne odmietol kľúč API.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Zahrnúť moje nedávne konverzácie ako kontext';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Odpovedané v tomto telefóne ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Neukladá sa na váš server. Zostane, kým sa Omi nezavrie.';
+
+  @override
+  String get phoneLlmAskPhone => 'Opýtať sa tohto telefónu';
+
+  @override
+  String get phoneLlmReplyFailed => 'Model v telefóne neodpovedal. Skontrolujte, či beží.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Model v telefóne beží';
+
+  @override
+  String get phoneLlmStatusLoading => 'Model v telefóne sa načítava';
+
+  @override
+  String get phoneLlmStatusOff => 'Model v telefóne je vypnutý';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Skontrolované $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'Zdroj AI: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Prepnúť';
+
+  @override
+  String get sendToHermesTitle => 'Odoslať do Hermes';
+
+  @override
   String get widgetFamilyDayTitle => 'Family day';
 
   @override

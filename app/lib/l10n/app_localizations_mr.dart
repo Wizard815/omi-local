@@ -16974,6 +16974,83 @@ class AppLocalizationsMr extends AppLocalizations {
   }
 
   @override
+  String get phoneLlmTitle => 'या फोनवरील AI';
+
+  @override
+  String get phoneLlmHint => 'या फोनवर चालणाऱ्या मॉडेलने चॅटला उत्तर द्या, उदा. Termux मधील llama-server.';
+
+  @override
+  String get phoneLlmSource => 'AI स्रोत';
+
+  @override
+  String get phoneLlmModeServer => 'सर्व्हर';
+
+  @override
+  String get phoneLlmModePhone => 'हा फोन';
+
+  @override
+  String get phoneLlmModeAuto => 'सर्व्हर पोहोचू न शकल्यास फोन';
+
+  @override
+  String get phoneLlmAddress => 'फोन मॉडेलचा पत्ता';
+
+  @override
+  String get phoneLlmNoModels => 'कोणतेही मॉडेल सापडले नाही. फोन मॉडेल चालू आहे का?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return '$ms ms मध्ये उत्तर दिले';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'फोन मॉडेलने उत्तर दिले नाही.';
+
+  @override
+  String get phoneLlmUnauthorized => 'फोन मॉडेलने API की नाकारली.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'माझी अलीकडील संभाषणे संदर्भ म्हणून समाविष्ट करा';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'या फोनवर उत्तर दिले ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'तुमच्या सर्व्हरवर जतन केले नाही. Omi बंद होईपर्यंत राहील.';
+
+  @override
+  String get phoneLlmAskPhone => 'त्याऐवजी या फोनला विचारा';
+
+  @override
+  String get phoneLlmReplyFailed => 'फोन मॉडेलने उत्तर दिले नाही. ते चालू आहे का ते तपासा.';
+
+  @override
+  String get phoneLlmStatusRunning => 'फोन मॉडेल चालू आहे';
+
+  @override
+  String get phoneLlmStatusLoading => 'फोन मॉडेल लोड होत आहे';
+
+  @override
+  String get phoneLlmStatusOff => 'फोन मॉडेल बंद आहे';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return '$time ला तपासले';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'AI स्रोत: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'बदला';
+
+  @override
+  String get sendToHermesTitle => 'Hermes ला पाठवा';
+
+  @override
   String get widgetFamilyDayTitle => 'Family day';
 
   @override

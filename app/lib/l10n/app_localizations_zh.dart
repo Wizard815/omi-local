@@ -16709,6 +16709,83 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get phoneLlmTitle => '本机 AI';
+
+  @override
+  String get phoneLlmHint => '用在本机运行的模型回答聊天，例如 Termux 中的 llama-server。';
+
+  @override
+  String get phoneLlmSource => 'AI 来源';
+
+  @override
+  String get phoneLlmModeServer => '服务器';
+
+  @override
+  String get phoneLlmModePhone => '本机';
+
+  @override
+  String get phoneLlmModeAuto => '服务器无法访问时使用本机';
+
+  @override
+  String get phoneLlmAddress => '本机模型地址';
+
+  @override
+  String get phoneLlmNoModels => '未找到模型。本机模型是否在运行？';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return '$ms 毫秒内回答';
+  }
+
+  @override
+  String get phoneLlmTestFailed => '本机模型没有回答。';
+
+  @override
+  String get phoneLlmUnauthorized => '本机模型拒绝了 API 密钥。';
+
+  @override
+  String get phoneLlmIncludeConversations => '将我最近的对话作为上下文';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return '由本机回答（$model）';
+  }
+
+  @override
+  String get phoneLlmNotSaved => '不会保存到你的服务器。在 Omi 关闭前保留。';
+
+  @override
+  String get phoneLlmAskPhone => '改问本机';
+
+  @override
+  String get phoneLlmReplyFailed => '本机模型没有回答。请检查它是否在运行。';
+
+  @override
+  String get phoneLlmStatusRunning => '本机模型运行中';
+
+  @override
+  String get phoneLlmStatusLoading => '本机模型加载中';
+
+  @override
+  String get phoneLlmStatusOff => '本机模型已关闭';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return '检查于 $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'AI 来源：$source';
+  }
+
+  @override
+  String get phoneLlmSwitch => '切换';
+
+  @override
+  String get sendToHermesTitle => '发送到 Hermes';
+
+  @override
   String get widgetFamilyDayTitle => 'Family day';
 
   @override

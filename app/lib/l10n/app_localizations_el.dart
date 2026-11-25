@@ -17071,6 +17071,84 @@ class AppLocalizationsEl extends AppLocalizations {
   }
 
   @override
+  String get phoneLlmTitle => 'AI σε αυτό το τηλέφωνο';
+
+  @override
+  String get phoneLlmHint =>
+      'Απαντήστε στη συνομιλία με ένα μοντέλο που τρέχει σε αυτό το τηλέφωνο, όπως το llama-server στο Termux.';
+
+  @override
+  String get phoneLlmSource => 'Πηγή AI';
+
+  @override
+  String get phoneLlmModeServer => 'Διακομιστής';
+
+  @override
+  String get phoneLlmModePhone => 'Αυτό το τηλέφωνο';
+
+  @override
+  String get phoneLlmModeAuto => 'Το τηλέφωνο όταν ο διακομιστής δεν είναι προσβάσιμος';
+
+  @override
+  String get phoneLlmAddress => 'Διεύθυνση μοντέλου τηλεφώνου';
+
+  @override
+  String get phoneLlmNoModels => 'Δεν βρέθηκαν μοντέλα. Τρέχει το μοντέλο του τηλεφώνου;';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Απάντησε σε $ms ms';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Το μοντέλο του τηλεφώνου δεν απάντησε.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Το μοντέλο του τηλεφώνου απέρριψε το κλειδί API.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Συμπερίληψη των πρόσφατων συνομιλιών μου ως πλαίσιο';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Απαντήθηκε σε αυτό το τηλέφωνο ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Δεν αποθηκεύεται στον διακομιστή σας. Διατηρείται μέχρι να κλείσει το Omi.';
+
+  @override
+  String get phoneLlmAskPhone => 'Ρωτήστε αυτό το τηλέφωνο';
+
+  @override
+  String get phoneLlmReplyFailed => 'Το μοντέλο του τηλεφώνου δεν απάντησε. Ελέγξτε ότι τρέχει.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Το μοντέλο του τηλεφώνου τρέχει';
+
+  @override
+  String get phoneLlmStatusLoading => 'Το μοντέλο του τηλεφώνου φορτώνει';
+
+  @override
+  String get phoneLlmStatusOff => 'Το μοντέλο του τηλεφώνου είναι ανενεργό';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Ελέγχθηκε $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'Πηγή AI: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Εναλλαγή';
+
+  @override
+  String get sendToHermesTitle => 'Αποστολή στο Hermes';
+
+  @override
   String get widgetFamilyDayTitle => 'Family day';
 
   @override

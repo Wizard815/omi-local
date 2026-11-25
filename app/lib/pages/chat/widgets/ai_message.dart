@@ -29,6 +29,7 @@ import 'package:omi/providers/app_provider.dart';
 import 'package:omi/providers/connectivity_provider.dart';
 import 'package:omi/providers/conversation_provider.dart';
 import 'package:omi/providers/message_provider.dart';
+import 'package:omi/services/phone_llm/phone_llm_client.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 import 'package:omi/utils/other/temp.dart';
 import 'package:omi/widgets/extensions/string.dart';
@@ -329,7 +330,19 @@ class _AIMessageState extends State<AIMessage> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.replyFailed) return ChatReplyError(failure: widget.replyFailure, onRetry: widget.onRetry);
+    // Phone answers (lib/services/phone_llm): read here so the chat page needs no new wiring.
+    final chat = Provider.of<MessageProvider?>(context, listen: false);
+    if (widget.replyFailed) {
+      final phoneError = chat?.phoneReplyError(widget.message);
+      return ChatReplyError(
+        failure: widget.replyFailure,
+        onRetry: widget.onRetry,
+        phoneError: phoneError,
+        onAskPhone:
+            chat != null && chat.canAskPhone(widget.message) ? () => chat.askPhoneInstead(widget.message) : null,
+      );
+    }
+    final phoneModel = chat?.phoneAnswerModel(widget.message);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -361,6 +374,7 @@ class _AIMessageState extends State<AIMessage> {
             ],
           ),
         ],
+        if (phoneModel != null && !widget.showTypingIndicator) PhoneAnswerLabel(model: phoneModel),
       ],
     );
   }
@@ -1230,25 +1244,37 @@ class InitialOptionWidget extends StatelessWidget {
 
 /// A reply that failed: a localized reason and Try Again, which sends the user's message again.
 class ChatReplyError extends StatelessWidget {
-  const ChatReplyError({super.key, this.failure, this.onRetry});
+  const ChatReplyError({super.key, this.failure, this.onRetry, this.phoneError, this.onAskPhone});
 
   final ChatStreamFailureClass? failure;
 
   /// Null when the message cannot be sent again from here (a voice message).
   final VoidCallback? onRetry;
 
+  /// Set when the reply was asked of this phone's model: its error code (`PhoneLlmError`).
+  final String? phoneError;
+
+  /// "Ask this phone instead", offered on a failed server reply when a phone model is set up.
+  final VoidCallback? onAskPhone;
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final reason = switch (failure) {
-      ChatStreamFailureClass.offline => l10n.chatReplyOffline,
-      ChatStreamFailureClass.server => l10n.chatReplyServerError,
-      ChatStreamFailureClass.timeout => l10n.chatReplyTimeout,
-      ChatStreamFailureClass.notSignedIn => l10n.chatReplyNotSignedIn,
-      ChatStreamFailureClass.quota => l10n.chatQuotaExceededReply,
-      _ => l10n.chatReplyFailed,
+    final phoneReason = switch (phoneError) {
+      null => null,
+      PhoneLlmError.unauthorized => l10n.phoneLlmUnauthorized,
+      _ => l10n.phoneLlmReplyFailed,
     };
-    return Semantics(
+    final reason = phoneReason ??
+        switch (failure) {
+          ChatStreamFailureClass.offline => l10n.chatReplyOffline,
+          ChatStreamFailureClass.server => l10n.chatReplyServerError,
+          ChatStreamFailureClass.timeout => l10n.chatReplyTimeout,
+          ChatStreamFailureClass.notSignedIn => l10n.chatReplyNotSignedIn,
+          ChatStreamFailureClass.quota => l10n.chatQuotaExceededReply,
+          _ => l10n.chatReplyFailed,
+        };
+    final error = Semantics(
       liveRegion: true,
       child: Container(
         padding: const EdgeInsets.all(OmiSpacing.sm),
@@ -1267,6 +1293,52 @@ class ChatReplyError extends StatelessWidget {
               ),
           ],
         ),
+      ),
+    );
+    if (onAskPhone == null) return error;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        error,
+        const SizedBox(height: OmiSpacing.xs),
+        OmiButton.tertiary(
+          key: const ValueKey('chat_ask_phone_instead'),
+          label: l10n.phoneLlmAskPhone,
+          size: OmiButtonSize.compact,
+          onPressed: onAskPhone,
+        ),
+      ],
+    );
+  }
+}
+
+/// Under an answer this phone's own model wrote: which model, and that it is not on the server.
+class PhoneAnswerLabel extends StatelessWidget {
+  const PhoneAnswerLabel({super.key, required this.model});
+
+  final String model;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Padding(
+      key: const ValueKey('chat_phone_answer_label'),
+      padding: const EdgeInsets.only(top: OmiSpacing.xs),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ExcludeSemantics(child: Icon(Icons.smartphone_rounded, size: 14, color: OmiColors.textTertiary)),
+          const SizedBox(width: OmiSpacing.xs),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.phoneLlmAnsweredOn(model), style: OmiType.footnote.copyWith(color: OmiColors.textSecondary)),
+                Text(l10n.phoneLlmNotSaved, style: OmiType.caption.copyWith(color: OmiColors.textTertiary)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

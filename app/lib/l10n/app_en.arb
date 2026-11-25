@@ -20591,6 +20591,118 @@
             }
         }
     },
+    "phoneLlmTitle": "AI on this phone",
+    "@phoneLlmTitle": {
+        "description": "Title of the setting that lets this phone's own model answer chat"
+    },
+    "phoneLlmHint": "Answer chat with a model that runs on this phone, such as llama-server in Termux.",
+    "@phoneLlmHint": {
+        "description": "Explains the phone AI setting"
+    },
+    "phoneLlmSource": "AI source",
+    "@phoneLlmSource": {
+        "description": "Heading: where chat answers come from (Omi's server or this phone)"
+    },
+    "phoneLlmModeServer": "Server",
+    "@phoneLlmModeServer": {
+        "description": "AI source option: Omi's own server answers"
+    },
+    "phoneLlmModePhone": "This phone",
+    "@phoneLlmModePhone": {
+        "description": "AI source option: this phone's own model answers"
+    },
+    "phoneLlmModeAuto": "Phone when the server can't be reached",
+    "@phoneLlmModeAuto": {
+        "description": "AI source option: the server, falling back to this phone only when the server is unreachable"
+    },
+    "phoneLlmAddress": "Phone model address",
+    "@phoneLlmAddress": {
+        "description": "Label of the field holding the phone model's local address"
+    },
+    "phoneLlmNoModels": "No models found. Is the phone model running?",
+    "@phoneLlmNoModels": {
+        "description": "Shown when the phone model server lists no models or cannot be reached"
+    },
+    "phoneLlmTestResult": "Answered in {ms} ms",
+    "@phoneLlmTestResult": {
+        "description": "Result of the phone model test: the round-trip time in milliseconds",
+        "placeholders": {
+            "ms": {
+                "type": "String"
+            }
+        }
+    },
+    "phoneLlmTestFailed": "The phone model didn't answer.",
+    "@phoneLlmTestFailed": {
+        "description": "Phone model test failed"
+    },
+    "phoneLlmUnauthorized": "The phone model refused the API key.",
+    "@phoneLlmUnauthorized": {
+        "description": "The phone model server rejected the API key (HTTP 401)"
+    },
+    "phoneLlmIncludeConversations": "Include my recent conversations as context",
+    "@phoneLlmIncludeConversations": {
+        "description": "Toggle: send titles and overviews of recent conversations to the phone model"
+    },
+    "phoneLlmAnsweredOn": "Answered on this phone ({model})",
+    "@phoneLlmAnsweredOn": {
+        "description": "Label under a chat answer written by this phone's model; model is the model's name",
+        "placeholders": {
+            "model": {
+                "type": "String"
+            }
+        }
+    },
+    "phoneLlmNotSaved": "Not saved on your server. Kept until Omi closes.",
+    "@phoneLlmNotSaved": {
+        "description": "Note under a phone answer: it is not stored on the user's Omi server, only in memory"
+    },
+    "phoneLlmAskPhone": "Ask This Phone Instead",
+    "@phoneLlmAskPhone": {
+        "description": "Button on a failed chat reply: send the same question to this phone's model"
+    },
+    "phoneLlmReplyFailed": "The phone model didn't answer. Check that it's running.",
+    "@phoneLlmReplyFailed": {
+        "description": "A chat reply from the phone model failed"
+    },
+    "phoneLlmStatusRunning": "Phone model running",
+    "@phoneLlmStatusRunning": {
+        "description": "Status: the phone model server answers"
+    },
+    "phoneLlmStatusLoading": "Phone model loading",
+    "@phoneLlmStatusLoading": {
+        "description": "Status: the phone model server is still loading the model"
+    },
+    "phoneLlmStatusOff": "Phone model off",
+    "@phoneLlmStatusOff": {
+        "description": "Status: the phone model server does not answer"
+    },
+    "phoneLlmCheckedAt": "Checked {time}",
+    "@phoneLlmCheckedAt": {
+        "description": "When the phone model's status was last checked; time is a clock time",
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    },
+    "phoneLlmSourceChanged": "AI source: {source}",
+    "@phoneLlmSourceChanged": {
+        "description": "Toast after the AI source changed; source is Server, This phone or Auto",
+        "placeholders": {
+            "source": {
+                "type": "String"
+            }
+        }
+    },
+    "phoneLlmSwitch": "Switch",
+    "@phoneLlmSwitch": {
+        "description": "Widget button: move to the next AI source (Server, This phone, Auto)"
+    },
+    "sendToHermesTitle": "Send to Hermes",
+    "@sendToHermesTitle": {
+        "description": "Conversation menu action: open the conversation's title and overview in the Studio Own app's Hermes chat"
+    },
     "widgetFamilyDayTitle": "Family day",
     "@widgetFamilyDayTitle": {
         "description": "Android home-screen Family day widget title (the family calendar's day)"

@@ -6,7 +6,7 @@
 checks:
   - id: omi-host-stdlib-tests
     command: ["bash", "omi-host/run_stdlib_tests.sh"]
-    triggers: ["omi-host/*.py", "omi-host/*.sh", "omi-host/egress-guard/**", "omi-host/demo/caldav_demo.py", ".github/checks-manifest.yaml"]
+    triggers: ["omi-host/*.py", "omi-host/*.sh", "omi-host/egress-guard/**", "omi-host/backup/**", "omi-host/health/**", "omi-host/demo/caldav_demo.py", ".github/checks-manifest.yaml"]
     lanes: ["local", "ci"]
     platforms: ["linux"]
     reason: "SELF_HOSTING_ROADMAP open item 4: the self-hosted stack's env scripts, egress guard, backups and merge proxy had tests that only ran by hand"

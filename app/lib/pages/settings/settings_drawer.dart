@@ -158,6 +158,13 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
               icon: FontAwesomeIcons.volumeHigh,
               title: l10n.assistantVoiceSettingsTitle,
             ),
+            if (PlatformService.isAndroid)
+              _row(
+                SettingsDestination.phoneAi,
+                key: 'settings_row_phone_ai',
+                icon: FontAwesomeIcons.mobileScreen,
+                title: l10n.phoneLlmTitle,
+              ),
             _row(
               SettingsDestination.notificationsGroup,
               key: 'settings_group_notifications',

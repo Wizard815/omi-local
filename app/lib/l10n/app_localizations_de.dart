@@ -17083,6 +17083,84 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get phoneLlmTitle => 'KI auf diesem Telefon';
+
+  @override
+  String get phoneLlmHint =>
+      'Chat mit einem Modell beantworten, das auf diesem Telefon läuft, z. B. llama-server in Termux.';
+
+  @override
+  String get phoneLlmSource => 'KI-Quelle';
+
+  @override
+  String get phoneLlmModeServer => 'Server';
+
+  @override
+  String get phoneLlmModePhone => 'Dieses Telefon';
+
+  @override
+  String get phoneLlmModeAuto => 'Telefon, wenn der Server nicht erreichbar ist';
+
+  @override
+  String get phoneLlmAddress => 'Adresse des Telefonmodells';
+
+  @override
+  String get phoneLlmNoModels => 'Keine Modelle gefunden. Läuft das Telefonmodell?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Antwort in $ms ms';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Das Telefonmodell hat nicht geantwortet.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Das Telefonmodell hat den API-Schlüssel abgelehnt.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Meine letzten Gespräche als Kontext einbeziehen';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Auf diesem Telefon beantwortet ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Nicht auf deinem Server gespeichert. Bleibt, bis Omi geschlossen wird.';
+
+  @override
+  String get phoneLlmAskPhone => 'Stattdessen dieses Telefon fragen';
+
+  @override
+  String get phoneLlmReplyFailed => 'Das Telefonmodell hat nicht geantwortet. Prüfe, ob es läuft.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Telefonmodell läuft';
+
+  @override
+  String get phoneLlmStatusLoading => 'Telefonmodell wird geladen';
+
+  @override
+  String get phoneLlmStatusOff => 'Telefonmodell aus';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Geprüft $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'KI-Quelle: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Wechseln';
+
+  @override
+  String get sendToHermesTitle => 'An Hermes senden';
+
+  @override
   String get widgetFamilyDayTitle => 'Family day';
 
   @override

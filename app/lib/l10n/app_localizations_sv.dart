@@ -16976,6 +16976,84 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
+  String get phoneLlmTitle => 'AI på den här telefonen';
+
+  @override
+  String get phoneLlmHint =>
+      'Svara i chatten med en modell som körs på den här telefonen, t.ex. llama-server i Termux.';
+
+  @override
+  String get phoneLlmSource => 'AI-källa';
+
+  @override
+  String get phoneLlmModeServer => 'Server';
+
+  @override
+  String get phoneLlmModePhone => 'Den här telefonen';
+
+  @override
+  String get phoneLlmModeAuto => 'Telefonen när servern inte kan nås';
+
+  @override
+  String get phoneLlmAddress => 'Telefonmodellens adress';
+
+  @override
+  String get phoneLlmNoModels => 'Inga modeller hittades. Körs telefonmodellen?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Svarade på $ms ms';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Telefonmodellen svarade inte.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Telefonmodellen avvisade API-nyckeln.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Ta med mina senaste samtal som kontext';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Besvarat på den här telefonen ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Sparas inte på din server. Finns kvar tills Omi stängs.';
+
+  @override
+  String get phoneLlmAskPhone => 'Fråga den här telefonen';
+
+  @override
+  String get phoneLlmReplyFailed => 'Telefonmodellen svarade inte. Kontrollera att den körs.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Telefonmodellen körs';
+
+  @override
+  String get phoneLlmStatusLoading => 'Telefonmodellen läses in';
+
+  @override
+  String get phoneLlmStatusOff => 'Telefonmodellen är av';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Kontrollerat $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'AI-källa: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Byt';
+
+  @override
+  String get sendToHermesTitle => 'Skicka till Hermes';
+
+  @override
   String get widgetFamilyDayTitle => 'Family day';
 
   @override

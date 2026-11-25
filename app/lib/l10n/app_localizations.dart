@@ -29499,6 +29499,144 @@ abstract class AppLocalizations {
   /// **'Into {language}'**
   String widgetTranslationInto(String language);
 
+  /// Title of the setting that lets this phone's own model answer chat
+  ///
+  /// In en, this message translates to:
+  /// **'AI on this phone'**
+  String get phoneLlmTitle;
+
+  /// Explains the phone AI setting
+  ///
+  /// In en, this message translates to:
+  /// **'Answer chat with a model that runs on this phone, such as llama-server in Termux.'**
+  String get phoneLlmHint;
+
+  /// Heading: where chat answers come from (Omi's server or this phone)
+  ///
+  /// In en, this message translates to:
+  /// **'AI source'**
+  String get phoneLlmSource;
+
+  /// AI source option: Omi's own server answers
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get phoneLlmModeServer;
+
+  /// AI source option: this phone's own model answers
+  ///
+  /// In en, this message translates to:
+  /// **'This phone'**
+  String get phoneLlmModePhone;
+
+  /// AI source option: the server, falling back to this phone only when the server is unreachable
+  ///
+  /// In en, this message translates to:
+  /// **'Phone when the server can\'t be reached'**
+  String get phoneLlmModeAuto;
+
+  /// Label of the field holding the phone model's local address
+  ///
+  /// In en, this message translates to:
+  /// **'Phone model address'**
+  String get phoneLlmAddress;
+
+  /// Shown when the phone model server lists no models or cannot be reached
+  ///
+  /// In en, this message translates to:
+  /// **'No models found. Is the phone model running?'**
+  String get phoneLlmNoModels;
+
+  /// Result of the phone model test: the round-trip time in milliseconds
+  ///
+  /// In en, this message translates to:
+  /// **'Answered in {ms} ms'**
+  String phoneLlmTestResult(String ms);
+
+  /// Phone model test failed
+  ///
+  /// In en, this message translates to:
+  /// **'The phone model didn\'t answer.'**
+  String get phoneLlmTestFailed;
+
+  /// The phone model server rejected the API key (HTTP 401)
+  ///
+  /// In en, this message translates to:
+  /// **'The phone model refused the API key.'**
+  String get phoneLlmUnauthorized;
+
+  /// Toggle: send titles and overviews of recent conversations to the phone model
+  ///
+  /// In en, this message translates to:
+  /// **'Include my recent conversations as context'**
+  String get phoneLlmIncludeConversations;
+
+  /// Label under a chat answer written by this phone's model; model is the model's name
+  ///
+  /// In en, this message translates to:
+  /// **'Answered on this phone ({model})'**
+  String phoneLlmAnsweredOn(String model);
+
+  /// Note under a phone answer: it is not stored on the user's Omi server, only in memory
+  ///
+  /// In en, this message translates to:
+  /// **'Not saved on your server. Kept until Omi closes.'**
+  String get phoneLlmNotSaved;
+
+  /// Button on a failed chat reply: send the same question to this phone's model
+  ///
+  /// In en, this message translates to:
+  /// **'Ask This Phone Instead'**
+  String get phoneLlmAskPhone;
+
+  /// A chat reply from the phone model failed
+  ///
+  /// In en, this message translates to:
+  /// **'The phone model didn\'t answer. Check that it\'s running.'**
+  String get phoneLlmReplyFailed;
+
+  /// Status: the phone model server answers
+  ///
+  /// In en, this message translates to:
+  /// **'Phone model running'**
+  String get phoneLlmStatusRunning;
+
+  /// Status: the phone model server is still loading the model
+  ///
+  /// In en, this message translates to:
+  /// **'Phone model loading'**
+  String get phoneLlmStatusLoading;
+
+  /// Status: the phone model server does not answer
+  ///
+  /// In en, this message translates to:
+  /// **'Phone model off'**
+  String get phoneLlmStatusOff;
+
+  /// When the phone model's status was last checked; time is a clock time
+  ///
+  /// In en, this message translates to:
+  /// **'Checked {time}'**
+  String phoneLlmCheckedAt(String time);
+
+  /// Toast after the AI source changed; source is Server, This phone or Auto
+  ///
+  /// In en, this message translates to:
+  /// **'AI source: {source}'**
+  String phoneLlmSourceChanged(String source);
+
+  /// Widget button: move to the next AI source (Server, This phone, Auto)
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get phoneLlmSwitch;
+
+  /// Conversation menu action: open the conversation's title and overview in the Studio Own app's Hermes chat
+  ///
+  /// In en, this message translates to:
+  /// **'Send to Hermes'**
+  String get sendToHermesTitle;
+
   /// Android home-screen Family day widget title (the family calendar's day)
   ///
   /// In en, this message translates to:

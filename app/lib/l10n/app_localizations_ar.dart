@@ -16876,6 +16876,83 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get phoneLlmTitle => 'الذكاء الاصطناعي على هذا الهاتف';
+
+  @override
+  String get phoneLlmHint => 'أجب على الدردشة بنموذج يعمل على هذا الهاتف، مثل llama-server في Termux.';
+
+  @override
+  String get phoneLlmSource => 'مصدر الذكاء الاصطناعي';
+
+  @override
+  String get phoneLlmModeServer => 'الخادم';
+
+  @override
+  String get phoneLlmModePhone => 'هذا الهاتف';
+
+  @override
+  String get phoneLlmModeAuto => 'الهاتف عندما يتعذر الوصول إلى الخادم';
+
+  @override
+  String get phoneLlmAddress => 'عنوان نموذج الهاتف';
+
+  @override
+  String get phoneLlmNoModels => 'لم يُعثر على نماذج. هل نموذج الهاتف قيد التشغيل؟';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'أجاب خلال $ms مللي ثانية';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'لم يُجب نموذج الهاتف.';
+
+  @override
+  String get phoneLlmUnauthorized => 'رفض نموذج الهاتف مفتاح API.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'تضمين محادثاتي الأخيرة كسياق';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'أُجيب على هذا الهاتف ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'غير محفوظ على خادمك. يبقى حتى يُغلق Omi.';
+
+  @override
+  String get phoneLlmAskPhone => 'اسأل هذا الهاتف بدلاً من ذلك';
+
+  @override
+  String get phoneLlmReplyFailed => 'لم يُجب نموذج الهاتف. تحقّق من أنه قيد التشغيل.';
+
+  @override
+  String get phoneLlmStatusRunning => 'نموذج الهاتف يعمل';
+
+  @override
+  String get phoneLlmStatusLoading => 'جارٍ تحميل نموذج الهاتف';
+
+  @override
+  String get phoneLlmStatusOff => 'نموذج الهاتف متوقف';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'تم التحقق $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'مصدر الذكاء الاصطناعي: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'تبديل';
+
+  @override
+  String get sendToHermesTitle => 'إرسال إلى Hermes';
+
+  @override
   String get widgetFamilyDayTitle => 'Family day';
 
   @override

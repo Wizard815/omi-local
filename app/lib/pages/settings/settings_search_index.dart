@@ -31,6 +31,9 @@ enum SettingsDestination {
   language,
   customVocabulary,
   voice,
+
+  /// AI on this phone (Android only): chat answered by the phone's own model.
+  phoneAi,
   voiceProfile,
   people,
   deleteAccount,
@@ -159,6 +162,8 @@ final List<SettingsSearchEntry> settingsSearchEntries = [
     SettingsDestination.voice,
     _drawer,
   ),
+  SettingsSearchEntry('phoneLlmTitle', (l) => l.phoneLlmTitle, SettingsDestination.phoneAi, _drawer,
+      visible: _whenAndroid),
   SettingsSearchEntry(
     'conversationTimeout',
     (l) => l.conversationTimeout,

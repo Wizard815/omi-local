@@ -9,6 +9,8 @@ import 'package:omi/backend/schema/family_calendar.dart';
 import 'package:omi/backend/schema/schema.dart';
 import 'package:omi/l10n/app_localizations.dart';
 import 'package:omi/services/android_home_widgets.dart';
+import 'package:omi/services/phone_llm/phone_llm_router.dart';
+import 'package:omi/services/phone_llm/phone_llm_settings.dart';
 import 'package:omi/ui/format/omi_date_format.dart';
 import 'package:omi/utils/enums.dart';
 
@@ -148,6 +150,52 @@ void main() {
     });
   });
 
+  group('AI source', () {
+    test('mode, the phone model\'s last known state and when it was checked', () {
+      final doc = AndroidWidgetDocuments.aiSource(
+        mode: PhoneLlmMode.auto,
+        health: PhoneHealth.loading,
+        checkedAt: DateTime(2026, 11, 25, 10, 43),
+        l10n: en,
+        dates: dates,
+      );
+      expect(doc, {
+        'title': 'AI source',
+        'mode': 'auto',
+        'mode_label': 'Auto',
+        'status': 'loading',
+        'status_label': 'Phone model loading',
+        'checked_at': DateTime(2026, 11, 25, 10, 43).millisecondsSinceEpoch,
+        'checked_label': 'Checked ${dates.time(DateTime(2026, 11, 25, 10, 43))}',
+        'action': 'Switch',
+      });
+    });
+
+    test('never checked reads as off, with no time', () {
+      final doc = AndroidWidgetDocuments.aiSource(
+          mode: PhoneLlmMode.server, health: null, checkedAt: null, l10n: en, dates: dates);
+      expect(doc['mode_label'], 'Server');
+      expect(doc['status'], 'unknown');
+      expect(doc['status_label'], 'Phone model off');
+      expect(doc['checked_at'], isNull);
+      expect(doc['checked_label'], '');
+    });
+
+    test('each mode has its short label; running and off read as such', () {
+      expect(AndroidWidgetDocuments.sourceLabel(PhoneLlmMode.phone, en), 'This phone');
+      final running = AndroidWidgetDocuments.aiSource(
+          mode: PhoneLlmMode.phone, health: PhoneHealth.running, checkedAt: DateTime(2026), l10n: en, dates: dates);
+      expect(running['status_label'], 'Phone model running');
+      final off = AndroidWidgetDocuments.aiSource(
+          mode: PhoneLlmMode.phone, health: PhoneHealth.off, checkedAt: DateTime(2026), l10n: en, dates: dates);
+      expect(off['status'], 'off');
+    });
+
+    test('signing out clears it with the other Android documents', () {
+      expect(AndroidWidgetDocuments.keys, contains(AndroidWidgetDocuments.aiSourceKey));
+    });
+  });
+
   test('every document is plain JSON', () {
     final now = DateTime(2026, 11, 25);
     for (final doc in [
@@ -159,6 +207,8 @@ void main() {
       AndroidWidgetDocuments.familyDay(const FamilyDay(configured: false), en, now: now),
       AndroidWidgetDocuments.nextEvent(en),
       AndroidWidgetDocuments.memory(const [], en),
+      AndroidWidgetDocuments.aiSource(
+          mode: PhoneLlmMode.phone, health: PhoneHealth.running, checkedAt: now, l10n: en, dates: dates),
     ]) {
       expect(jsonDecode(jsonEncode(doc)), doc);
     }

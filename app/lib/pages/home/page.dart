@@ -6,6 +6,8 @@
 // permission), and the static FGS call here stays an App UI handoff -- capture
 // ownership belongs to CaptureSessionOwner (app/lib/services/capture/OWNERSHIP.md).
 import 'package:omi/providers/usage_provider.dart';
+import 'package:omi/services/phone_llm/phone_llm_settings.dart';
+import 'package:omi/services/phone_llm/phone_llm_status.dart';
 import 'package:omi/services/on_device/on_device_runner.dart';
 import 'package:omi/services/on_device/on_device_transcription_controller.dart';
 import 'package:omi/services/services.dart';
@@ -531,6 +533,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, Ticker
         user: context.read<UserProvider>(),
         home: context.read<HomeProvider>(),
         memories: context.read<MemoriesProvider>(),
+        phoneLlm: PhoneLlmSettings.instance,
+        phoneStatus: PhoneLlmStatus(),
         l10n: () => context.l10n,
         dates: () => OmiDateFormat.of(context),
       )..start();

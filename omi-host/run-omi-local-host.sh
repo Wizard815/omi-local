@@ -138,6 +138,21 @@ if [ "${OMI_APPS_ENABLED:-0}" = "1" ]; then
     omi-apps-gateway omi-app-hermes-agent
 fi
 
+# Backups to your NAS and the health page with alerts (BACKUP.md, HEALTH.md).
+export OMI_GIT_COMMIT="${OMI_GIT_COMMIT:-$(git -C "$REPO" rev-parse HEAD 2>/dev/null || true)}"
+if [ "${OMI_BACKUP_ENABLED:-0}" = "1" ]; then
+  if [ -z "${OMI_BACKUP_DIR:-}" ] || [ ! -d "${OMI_BACKUP_DIR}" ]; then
+    echo "WARNING: OMI_BACKUP_ENABLED=1 but OMI_BACKUP_DIR (${OMI_BACKUP_DIR:-unset}) is not a mounted directory; omi-backup not started" >&2
+  else
+    echo "=== Starting backups (daily at ${OMI_BACKUP_TIME:-03:30} into $OMI_BACKUP_DIR) ==="
+    docker compose "${COMPOSE_FILES[@]}" --profile backup up -d omi-backup
+  fi
+fi
+if [ "${OMI_HEALTH_ENABLED:-0}" = "1" ]; then
+  echo "=== Starting the health page (http://${BIND_IP}:${OMI_HEALTH_PORT:-8099}/) ==="
+  docker compose "${COMPOSE_FILES[@]}" --profile health up -d omi-health
+fi
+
 # 4. Wait for health
 echo "=== Waiting for merge proxy ==="
 for i in $(seq 1 30); do
@@ -202,6 +217,12 @@ echo "Model list:    http://${BIND_IP}:8000/dashboard/models/available"
 echo "Merge proxy:   http://127.0.0.1:4000/health"
 echo "Audio:         ${AUDIO_HEALTH_URL:-off (cloud STT only)} (STT + diarization + TTS)"
 echo "Logs:          docker logs -f omi-local | docker logs -f omi-proxy | docker logs -f omi-audio"
+if [ "${OMI_HEALTH_ENABLED:-0}" = "1" ]; then
+  echo "Health page:   http://${BIND_IP}:${OMI_HEALTH_PORT:-8099}/  (HEALTH.md)"
+fi
+if [ "${OMI_BACKUP_ENABLED:-0}" = "1" ]; then
+  echo "Backups:       ${OMI_BACKUP_DIR:-unset}  (BACKUP.md; one now: bash $HERE/backup.sh)"
+fi
 echo "Stop:          cd $HERE && docker compose down"
 echo
 echo "Local only:    container traffic is limited to the LAN; attempts are logged in /data/logs/egress.jsonl"

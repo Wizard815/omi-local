@@ -180,3 +180,20 @@ has no Omi tools, and what FAITH writes waits in that person's Waiting for your 
 OMI_ALLGLANCE_REPO=<ALLGlance checkout> OMI_FAITH_SERVER=<F.A.I.T.H/server copy, npm installed> \
 OMI_RADICALE_BIN=/tmp/radicale/bin/radicale omi-host/demo/peers_demo.sh
 ```
+
+## Backup demo: back up, lose the disk, restore, same counts
+
+`backup_demo.sh` runs the CalDAV demo above on a throwaway stack, backs it up while it runs
+(`backup/omi_backup.py`, quiesced with `maintenance.sh`'s own export and Redis snapshot),
+deletes the stack's data, restores onto an empty directory, starts the stack from it and
+compares what the user and the stores show (`backup_demo.py`). Then it runs the test
+restore (`backup-verify`) and the health watchdog against the restored stack, kills Redis,
+and waits for the down and recovered alerts at a stand-in ntfy (`fake_ntfy.py`). Same
+prerequisites as the CalDAV demo; its ports default away from it.
+
+```
+OMI_RADICALE_BIN=/tmp/radicale/bin/radicale omi-host/demo/backup_demo.sh          # run, tear down
+OMI_RADICALE_BIN=/tmp/radicale/bin/radicale omi-host/demo/backup_demo.sh --keep   # leave stack, watchdog, fake ntfy
+```
+
+See [BACKUP.md](../BACKUP.md) and [HEALTH.md](../HEALTH.md).

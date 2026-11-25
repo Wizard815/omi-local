@@ -371,6 +371,14 @@ volume is under Docker's `volumes/omi-host_omi-data/_data`; `tar xzf omi-data-<s
 -C <that path>`), start the stack. Copy the tarballs somewhere off the box too: a
 `docker cp omi-local:/data/backups .` in a cron job on the host is enough.
 
+**Backups to your NAS, test restores and a health page with alerts:** those tarballs sit on
+the same disk as the data. [`omi-host/BACKUP.md`](omi-host/BACKUP.md) sets up a daily,
+checksummed, consistent snapshot on a NAS share (`OMI_BACKUP_ENABLED=1`), with
+daily/weekly/monthly retention, a monthly test restore and step-by-step restore after a
+dead disk. [`omi-host/HEALTH.md`](omi-host/HEALTH.md) adds `omi-health`
+(`OMI_HEALTH_ENABLED=1`): a status page on the LAN and down/recovered alerts to your
+own ntfy, Gotify or a webhook.
+
 ### Self-hosting switch (`OMI_SELF_HOSTED`)
 omi-host's entrypoint exports `OMI_SELF_HOSTED=1`. The backend reads it (`backend/utils/self_hosting.py`)
 to turn off what a self-hosted install does not have: billing and quota gates, the whole-account
