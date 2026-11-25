@@ -27120,13 +27120,13 @@ abstract class AppLocalizations {
   /// Day review page title
   ///
   /// In en, this message translates to:
-  /// **'Day review'**
+  /// **'Day Review'**
   String get dayReviewTitle;
 
   /// Day reviews list page title
   ///
   /// In en, this message translates to:
-  /// **'Day reviews'**
+  /// **'Day Reviews'**
   String get dayReviewsTitle;
 
   /// Day review load error
@@ -27174,7 +27174,7 @@ abstract class AppLocalizations {
   /// Day review finalize confirmation title
   ///
   /// In en, this message translates to:
-  /// **'Build the day summary?'**
+  /// **'Build the Day Summary?'**
   String get dayReviewConfirmTitle;
 
   /// Day review finalize confirmation body
@@ -27210,7 +27210,7 @@ abstract class AppLocalizations {
   /// Reopen confirmation title
   ///
   /// In en, this message translates to:
-  /// **'Reopen this day?'**
+  /// **'Reopen This Day?'**
   String get dayReviewReopenTitle;
 
   /// Reopen confirmation body
@@ -27222,13 +27222,13 @@ abstract class AppLocalizations {
   /// Reopen action
   ///
   /// In en, this message translates to:
-  /// **'Reopen day'**
+  /// **'Reopen Day'**
   String get dayReviewReopenAction;
 
   /// Copy button tooltip
   ///
   /// In en, this message translates to:
-  /// **'Copy summary'**
+  /// **'Copy Summary'**
   String get dayReviewCopy;
 
   /// Snackbar after copying the summary
@@ -27288,7 +27288,7 @@ abstract class AppLocalizations {
   /// Add paragraph dialog title
   ///
   /// In en, this message translates to:
-  /// **'Add a paragraph'**
+  /// **'Add a Paragraph'**
   String get dayReviewAddParagraphTitle;
 
   /// Add paragraph dialog hint
@@ -27330,7 +27330,7 @@ abstract class AppLocalizations {
   /// Regenerate button
   ///
   /// In en, this message translates to:
-  /// **'Apply corrections ({count})'**
+  /// **'Apply Corrections ({count})'**
   String dayReviewApplyButton(int count);
 
   /// Kept conversations section
@@ -27654,7 +27654,7 @@ abstract class AppLocalizations {
   /// Primary action on the day review: fold every unstarred conversation into one summary
   ///
   /// In en, this message translates to:
-  /// **'Bundle the day'**
+  /// **'Bundle the Day'**
   String get dayReviewBundleButton;
 
   /// Explains the one-tap bundle
@@ -27756,7 +27756,7 @@ abstract class AppLocalizations {
   /// Settings row and page title
   ///
   /// In en, this message translates to:
-  /// **'Calendar & tasks (CalDAV)'**
+  /// **'Calendar & Tasks (CalDAV)'**
   String get caldavSettingsTitle;
 
   /// Intro paragraph of the CalDAV settings page
@@ -27792,13 +27792,13 @@ abstract class AppLocalizations {
   /// Button
   ///
   /// In en, this message translates to:
-  /// **'Test connection'**
+  /// **'Test Connection'**
   String get caldavTestConnection;
 
   /// Button
   ///
   /// In en, this message translates to:
-  /// **'Sync now'**
+  /// **'Sync Now'**
   String get caldavSyncNow;
 
   /// Button
@@ -28002,13 +28002,13 @@ abstract class AppLocalizations {
   /// Decline button: Omi got it wrong or it is not wanted
   ///
   /// In en, this message translates to:
-  /// **'Not this'**
+  /// **'Not This'**
   String get familyCalendarDecline;
 
   /// Approve button
   ///
   /// In en, this message translates to:
-  /// **'Add to calendar'**
+  /// **'Add to Calendar'**
   String get familyCalendarApprove;
 
   /// Toast after approving
@@ -28140,7 +28140,7 @@ abstract class AppLocalizations {
   /// Button on a day summary draft: finalize it and send it to the calendar
   ///
   /// In en, this message translates to:
-  /// **'Approve the day'**
+  /// **'Approve the Day'**
   String get approvalApproveDay;
 
   /// Busy overlay while a day is approved
@@ -28236,7 +28236,7 @@ abstract class AppLocalizations {
   /// Menu/confirm: discard the draft and sort the day by hand
   ///
   /// In en, this message translates to:
-  /// **'Sort by hand instead'**
+  /// **'Sort by Hand Instead'**
   String get approvalDraftSortAction;
 
   /// Confirm body for discarding a draft
@@ -28248,7 +28248,7 @@ abstract class AppLocalizations {
   /// Confirm title for discarding a draft
   ///
   /// In en, this message translates to:
-  /// **'Discard the draft?'**
+  /// **'Discard the Draft?'**
   String get approvalDraftSortTitle;
 
   /// Due date of a waiting task
@@ -28260,7 +28260,7 @@ abstract class AppLocalizations {
   /// Button: edit a task's text, then approve it
   ///
   /// In en, this message translates to:
-  /// **'Edit & approve'**
+  /// **'Edit & Approve'**
   String get approvalEditApprove;
 
   /// Title of the sheet that edits a task before approving it
@@ -28314,7 +28314,7 @@ abstract class AppLocalizations {
   /// Title of the page listing what waits for approval
   ///
   /// In en, this message translates to:
-  /// **'Waiting for your OK'**
+  /// **'Waiting for Your OK'**
   String get approvalPageTitle;
 
   /// Confirm body for reopening an approved day
@@ -28356,7 +28356,7 @@ abstract class AppLocalizations {
   /// Header of the waiting tasks section
   ///
   /// In en, this message translates to:
-  /// **'Waiting for your OK'**
+  /// **'Waiting for Your OK'**
   String get approvalWaitingTitle;
 
   /// Part of the waiting line: yesterday's day summary draft
@@ -28518,13 +28518,13 @@ abstract class AppLocalizations {
   /// Button: approve every waiting item at once
   ///
   /// In en, this message translates to:
-  /// **'Approve all ({count})'**
+  /// **'Approve All ({count})'**
   String approvalApproveAll(int count);
 
   /// Day review: approve every waiting item of this day
   ///
   /// In en, this message translates to:
-  /// **'Approve all from this day ({count})'**
+  /// **'Approve All from This Day ({count})'**
   String approvalApproveAllFromDay(int count);
 
   /// Hint under Approve all: long-press opens a checklist
@@ -28542,7 +28542,7 @@ abstract class AppLocalizations {
   /// Approves the ticked items
   ///
   /// In en, this message translates to:
-  /// **'Approve selected ({count})'**
+  /// **'Approve Selected ({count})'**
   String approvalApproveSelected(int count);
 
   /// Checklist hint
@@ -28584,7 +28584,7 @@ abstract class AppLocalizations {
   /// Action: edit the day summary text directly
   ///
   /// In en, this message translates to:
-  /// **'Edit text'**
+  /// **'Edit Text'**
   String get dayReviewEditText;
 
   /// Field label: the summary's title
@@ -28620,7 +28620,7 @@ abstract class AppLocalizations {
   /// Confirm title before a rewrite replaces hand edits
   ///
   /// In en, this message translates to:
-  /// **'Rewrite the summary?'**
+  /// **'Rewrite the Summary?'**
   String get dayReviewRewriteEditsTitle;
 
   /// Confirm body
@@ -28644,7 +28644,7 @@ abstract class AppLocalizations {
   /// No description provided for @agentJobsAllowOnce.
   ///
   /// In en, this message translates to:
-  /// **'Allow once'**
+  /// **'Allow Once'**
   String get agentJobsAllowOnce;
 
   /// No description provided for @agentJobsAnswerFailed.
@@ -28716,7 +28716,7 @@ abstract class AppLocalizations {
   /// No description provided for @agentJobsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Agent jobs'**
+  /// **'Agent Jobs'**
   String get agentJobsTitle;
 
   /// No description provided for @agentJobsUntitled.
@@ -28752,7 +28752,7 @@ abstract class AppLocalizations {
   /// No description provided for @connectionsClearToken.
   ///
   /// In en, this message translates to:
-  /// **'Remove saved token'**
+  /// **'Remove Saved Token'**
   String get connectionsClearToken;
 
   /// No description provided for @connectionsCoinpilePurpose.
@@ -28962,7 +28962,7 @@ abstract class AppLocalizations {
   /// No description provided for @connectionsTest.
   ///
   /// In en, this message translates to:
-  /// **'Test connection'**
+  /// **'Test Connection'**
   String get connectionsTest;
 
   /// No description provided for @connectionsTestFailed.
@@ -29190,7 +29190,7 @@ abstract class AppLocalizations {
   /// No description provided for @sendToAgentPreviewAgain.
   ///
   /// In en, this message translates to:
-  /// **'Refresh preview'**
+  /// **'Refresh Preview'**
   String get sendToAgentPreviewAgain;
 
   /// No description provided for @sendToAgentPreviewFailed.
@@ -29232,7 +29232,7 @@ abstract class AppLocalizations {
   /// No description provided for @sendToAgentShowPreview.
   ///
   /// In en, this message translates to:
-  /// **'Show what will be sent'**
+  /// **'Show What Will Be Sent'**
   String get sendToAgentShowPreview;
 
   /// No description provided for @sendToAgentStudioHint.
@@ -29250,7 +29250,7 @@ abstract class AppLocalizations {
   /// No description provided for @sendToAgentTitle.
   ///
   /// In en, this message translates to:
-  /// **'Send to agent…'**
+  /// **'Send to Agent…'**
   String get sendToAgentTitle;
 
   /// No description provided for @sendToAgentUseSuggested.
@@ -29370,13 +29370,13 @@ abstract class AppLocalizations {
   /// No description provided for @sendToWikiSend.
   ///
   /// In en, this message translates to:
-  /// **'Send to wiki'**
+  /// **'Send to Wiki'**
   String get sendToWikiSend;
 
   /// No description provided for @sendToWikiSendRevised.
   ///
   /// In en, this message translates to:
-  /// **'Send revised copy'**
+  /// **'Send Revised Copy'**
   String get sendToWikiSendRevised;
 
   /// No description provided for @sendToWikiSent.
@@ -29388,7 +29388,7 @@ abstract class AppLocalizations {
   /// No description provided for @sendToWikiTitle.
   ///
   /// In en, this message translates to:
-  /// **'Send to wiki'**
+  /// **'Send to Wiki'**
   String get sendToWikiTitle;
 
   /// No description provided for @sendToWikiWhere.
@@ -29402,6 +29402,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This connection is off or has no address or token. Set it up in Settings > Connections.'**
   String get connectionsNotReady;
+
+  /// Under a chat reply that has had no answer for a while (a slow or self-hosted model); the server is still working.
+  ///
+  /// In en, this message translates to:
+  /// **'Still working on it. This can take a few minutes.'**
+  String get chatReplyStillWorking;
+
+  /// Day reviews list: the list could not be loaded (with Try Again).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your day reviews.'**
+  String get dayReviewsLoadFailed;
+
+  /// Summary tab of a conversation whose transcript is stored while its notes are still being written (a slow model can take minutes).
+  ///
+  /// In en, this message translates to:
+  /// **'Writing notes… The transcript is ready to read now.'**
+  String get conversationWritingNotesTranscriptReady;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
