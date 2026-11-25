@@ -9,6 +9,7 @@ import 'package:omi/backend/http/api/action_items.dart' as action_items_api;
 import 'package:omi/backend/http/api/memories.dart' as memories_api;
 import 'package:omi/backend/http/api/conversations.dart';
 import 'package:omi/backend/http/api_result.dart';
+import 'package:omi/backend/preferences.dart';
 import 'package:omi/backend/schema/action_item.dart';
 import 'package:omi/backend/schema/memory.dart';
 import 'package:omi/backend/schema/app.dart';
@@ -222,12 +223,10 @@ Future<bool> openHomeDeepLink(
       if (taskById != null) {
         task = await taskById(id);
       } else {
-        final uid = FirebaseAuth.instance.currentUser?.uid;
+        final uid = _signedInUid();
         if (uid == null) return false;
         final result = await action_items_api.ActionItemsApi(baseUrl: Env.apiBaseUrl ?? '').getById(id);
-        task = FirebaseAuth.instance.currentUser?.uid == uid && result is ApiSuccess<ActionItemWithMetadata>
-            ? result.data
-            : null;
+        task = _signedInUid() == uid && result is ApiSuccess<ActionItemWithMetadata> ? result.data : null;
       }
       if (!context.mounted || (canOpen != null && !canOpen())) return false;
       if (task == null || !siriTaskIsIndexable(task, DateTime.now())) {
@@ -274,11 +273,11 @@ Future<bool> openHomeDeepLink(
       unawaited(routeToPage(context, const MemoriesPage()));
     case 'conversation':
       if (id == null) return false;
-      final uid = FirebaseAuth.instance.currentUser?.uid;
+      final uid = _signedInUid();
       if (uid == null) return false;
       final conversation = await getConversationById(id);
       if (!context.mounted || (canOpen != null && !canOpen())) return false;
-      if (FirebaseAuth.instance.currentUser?.uid != uid || conversation == null) {
+      if (_signedInUid() != uid || conversation == null) {
         Logger.debug('Conversation not found: $id');
         OmiFeedback.info(context, context.l10n.conversationNotFoundOrDeleted);
         return false;
@@ -309,9 +308,9 @@ Future<bool> openHomeDeepLink(
 /// cursor, independent of the active Memories view or device filter. Incomplete
 /// reads never turn an unseen id into a claim that the memory was deleted.
 Future<Memory?> _resolveIndexedMemoryById(String id) async {
-  final uid = FirebaseAuth.instance.currentUser?.uid;
+  final uid = _signedInUid();
   if (uid == null) return null;
-  return resolveIndexedMemoryById(id, uid: uid, ownerIsCurrent: () => FirebaseAuth.instance.currentUser?.uid == uid);
+  return resolveIndexedMemoryById(id, uid: uid, ownerIsCurrent: () => _signedInUid() == uid);
 }
 
 typedef IndexedMemoryPageFetcher = Future<memories_api.GetMemoriesResult> Function(
@@ -387,4 +386,14 @@ Future<void> _prepareChat(BuildContext context, String? id) async {
   appProvider.setSelectedChatAppId(appId);
   await messageProvider.refreshMessages();
   if (messageProvider.messages.isEmpty) messageProvider.sendInitialAppMessage(selectedApp);
+}
+
+/// The signed-in user's id. A self-hosted (omi-local) sign-in has no Firebase user, so the id the
+/// app saved at sign-in stands in; without it, links to a task, memory or conversation from a
+/// widget or a notification opened nothing on a self-hosted server.
+String? _signedInUid() {
+  final firebase = FirebaseAuth.instance.currentUser?.uid;
+  if (firebase != null) return firebase;
+  final prefs = SharedPreferencesUtil();
+  return prefs.isLocalRemoteSession && prefs.uid.isNotEmpty ? prefs.uid : null;
 }
