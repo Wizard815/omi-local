@@ -1,3 +1,6 @@
+// The HTTP client for the phone's own model (llama-server in Termux, OpenAI API). It never
+// throws from a chat stream: every failure ends the stream as one error chunk.
+
 import 'dart:async';
 import 'dart:convert';
 

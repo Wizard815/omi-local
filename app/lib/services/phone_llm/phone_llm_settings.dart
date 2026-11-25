@@ -1,3 +1,6 @@
+// The "AI on this phone" settings, in their own preference keys; the API key lives only in
+// secure storage. Nothing reaches the phone model until a model is picked here.
+
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';

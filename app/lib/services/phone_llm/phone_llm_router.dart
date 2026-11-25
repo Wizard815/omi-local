@@ -1,3 +1,6 @@
+// Per typed message: does the Omi server or this phone's model answer? A slow server always keeps
+// the turn; only a server that cannot be reached at all hands it to a running phone model.
+
 import 'dart:async';
 import 'dart:io';
 
