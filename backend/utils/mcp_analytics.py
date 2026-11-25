@@ -260,6 +260,7 @@ def user_in_tool_call_sample(uid: Any, rate: float) -> bool:
 
 
 def emit_mcp_posthog_event(distinct_id: Optional[str], event: str, properties: dict) -> bool:
+    """omi-local: upstream's name; the event lands only in the local usage store."""
     return emit_product_event(uid=distinct_id or '', event=event, properties={**properties, "source_platform": "mcp"})
 
 

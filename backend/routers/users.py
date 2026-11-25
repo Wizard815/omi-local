@@ -89,7 +89,7 @@ from utils.conversations.factory import deserialize_conversation, deserialize_co
 from models.other import Person, CreatePerson
 from typing import Optional
 from models.user_usage import UserUsageResponse, UsagePeriod
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, timezone
 
 from models.users import (
     TranscriptionAllowanceSnapshot,
@@ -138,6 +138,8 @@ from utils.subscription import (
     get_trial_metadata,
 )
 from database import user_usage as user_usage_db
+from database import local_usage as local_usage_db
+from config.local_usage import retention_days as local_usage_retention_days, usage_enabled as local_usage_enabled
 from utils import stripe as stripe_utils
 from utils.cloud_tasks import (
     AccountDeletionTaskAuthentication,
@@ -2474,6 +2476,26 @@ def get_llm_usage(
         'summary': summary,
         'top_features': top_features,
         'period_days': days,
+    }
+
+
+@router.get('/v1/users/me/local-usage', tags=['users'])
+def get_my_local_usage(
+    days: int = Query(default=30, ge=1, le=365),
+    uid: str = Depends(auth.get_current_user_uid),
+):
+    """Your own usage on this server (omi-local): event counts per day and your recent events.
+
+    Read-only, and only ever the caller's own data. Kept on this server
+    (database/local_usage.py); nothing is sent anywhere else.
+    """
+    enabled = local_usage_enabled()
+    window = min(days, local_usage_retention_days())
+    data = local_usage_db.get_user_summary(uid) if enabled else {}
+    return {
+        'enabled': enabled,
+        'retention_days': local_usage_retention_days(),
+        **local_usage_db.user_view(data, now=datetime.now(timezone.utc), window_days=window),
     }
 
 
