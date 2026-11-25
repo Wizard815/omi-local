@@ -32,6 +32,7 @@ Rerun `bash omi-host/egress-firewall.sh` after a reboot or after recreating cont
 | Your own cloud key, e.g. OpenAI | `OMI_EGRESS_ALLOW=api.openai.com` and `OMI_EGRESS_FIREWALL=0` (or add the address to `OMI_EGRESS_LAN`) |
 | OpenRouter models in the proxy | `OMI_EGRESS_ALLOW=openrouter.ai`, `OMI_EGRESS_FIREWALL=0` |
 | A faster-whisper model on the first start of `omi-audio` | `OMI_EGRESS_ALLOW=huggingface.co` once, then remove it |
+| Health alerts to a public ntfy.sh / Gotify (a LAN one needs nothing; [HEALTH.md](HEALTH.md)) | `OMI_EGRESS_ALLOW=ntfy.sh`, `OMI_EGRESS_FIREWALL=0` |
 | See what would be blocked without blocking it | `OMI_EGRESS_GUARD=log` |
 
 `omi-searxng` (web search, off unless `SEARXNG_ENABLED=1`) is left out of the firewall: querying

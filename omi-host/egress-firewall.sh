@@ -50,7 +50,7 @@ DOCKER="${DOCKER:-docker}"
 CHAIN=OMI-EGRESS
 # omi-searxng is left out on purpose: web search is its whole job. Add it to
 # lock it down too (search then stops working).
-CONTAINERS="${OMI_EGRESS_CONTAINERS:-omi-local omi-proxy omi-audio omi-apps-gateway omi-app-hermes-agent omi-firestore-ui-proxy}"
+CONTAINERS="${OMI_EGRESS_CONTAINERS:-omi-local omi-proxy omi-audio omi-apps-gateway omi-app-hermes-agent omi-firestore-ui-proxy omi-backup omi-health}"
 LAN="${OMI_EGRESS_LAN:-10.0.0.0/8 172.16.0.0/12 192.168.0.0/16}"
 
 run() {
