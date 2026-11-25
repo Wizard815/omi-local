@@ -675,23 +675,23 @@ def test_pusher_imageio_ffmpeg_exclusion_keeps_its_system_ffmpeg_fallback():
     assert 'install --no-install-recommends ffmpeg' in dockerfile
 
 
-def test_pusher_posthog_pin_matches_backend_cohort_flag_client():
-    """PR #20533 enabled cohort dispatch, but pusher lacked the lazy PostHog SDK."""
-    pusher = (BACKEND_DIR / 'pusher' / 'requirements.txt').read_text(encoding='utf-8')
-    backend = (BACKEND_DIR / 'requirements.txt').read_text(encoding='utf-8')
-    pin = _requirement_pin(backend, 'posthog')
-    assert _requirement_pin(pusher, 'posthog') == pin
-    lock = tomllib.loads((BACKEND_DIR / 'pusher' / 'pylock.toml').read_text(encoding='utf-8'))
-    packages = {package['name']: package['version'] for package in lock['packages']}
-    assert packages['posthog'] == pin.split('==', 1)[1]
+def test_no_image_ships_the_posthog_sdk():
+    """omi-local removed third-party analytics: neither image may pin or lock PostHog again."""
+    for requirements, lock in (
+        (BACKEND_DIR / 'requirements.txt', BACKEND_DIR / 'pylock.toml'),
+        (BACKEND_DIR / 'pusher' / 'requirements.txt', BACKEND_DIR / 'pusher' / 'pylock.toml'),
+    ):
+        assert not any(line.startswith('posthog') for line in requirements.read_text(encoding='utf-8').splitlines())
+        packages = {package['name'] for package in tomllib.loads(lock.read_text(encoding='utf-8'))['packages']}
+        assert 'posthog' not in packages
 
 
 def test_pusher_lock_covers_mentor_v2_lazy_imports():
     """Packages audited in the pusher-only venv, including function-local imports.
 
-    PR #20533's cohort dispatch exposed a missing lazy PostHog import that the
-    static entrypoint smoke did not see. Keep this audited package contract
-    independent of the full backend environment, where PostHog was installed.
+    PR #20533's cohort dispatch exposed a missing lazy import that the static
+    entrypoint smoke did not see. Keep this audited package contract
+    independent of the full backend environment.
     Jev dedupe/usefulness use gateway_client's httpx transport, not another SDK.
     """
     module_distributions = {
@@ -719,7 +719,6 @@ def test_pusher_lock_covers_mentor_v2_lazy_imports():
         'openai': 'openai',
         'opuslib': 'opuslib',
         'pinecone': 'pinecone',
-        'posthog': 'posthog',
         'prometheus_client': 'prometheus-client',
         'pycountry': 'pycountry',
         'pydantic': 'pydantic',

@@ -1,8 +1,6 @@
-"""Omi flag store: evaluation, snapshot refresh/fallback, /v1/flags, proactivity_v2 source switch, CLI rules."""
+"""Omi flag store: evaluation, snapshot refresh/fallback, /v1/flags, proactivity_v2 store read, CLI rules."""
 
 import json
-import subprocess
-import sys
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -10,14 +8,12 @@ import pytest
 import yaml
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from posthog.feature_flags import _hash as posthog_hash
 
 from config.proactivity_v2 import ProactivityDenied
 from routers import omi_flags as flags_router
 from database import omi_flags as omi_flags_store
 from scripts import omi_flags as cli
 from utils import omi_flags, proactivity_flags
-from utils.omi_flag_metrics import OMI_FLAG_DUAL_READ_TOTAL
 from utils.other.endpoints import get_current_user_uid
 
 
@@ -69,11 +65,14 @@ def store(monkeypatch):
     return fake
 
 
-def test_rollout_hash_matches_posthog_so_imported_cohorts_do_not_move():
-    for uid in ('uid-a', 'uid-b', 'Zx81'):
-        assert omi_flags.rollout_hash('screen_activity_lossless_sync', uid) == posthog_hash(
-            'screen_activity_lossless_sync', uid
-        )
+# Values computed with posthog 3.5.2's feature_flags._hash before the SDK was
+# removed: imported cohorts must not move.
+PINNED_ROLLOUT_HASHES = {'uid-a': 0.2735759712172675, 'uid-b': 0.5293468874387527, 'Zx81': 0.6744793596361277}
+
+
+def test_rollout_hash_matches_the_pinned_bucketing_so_imported_cohorts_do_not_move():
+    for uid, expected in PINNED_ROLLOUT_HASHES.items():
+        assert omi_flags.rollout_hash('screen_activity_lossless_sync', uid) == expected
 
 
 def test_evaluate_kill_deny_allow_and_percentage():
@@ -180,70 +179,7 @@ def test_client_flags_endpoint_filters_by_surface(store):
     assert TestClient(app).get('/v1/flags', params={'surface': 'backend'}).status_code == 422
 
 
-def _dual_count(outcome):
-    return OMI_FLAG_DUAL_READ_TOTAL.labels(flag='proactivity_v2', outcome=outcome)._value.get()
-
-
-def test_dual_read_scrape_exports_all_outcomes_before_any_evaluation():
-    # A fresh process proves startup registration without creating children in
-    # the test or inheriting comparisons performed by another test.
-    result = subprocess.run(
-        [
-            sys.executable,
-            '-c',
-            'from utils.metrics import metrics_response; print(metrics_response().body.decode())',
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-        timeout=30,
-    )
-    samples = {line for line in result.stdout.splitlines() if line.startswith('omi_flag_dual_read_total{')}
-    assert samples == {
-        f'omi_flag_dual_read_total{{flag="proactivity_v2",outcome="{outcome}"}} 0.0'
-        for outcome in ('match', 'mismatch', 'omi_absent', 'omi_error')
-    }
-
-
-def test_flag_metric_import_preserves_created_series_for_other_collectors():
-    # Exercise this module independently of the shared exporter's existing policy.
-    result = subprocess.run(
-        [
-            sys.executable,
-            '-c',
-            'from utils import omi_flag_metrics; '
-            'from prometheus_client import Counter, generate_latest; '
-            'Counter("unrelated_probe_total", "Unrelated collector"); '
-            'print(generate_latest().decode())',
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-        timeout=30,
-    )
-    assert 'unrelated_probe_created ' in result.stdout
-
-
-def test_proactivity_default_source_is_posthog(store, monkeypatch):
-    monkeypatch.delenv('OMI_FLAGS_SOURCE', raising=False)
-    monkeypatch.setattr(proactivity_flags, '_posthog_enabled', Mock(return_value=False))
-    assert proactivity_flags.enabled('u') is False
-    assert store.reads == 0
-
-
-@pytest.mark.parametrize('posthog_value,outcome', [(True, 'match'), (False, 'mismatch')])
-def test_proactivity_dual_serves_posthog_and_counts(store, monkeypatch, posthog_value, outcome):
-    monkeypatch.setenv('OMI_FLAGS_SOURCE', 'dual')
-    monkeypatch.setattr(proactivity_flags, '_posthog_enabled', Mock(return_value=posthog_value))
-    before = _dual_count(outcome)
-    assert proactivity_flags.enabled('u') is posthog_value
-    assert _dual_count(outcome) == before + 1
-
-
-def test_proactivity_omi_source_and_absent_fails_closed(store, monkeypatch):
-    monkeypatch.setenv('OMI_FLAGS_SOURCE', 'omi')
-    posthog = Mock(side_effect=AssertionError('PostHog must not be called'))
-    monkeypatch.setattr(proactivity_flags, '_posthog_enabled', posthog)
+def test_proactivity_reads_the_store_and_absent_fails_closed(store, monkeypatch):
     monkeypatch.setattr(proactivity_flags, '_next_warning_at', 0.0)
     assert proactivity_flags.enabled('u') is True
     store.docs = {}
