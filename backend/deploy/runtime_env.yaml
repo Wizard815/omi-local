@@ -3145,7 +3145,6 @@ environments:
           CONVERSATION_NOTES_SCALED_DETAIL_ENABLED:
             value: 'true'
             category: ops_kill
-          QUIET_EMPTY_EXIT_ENABLED: {value: 'true', category: rollout}
           HOME_TRANSCRIPTION_PRESENTATION_GATE:
             value: 'true'
             category: ops_kill
@@ -3463,7 +3462,6 @@ environments:
           CONVERSATION_NOTES_SCALED_DETAIL_ENABLED:
             value: 'true'
             category: ops_kill
-          QUIET_EMPTY_EXIT_ENABLED: {value: 'true', category: rollout}
           HOME_TRANSCRIPTION_PRESENTATION_GATE:
             value: 'true'
             category: ops_kill
@@ -4167,7 +4165,6 @@ environments:
             BATCH_HELD_POLL_SKIP_ENABLED:
               value: 'true'
               category: ops_kill
-            QUIET_EMPTY_EXIT_ENABLED: {value: 'true', category: rollout}
             HOME_TRANSCRIPTION_PRESENTATION_GATE:
               value: 'true'
               category: ops_kill
@@ -4693,7 +4690,6 @@ environments:
               value: 'true'
               category: ops_kill
             BATCH_PROJECTION_FINISH_BACKOFF_ENABLED: {value: 'false', category: rollout}
-            QUIET_EMPTY_EXIT_ENABLED: {value: 'true', category: rollout}
             HOME_TRANSCRIPTION_PRESENTATION_GATE:
               value: 'true'
               category: ops_kill
@@ -5204,7 +5200,6 @@ environments:
             BATCH_HELD_POLL_SKIP_ENABLED:
               value: 'true'
               category: ops_kill
-            QUIET_EMPTY_EXIT_ENABLED: {value: 'true', category: rollout}
             OMI_FLAGS_FIRESTORE_PROJECT:
               value: based-hardware
               category: service_discovery
@@ -5668,7 +5663,6 @@ environments:
               value: 'true'
               category: ops_kill
             BATCH_PROJECTION_FINISH_BACKOFF_ENABLED: {value: 'false', category: rollout}
-            QUIET_EMPTY_EXIT_ENABLED: {value: 'true', category: rollout}
             OMI_FLAGS_FIRESTORE_PROJECT:
               value: based-hardware
               category: service_discovery

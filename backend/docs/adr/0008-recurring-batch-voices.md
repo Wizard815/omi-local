@@ -67,8 +67,9 @@ write transaction. A save before opt-out is scrubbed; a late save after the scan
 cannot restore a revoked pointer. This also applies to legacy processing upserts.
 
 Ship on by default, nested under batch-final-pass admission, with
-`SPEAKER_RECURRING_VOICES_ENABLED` as the kill switch and
-`SPEAKER_RECURRING_PERCENT=100` on the existing UID hash. The rollout lead owns
+`SPEAKER_RECURRING_VOICES_ENABLED` as the kill switch and the existing
+final-pass UID hash (the separate recurring percent was retired on 2026-11-25,
+keeping its 100% default). The rollout lead owns
 cohort overrides and ramp decisions. Suggestions reuse existing identify cards
 and copy. `recurring_voice_id` is additive and does not require an app release;
 visible pre-confirmation grouping is a later app change.

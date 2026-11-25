@@ -221,7 +221,6 @@ def _install_streams(service, service_mod, *, canonical, historical, statuses=No
 
 @pytest.mark.parametrize('cursor_mode', [False, True])
 def test_demand_sized_raw_scan_preserves_mixed_pages_without_index_gate(service_mod, monkeypatch, cursor_mode):
-    monkeypatch.setenv('OMI_INDEXED_LIST_READS_ENABLED', 'false')
     canonical = [_dated_memory(service_mod, f'c-{i:03}', day=1000 - i * 2) for i in range(120)]
     historical = [_dated_historical(service_mod, f'h-{i:03}', day=999 - i * 2) for i in range(120)]
 
@@ -248,7 +247,6 @@ def test_demand_sized_raw_scan_preserves_mixed_pages_without_index_gate(service_
 
 
 def test_demand_scan_refills_filtered_prefix_and_retains_last_page(service_mod, monkeypatch):
-    monkeypatch.setenv('OMI_INDEXED_LIST_READS_ENABLED', 'false')
     service = service_mod.MemoryService(db_client=_Db())
     visible = [_dated_memory(service_mod, f'c-{i:03}', day=100 - i) for i in range(6)]
     slots = [(None, (datetime(2026, 12, 1, tzinfo=timezone.utc), f'filtered-{i}')) for i in range(23)]

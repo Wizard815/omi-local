@@ -27,44 +27,53 @@
   "names": {
     "BATCH_ADMISSION_LANGUAGE_EXCLUSION_ENABLED": {
       "owner": "Goal: Pipeline",
-      "review_by": "2026-12-14"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_ADMISSION_LANGUAGE_SAMPLE_ENABLED": {
       "owner": "intakefallback / batch rollout lead",
-      "review_by": "2026-11-29"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_ADMISSION_PARALLEL_CALLS": {
       "owner": "planscost",
-      "review_by": "2026-11-30"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_ALLOWANCE_HOLD_RETRY_SECONDS": {
       "owner": "Goal: Pipeline",
-      "review_by": "2026-12-14"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_CONTROL_CANDIDATE_FANOUT": {
       "owner": "planscost",
-      "review_by": "2026-11-30"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_HELD_DEAD_LETTER_ENABLED": {
       "owner": "uicleanup / omi-lifecycle",
-      "review_by": "2026-12-06",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_HELD_POLL_SKIP_ENABLED": {
       "owner": "firestore-lead",
-      "review_by": "2026-11-18",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_LEGACY_CAPACITY_FALLBACK_ENABLED": {
       "owner": "overflow / two-lane lead",
-      "review_by": "2026-11-29"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_API_URL": {
       "seeded": "2026-10-25"
     },
     "BATCH_PIPELINE_ASR_CUDA_GRAPHS_ENABLED": {
       "owner": "planscost / gpu efficiency sprint",
-      "review_by": "2026-12-02"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_ASR_LEFT_CONTEXT_SECONDS": {
       "seeded": "2026-10-25"
@@ -74,12 +83,14 @@
     },
     "BATCH_PIPELINE_BACKLOG_RELEASE_METER_ENABLED": {
       "owner": "SCA-2015",
-      "review_by": "2026-12-14",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_CONTENTION_RETRY_ENABLED": {
       "owner": "batch record lane / rollout lead",
-      "review_by": "2026-11-28"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_CONTEXT_SECONDS": {
       "seeded": "2026-10-25"
@@ -89,8 +100,9 @@
     },
     "BATCH_PIPELINE_DELIVERED_SHARE_ENABLED": {
       "owner": "Goal: Pipeline",
-      "review_by": "2026-12-13",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_DIARIZER": {
       "seeded": "2026-10-25"
@@ -106,11 +118,13 @@
     },
     "BATCH_PIPELINE_EMPTY_ASR_SAFETY_NET_ENABLED": {
       "owner": "dazheng (batch record lane / rollout lead)",
-      "review_by": "2026-12-14"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_ENRICHMENT_FRESH_SWEEP_MAX_AGE_DAYS": {
       "owner": "omi-pipeline",
-      "review_by": "2026-11-30"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_FLIGHT_BATCHING_ENABLED": {
       "seeded": "2026-10-25"
@@ -123,39 +137,47 @@
     },
     "BATCH_PIPELINE_FRESH_GUARD_ENABLED": {
       "owner": "Goal: Pipeline",
-      "review_by": "2026-12-13",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_GUARDED_LONG_RECOVERY_MAX_SECONDS": {
       "owner": "planscost",
-      "review_by": "2026-11-30"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_IDLE_POLL_MAX_SECONDS": {
       "owner": "planscost",
-      "review_by": "2026-11-30"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_INDEPENDENT_LANGUAGE_RECOVERY_ENABLED": {
       "owner": "planscost",
-      "review_by": "2026-11-30"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_INDEPENDENT_RECOVERY_MAX_SECONDS": {
       "owner": "planscost",
-      "review_by": "2026-11-30"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_LANGUAGE_ELIGIBILITY_ENABLED": {
       "owner": "dazheng (batch record lane / rollout lead)",
-      "review_by": "2026-12-14"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_LANGUAGE_INHERITANCE_ENABLED": {
       "owner": "dazheng (batch record lane / rollout lead)",
-      "review_by": "2026-12-14"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_LONG_SPEECH_HANDOFF_ENABLED": {
       "seeded": "2026-10-25"
     },
     "BATCH_PIPELINE_MAX_OWNER_DRAINS": {
       "owner": "omi-pipeline / lead2",
-      "review_by": "2026-12-05"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_MERGE_CATCH_UP_DEPTH": {
       "seeded": "2026-10-25"
@@ -165,8 +187,9 @@
     },
     "BATCH_PIPELINE_MERGE_TX_FRESH_GATE_ENABLED": {
       "owner": "SCA-2015",
-      "review_by": "2026-12-14",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_MODEL_BATCH_SIZE": {
       "seeded": "2026-10-25"
@@ -176,11 +199,13 @@
     },
     "BATCH_PIPELINE_OWNER_DRAIN_ADMISSION_DIAGNOSTICS": {
       "owner": "Goal: Pipeline / SCA-1960",
-      "review_by": "2026-11-28"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_OWNER_DRAIN_FIRST_TURN_SECONDS": {
       "owner": "provider-stt drain",
-      "review_by": "2026-12-12"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_PADDED_SECONDS": {
       "seeded": "2026-10-25"
@@ -190,103 +215,124 @@
     },
     "BATCH_PIPELINE_PREPARE_FLIGHT_ENABLED": {
       "owner": "planscost / gpu efficiency sprint",
-      "review_by": "2026-12-02"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_PROJECTION_FOLLOWUP_BACKOFF_SECONDS": {
       "owner": "cl2-gpueff",
-      "review_by": "2026-12-05"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_PROJECTION_FOLLOWUP_SLOTS": {
       "owner": "cl2-gpueff",
-      "review_by": "2026-12-05"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_PROJECTION_GHOST_SETTLE_COHORT": {
       "owner": "uicleanup / omi-lifecycle",
-      "review_by": "2026-12-06"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_PROJECTION_GHOST_SETTLE_ENABLED": {
       "owner": "uicleanup / omi-lifecycle",
-      "review_by": "2026-12-06",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_PROJECTION_HOLD_LOG_ENABLED": {
       "owner": "omi-pipeline",
-      "review_by": "2026-12-08",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_PROJECTION_HOLD_RECOVERY_ENABLED": {
       "owner": "Goal: Pipeline",
-      "review_by": "2026-12-14"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_PROJECTION_PREFETCH": {
       "seeded": "2026-10-25"
     },
     "BATCH_PIPELINE_PROJECTION_PUMP_ENABLED": {
       "owner": "omi-pipeline / lead2",
-      "review_by": "2026-12-05",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_PROJECTION_RECENT_DISCOVERY_SECONDS": {
       "owner": "provider-stt drain",
-      "review_by": "2026-12-12"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_PROJECTION_RESTORABLE_CAP_EXPIRY_ENABLED": {
       "owner": "omi-pipeline",
-      "review_by": "2026-12-06",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_PROJECTION_SOURCE_DELETED_ENABLED": {
       "owner": "cl2-cost / lead2",
-      "review_by": "2026-12-05"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_PROJECTION_STRIPING_ENABLED": {
       "owner": "omi-pipeline",
-      "review_by": "2026-12-06",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_PROVIDER_BACKLOG_RELEASE_ENABLED": {
       "owner": "provider-stt drain",
-      "review_by": "2026-11-27",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_PROVIDER_FRESH_CAPTURE_LAG_SECONDS": {
       "owner": "provider-stt drain",
-      "review_by": "2026-12-12"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_PROVIDER_STT_SWEEP_MAX_AGE_DAYS": {
       "owner": "omi-pipeline",
-      "review_by": "2026-11-30"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_PUBLISH_CONCURRENCY": {
       "seeded": "2026-10-25"
     },
     "BATCH_PIPELINE_PUMP_SWEEP_PAGES": {
       "owner": "omi-pipeline / lead2",
-      "review_by": "2026-12-05"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_PUMP_TICK_SECONDS": {
       "owner": "omi-pipeline / lead2",
-      "review_by": "2026-12-05"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_READY_DISCOVERY_CURSOR_ENABLED": {
       "owner": "provider-stt-drain",
-      "review_by": "2026-12-14",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_READY_DISCOVERY_OWNERS_PER_TICK": {
       "owner": "provider-stt-drain",
-      "review_by": "2026-12-14"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_READY_DISCOVERY_TICK_SECONDS": {
       "owner": "provider-stt-drain",
-      "review_by": "2026-12-14"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_READ_ONLY_METRICS_ENABLED": {
       "seeded": "2026-10-25"
     },
     "BATCH_PIPELINE_RECORD_PROTOCOL_READY": {
       "owner": "two-lane lead",
-      "review_by": "2026-12-14"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_RECOVERY_DISPATCH_BATCH_SIZE": {
       "seeded": "2026-10-25"
@@ -317,24 +363,29 @@
     },
     "BATCH_PIPELINE_SERVING_METRICS_MIN_REFRESH_SECONDS": {
       "owner": "planscost",
-      "review_by": "2026-11-30"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_SERVING_PROJECTION_SWEEP": {
       "owner": "omi-pipeline / lead2",
-      "review_by": "2026-12-05",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_SERVING_SWEEP_PAGE_ROWS": {
       "owner": "omi-pipeline / lead2",
-      "review_by": "2026-12-06"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_SERVING_TICK_SECONDS": {
       "owner": "omi-pipeline / lead2",
-      "review_by": "2026-12-06"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_SHADOW_LANGUAGE_PROBES_PER_HOUR": {
       "owner": "two-lane lead",
-      "review_by": "2026-12-14"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_SHADOW_PAID_RECOVERY_PER_HOUR": {
       "seeded": "2026-10-25"
@@ -347,18 +398,21 @@
     },
     "BATCH_PIPELINE_SHARED_EMBEDDING_TRUNK_ENABLED": {
       "owner": "batch record lane / gpu efficiency sprint",
-      "review_by": "2026-12-02"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_STAGE_PROFILING_ENABLED": {
       "seeded": "2026-10-25"
     },
     "BATCH_PIPELINE_STRICT_VAD_SHADOW_PERCENT": {
       "owner": "flightcut / batch rollout lead",
-      "review_by": "2026-11-29"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_SWEEP_AGE_GATE": {
       "owner": "omi-pipeline",
-      "review_by": "2026-11-30"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_UID_ALLOWLIST": {
       "seeded": "2026-10-25"
@@ -368,11 +422,13 @@
     },
     "BATCH_PIPELINE_UPLOAD_COALESCING_ENABLED": {
       "owner": "margin / SCA-1800",
-      "review_by": "2026-11-26"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_VAD_SEGMENTATION_REUSE_ENABLED": {
       "owner": "planscost / gpu efficiency sprint",
-      "review_by": "2026-12-02"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_WINDOW_SECONDS": {
       "seeded": "2026-10-25"
@@ -394,11 +450,13 @@
     },
     "BATCH_PIPELINE_WORKER_PROCESSES": {
       "owner": "planscost / two-lane lead",
-      "review_by": "2026-11-30"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_WORKER_PROCESS_INDEX": {
       "owner": "planscost / two-lane lead",
-      "review_by": "2026-11-30"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PIPELINE_WORKER_RELEASE": {
       "seeded": "2026-10-25"
@@ -411,76 +469,94 @@
     },
     "BATCH_PULL_BUSY_BORROW_ENABLED": {
       "owner": "cl2-gpueff / batch rollout lead",
-      "review_by": "2026-12-04"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_PULL_MULTI_LEASE_ENABLED": {
       "owner": "pulleff / batch rollout lead",
-      "review_by": "2026-11-29"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_SHARD_SPREAD_ENABLED": {
       "owner": "batch record lane / rollout lead",
-      "review_by": "2026-11-28"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_SKIP_UNCHANGED_CONTROL_WRITE_ENABLED": {
       "owner": "pinecone2 / batch rollout lead",
-      "review_by": "2026-12-05"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_TIMELINESS_ALL_TIME_COUNTS_ENABLED": {
       "owner": "omi-pipeline",
-      "review_by": "2026-12-08",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_VENDOR_FAILOVER_ENABLED": {
       "owner": "vroute-d / two-lane lead",
-      "review_by": "2026-11-29"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_VENDOR_HELD_REDRIVE_ENABLED": {
       "owner": "vroute-d / two-lane lead",
-      "review_by": "2026-11-29"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_VENDOR_HELD_REDRIVE_SECONDS": {
       "owner": "vroute-d / two-lane lead",
-      "review_by": "2026-11-29"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_VENDOR_HELD_STALE_GRACE_SECONDS": {
       "owner": "vroute-d / two-lane lead",
-      "review_by": "2026-11-29"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_VENDOR_MIN_SPEECH_SECONDS": {
       "owner": "blindspot-audit / two-lane lead",
-      "review_by": "2026-12-13"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_VENDOR_OVERFLOW_ENABLED": {
       "owner": "overflow / two-lane lead",
-      "review_by": "2026-11-29"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_VENDOR_OVERFLOW_ENTER_SECONDS": {
       "owner": "overflow / two-lane lead",
-      "review_by": "2026-11-29"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_VENDOR_OVERFLOW_MIN_READY_UNITS": {
       "owner": "overflow / two-lane lead",
-      "review_by": "2026-11-29"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_VENDOR_ROUTE_TABLE": {
       "owner": "vroute-b / two-lane lead",
-      "review_by": "2026-11-29"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_VENDOR_ROUTING_ENABLED": {
       "owner": "vroute-b / two-lane lead",
-      "review_by": "2026-11-29"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_VENDOR_ROUTING_PERCENT": {
       "owner": "vroute-b / two-lane lead",
-      "review_by": "2026-11-29"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_VENDOR_ROUTING_SHADOW_PERCENT": {
       "owner": "vroute-b / two-lane lead",
-      "review_by": "2026-11-29"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BATCH_VENDOR_ROUTING_UID_ALLOWLIST": {
       "owner": "vroute-b / two-lane lead",
-      "review_by": "2026-11-29"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "BUCKET_AUDIO_DERIVED": {
       "seeded": "2026-10-25"
@@ -496,40 +572,48 @@
     },
     "CAP_HOLD_FLEET_SNAPSHOT_ENABLED": {
       "owner": "sync lane",
-      "review_by": "2026-12-14"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "CAP_HOLD_FLEET_SNAPSHOT_MIN_INTERVAL_SECONDS": {
       "owner": "sync lane",
-      "review_by": "2026-12-14"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "CAP_HOLD_FLEET_SNAPSHOT_WAIT_SECONDS": {
       "owner": "sync lane",
-      "review_by": "2026-12-14"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "CAP_HOLD_LIVE_FRAGMENT_ENABLED": {
       "seeded": "2026-10-25"
     },
     "CAP_HOLD_REDRIVE_CHOICES_PAGE": {
       "owner": "sync lane",
-      "review_by": "2026-12-14"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "CAP_HOLD_REDRIVE_ITEMS_PER_OWNER": {
       "owner": "sync lane",
-      "review_by": "2026-12-14"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "CAP_HOLD_REDRIVE_PARALLEL_DRAIN_ENABLED": {
       "owner": "sync lane",
-      "review_by": "2026-12-14"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "CONVERSATION_MERGE_BEFORE_PROCESSING": {
       "owner": "rollout-meetings / occasion architecture",
-      "review_by": "2026-11-28",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "CONVERSATION_OCCASION_RELEVANCE_ENABLED": {
       "owner": "rollout-meetings / occasion architecture",
-      "review_by": "2026-11-28",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "CONVERSATION_SPEAKER_ANCHOR_SECONDS": {
       "seeded": "2026-10-25"
@@ -539,8 +623,9 @@
     },
     "CONVERSATION_TERMINAL_FAMILY_MODE": {
       "owner": "uicleanup / omi-lifecycle",
-      "review_by": "2026-12-06",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "DEEPGRAM_API_KEY": {
       "seeded": "2026-10-25"
@@ -571,60 +656,71 @@
     },
     "EPISODE_CARRY_ON_SESSION_END": {
       "owner": "rollout-meetings / occasion architecture",
-      "review_by": "2026-11-28",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "EPISODE_COMPOSER_REUSE": {
       "owner": "refactor-lead",
-      "review_by": "2026-12-10",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "EPISODE_COMPOSER_THRIFT": {
       "owner": "refactor-lead",
-      "review_by": "2026-12-10",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "EPISODE_HARD_CAP_ACROSS_CONVERSATIONS": {
       "owner": "rollout-meetings / occasion architecture",
-      "review_by": "2026-11-28",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "EPISODE_LIVE_TIMER_START_ENABLED": {
       "owner": "rollout-meetings / occasion architecture",
-      "review_by": "2026-11-28",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "EPISODE_MOMENT_OUTPUT_VALIDATOR": {
       "owner": "rollout-meetings / occasion architecture",
-      "review_by": "2026-11-28",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "EPISODE_RECORDED_TIME_ENABLED": {
       "owner": "rollout-meetings / occasion architecture",
-      "review_by": "2026-11-28",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "FIRESTORE_EMULATOR_HOST": {
       "seeded": "2026-10-25"
     },
     "HOME_EMPTY_OUTPUT_NOISE": {
       "owner": "refactor-lead",
-      "review_by": "2026-12-10",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "HOME_HIDE_BELOW_FLOOR_ROWS": {
       "owner": "rollout-meetings / occasion architecture",
-      "review_by": "2026-11-28",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "HOME_LIVE_MEMBER_NOTES_BOUNDED_ENABLED": {
       "owner": "q12-live-notes",
       "registry": "config/feature-flags.yaml",
-      "review_by": "2026-12-14"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "HOSTED_LID_API_URL": {
       "owner": "planscost",
-      "review_by": "2026-11-30"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "HOSTED_PARAKEET_API_URL": {
       "seeded": "2026-10-25"
@@ -643,12 +739,14 @@
     },
     "K_REVISION": {
       "owner": "omi-pipeline",
-      "review_by": "2026-12-06"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "LATE_AUDIO_SYNC_INTAKE_ENABLED": {
       "owner": "rollout-meetings / occasion architecture",
-      "review_by": "2026-11-28",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "LISTEN_LIVE_TAIL_CATCHUP_RATE": {
       "seeded": "2026-10-25"
@@ -658,7 +756,8 @@
     },
     "LISTEN_PREVIEW_BATCH_CUSTODY_ENABLED": {
       "owner": "planscost",
-      "review_by": "2026-11-30"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "LISTEN_REPLAY_PREFIX_MARGIN_SECONDS": {
       "seeded": "2026-10-25"
@@ -725,15 +824,18 @@
     },
     "PARAKEET_LID_MODEL": {
       "owner": "planscost",
-      "review_by": "2026-11-30"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "PARAKEET_LID_ONLY": {
       "owner": "planscost",
-      "review_by": "2026-11-30"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "PARAKEET_SHAPE_CANARY_FILE": {
       "owner": "two-lane lead",
-      "review_by": "2026-12-04"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "PARAKEET_USE_V2": {
       "seeded": "2026-10-25"
@@ -746,7 +848,8 @@
     },
     "PARAKEET_WINDOW_FIRST_TEXT_CUT_ENABLED": {
       "owner": "dazheng (live STT / rollout lead)",
-      "review_by": "2026-12-14"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "PARAKEET_WINDOW_MAX_SESSIONS": {
       "seeded": "2026-10-25"
@@ -771,93 +874,111 @@
     },
     "PRERECORDED_SONIOX_FAILOVER_ENABLED": {
       "owner": "refactor-lead",
-      "review_by": "2026-11-24"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "PROCESSING_ATTENTION_NON_RETRYABLE_EXPIRY_ENABLED": {
       "owner": "refactor-lead",
-      "review_by": "2026-12-10",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "PROJECTION_DRAIN_CLAIM_AWARE": {
       "owner": "two-lane lead",
-      "review_by": "2026-12-05",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "PROJECTION_DRAIN_LIVE_TARGET_BACKOFF": {
       "replaces": "SYNC_BACKFILL_INFLIGHT_LIMIT",
       "owner": "omi-pipeline",
-      "review_by": "2026-12-08",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "PROJECTION_DRAIN_PRIVACY_BACKOFF": {
       "owner": "omi-pipeline / privblock",
-      "review_by": "2026-12-06",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "PROJECTION_DRAIN_PRIVACY_BACKOFF_SECONDS": {
       "owner": "omi-pipeline / privblock",
-      "review_by": "2026-12-06"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "PROJECTION_PRIVACY_REFUSAL_RESUME": {
       "owner": "omi-pipeline / refusal-resume",
-      "review_by": "2026-12-06",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "PROVIDER_MODE": {
       "seeded": "2026-10-25"
     },
     "PUSHER_AUDIO_FILE_INCREMENTAL_ENABLED": {
       "owner": "planscost",
-      "review_by": "2026-11-30"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "PUSHER_PROJECTION_DEBT_DURABLE_ENABLED": {
       "owner": "uicleanup / omi-lifecycle",
-      "review_by": "2026-12-06"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "PUSHER_RECORD_CLOSE_FAST_PATH_ENABLED": {
       "owner": "quality-12h/Q12-A",
-      "review_by": "2026-12-15",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "PUSHER_RECORD_CLOSE_NOTIFY_ENABLED": {
       "owner": "quality-12h/Q12-A",
-      "review_by": "2026-12-15",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "PUSHER_RECORD_CLOSE_NOTIFY_ENABLED_SERVE_PERCENT": {
       "owner": "quality-12h/Q12-A",
-      "review_by": "2026-12-15",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "PUSHER_RECORD_CLOSE_NOTIFY_ENABLED_SERVE_UID_SHA256S": {
       "owner": "quality-12h/Q12-A",
-      "review_by": "2026-12-15",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "PUSHER_RECORD_SEAL_WAKE_ENABLED": {
       "owner": "quality-12h/Q12-A",
-      "review_by": "2026-12-15",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "RECORD_FOLLOWUP_WAKE_ENABLED": {
       "owner": "q12-post-seal",
-      "review_by": "2026-12-14",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "RECORD_FRESH_MERGE_ENABLED": {
       "owner": "q12-post-seal",
-      "review_by": "2026-12-14",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "RECORD_NOTES_EAGER_ENABLED": {
       "owner": "q12-post-seal",
-      "review_by": "2026-12-14",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "RECORD_SEAL_WAKE_PRESERVED_ENABLED": {
       "owner": "q12-post-seal",
-      "review_by": "2026-12-14",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "REDIS_DB_HOST": {
       "seeded": "2026-10-25"
@@ -870,13 +991,15 @@
     },
     "SERVER_BATCH_ONLY_WEB_PERCENT": {
       "owner": "planscost",
-      "review_by": "2026-11-30",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "SERVER_BATCH_UNSUPPORTED_LANGUAGES": {
       "owner": "planscost",
-      "review_by": "2026-11-30",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "SONIOX_API_KEY": {
       "seeded": "2026-10-25"
@@ -910,27 +1033,32 @@
     },
     "STT_FREE_ALLOWANCE_WATCH_ENABLED": {
       "owner": "margin-owner",
-      "review_by": "2026-12-12",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "STT_GPU_FLEET_OFF": {
       "owner": "Goal: Pipeline",
-      "review_by": "2026-12-14"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "STT_IDLE_PARAKEET_FAILBACK_ENABLED": {
       "owner": "liveoptimal / two-lane lead",
-      "review_by": "2026-12-01"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "STT_IDLE_REOPEN_COST_RESELECT_ENABLED": {
       "owner": "idlereopen / two-lane lead",
-      "review_by": "2026-11-26"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "STT_NON_EN_MULTI_PREFER_HINTABLE_PERCENT": {
       "seeded": "2026-10-25"
     },
     "STT_PRERECORDED_LANGUAGE_GATE_CONFIDENT_SKIP": {
       "owner": "lidprobe / two-lane lead",
-      "review_by": "2026-11-29"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "STT_PRERECORDED_LANGUAGE_GATE_PERCENT": {
       "seeded": "2026-10-25"
@@ -970,12 +1098,14 @@
     },
     "STT_STREAMING_PARAKEET_SLOT_ENABLED": {
       "owner": "planscost",
-      "review_by": "2026-11-30"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "SUMMARY_PROJECTION_DEBT_ENABLED": {
       "owner": "refactor-lead",
-      "review_by": "2026-12-10",
-      "registry": "config/feature-flags.yaml"
+      "review_by": "2027-03-01",
+      "registry": "config/feature-flags.yaml",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "SYNC_BACKFILL_ADMISSION_LIMITS": {
       "seeded": "2026-10-25"
@@ -1003,17 +1133,18 @@
     },
     "SYNC_BACKFILL_WORKER_API_URL": {
       "owner": "infracost / syncsplit",
-      "review_by": "2026-11-23",
-      "reason": "2026-11-10 renewed by flagrulings: review_by expiry failed every backend unit shard; owner to confirm keep or delete"
+      "review_by": "2027-03-01",
+      "reason": "2026-11-10 renewed by flagrulings: review_by expiry failed every backend unit shard; owner to confirm keep or delete; omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "SYNC_BACKFILL_WORKER_AUDIENCE": {
       "owner": "infracost / syncsplit",
-      "review_by": "2026-11-23",
-      "reason": "2026-11-10 renewed by flagrulings: review_by expiry failed every backend unit shard; owner to confirm keep or delete"
+      "review_by": "2027-03-01",
+      "reason": "2026-11-10 renewed by flagrulings: review_by expiry failed every backend unit shard; owner to confirm keep or delete; omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "SYNC_CAPTURE_END_SILENCE_SECONDS": {
       "owner": "lifecycle-owner (SCA-1766)",
-      "review_by": "2026-12-14"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "SYNC_CAPTURE_MAX_FUTURE_SKEW_SECONDS": {
       "seeded": "2026-10-25"
@@ -1032,7 +1163,8 @@
     },
     "SYNC_EARLY_CAPTURE_CLAMP_ENABLED": {
       "owner": "earlyclamp / two-lane transcription",
-      "review_by": "2026-11-17"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "SYNC_EMPTY_SUCCESS_GUARD_ENABLED": {
       "seeded": "2026-10-25"
@@ -1060,27 +1192,33 @@
     },
     "SYNC_OPUS_RAW_FRAME_WRITES": {
       "owner": "synceff / backend-sync efficiency",
-      "review_by": "2026-12-04"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "SYNC_PROCESSING_HOLD_ENABLED": {
       "owner": "rollout-meetings / occasion architecture",
-      "review_by": "2026-11-28"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "SYNC_PROCESSING_QUIET_SECONDS": {
       "owner": "lifecycle-owner (SCA-1766)",
-      "review_by": "2026-12-14"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "SYNC_RECORD_COVERAGE_WAIT_MEMO": {
       "owner": "cl2-fixnow",
-      "review_by": "2026-12-11"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "SYNC_RECORD_DECODE_FAILURE_MEMO": {
       "owner": "omi-pipeline / SCA-2229",
-      "review_by": "2026-12-11"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "SYNC_RECORD_WAIT_MEMO_FIRST": {
       "owner": "omi-pipeline / SCA-2229",
-      "review_by": "2026-12-11"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "SYNC_RETIRED_HANDLE_ACK_ENABLED": {
       "seeded": "2026-10-25"
@@ -1093,7 +1231,8 @@
     },
     "SYNC_UPLOAD_WATERMARK_ENABLED": {
       "owner": "lifecycle-owner (SCA-1766)",
-      "review_by": "2026-12-14"
+      "review_by": "2027-03-01",
+      "reason": "omi-local 2026-11-25: self-hosted fork runs it at its default; inherited cloud pipeline gate, renewed to 2027-03-01"
     },
     "TRANSCRIPTION_FINAL_PASS_AUTHORITATIVE": {
       "seeded": "2026-10-25"

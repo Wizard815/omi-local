@@ -306,8 +306,11 @@ def registry_rows():
 def test_registry_refuses_unknown_keys_and_experiments(registry_rows):
     registry = registry_rows
     assert registry['proactivity_v2']['surfaces'] == ['backend', 'llm-gateway']
+    # No live experiment row remains in the omi-local registry; keep the
+    # refusal pinned with a synthetic experiment row.
+    experiment = {**registry, 'synthetic-experiment': {'kind': 'posthog', 'lifecycle': 'experiment'}}
     with pytest.raises(cli.FlagCliError):
-        cli.registry_entry(registry, 'paywall-variant')
+        cli.registry_entry(experiment, 'synthetic-experiment')
     with pytest.raises(cli.FlagCliError):
         cli.registry_entry(registry, 'not-a-flag')
 

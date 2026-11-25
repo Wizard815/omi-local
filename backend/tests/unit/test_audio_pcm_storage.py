@@ -421,14 +421,14 @@ async def test_listen_writer_compresses_only_new_pcm_and_keeps_native_packets(re
 @pytest.mark.asyncio
 async def test_pusher_commits_compressed_pcm_before_receipt_and_projection(remote, monkeypatch, real_codec_budget):
     _window_harness(remote, monkeypatch)
-    monkeypatch.setenv('AUDIO_CUSTODY_FRAMED_PERCENT', '100')
     captured = [bytes(32000), struct.pack('<h', 5) * 16000]
     sock = Socket(_audio_frames('conversation', captured, step=3))
     await pusher._websocket_util_trigger(sock, 'owner', 16000, audio_timeline=2, audio_custody=1)
     receipts = _sent_receipts(sock)
-    assert len(receipts) == 1
-    assert remote.blob(receipts[0].path).metadata['codec'] == 'flac'
-    assert audio_outbox.read_pcm('owner', receipts[0]) == b''.join(captured)
+    # Unframed custody commits one window per continuous run.
+    assert len(receipts) == 2
+    assert {remote.blob(receipt.path).metadata['codec'] for receipt in receipts} == {'flac'}
+    assert b''.join(audio_outbox.read_pcm('owner', receipt) for receipt in receipts) == b''.join(captured)
 
 
 def _stage_meter(monkeypatch):

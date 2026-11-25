@@ -83,7 +83,6 @@ from utils.other.list_budget import (
     ListReadBudgetExhausted,
     budgeted_get_all,
     canonical_scan_window_size,
-    indexed_list_reads_enabled,
 )
 from utils.other.portability_read import check_portability_read
 from utils.memory.canonical_visibility_filter import batch_canonical_expiry_observations
@@ -619,7 +618,6 @@ class CanonicalMemoryBackend:
                     "limit": canonical_scan_window_size(
                         min(needed - len(collected), raw_cap - scanned),
                         MEMORY_LIST_SCAN_CHUNK_SIZE,
-                        indexed=indexed_list_reads_enabled(),
                         filtered=scanned > len(collected),
                     ),
                     "start_after": start_after,
@@ -1864,7 +1862,6 @@ class _CanonicalCursorStream:
                 "limit": canonical_scan_window_size(
                     max(1, self._page_limit + 1 - self._consumed_count),
                     MEMORY_LIST_SCAN_CHUNK_SIZE,
-                    indexed=indexed_list_reads_enabled(),
                     filtered=self._filtered_slots,
                 ),
                 "start_after": start_after,
