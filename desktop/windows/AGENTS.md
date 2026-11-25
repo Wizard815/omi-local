@@ -9,10 +9,10 @@ and feature overview.
 
 **omi-local:** the app talks only to the user's own server. Main owns the server
 URL and session (`src/main/omiLocal/`; username/password at
-`/v1/auth/local-login`); the renderer reads them through `lib/session.ts` (no
+`/v1/auth/local-login`); the renderer reads them through `src/renderer/src/lib/session.ts` (no
 Firebase SDK) and resolves the server per request — never bake a service URL into
 the build or `.env`. The renderer CSP is built from the server
-(`omiLocal/csp.ts`). No third-party telemetry: Sentry and PostHog are gone,
+(`src/main/omiLocal/csp.ts`). No third-party telemetry: Sentry and PostHog are gone,
 `analytics.trackEvent` and `observability/localReport` write the local log only —
 do not add an analytics, crash-report or cloud host.
 
