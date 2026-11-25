@@ -1,6 +1,8 @@
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:omi/utils/share_sheet.dart';
+
 /// "Send to Hermes" (Android): a conversation's title and overview into a new chat in the Studio
 /// Own app (`com.ekkostudio.own`), unsent, or the share sheet when that app is not installed.
 /// Contract: hermes-studio `docs/omi.md`. Nothing is sent without the person pressing Send there.
@@ -40,6 +42,10 @@ abstract final class StudioOwnLink {
   }
 
   static Future<void> _share(String text, String subject) async {
-    await SharePlus.instance.share(ShareParams(text: text, subject: subject.isEmpty ? null : subject));
+    await SharePlus.instance.share(ShareParams(
+      text: text,
+      subject: subject.isEmpty ? null : subject,
+      sharePositionOrigin: shareSheetOrigin(),
+    ));
   }
 }
