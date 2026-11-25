@@ -37,6 +37,19 @@ class ApiClient {
   static const Duration streamInactivityTimeout = Duration(seconds: 60);
   static const Duration streamTotalTimeout = Duration(seconds: 180);
 
+  /// A chat turn on a self-hosted model may stay silent for one whole model call before its first
+  /// answer event (server: `OMI_LOCAL_LLM_TIMEOUT_SECONDS`, default 300 s) and run for four calls in
+  /// all (1200 s). The client waits a little longer than both, so the server's own deadline — which
+  /// ends the stream with a typed error frame — is what the reader sees, never a client timeout
+  /// while the server is still working. A cloud turn is unaffected: its server deadlines (25 s to
+  /// the first event, 20 s heartbeats, 150 s in all) end it long before these.
+  static const Duration chatStreamInactivityTimeout = Duration(seconds: 330);
+  static const Duration chatStreamTotalTimeout = Duration(seconds: 1260);
+
+  /// A request whose server work may wait for a self-hosted model: the server's HTTP limit is three
+  /// model calls (900 s at the default 300 s), plus a margin. Cloud servers answer within 120 s.
+  static const Duration slowModelRequestTimeout = Duration(seconds: 960);
+
   static void dispose() {
     HttpPoolManager.instance.dispose();
   }
@@ -654,7 +667,8 @@ Future<http.Response> sendUncaughtApiCall({
   if (execution != null) {
     var builtHeaders = await execution.headers(ApiRequest(url: url, method: method, headers: headers, body: body));
     ensureCurrentOwner();
-    var response = await execution.transport(ApiRequest(url: url, method: method, headers: builtHeaders, body: body));
+    var response = await execution
+        .transport(ApiRequest(url: url, method: method, headers: builtHeaders, body: body, timeout: timeout));
     if (response.statusCode == 401) {
       ensureCurrentOwner();
       response = await refreshAndReplayAfter401(
@@ -667,7 +681,8 @@ Future<http.Response> sendUncaughtApiCall({
         replay: () async {
           builtHeaders = await execution.headers(ApiRequest(url: url, method: method, headers: headers, body: body));
           ensureCurrentOwner();
-          return execution.transport(ApiRequest(url: url, method: method, headers: builtHeaders, body: body));
+          return execution
+              .transport(ApiRequest(url: url, method: method, headers: builtHeaders, body: body, timeout: timeout));
         },
       );
     }
@@ -1038,11 +1053,15 @@ class ApiStreamingSeams {
   final AuthService? auth;
 }
 
-Stream<String> _sseBlocks(Stream<List<int>> byteStream) async* {
+Stream<String> _sseBlocks(
+  Stream<List<int>> byteStream, {
+  Duration inactivityTimeout = ApiClient.streamInactivityTimeout,
+  Duration totalTimeout = ApiClient.streamTotalTimeout,
+}) async* {
   final iterator = StreamIterator(byteStream.transform(utf8.decoder));
   final totalExpired = Completer<bool>();
   var expired = false;
-  final totalTimer = Timer(ApiClient.streamTotalTimeout, () {
+  final totalTimer = Timer(totalTimeout, () {
     expired = true;
     if (!totalExpired.isCompleted) totalExpired.complete(false);
   });
@@ -1054,7 +1073,7 @@ Stream<String> _sseBlocks(Stream<List<int>> byteStream) async* {
   try {
     while (true) {
       if (expired) throw TimeoutException('stream exceeded total bound');
-      final next = iterator.moveNext().timeout(ApiClient.streamInactivityTimeout);
+      final next = iterator.moveNext().timeout(inactivityTimeout);
       next.ignore();
       final hasNext = await Future.any<bool>([next, totalExpired.future]);
       if (expired) throw TimeoutException('stream exceeded total bound');
@@ -1122,6 +1141,8 @@ Stream<String> makeStreamingApiCall({
   String method = 'POST',
   ApiStreamingSeams? seams,
   Future<void>? cancelSignal,
+  Duration inactivityTimeout = ApiClient.streamInactivityTimeout,
+  Duration totalTimeout = ApiClient.streamTotalTimeout,
 }) async* {
   // Setup-deadline abort (same rationale as the multipart variant): the POST
   // must die with the wait, or a retry can submit the chat turn twice. Armed
@@ -1193,7 +1214,7 @@ Stream<String> makeStreamingApiCall({
     // body streams so the abort cannot kill a healthy long-lived SSE read
     // (inactivity/total stream timeouts govern that phase).
     setupAbortTimer.cancel();
-    yield* _sseBlocks(streamedResponse.stream);
+    yield* _sseBlocks(streamedResponse.stream, inactivityTimeout: inactivityTimeout, totalTimeout: totalTimeout);
   } on AuthTokenUnavailableException catch (e) {
     setupAbortTimer.cancel();
     await _handleAuthUnavailable(e, expireTerminalSession: true);

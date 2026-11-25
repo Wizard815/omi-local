@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:omi/backend/http/api_result.dart';
+import 'package:omi/backend/http/shared.dart';
 import 'package:omi/backend/schema/transcript_segment.dart';
 
 /// Chunk boundaries never merge speakers or reset timestamps. Retrying the same
@@ -29,6 +30,9 @@ Future<String> uploadOnDeviceSegments(
         request: ApiRequest(
             url: '${baseUrl}v1/conversations/from-segments',
             method: 'POST',
+            // A self-hosted server may write the notes before it answers (background processing
+            // off): wait out its own HTTP limit instead of timing out and sending the chunk again.
+            timeout: ApiClient.slowModelRequestTimeout,
             body: jsonEncode({
               ...metadata,
               'client_session_id': sessionId,
