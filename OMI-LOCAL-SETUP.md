@@ -457,3 +457,33 @@ this: upstream's own test stacks run with it and still expect those gates.
 The backend now runs the hourly recap job itself (`OMI_LOCAL_SCHEDULER=1`, default on) at your
 chosen local hour, and the app reports its time zone on start-up, so recaps and day reviews use
 your day, not UTC.
+
+### Connect to Hermes Studio
+Omi sends coding jobs to Studio (**Send to agent → Studio**), gets the results back on a signed
+webhook, and answers Studio's Agent work approvals from its own Approvals page. Full details:
+[`omi-host/examples/integrations/README.md`](omi-host/examples/integrations/README.md) (Studio's
+side: its `docs/omi.md`).
+
+1. **Make the key in Studio.** Connections → Omi → Omi's address (`http://<omi>:8000`) →
+   **Make a key**. Copy the `sk-studio-omi-…` key; Studio shows it once and keeps only a hash.
+2. **Give it to Omi**, one of:
+   - the app: Settings → Connections → Studio → token (one person; wins over the stack's), or
+   - the stack: `STUDIO_URL` and `STUDIO_API_KEY` in `omi-host/.env` (the household default).
+   Turn Studio on in the app and tap **Test connection**. "not valid any more" means the key was
+   revoked: make a new one. "This key is for Omi" means Omi asked for something the key may not do.
+   Studio's LAN address must be in `OMI_WEBHOOK_ALLOWED_PRIVATE_NETWORKS`.
+3. **Webhook secret.** In Studio: Connections → Omi → **Register the webhook**, copy the secret
+   (shown once) into `STUDIO_WEBHOOK_SECRET` in `omi-host/.env`, or the webhook secret in the app
+   (the app's wins). Restart the stack after changing `.env`. Without the right secret Omi refuses
+   Studio's results (401), and the job only learns "finished, read it in Studio" from polling.
+   After **New secret** in Studio, paste the new one into Omi.
+4. **Approvals.** When an agent in one of Omi's Studio chats asks for approval, it shows under
+   "Agents asking before they go on" in Omi's Approvals (pull to refresh). Each person sees only
+   the chats they started, even with the household key. **Approve** or
+   **Decline** answers in Studio as "<your first name> (Omi)". The first answer anywhere wins: if
+   someone already answered in Studio, Mattermost or Pondering Orb, the card says who (for example
+   "Already approved in Studio by Robin.") and nothing changes. A chat's own "Allow once / Deny"
+   question is still answered in Studio.
+
+Never paste the key or the secret into a chat, a log or a commit; Omi stores both encrypted and
+never shows or logs them.

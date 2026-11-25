@@ -176,6 +176,8 @@ services:
       ODYSSEUS_URL: ${ODYSSEUS_URL:-}
       ODYSSEUS_API_TOKEN: ${ODYSSEUS_API_TOKEN:-}
       STUDIO_URL: ${STUDIO_URL:-}
+      # A Studio key made for Omi (Studio: Connections > Omi > Make a key), not an admin login.
+      STUDIO_API_KEY: ${STUDIO_API_KEY:-}
       STUDIO_WEBHOOK_SECRET: ${STUDIO_WEBHOOK_SECRET:-}
       COINPILE_URL: ${COINPILE_URL:-}
       ORB_URL: ${ORB_URL:-}
