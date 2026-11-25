@@ -18,7 +18,7 @@ Runs on the stack caldav_demo.sh starts (hermes_demo.sh sets OMI_DEMO_DRIVER), w
 | mcp | Hermes connects with an Omi MCP key and registers Omi's tools | the mcp__omi__* tools Hermes lists |
 | mcp | search_conversations, get_day_review before the day is approved | the conversation found; no draft text |
 | mcp | the same after Approve: the approved summary, and the rolled-up conversation still found | review text; search hit |
-| tasks | create_action_item from Hermes | waits (approval=pending), not on the CalDAV list |
+| tasks | create_action_item from Hermes | waits (approval=pending), not on the CalDAV list; hidden from agents' reads unless include_waiting |
 | tasks | the user approves it in Omi | VTODO on the user's CalDAV list |
 | tasks | the phone completes it (STATUS:COMPLETED) | Omi marks it done; Hermes sees it done |
 | tasks | Hermes completes an approved task | VTODO STATUS:COMPLETED |
@@ -249,6 +249,8 @@ class HermesDemo:
                 {'tool': 'create_calendar_event', 'args': {'title': "Theo's dentist", 'start': start.isoformat(),
                                                            'duration': 45, 'requested_by': 'Hermes'}},
                 {'tool': 'create_memory', 'args': {'content': 'The family plumber is Gary; he prefers the back gate.'}},
+                {'tool': 'get_action_items', 'args': {}},
+                {'tool': 'get_action_items', 'args': {'include_waiting': True}},
             ]
         )
         task = (self.payload(out['by_tool']['create_action_item'][0]) or {}).get('action_item') or {}
@@ -259,6 +261,11 @@ class HermesDemo:
             task.get('approval') == 'pending' and trap.get('approval') == 'pending', json.dumps(task)[:300]))
         self.check('events', 'send', 'create_calendar_event from Hermes waits for the user\'s OK', lambda: (
             event.get('status') == 'waiting_for_approval', json.dumps(event)[:300]))
+        plain = json.dumps(self.payload(out['by_tool']['get_action_items'][0]))
+        asked = json.dumps(self.payload(out['by_tool']['get_action_items'][1]))
+        self.check('tasks', 'read', 'an agent reading tasks (ALLGlance\'s get_action_items) does not see waiting ones; '
+                   'include_waiting shows them', lambda: (
+            self.ids['task'] not in plain and self.ids['task'] in asked, f'plain={plain[:120]} include_waiting={asked[:120]}'))
         waiting = self.omi.call('GET', '/v1/approvals')
         self.check('tasks', 'send', 'Waiting for your OK (GET /v1/approvals) lists both tasks and the event', lambda: (
             {self.ids['task'], self.ids['trap']} <= {t.get('id') for t in waiting.get('tasks') or []}

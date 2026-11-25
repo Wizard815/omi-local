@@ -23,7 +23,7 @@ from database.vector_db import (
     search_action_items_by_vector,
 )
 from utils import task_approval
-from utils.mcp_data import clean_action_item
+from utils.mcp_data import clean_action_item, hidden_from_agents
 from utils.notifications import sync_action_item_reminder
 
 logger = logging.getLogger(__name__)
@@ -269,7 +269,9 @@ def delete_action_item(uid: str, action_item_id: str) -> None:
         )
 
 
-def search_action_items(uid: str, query: Optional[str], limit: int = 10) -> List[Dict[str, Any]]:
+def search_action_items(
+    uid: str, query: Optional[str], limit: int = 10, *, include_waiting: bool = False
+) -> List[Dict[str, Any]]:
     """Semantic search over the user's tasks, returned in relevance order."""
     if not isinstance(query, str) or not query.strip():
         raise ValueError("query is required")
@@ -287,4 +289,8 @@ def search_action_items(uid: str, query: Optional[str], limit: int = 10) -> List
     # does not guarantee ordering.
     order = {aid: i for i, aid in enumerate(ids)}
     items.sort(key=lambda it: order.get(it.get("id", ""), len(ids)))
-    return [clean_action_item(it) for it in items if not it.get("deleted", False)]
+    return [
+        clean_action_item(it)
+        for it in items
+        if not it.get("deleted", False) and not hidden_from_agents(it, include_waiting=include_waiting)
+    ]

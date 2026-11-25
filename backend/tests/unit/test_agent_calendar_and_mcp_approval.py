@@ -17,6 +17,7 @@ import pytest  # noqa: E402
 from models.family_calendar import FamilyCalendarEvent  # noqa: E402
 from utils import agent_calendar, day_review_service, mcp_action_items, task_approval  # noqa: E402
 from utils.mcp_server.errors import ToolExecutionError  # noqa: E402
+from utils.mcp_server.handlers import action_items as action_item_handlers  # noqa: E402
 from utils.mcp_server.handlers import calendar as calendar_handlers  # noqa: E402
 from utils.mcp_server.registry import TOOL_REQUIRED_SCOPE, spec_for_tool  # noqa: E402
 
@@ -139,3 +140,57 @@ def test_day_review_leaves_agent_requests_out(monkeypatch):
     monkeypatch.setattr(day_review_service.day_reviews_db, 'get_day_review', lambda uid, date: None)
     loaded = day_review_service.load_day('u1', NOW.date(), 'UTC')
     assert loaded.visible == [] and loaded.rolled_up == [] and loaded.dropped_auto_count == 0
+
+
+ROWS = [
+    {'id': 'ok', 'description': 'Approved', 'completed': False},
+    {'id': 'wait', 'description': 'Heard, not approved', 'completed': False, 'approval': 'pending'},
+    {'id': 'no', 'description': 'Declined', 'completed': False, 'approval': 'declined'},
+]
+
+
+def test_agents_never_read_declined_and_read_waiting_only_on_request(monkeypatch):
+    """ALLGlance (and any agent) reads over MCP: no unapproved items unless it asks for them."""
+    monkeypatch.setattr(
+        action_item_handlers.action_items_db, 'get_action_items', lambda uid, **k: [dict(r) for r in ROWS]
+    )
+    plain = action_item_handlers.get_action_items('u1', {})
+    assert [i['id'] for i in plain['action_items']] == ['ok']
+    waiting = action_item_handlers.get_action_items('u1', {'include_waiting': True})
+    assert [i['id'] for i in waiting['action_items']] == ['ok', 'wait']
+    assert waiting['action_items'][1]['approval'] == 'pending'
+
+    monkeypatch.setattr(mcp_action_items, 'search_action_items_by_vector', lambda uid, q, limit: ['ok', 'wait', 'no'])
+    monkeypatch.setattr(
+        mcp_action_items.action_items_db, 'get_action_items_by_ids', lambda uid, ids: [dict(r) for r in ROWS]
+    )
+    assert [i['id'] for i in mcp_action_items.search_action_items('u1', 'x')] == ['ok']
+
+
+def test_sync_feed_turns_unapproved_rows_into_tombstones(monkeypatch):
+    monkeypatch.setattr(
+        action_item_handlers.action_item_sync_db,
+        'get_action_items_sync_page',
+        lambda uid, **k: ([dict(r, updated_at=NOW) for r in ROWS], None),
+    )
+    items, _ = action_item_handlers.action_items_sync_page_core(
+        'u1', updated_since=NOW, limit=10, cursor_kind='get_action_items'
+    )
+    assert [(i['id'], bool(i.get('deleted')), i['description']) for i in items] == [
+        ('ok', False, 'Approved'),
+        ('wait', True, ''),
+        ('no', True, ''),
+    ]
+
+
+def test_calendar_tool_hides_waiting_events_unless_asked(monkeypatch):
+    events = [
+        {'title': 'On it', 'status': 'on_calendar', 'start': '2026-11-25T10:00:00+00:00'},
+        {'title': 'Proposed', 'status': 'waiting_for_approval', 'start': '2026-11-25T11:00:00+00:00'},
+    ]
+    monkeypatch.setattr(calendar_handlers.agent_calendar, 'list_events', lambda uid, a, b: list(events))
+    monkeypatch.setattr(calendar_handlers, 'local_date_window', lambda *a: (None, None, timezone.utc))
+    out = calendar_handlers.get_calendar_events('u1', {})
+    assert [e['title'] for e in out['events']] == ['On it'] and out['waiting_for_approval'] == 1
+    out = calendar_handlers.get_calendar_events('u1', {'include_waiting': True})
+    assert [e['title'] for e in out['events']] == ['On it', 'Proposed']
