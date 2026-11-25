@@ -52,7 +52,7 @@ from config.recording_speakers import stamp_scope_index, with_creation_scope_ind
 from config.record_audio import record_identity
 from utils.sync.stage import current_stage
 from utils.conversations.fragment_visibility import is_completed_rule_discard, is_user_curated
-from utils.conversations.fragment_visibility import SETTLING_FIELDS, is_settling_fragment
+from utils.conversations.fragment_visibility import is_settling_fragment
 from utils.conversations.transcript_hash import (
     canonicalize_transcript_segments_for_storage,
     transcript_sha256_for_binding,
@@ -71,7 +71,7 @@ from utils.manual_speaker_assignments import (
     normalize_rejection,
     remap_absorbed_receipt,
 )
-from utils.conversations.home_titles import SUMMARY_DEBT_FIELDS, apply_user_title, project_home
+from utils.conversations.home_titles import apply_user_title, project_home
 from utils.conversations import transcribing_hold
 from database.mcp_read_queries import MCP_CONVERSATION_CARD_FIELD_PATHS, MCP_CONVERSATION_TRANSCRIPT_FIELD_PATHS
 from database.quiet_check_retirement import restore_quiet_check_in_transaction, stop_quiet_check_for_conversation
@@ -112,7 +112,6 @@ from utils.other.list_budget import (
     ListReadBudgetExhausted,
     budgeted_get_all,
     budgeted_stream_iter,
-    indexed_list_reads_enabled,
 )
 from utils.other.portability_read import (
     check_portability_read,
@@ -2156,37 +2155,11 @@ def get_conversations_without_photos(
     the budget's per-RPC timeout with each fetched row charged. An offset
     that exhausts the allowance returns an empty, explicitly truncated page
     instead of pretending to be complete.
+
+    ``list_fields_only`` marks archive-list callers; the field-projected read
+    it once enabled was retired with its dark switch, so rows are read whole.
     """
     conversations_ref = db.collection('users').document(uid).collection(conversations_collection)
-    if list_fields_only and indexed_list_reads_enabled():
-        # The archive list contract permits omitted transcript detail. Exclude
-        # the large blob before download/decompression and correction-overlay
-        # point reads, rather than fetching it and discarding it at the router.
-        # Keep every other response field and all visibility/title metadata.
-        from models.conversation import Conversation
-
-        fields = set(Conversation.model_fields) - {'transcript_segments', 'transcript_segments_compressed'}
-        fields.update(
-            {
-                'data_protection_level',
-                'user_title',
-                'user_corrections_compressed',
-                'deleted',
-                'dream_duplicate_of',
-                'sync_bridge_pending',
-                'relevance_decision',
-                'sync_relevance_user_kept',
-                'has_photos',
-                'folder_user_set',
-                'episode_id',
-                'finalization_status',
-                'notes_written_at',
-                *SETTLING_FIELDS,
-                *SUMMARY_DEBT_FIELDS,
-                *transcribing_hold.READ_FIELDS,
-            }
-        )
-        conversations_ref = conversations_ref.select(sorted(fields))
     if not include_discarded:
         conversations_ref = conversations_ref.where(filter=FieldFilter('discarded', '==', False))
     if sources:

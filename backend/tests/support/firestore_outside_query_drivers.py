@@ -367,7 +367,6 @@ _driver(
         'include_pending_processing': [False, True],
         'include_archive': [False, True],
     },
-    patchers=(_stub('utils.memory.canonical_memory_adapter.indexed_list_reads_enabled', True),),
     neutrals={
         'limit': LIMIT,
         'device_scope_request': (None, 'post-read visibility only'),

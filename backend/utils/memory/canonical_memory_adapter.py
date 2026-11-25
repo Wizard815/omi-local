@@ -24,8 +24,6 @@ from database import knowledge_graph as kg_db
 from database.released_memory_projection import projected_stream_list
 from database.firestore_index_registry import (
     UNIVERSAL_CANONICAL_LIST_SCAN_QUERY,
-    UNIVERSAL_CANONICAL_RELEASED_PROCESSED_QUERY,
-    UNIVERSAL_CANONICAL_RELEASED_PENDING_QUERY,
 )
 from database.review_queue import purge_stale_review_conflicts_for_memories
 from utils.client_device import DeviceScopeRequest
@@ -69,7 +67,6 @@ from utils.other.list_budget import (
     ListReadBudget,
     ListReadBudgetExhausted,
     budgeted_document_get,
-    indexed_list_reads_enabled,
 )
 from models.memory_domain import (
     MemoryLayer as DomainMemoryLayer,
@@ -102,7 +99,6 @@ from models.memory_contracts import DurablePatchDecision, LifecycleState, determ
 from models.memory_operations import MemoryLedgerReopenReceipt, MemoryOperation, MemoryOperationType
 from models.memory_source_replacement import ConversationSourceReplacementReceipt
 from models.product_memory import (
-    undecided_visible,
     visible_memory_tier,
     LedgerWriteReason,
     MAX_MEMORY_ARGUMENTS_JSON_BYTES,
@@ -906,40 +902,7 @@ def read_canonical_scan_page(
 
     items_ref = client.collection(MemoryCollections(uid=uid).memory_items)
     queries = []
-    if not archive_explicit and indexed_list_reads_enabled():
-        # Necessary conditions over fields required by MemoryItem. Keep the
-        # policy checks below authoritative. Expired *processed* Short-term is
-        # still visible, so expires_at must never be a query exclusion.
-        values: Dict[str, Any] = {
-            'status': 'active',
-            'source_state': 'active',
-            'source_states': ['active', 'missing'],
-            'processing_state': 'processed',
-            # Historical Review archives are projected as Short-term while the
-            # mitigation is on. The policy below still rejects other archives.
-            'tiers': ['short_term', 'long_term', 'archive'] if undecided_visible() else ['short_term', 'long_term'],
-        }
-        if include_pending_processing:
-            # Usually empty: prove the pending branch first so a subsequent
-            # interrupted processed stream can retain its verified prefix.
-            queries.append(
-                UNIVERSAL_CANONICAL_RELEASED_PENDING_QUERY.build(
-                    items_ref,
-                    {**values, 'processing_state': 'pending', 'tier': 'short_term', 'required': True},
-                    field_filter_factory=FieldFilter,
-                )
-            )
-        queries.append(
-            UNIVERSAL_CANONICAL_RELEASED_PROCESSED_QUERY.build(
-                items_ref,
-                values,
-                field_filter_factory=FieldFilter,
-            )
-        )
-    else:
-        # Explicit Archive can admit pending Archive rows without required
-        # processing, so keep that rarer policy on the raw query.
-        queries.append(UNIVERSAL_CANONICAL_LIST_SCAN_QUERY.build(items_ref, {}, field_filter_factory=FieldFilter))
+    queries.append(UNIVERSAL_CANONICAL_LIST_SCAN_QUERY.build(items_ref, {}, field_filter_factory=FieldFilter))
 
     def snapshot_key(snapshot: Any) -> Tuple[int, int, str]:
         stamp = (snapshot.to_dict() or {}).get('updated_at')
