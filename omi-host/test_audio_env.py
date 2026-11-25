@@ -68,16 +68,16 @@ def test_a_chain_with_parakeet_turns_on_upstreams_live_parakeet_slot():
 
 
 def test_audio_url_moves_every_surface():
-    code, env, _ = run(OMI_AUDIO_URL="http://192.168.20.10:8790")
+    code, env, _ = run(OMI_AUDIO_URL="http://192.168.1.10:8790")
     assert code == 0
-    assert {k: env[k] for k in SURFACES} == dict.fromkeys(SURFACES, "http://192.168.20.10:8790"), env
+    assert {k: env[k] for k in SURFACES} == dict.fromkeys(SURFACES, "http://192.168.1.10:8790"), env
     assert env["STT_SERVICE_MODELS"] == "parakeet"
 
 
 def test_an_explicit_surface_url_still_wins():
-    code, env, _ = run(OMI_AUDIO_URL="http://192.168.20.10:8790", TTS_LOCAL_BASE_URL="http://tts-box:8790")
+    code, env, _ = run(OMI_AUDIO_URL="http://192.168.1.10:8790", TTS_LOCAL_BASE_URL="http://tts-box:8790")
     assert code == 0
-    assert env["HOSTED_PARAKEET_API_URL"] == "http://192.168.20.10:8790"
+    assert env["HOSTED_PARAKEET_API_URL"] == "http://192.168.1.10:8790"
     assert env["TTS_LOCAL_BASE_URL"] == "http://tts-box:8790"
 
 

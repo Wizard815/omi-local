@@ -9,7 +9,7 @@ import 'package:omi/services/auth/emulator_login_retirement.dart';
 void main() {
   late List<String> calls;
 
-  Future<bool> retire(String? email, {String savedServerUrl = 'http://192.168.20.5:8000/'}) {
+  Future<bool> retire(String? email, {String savedServerUrl = 'http://192.168.1.5:8000/'}) {
     return retireEmulatorLoginSession(
       currentUserEmail: email,
       savedServerUrl: savedServerUrl,
@@ -22,7 +22,7 @@ void main() {
 
   test('an old emulator login is pointed at the saved server, then signed out', () async {
     expect(await retire('blake@local.omi'), isTrue);
-    expect(calls, ['point:192.168.20.5', 'signOut']);
+    expect(calls, ['point:192.168.1.5', 'signOut']);
   });
 
   test('without a saved server it is still signed out', () async {

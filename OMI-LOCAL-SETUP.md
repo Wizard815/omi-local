@@ -1,14 +1,14 @@
 # Omi — complete local setup (Unraid + Android phone)
 
 Everything below was **built and verified on this machine** (Hermes container on
-RaidLab, 192.168.20.5), not just designed. What works, what's local vs cloud, and
+RaidLab, <server-ip>), not just designed. What works, what's local vs cloud, and
 the two commands to finish.
 
 ## What is included
 
 | Artifact | Path | What it is |
 |---|---|---|
-| **Android APK** | `omi-dev-local.apk` | `com.friend.ios.dev` (dev flavor), built from `app/` with Flutter 3.44.5. Signs in with a server URL (`http://192.168.20.5:8000/` or a tunnel URL) plus the username/password seeded on the server. Cleartext + `omi-dev://` callback scheme confirmed in the manifest. |
+| **Android APK** | `omi-dev-local.apk` | `com.friend.ios.dev` (dev flavor), built from `app/` with Flutter 3.44.5. Signs in with a server URL (`http://<server-ip>:8000/` or a tunnel URL) plus the username/password seeded on the server. Cleartext + `omi-dev://` callback scheme confirmed in the manifest. |
 | **Host stack package** | `omi-host/` | `Dockerfile` + `docker-compose.yml` + `entrypoint.sh` + `run-omi-local-host.sh`. Two containers (one compose project): **omi-local** (Firebase **Auth emulator** (container-internal), **Firestore emulator (:8085)**, **Redis (:6380)**, Python **backend (:8000)**) and **omi-audio** (fully-offline **CPU** speech: faster-whisper STT + speaker diarization + Piper TTS on `:8790`). All from this repo's own code (`backend/`), offline provider mode. |
 
 The APK is already at the repo root. The host package is in `omi-host/`.
@@ -23,8 +23,8 @@ bash omi-host/run-omi-local-host.sh
 ```
 
 This runs `docker build` (context = repo root) and `docker compose up -d`, then
-waits for `http://192.168.20.5:8000/health`. It must run **on the host**
-(`ssh root@192.168.20.5`), because the phone can only reach `192.168.20.5`, not
+waits for `http://<server-ip>:8000/health`. It must run **on the host**
+(`ssh root@<server-ip>`), because the phone can only reach `<server-ip>`, not
 the Docker-bridge network this dev container sits on.
 
 **2. Build and install the APK on the phone:**
@@ -41,7 +41,7 @@ adb install -r app/build/app/outputs/flutter-apk/app-dev-release.apk   # path pr
 #     (allow "install unknown apps" for your file manager)
 ```
 
-Then open **Omi Dev** and enter the **Server URL** (`http://192.168.20.5:8000/` on
+Then open **Omi Dev** and enter the **Server URL** (`http://<server-ip>:8000/` on
 the LAN, or your tunnel URL) and the username/password you seeded with
 `backend/scripts/seed_local_account.py`. The backend checks the password and
 signs its own session token (see **Login** below). No Omi cloud, no Omi account,
@@ -73,7 +73,7 @@ the audit behind it: [`omi-host/NETWORK.md`](omi-host/NETWORK.md).
 
 1. **Fully local (your MI50 llama.cpp)** — start llama.cpp with an OpenAI server and pass it in:
    ```bash
-   OPENAI_BASE_URL=http://192.168.20.5:8081/v1 \
+   OPENAI_BASE_URL=http://<server-ip>:8081/v1 \
    OPENAI_API_KEY=*** \
    LOCAL_LLM_MODEL=qwen-local \
    bash omi-host/run-omi-local-host.sh
@@ -150,7 +150,7 @@ omi-dev-local.apk              # the Android APK
 omi-host/
   Dockerfile                   # omi-local host container image
   Dockerfile.audio             # omi-audio image (pipecat base + faster-whisper/piper/resemblyzer)
-  docker-compose.yml           # pins 192.168.20.5:8000 + omi-audio (:8790 loopback)
+  docker-compose.yml           # pins <server-ip>:8000 + omi-audio (:8790 loopback)
   entrypoint.sh                # starts redis + firebase emulators + backend (+ local-audio env)
   local_audio_service.py       # fully-offline CPU audio: WS /v3/stream + /v1//v2 transcribe
                                #   + /v2/embedding + /v1/tts (Piper) + /health

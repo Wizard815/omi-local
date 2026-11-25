@@ -88,10 +88,10 @@ void main() {
           jsonEncode({'items': [], 'next_cursor': null, 'has_more': false, 'truncated': false, 'generation': 'g'}), 200,
           headers: {'content-type': 'application/json; charset=utf-8'});
     });
-    Env.overrideApiBaseUrl('http://192.168.20.5:8000/');
+    Env.overrideApiBaseUrl('http://192.168.1.5:8000/');
     addTearDown(Env.clearApiBaseUrlOverrideForTesting);
     await api.page();
-    expect(urls.single, startsWith('http://192.168.20.5:8000/v1/home/feed?'));
+    expect(urls.single, startsWith('http://192.168.1.5:8000/v1/home/feed?'));
   });
   test('unknown recording origin keeps pagination order without inventing detail timing', () {
     final json = card(1).toJson()..['started_at'] = null;

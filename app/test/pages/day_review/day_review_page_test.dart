@@ -473,7 +473,7 @@ void main() {
         'wiki': ConnectionTarget(
             name: 'wiki',
             enabled: true,
-            url: 'http://192.168.20.5:27123',
+            url: 'http://192.168.1.5:27123',
             hasToken: true,
             options: {'send_kept_conversations': 'ask'}),
       }),

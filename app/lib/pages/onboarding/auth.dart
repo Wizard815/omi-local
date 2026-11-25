@@ -127,7 +127,7 @@ class _AuthComponentState extends State<AuthComponent> {
                 TextField(
                   controller: _serverUrlController,
                   style: TextStyle(color: OmiColors.textPrimary, fontSize: 14, fontFamily: 'Manrope'),
-                  decoration: _fieldDecoration(label: 'Server URL', hint: 'http://192.168.20.5:8000/', icon: Icons.dns),
+                  decoration: _fieldDecoration(label: 'Server URL', hint: 'http://192.168.1.5:8000/', icon: Icons.dns),
                   keyboardType: TextInputType.url,
                   autocorrect: false,
                   onChanged: (_) => setState(() {}),

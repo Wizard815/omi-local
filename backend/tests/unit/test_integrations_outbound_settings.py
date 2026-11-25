@@ -65,11 +65,11 @@ def test_every_target_starts_off_with_no_token(client):
 def test_tokens_are_write_only_and_stored_encrypted(client, fake_db):
     out = client.put(
         '/v1/integrations/outbound',
-        json={'wiki': {'enabled': True, 'url': 'http://192.168.20.5:27123/', 'token': 'fam-secret-token'}},
+        json={'wiki': {'enabled': True, 'url': 'http://192.168.1.5:27123/', 'token': 'fam-secret-token'}},
     )
     assert out.status_code == 200
     body = out.json()
-    assert body['wiki']['has_token'] is True and body['wiki']['url'] == 'http://192.168.20.5:27123'
+    assert body['wiki']['has_token'] is True and body['wiki']['url'] == 'http://192.168.1.5:27123'
     assert 'fam-secret-token' not in json.dumps(body)
     stored = fake_db.dump(('users', 'u1'))['users/u1/integrations/outbound']['wiki']
     assert stored['token_enc'] and stored['token_enc'] != 'fam-secret-token'
@@ -87,11 +87,11 @@ def test_a_bad_address_is_refused(client):
 
 
 def test_env_defaults_apply_until_the_user_sets_their_own(client, monkeypatch):
-    monkeypatch.setenv('HERMES_API_URL', 'http://192.168.20.9:8642')
+    monkeypatch.setenv('HERMES_API_URL', 'http://192.168.1.9:8642')
     monkeypatch.setenv('HERMES_API_KEY', 'household-hermes-key')
-    monkeypatch.setenv('LLMWIKI_URL', 'http://192.168.20.5:27123')
+    monkeypatch.setenv('LLMWIKI_URL', 'http://192.168.1.5:27123')
     body = client.get('/v1/integrations/outbound').json()
-    assert body['hermes']['url'] == 'http://192.168.20.9:8642' and body['hermes']['url_from_env'] is True
+    assert body['hermes']['url'] == 'http://192.168.1.9:8642' and body['hermes']['url_from_env'] is True
     assert body['hermes']['has_token'] is True and body['hermes']['token_from_env'] is True
     assert body['hermes']['enabled'] is False  # an env address alone never sends anything
     assert body['wiki']['url_from_env'] is True and body['wiki']['has_token'] is False
@@ -150,10 +150,10 @@ def test_lan_targets_follow_the_webhook_address_rule(monkeypatch):
     with pytest.raises(Exception):
         outbound_http._target('http://127.0.0.1:27123/family-mcp')
     with pytest.raises(Exception):
-        outbound_http._target('http://192.168.20.5:27123/family-mcp')
-    monkeypatch.setenv('OMI_WEBHOOK_ALLOWED_PRIVATE_NETWORKS', '192.168.20.0/24')
-    pinned, extra = outbound_http._target('http://192.168.20.5:27123/family-mcp')
-    assert pinned == 'http://192.168.20.5:27123/family-mcp' and extra['headers']['Host'] == '192.168.20.5:27123'
+        outbound_http._target('http://192.168.1.5:27123/family-mcp')
+    monkeypatch.setenv('OMI_WEBHOOK_ALLOWED_PRIVATE_NETWORKS', '192.168.1.0/24')
+    pinned, extra = outbound_http._target('http://192.168.1.5:27123/family-mcp')
+    assert pinned == 'http://192.168.1.5:27123/family-mcp' and extra['headers']['Host'] == '192.168.1.5:27123'
     with pytest.raises(Exception):
         outbound_http._target('http://127.0.0.1:27123/family-mcp')
 
@@ -170,11 +170,11 @@ async def test_a_refused_address_is_reported_not_sent(monkeypatch):
 def test_dev_webhook_to_the_same_wiki_is_skipped_while_send_to_wiki_is_on(client, monkeypatch):
     client.put(
         '/v1/integrations/outbound',
-        json={'wiki': {'enabled': True, 'url': 'http://192.168.20.5:27123', 'token': 't'}},
+        json={'wiki': {'enabled': True, 'url': 'http://192.168.1.5:27123', 'token': 't'}},
     )
-    hook = 'http://192.168.20.5:27123/family/conversation?key=abc'
+    hook = 'http://192.168.1.5:27123/family/conversation?key=abc'
     assert integrations_out.wiki_owns_conversation_webhook('u1', hook) is True
-    assert integrations_out.wiki_owns_conversation_webhook('u1', 'http://192.168.20.6:27123/x') is False
+    assert integrations_out.wiki_owns_conversation_webhook('u1', 'http://192.168.1.6:27123/x') is False
     monkeypatch.setattr(router_module, 'get_user_webhook_db', lambda uid, wtype: hook)
     assert client.get('/v1/integrations/outbound').json()['conversation_webhook_to_wiki'] is True
     client.put('/v1/integrations/outbound', json={'wiki': {'enabled': False}})
@@ -188,7 +188,7 @@ async def test_conversation_created_webhook_skips_the_wiki_it_now_sends_to(monke
     posted = []
     monkeypatch.setattr(webhooks, 'user_webhook_status_db', lambda uid, wtype: True)
     monkeypatch.setattr(
-        webhooks, 'get_user_webhook_db', lambda uid, wtype: 'http://192.168.20.5:27123/family/conversation'
+        webhooks, 'get_user_webhook_db', lambda uid, wtype: 'http://192.168.1.5:27123/family/conversation'
     )
     monkeypatch.setattr(integrations_out, 'wiki_owns_conversation_webhook', lambda uid, url: True)
 

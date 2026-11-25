@@ -32,26 +32,26 @@ def _resolve(monkeypatch, *ips):
 
 def test_private_address_blocked_by_default(monkeypatch):
     monkeypatch.delenv(ENV, raising=False)
-    _resolve(monkeypatch, '192.168.20.5')
+    _resolve(monkeypatch, '192.168.1.5')
     with pytest.raises(UnsafeWebhookURLError):
         assert_public_http_url('http://llmwiki.lan:27123/family/conversation')
 
 
 def test_allowed_host_passes_and_is_pinned(monkeypatch):
-    monkeypatch.setenv(ENV, '192.168.20.5/32')
-    _resolve(monkeypatch, '192.168.20.5')
-    assert assert_public_http_url('http://llmwiki.lan:27123/family/conversation') == '192.168.20.5'
+    monkeypatch.setenv(ENV, '192.168.1.5/32')
+    _resolve(monkeypatch, '192.168.1.5')
+    assert assert_public_http_url('http://llmwiki.lan:27123/family/conversation') == '192.168.1.5'
     pinned, extra = safe_request_target('http://llmwiki.lan:27123/family/conversation?key=k')
-    assert pinned == 'http://192.168.20.5:27123/family/conversation?key=k'
+    assert pinned == 'http://192.168.1.5:27123/family/conversation?key=k'
     assert extra['headers']['Host'] == 'llmwiki.lan:27123'
 
 
 def test_only_the_listed_network(monkeypatch):
-    monkeypatch.setenv(ENV, '192.168.20.0/24')
+    monkeypatch.setenv(ENV, '192.168.1.0/24')
     _resolve(monkeypatch, '192.168.30.7')
     with pytest.raises(UnsafeWebhookURLError):
         assert_public_http_url('http://other.lan/')
-    _resolve(monkeypatch, '192.168.20.9', '10.0.0.2')
+    _resolve(monkeypatch, '192.168.1.9', '10.0.0.2')
     with pytest.raises(UnsafeWebhookURLError):
         assert_public_http_url_all('http://split.lan/')
 
@@ -75,17 +75,17 @@ def test_loopback_metadata_and_wide_entries_are_ignored(monkeypatch, entry, ip):
 
 
 def test_garbage_entries_are_ignored_and_public_still_works(monkeypatch):
-    monkeypatch.setenv(ENV, 'not-a-network, ,192.168.20.5')
+    monkeypatch.setenv(ENV, 'not-a-network, ,192.168.1.5')
     _resolve(monkeypatch, '8.8.8.8')
     assert assert_public_http_url('https://example.com/') == '8.8.8.8'
-    _resolve(monkeypatch, '192.168.20.5')
-    assert assert_public_http_url('http://wiki.lan/') == '192.168.20.5'
+    _resolve(monkeypatch, '192.168.1.5')
+    assert assert_public_http_url('http://wiki.lan/') == '192.168.1.5'
 
 
 def test_ipv4_mapped_ipv6_follows_the_ipv4_rule(monkeypatch):
-    monkeypatch.setenv(ENV, '192.168.20.5/32')
-    _resolve(monkeypatch, '::ffff:192.168.20.5')
-    assert assert_public_http_url('http://wiki.lan/') == '::ffff:192.168.20.5'
+    monkeypatch.setenv(ENV, '192.168.1.5/32')
+    _resolve(monkeypatch, '::ffff:192.168.1.5')
+    assert assert_public_http_url('http://wiki.lan/') == '::ffff:192.168.1.5'
     _resolve(monkeypatch, '::ffff:127.0.0.1')
     with pytest.raises(UnsafeWebhookURLError):
         assert_public_http_url('http://wiki.lan/')

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# run-omi-local-host.sh — run on the UNRAID HOST (ssh root@192.168.20.5), NOT in a container.
+# run-omi-local-host.sh — run on the UNRAID HOST (ssh root@<server-ip>), NOT in a container.
 #
 # Starts THREE containers (one compose project, shared omi-data volume):
 #   omi-proxy  — auto-discovering model merge proxy (:4000)
@@ -11,7 +11,7 @@
 #   2. bash ~/omi-host/run-omi-local-host.sh
 #
 # Options via environment:
-#   BIND_IP=192.168.20.5              (auto-detected from default route if unset)
+#   BIND_IP=<server-ip>              (auto-detected from default route if unset)
 #   PROVIDER_MODE=offline|real        (default offline)
 #   LLAMA_HOST=172.19.0.4             (llama.cpp host — for merge proxy auto-discovery)
 #   LLAMA_PORT=8081                   (llama.cpp port)

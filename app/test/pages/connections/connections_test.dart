@@ -49,7 +49,7 @@ void main() {
     expect(api.updates.last.$1, 'wiki');
     expect(api.updates.last.$2, {'enabled': true});
 
-    await tester.enterText(find.byKey(const Key('connections_wiki_field_url')), 'http://192.168.20.5:27123');
+    await tester.enterText(find.byKey(const Key('connections_wiki_field_url')), 'http://192.168.1.5:27123');
     await tester.enterText(find.byKey(const Key('connections_wiki_field_token')), 'family-token');
     await tester.ensureVisible(find.byKey(const Key('connections_save_wiki')));
     await tester.pumpAndSettle();
@@ -57,7 +57,7 @@ void main() {
     await tester.pumpAndSettle();
     final saved = api.updates.last.$2;
     expect(api.updates.last.$1, 'wiki');
-    expect(saved['url'], 'http://192.168.20.5:27123');
+    expect(saved['url'], 'http://192.168.1.5:27123');
     expect(saved['token'], 'family-token');
     expect(find.text('On'), findsOneWidget);
     // The token field is cleared after saving and never shows the stored token.

@@ -30,7 +30,7 @@ class FakeConnections extends ConnectionsApi {
   OutboundPreview wikiPreview = const OutboundPreview(
     title: 'Conversation - Garage shelves (conv-1)',
     content: '**From:** Omi conversation\n\n## Overview\n\nPlanned shelves.',
-    destination: 'http://192.168.20.5:27123 : raw/sources/2026-11-16 - Conversation - Garage shelves (conv-1).md',
+    destination: 'http://192.168.1.5:27123 : raw/sources/2026-11-16 - Conversation - Garage shelves (conv-1).md',
   );
 
   @override
@@ -67,7 +67,7 @@ class FakeConnections extends ConnectionsApi {
     previews.add((target: target, prompt: prompt, transcript: includeTranscript, context: context.toJson()));
     return ConnectionResult.ok(AgentJobPreview(
       target: target,
-      destination: target == 'hermes' ? 'http://192.168.20.9:8642' : 'http://192.168.20.9:7000',
+      destination: target == 'hermes' ? 'http://192.168.1.9:8642' : 'http://192.168.1.9:7000',
       content: '$prompt\n\n---\nContext from Omi:\n\n## Conversation: Garage shelves',
       suggestedTarget: prompt.length > 40 ? 'hermes' : 'odysseus',
       title: 'Garage shelves',

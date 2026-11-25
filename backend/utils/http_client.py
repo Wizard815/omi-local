@@ -59,7 +59,7 @@ def _allowed_private_networks() -> list[ipaddress.IPv4Network | ipaddress.IPv6Ne
     """Self-hosted opt-in: private networks a user's own webhooks may reach.
 
     `OMI_WEBHOOK_ALLOWED_PRIVATE_NETWORKS` is a comma-separated list of IPs or
-    CIDRs (e.g. `192.168.20.5/32`, for a home server such as an LLMWIKI vault).
+    CIDRs (e.g. `192.168.1.5/32`, for a home server such as an LLMWIKI vault).
     Read at call time; unset means no private address is ever allowed. Entries
     that aren't private networks are ignored, so this can't open loopback,
     link-local (cloud metadata), multicast or public ranges.

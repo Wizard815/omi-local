@@ -48,7 +48,7 @@ Map<String, Object?> _target({
 final Map<String, Object?> _connections = {
   'wiki': _target(
     enabled: true,
-    url: 'http://192.168.20.5:27123',
+    url: 'http://192.168.1.5:27123',
     hasToken: true,
     checked: true,
     extra: {
@@ -61,15 +61,15 @@ final Map<String, Object?> _connections = {
   ),
   'odysseus': _target(
     enabled: true,
-    url: 'http://192.168.20.9:7000',
+    url: 'http://192.168.1.9:7000',
     hasToken: true,
     fromEnv: true,
     checked: true,
     extra: {'endpoint_id': 'ep-local-llama', 'model': 'llama-3.3-70b', 'session_id': ''},
   ),
-  'hermes': _target(enabled: true, url: 'http://192.168.20.9:8642', fromEnv: true),
+  'hermes': _target(enabled: true, url: 'http://192.168.1.9:8642', fromEnv: true),
   'studio': _target(
-    url: 'http://192.168.20.9:8648',
+    url: 'http://192.168.1.9:8648',
     fromEnv: true,
     extra: {
       'default_agent': 'claude-code',
@@ -233,7 +233,7 @@ final connectionsScenarios = <AuditScenario>[
       const prompt = 'Make a cut list for three shelves and draft the hardware store order.';
       a.server.jsonRoutes['POST /v1/agent-jobs/preview'] = {
         'target': 'odysseus',
-        'destination': 'http://192.168.20.9:7000',
+        'destination': 'http://192.168.1.9:7000',
         'content': '$prompt\n\n---\nContext from Omi:\n\n## Conversation: Garage shelves ($_date 08:10)\n\n'
             'Planned shelves for the garage; need a cut list.\n\nAction items:\n- Buy 3 boards',
         'suggested_target': 'hermes',
@@ -259,7 +259,7 @@ final connectionsScenarios = <AuditScenario>[
         'content': '**From:** Omi conversation, $_date 08:10 to 08:22 (omi://conversation/conv-garage)\n\n'
             '## Overview\n\nPlanned shelves for the garage; need a cut list.\n\n## Action items\n\n- [ ] Buy 3 boards',
         'destination':
-            'http://192.168.20.5:27123 : raw/sources/$_date - Conversation - Garage shelves (conv-gar) (revised 1).md',
+            'http://192.168.1.5:27123 : raw/sources/$_date - Conversation - Garage shelves (conv-gar) (revised 1).md',
         'receipts': [
           {'target': 'wiki', 'sent_at': _utc(9, 0), 'title': 'Conversation - Garage shelves (conv-gar)', 'revision': 0}
         ],

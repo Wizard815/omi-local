@@ -18,7 +18,7 @@ GUARD = Path(__file__).with_name("egress-guard")
 PRELUDE = textwrap.dedent(
     """
     import socket, json, sys
-    FAKE = {"api.openai.com": "104.18.7.192", "llama.lan": "192.168.20.5", "nas.example.com": "192.168.20.7",
+    FAKE = {"api.openai.com": "104.18.7.192", "llama.lan": "192.168.1.5", "nas.example.com": "192.168.1.7",
             "metadata.google.internal": "169.254.169.254"}
     import sitecustomize as g
     def fake(host, port, *a, **k):
@@ -66,7 +66,7 @@ def test_block_mode_refuses_public_and_metadata_allows_lan(tmp_path):
         """
         print(json.dumps([try_lookup("api.openai.com"), try_lookup("llama.lan"), try_lookup("nas.example.com"),
                           try_lookup("metadata.google.internal"), try_connect("8.8.8.8"), try_connect("127.0.0.1"),
-                          try_connect("192.168.20.5"), try_connect("169.254.169.254")]))
+                          try_connect("192.168.1.5"), try_connect("169.254.169.254")]))
         """,
         tmp_path,
         OMI_EGRESS_GUARD="block",
@@ -115,7 +115,7 @@ def test_uvloop_off_and_proxy_env_dropped_while_on(tmp_path):
         """,
         tmp_path,
         OMI_EGRESS_GUARD="block",
-        HTTPS_PROXY="http://192.168.20.2:3128",
+        HTTPS_PROXY="http://192.168.1.2:3128",
         NO_PROXY="localhost",
     )
     assert json.loads(out) == ["asyncio", None, "localhost"]

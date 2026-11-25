@@ -264,7 +264,7 @@ class _DeveloperSettingsPageState extends State<_DeveloperSettingsPageView> {
                 child: _DeveloperTextField(
                   controller: _serverUrlController,
                   label: 'Server URL',
-                  hint: 'http://192.168.20.5:8000/',
+                  hint: 'http://192.168.1.5:8000/',
                 ),
               ),
               const SizedBox(width: OmiSpacing.sm),

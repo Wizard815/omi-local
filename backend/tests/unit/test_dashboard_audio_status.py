@@ -43,10 +43,10 @@ def test_audio_off_is_not_configured_and_not_probed(dashboard, monkeypatch):
 
 
 def test_audio_url_is_probed_at_its_health_endpoint(dashboard, monkeypatch):
-    monkeypatch.setenv("HOSTED_PARAKEET_API_URL", "http://192.168.20.10:8790/")
+    monkeypatch.setenv("HOSTED_PARAKEET_API_URL", "http://192.168.1.10:8790/")
     probed = _probe(dashboard, monkeypatch, healthy=False)
 
     status = asyncio.run(dashboard._get_async_components())["audio_service"]
 
-    assert probed == ["http://192.168.20.10:8790/health"]
+    assert probed == ["http://192.168.1.10:8790/health"]
     assert status["status"] == "down"
