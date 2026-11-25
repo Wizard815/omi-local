@@ -13251,6 +13251,16 @@ export interface OmiApiPaths {
       };
     };
   };
+  "/v1/users/me/local-usage": {
+    get: {
+      operationId: "get_my_local_usage_v1_users_me_local_usage_get";
+      responses: {
+        "200": unknown;
+        "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
   "/v1/users/me/paywall": {
     get: {
       operationId: "get_user_paywall_status_v1_users_me_paywall_get";
@@ -23949,6 +23959,28 @@ export async function get_total_llm_cost_v1_users_me_llm_usage_total_get(header:
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
+export async function get_my_local_usage_v1_users_me_local_usage_get(query: { days?: number }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<unknown> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/users/me/local-usage`;
+  const _params = query ? Object.entries(query)
+    .filter(([, v]) => v !== undefined && v !== null)
+    .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`).join('&') : '';
+  const _search = _params ? `?${_params}` : "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "GET",
+    headers: {
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+      ...(header.authorization !== undefined ? { "authorization": String(header.authorization) } : {}),
+      ...(header.X_App_Platform !== undefined ? { "X-App-Platform": String(header.X_App_Platform) } : {}),
+      ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
+      ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
+    },
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
 export async function get_user_paywall_status_v1_users_me_paywall_get(query: { platform?: string | null }, header: { X_App_Platform?: string, authorization?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<PaywallStatusResponse> {
   const _base = init?.baseURL ?? "";
   const _path = `/v1/users/me/paywall`;
@@ -26439,4 +26471,4 @@ export async function get_speech_profile_v4_speech_profile_get(header: { authori
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
-// Total: 600 client methods generated.
+// Total: 601 client methods generated.
