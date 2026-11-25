@@ -488,6 +488,15 @@ def _try_reactivate_subscription(uid: str, target_price_id: str) -> dict | None:
         ) from exc
 
 
+BILLING_UNAVAILABLE = 'Billing is not available on this server.'
+
+
+def require_hosted_billing() -> None:
+    """omi-local: a self-hosted server has no Stripe; purchases and portals answer 404, not 500."""
+    if is_self_hosted():
+        raise HTTPException(status_code=404, detail=BILLING_UNAVAILABLE)
+
+
 @router.get('/v1/payments/available-plans', response_model=AvailablePlansResponse)
 def get_available_plans_endpoint(
     # Payment / plan surfaces must stay reachable even if BYOK fingerprints
@@ -694,6 +703,18 @@ def get_overage_info_endpoint(uid: str = Depends(auth.get_current_user_uid_no_by
     Safe to call on any plan — non-overage plans just get a zero snapshot plus
     the explainer copy.
     """
+    if is_self_hosted():
+        # omi-local: unlimited local plan, no overage billing.
+        return OverageInfoResponse(
+            plan='Unlimited (this server)',
+            plan_type=PlanType.unlimited.value,
+            is_overage_plan=False,
+            markup_multiplier=1.0,
+            markup_percent=0.0,
+            explainer_title=OVERAGE_EXPLAINER_TITLE,
+            explainer_body=BILLING_UNAVAILABLE,
+            provider_reference_rates=PROVIDER_REFERENCE_RATES,
+        )
     subscription = users_db.get_user_subscription(uid)
     plan = subscription.plan if subscription else PlanType.basic
     snapshot = get_user_overage(uid, plan)
@@ -740,6 +761,7 @@ def _validate_price_id(price_id: str) -> None:
     '/v1/payments/checkout-session',
     response_model=PaymentCheckoutSessionResponse,
     response_model_exclude_none=True,
+    dependencies=[Depends(require_hosted_billing)],
 )
 @fresh_reader
 def create_checkout_session_endpoint(
@@ -896,7 +918,11 @@ def _store_modified_subscription(
     return new_subscription
 
 
-@router.post('/v1/payments/upgrade-subscription', response_model=PaymentUpgradeSubscriptionResponse)
+@router.post(
+    '/v1/payments/upgrade-subscription',
+    response_model=PaymentUpgradeSubscriptionResponse,
+    dependencies=[Depends(require_hosted_billing)],
+)
 @fresh_reader
 def upgrade_subscription_endpoint(request: UpgradeSubscriptionRequest, uid: str = Depends(auth.get_current_user_uid)):
     """Upgrade or change a user's subscription plan.
@@ -1142,7 +1168,11 @@ class CancelSubscriptionRequest(BaseModel):
     reason_details: Optional[str] = None
 
 
-@router.delete('/v1/payments/subscription', response_model=PaymentStatusMessageResponse)
+@router.delete(
+    '/v1/payments/subscription',
+    response_model=PaymentStatusMessageResponse,
+    dependencies=[Depends(require_hosted_billing)],
+)
 @fresh_reader
 def cancel_subscription_endpoint(
     request: CancelSubscriptionRequest = CancelSubscriptionRequest(),
@@ -1818,7 +1848,11 @@ async def stripe_connect_webhook(request: Request, stripe_signature: str = Heade
     return {"status": "success"}
 
 
-@router.post("/v1/stripe/connect-accounts", response_model=StripeConnectAccountResponse)
+@router.post(
+    "/v1/stripe/connect-accounts",
+    response_model=StripeConnectAccountResponse,
+    dependencies=[Depends(require_hosted_billing)],
+)
 def create_connect_account_endpoint(
     country: str | None = Query(default=None), uid: str = Depends(auth.get_current_user_uid)
 ):
@@ -1873,7 +1907,11 @@ def check_onboarding_status(uid: str = Depends(auth.get_current_user_uid)):
         )
 
 
-@router.post("/v1/stripe/refresh/{account_id}", response_model=StripeConnectAccountResponse)
+@router.post(
+    "/v1/stripe/refresh/{account_id}",
+    response_model=StripeConnectAccountResponse,
+    dependencies=[Depends(require_hosted_billing)],
+)
 def refresh_account_link_endpoint(request: Request, account_id: str, uid: str = Depends(auth.get_current_user_uid)):
     """
     Generate a fresh account link if the previous one expired
@@ -2017,7 +2055,11 @@ def stripe_cancel():
     """)
 
 
-@router.post('/v1/payments/customer-portal', response_model=CustomerPortalSessionResponse)
+@router.post(
+    '/v1/payments/customer-portal',
+    response_model=CustomerPortalSessionResponse,
+    dependencies=[Depends(require_hosted_billing)],
+)
 def create_customer_portal_endpoint(uid: str = Depends(auth.get_current_user_uid)):
     """Create a Stripe Customer Portal session for managing payment methods and subscriptions."""
 
@@ -2075,7 +2117,11 @@ def get_payment_method_status(uid: str = Depends(auth.get_current_user_uid)):
     return {"stripe": stripe_status, "paypal": paypal_status, "default": default_payment_method}
 
 
-@router.post("/v1/payment-methods/default", response_model=PaymentMutationResponse)
+@router.post(
+    "/v1/payment-methods/default",
+    response_model=PaymentMutationResponse,
+    dependencies=[Depends(require_hosted_billing)],
+)
 def set_default_payment_method_endpoint(
     data: SetDefaultPaymentMethodRequest, uid: str = Depends(auth.get_current_user_uid)
 ):
