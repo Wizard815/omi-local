@@ -1294,6 +1294,102 @@ class GeneratedFamilyCalendarEventResponse {
   }
 }
 
+class GeneratedFamilyDayBlock {
+  final bool allDay;
+  final int? durationMinutes;
+  final String? ownerId;
+  final DateTime? start;
+  final String timeLabel;
+  final String title;
+
+  const GeneratedFamilyDayBlock({
+    this.allDay = false,
+    this.durationMinutes,
+    this.ownerId,
+    this.start,
+    this.timeLabel = "",
+    required this.title,
+  });
+
+  factory GeneratedFamilyDayBlock.fromJson(Map<String, dynamic> json) {
+    return GeneratedFamilyDayBlock(
+      allDay: _required(_readFieldValue<bool>(_readField(json, const ["all_day"]), "all_day", _readBool, requiredField: false, nullable: false, defaultValue: false), "all_day"),
+      durationMinutes: _readFieldValue<int>(_readField(json, const ["duration_minutes"]), "duration_minutes", _readInt, requiredField: false, nullable: true),
+      ownerId: _readFieldValue<String>(_readField(json, const ["owner_id"]), "owner_id", _readString, requiredField: false, nullable: true),
+      start: _readFieldValue<DateTime>(_readField(json, const ["start"]), "start", _readDateTime, requiredField: false, nullable: true),
+      timeLabel: _required(_readFieldValue<String>(_readField(json, const ["time_label"]), "time_label", _readString, requiredField: false, nullable: false, defaultValue: ""), "time_label"),
+      title: _required(_readFieldValue<String>(_readField(json, const ["title"]), "title", _readString, requiredField: true, nullable: false), "title"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'all_day': allDay,
+      'duration_minutes': durationMinutes,
+      'owner_id': ownerId,
+      'start': start?.toUtc().toIso8601String(),
+      'time_label': timeLabel,
+      'title': title,
+    };
+  }
+}
+
+class GeneratedFamilyDayResponse {
+  final List<String>? chores;
+  final int choresOverdue;
+  final bool configured;
+  final String date;
+  final String error;
+  final List<GeneratedFamilyDayBlock>? next;
+  final String ownerName;
+  final bool reachable;
+  final int remaining;
+  final int tasksDue;
+
+  const GeneratedFamilyDayResponse({
+    this.chores,
+    this.choresOverdue = 0,
+    required this.configured,
+    this.date = "",
+    this.error = "",
+    this.next,
+    this.ownerName = "",
+    this.reachable = false,
+    this.remaining = 0,
+    this.tasksDue = 0,
+  });
+
+  factory GeneratedFamilyDayResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedFamilyDayResponse(
+      chores: _readFieldValue<List<String>>(_readField(json, const ["chores"]), "chores", _readStringList, requiredField: false, nullable: true),
+      choresOverdue: _required(_readFieldValue<int>(_readField(json, const ["chores_overdue"]), "chores_overdue", _readInt, requiredField: false, nullable: false, defaultValue: 0), "chores_overdue"),
+      configured: _required(_readFieldValue<bool>(_readField(json, const ["configured"]), "configured", _readBool, requiredField: true, nullable: false), "configured"),
+      date: _required(_readFieldValue<String>(_readField(json, const ["date"]), "date", _readString, requiredField: false, nullable: false, defaultValue: ""), "date"),
+      error: _required(_readFieldValue<String>(_readField(json, const ["error"]), "error", _readString, requiredField: false, nullable: false, defaultValue: ""), "error"),
+      next: _readFieldValue<List<GeneratedFamilyDayBlock>>(_readField(json, const ["next"]), "next", (value) => _readObjectList(value, GeneratedFamilyDayBlock.fromJson), requiredField: false, nullable: true),
+      ownerName: _required(_readFieldValue<String>(_readField(json, const ["owner_name"]), "owner_name", _readString, requiredField: false, nullable: false, defaultValue: ""), "owner_name"),
+      reachable: _required(_readFieldValue<bool>(_readField(json, const ["reachable"]), "reachable", _readBool, requiredField: false, nullable: false, defaultValue: false), "reachable"),
+      remaining: _required(_readFieldValue<int>(_readField(json, const ["remaining"]), "remaining", _readInt, requiredField: false, nullable: false, defaultValue: 0), "remaining"),
+      tasksDue: _required(_readFieldValue<int>(_readField(json, const ["tasks_due"]), "tasks_due", _readInt, requiredField: false, nullable: false, defaultValue: 0), "tasks_due"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'chores': chores,
+      'chores_overdue': choresOverdue,
+      'configured': configured,
+      'date': date,
+      'error': error,
+      'next': next?.map((value) => value.toJson()).toList(),
+      'owner_name': ownerName,
+      'reachable': reachable,
+      'remaining': remaining,
+      'tasks_due': tasksDue,
+    };
+  }
+}
+
 class GeneratedKeepDayReviewConversationRequest {
   final bool kept;
 

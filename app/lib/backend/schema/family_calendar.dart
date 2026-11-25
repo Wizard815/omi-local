@@ -125,3 +125,65 @@ class FamilyCalendarOutcome {
         error: g.error,
       );
 }
+
+/// One block still ahead today on the family calendar.
+class FamilyDayBlock {
+  final String title;
+
+  /// UTC; null for an all-day block.
+  final DateTime? start;
+
+  /// "14:30" in the user's time zone, or the server's word for all day.
+  final String timeLabel;
+  final bool allDay;
+
+  const FamilyDayBlock({required this.title, this.start, this.timeLabel = '', this.allDay = false});
+
+  factory FamilyDayBlock.fromGenerated(wire.GeneratedFamilyDayBlock g) =>
+      FamilyDayBlock(title: g.title, start: g.start, timeLabel: g.timeLabel, allDay: g.allDay);
+}
+
+/// Today on the family calendar (`GET /v1/family-calendar/today`), sized for a home-screen widget.
+class FamilyDay {
+  final bool configured;
+
+  /// The gateway answered. When false, a widget keeps its last data and [error] says why.
+  final bool reachable;
+
+  /// Today in the user's time zone, `yyyy-MM-dd`.
+  final String date;
+
+  /// The member it is for; empty = the whole family.
+  final String ownerName;
+  final List<FamilyDayBlock> next;
+
+  /// Blocks still ahead today, including those not in [next].
+  final int remaining;
+  final int tasksDue;
+  final int choresOverdue;
+  final String error;
+
+  const FamilyDay({
+    required this.configured,
+    this.reachable = false,
+    this.date = '',
+    this.ownerName = '',
+    this.next = const [],
+    this.remaining = 0,
+    this.tasksDue = 0,
+    this.choresOverdue = 0,
+    this.error = '',
+  });
+
+  factory FamilyDay.fromGenerated(wire.GeneratedFamilyDayResponse g) => FamilyDay(
+        configured: g.configured,
+        reachable: g.reachable,
+        date: g.date,
+        ownerName: g.ownerName,
+        next: (g.next ?? const []).map(FamilyDayBlock.fromGenerated).toList(),
+        remaining: g.remaining,
+        tasksDue: g.tasksDue,
+        choresOverdue: g.choresOverdue,
+        error: g.error,
+      );
+}

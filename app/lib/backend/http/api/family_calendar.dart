@@ -20,6 +20,13 @@ Future<ApiResult<FamilyCalendar>> getFamilyCalendar({String? conversationId}) =>
       decode: (body) => FamilyCalendar.fromGenerated(wire.GeneratedFamilyCalendarResponse.fromJson(_json(body))),
     );
 
+/// Today on the family calendar: what is still ahead, tasks due and overdue chores (the Android
+/// Family day and Next event widgets).
+Future<ApiResult<FamilyDay>> getFamilyDay() => executeApi(
+      request: ApiRequest(url: '${_base()}/today', method: 'GET'),
+      decode: (body) => FamilyDay.fromGenerated(wire.GeneratedFamilyDayResponse.fromJson(_json(body))),
+    );
+
 /// Put one reviewed event on the family calendar, with the user's edits (null = keep Omi's value).
 Future<ApiResult<FamilyCalendarOutcome>> approveFamilyCalendarEvent(
   FamilyCalendarEvent event, {
