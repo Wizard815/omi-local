@@ -148,6 +148,9 @@ services:
       # two-way task sync. Worked example: examples/allglance/README.md.
       ALLGLANCE_URL: ${ALLGLANCE_URL:-}
       ALLGLANCE_TOKEN: ${ALLGLANCE_TOKEN:-}
+      # Developer webhooks to your own LAN (e.g. FAITH's /omi/hook/...): Omi refuses
+      # private addresses unless they are listed here (IPs or CIDRs, comma separated).
+      OMI_WEBHOOK_ALLOWED_PRIVATE_NETWORKS: ${OMI_WEBHOOK_ALLOWED_PRIVATE_NETWORKS:-}
       # Connections (the app's Settings > Connections): where Omi may send a user's things.
       # Each is off until that user turns it on, and only approved days or explicit sends
       # leave. These are household defaults; a user's own address/token in the app wins.
