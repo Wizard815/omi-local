@@ -307,10 +307,23 @@ final connectionsScenarios = <AuditScenario>[
     id: 'approvals-agents-asking',
     title: "Waiting for your OK: an agent's question next to the tasks",
     page: 'lib/pages/approvals/approvals_page.dart (ApprovalsPage)',
-    state: 'Nothing else waits; Hermes asks before it runs the cut-list script',
+    state: "Nothing else waits; Hermes asks before it runs the cut-list script; Studio's agent asks to merge",
     run: (a) async {
       a.server.jsonRoutes['GET /v1/approvals'] = _waiting;
       a.server.jsonRoutes['GET /v1/agent-jobs'] = {'jobs': _jobs};
+      a.server.jsonRoutes['GET /v1/agent-jobs/studio/approvals'] = {
+        'approvals': [
+          {
+            'id': 'aw-1',
+            'title': 'Merge the cut-list script',
+            'agent': 'claude-code',
+            'summary': 'Tests pass; ready to merge into main.',
+            'status': 'awaiting_approval',
+            'job_title': 'Write a cut-list script',
+          }
+        ],
+        'error': '',
+      };
       await a.pump(const ApprovalsPage(), scaffold: false);
       await a.shot('Open Waiting for your OK');
     },

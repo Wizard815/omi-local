@@ -3,7 +3,7 @@ import 'package:omi/backend/schema/connections.dart';
 
 /// A Connections server in memory: records every call, answers like the backend.
 class FakeConnections extends ConnectionsApi {
-  FakeConnections({ConnectionsState? state, this.jobs = const []})
+  FakeConnections({ConnectionsState? state, this.jobs = const [], this.studioApprovals = const []})
       : state = state ??
             const ConnectionsState(targets: {
               'wiki': ConnectionTarget(name: 'wiki', options: {
@@ -20,6 +20,11 @@ class FakeConnections extends ConnectionsApi {
 
   ConnectionsState state;
   List<AgentJob> jobs;
+  List<StudioApproval> studioApprovals;
+
+  /// Studio approvals someone already answered elsewhere: id -> Studio's sentence.
+  final studioAnsweredElsewhere = <String, String>{};
+  final studioAnswers = <(String, String, String?)>[];
   final updates = <(String, Map<String, Object?>)>[];
   final tests = <String>[];
   final previews = <({String target, String prompt, bool transcript, Map<String, Object?> context})>[];
@@ -91,6 +96,23 @@ class FakeConnections extends ConnectionsApi {
       for (final j in jobs) j.id == jobId ? AgentJob(id: j.id, target: j.target, title: j.title, status: 'running') : j
     ];
     return ConnectionResult.ok(jobs.firstWhere((j) => j.id == jobId));
+  }
+
+  @override
+  Future<ConnectionResult<({List<StudioApproval> approvals, String error})>> listStudioApprovals() async =>
+      ConnectionResult.ok((approvals: studioApprovals, error: ''));
+
+  @override
+  Future<ConnectionResult<StudioApprovalAnswer>> answerStudioApproval(String workId, String decision,
+      {String? by}) async {
+    studioAnswers.add((workId, decision, by));
+    final elsewhere = studioAnsweredElsewhere[workId];
+    if (elsewhere != null) {
+      return ConnectionResult.ok(StudioApprovalAnswer(ok: false, alreadyAnswered: true, message: elsewhere));
+    }
+    studioApprovals = [for (final a in studioApprovals) if (a.id != workId) a];
+    return ConnectionResult.ok(
+        StudioApprovalAnswer(ok: true, message: decision == 'approve' ? 'Approved.' : 'Rejected.'));
   }
 
   @override

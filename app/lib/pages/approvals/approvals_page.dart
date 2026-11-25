@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import 'package:omi/backend/http/api/approvals.dart';
 import 'package:omi/backend/http/api/connections.dart';
+import 'package:omi/backend/preferences.dart';
 import 'package:omi/backend/schema/connections.dart';
 import 'package:omi/l10n/app_localizations.dart';
 import 'package:omi/pages/approvals/waiting_tasks_section.dart';
@@ -41,12 +42,17 @@ String _summaryLabel(AppLocalizations l10n, String date, String today) {
 }
 
 class ApprovalsPage extends StatefulWidget {
-  const ApprovalsPage({super.key, this.api = const ApprovalsApi(), this.connections = const ConnectionsApi()});
+  const ApprovalsPage(
+      {super.key, this.api = const ApprovalsApi(), this.connections = const ConnectionsApi(), this.answeredBy});
 
   final ApprovalsApi api;
 
-  /// omi-local: agent jobs whose agent asks before it goes on (Hermes is answered here).
+  /// omi-local: agent jobs whose agent asks before it goes on (Hermes is answered here), and
+  /// Studio's Agent work approvals in Omi's Studio chats (answered here too).
   final ConnectionsApi connections;
+
+  /// The name Studio shows for an answer from here; null: the user's first name.
+  final String? answeredBy;
 
   @override
   State<ApprovalsPage> createState() => _ApprovalsPageState();
@@ -58,12 +64,29 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
   /// Agent jobs waiting for an answer (never part of Approve all, never auto-approved).
   List<AgentJob> _asking = const [];
 
+  /// Studio's Agent work waiting for an approval (never part of Approve all either).
+  List<StudioApproval> _studio = const [];
+
   @override
   void initState() {
     super.initState();
     _controller.load();
     _loadAsking();
+    _loadStudio();
   }
+
+  Future<void> _loadStudio() async {
+    final ConnectionResult<({List<StudioApproval> approvals, String error})> result;
+    try {
+      result = await widget.connections.listStudioApprovals();
+    } catch (_) {
+      return; // Studio is an extra section, like the agents' questions.
+    }
+    if (!mounted || result.value == null) return;
+    setState(() => _studio = result.value!.approvals);
+  }
+
+  String get _answeredBy => widget.answeredBy ?? SharedPreferencesUtil().givenName;
 
   Future<void> _loadAsking() async {
     final ConnectionResult<List<AgentJob>> result;
@@ -77,7 +100,7 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
   }
 
   Future<void> _refresh() async {
-    await Future.wait([_controller.load(), _loadAsking()]);
+    await Future.wait([_controller.load(), _loadAsking(), _loadStudio()]);
   }
 
   @override
@@ -106,7 +129,7 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
             child: ListView(
               padding: const EdgeInsets.only(bottom: OmiSpacing.xl),
               children: [
-                if (_asking.isNotEmpty)
+                if (_asking.isNotEmpty || _studio.isNotEmpty)
                   Padding(
                     key: const Key('approval_agents_asking'),
                     padding: const EdgeInsets.fromLTRB(OmiSpacing.md, OmiSpacing.sm, OmiSpacing.md, 0),
@@ -115,6 +138,15 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
                       const SizedBox(height: OmiSpacing.xs),
                       for (final job in _asking)
                         AgentJobCard(job: job, api: widget.connections, onChanged: _loadAsking),
+                      for (final approval in _studio)
+                        StudioApprovalCard(
+                          approval: approval,
+                          api: widget.connections,
+                          by: _answeredBy,
+                          onChanged: () async {
+                            await Future.wait([_loadStudio(), _loadAsking()]);
+                          },
+                        ),
                     ]),
                   ),
                 Padding(
@@ -125,7 +157,8 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
                   ),
                 ),
                 // "Nothing is waiting" would contradict an agent asking just above.
-                WaitingTasksSection(controller: _controller, showEmpty: _asking.isEmpty, showHeader: false),
+                WaitingTasksSection(
+                    controller: _controller, showEmpty: _asking.isEmpty && _studio.isEmpty, showHeader: false),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: OmiSpacing.md),
                   child: OmiSettingsGroup(

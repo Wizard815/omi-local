@@ -5,6 +5,8 @@
 //    changing the prompt asks for a new preview; the suggested agent can be taken in one tap;
 //  * Send to wiki shows exactly what goes and where, and a second copy is a "revised copy";
 //  * agent jobs: a Hermes question is answered with Allow once / Deny, a Studio one points to Studio;
+//  * Studio's Agent work approvals are answered with Approve / Decline, and one answered elsewhere
+//    first says who answered;
 //  * Send to Coinpile: a transaction needs an account and an amount, and sends exactly the fields.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -200,6 +202,37 @@ void main() {
     await tester.pumpAndSettle();
     expect(api.answers, [('h1', 'once')]);
     expect(find.byKey(const Key('agent_job_allow_h1')), findsNothing, reason: 'the job runs again');
+  });
+
+  testWidgets("Studio's Agent work approvals are answered here, and one answered elsewhere says who", (tester) async {
+    final api = FakeConnections(studioApprovals: const [
+      StudioApproval(id: 'aw-1', title: 'Merge shelves', agent: 'claude-code', summary: 'Tests pass; ready to merge.'),
+      StudioApproval(id: 'aw-2', title: 'Delete old branch'),
+    ]);
+    api.studioAnsweredElsewhere['aw-2'] = 'Already approved in Studio by Robin.';
+    var reloads = 0;
+    await _pump(
+      tester,
+      ListView(children: [
+        for (final a in api.studioApprovals)
+          StudioApprovalCard(approval: a, api: api, by: 'Sam', onChanged: () async => reloads++),
+      ]),
+    );
+    expect(find.text('Merge shelves'), findsOneWidget);
+    expect(find.text('Tests pass; ready to merge.'), findsOneWidget);
+    expect(find.text('Studio asks before it goes on'), findsNWidgets(2));
+
+    await tester.tap(find.byKey(const Key('studio_approval_approve_aw-1')));
+    await tester.pumpAndSettle();
+    expect(api.studioAnswers, [('aw-1', 'approve', 'Sam')]);
+    expect(reloads, 1);
+
+    await tester.tap(find.byKey(const Key('studio_approval_reject_aw-2')));
+    await tester.pumpAndSettle();
+    expect(api.studioAnswers.last, ('aw-2', 'reject', 'Sam'));
+    expect(find.text('Already approved in Studio by Robin.'), findsOneWidget);
+    expect(find.byKey(const Key('studio_approval_reject_aw-2')), findsNothing, reason: 'nothing left to answer');
+    expect(reloads, 1);
   });
 
   testWidgets('Send to Coinpile: a transaction needs an account and sends exactly the fields', (tester) async {

@@ -156,6 +156,28 @@ class ConnectionsApi {
         body: {'choice': choice},
       );
 
+  /// Studio's Agent work approvals in Omi's chats; `error` says why Studio could not be read.
+  Future<ConnectionResult<({List<StudioApproval> approvals, String error})>> listStudioApprovals() => _call(
+        'GET',
+        'v1/agent-jobs/studio/approvals',
+        (json) {
+          final g = wire.GeneratedStudioApprovalsResponse.fromJson(json);
+          return (
+            approvals: (g.approvals ?? const []).map(StudioApproval.fromGenerated).toList(),
+            error: g.error,
+          );
+        },
+      );
+
+  /// [decision] is 'approve' or 'reject'; [by] is the name Studio shows ("Robin (Omi)").
+  Future<ConnectionResult<StudioApprovalAnswer>> answerStudioApproval(String workId, String decision, {String? by}) =>
+      _call(
+        'POST',
+        'v1/agent-jobs/studio/approvals/${Uri.encodeComponent(workId)}',
+        (json) => StudioApprovalAnswer.fromGenerated(wire.GeneratedStudioApprovalAnswerResponse.fromJson(json)),
+        body: {'decision': decision, if (by != null && by.isNotEmpty) 'by': by},
+      );
+
   Future<ConnectionResult<({String title, String body})>> coinpileDraft({String? conversationId, String? taskId}) {
     final query = [
       if (conversationId != null) 'conversation_id=${Uri.encodeQueryComponent(conversationId)}',

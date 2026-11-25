@@ -2606,6 +2606,154 @@ class GeneratedAnswerAgentApprovalRequest {
   }
 }
 
+class GeneratedStudioApproval {
+  final String agent;
+  final DateTime? createdAt;
+  final String decidedBy;
+  final String decidedVia;
+  final String decision;
+  final String id;
+  final String jobId;
+  final String jobTitle;
+  final String sessionId;
+  final String status;
+  final String summary;
+  final String title;
+
+  const GeneratedStudioApproval({
+    this.agent = "",
+    this.createdAt,
+    this.decidedBy = "",
+    this.decidedVia = "",
+    this.decision = "",
+    required this.id,
+    this.jobId = "",
+    this.jobTitle = "",
+    this.sessionId = "",
+    this.status = "",
+    this.summary = "",
+    this.title = "",
+  });
+
+  factory GeneratedStudioApproval.fromJson(Map<String, dynamic> json) {
+    return GeneratedStudioApproval(
+      agent: _required(_readFieldValue<String>(_readField(json, const ["agent"]), "agent", _readString, requiredField: false, nullable: false, defaultValue: ""), "agent"),
+      createdAt: _readFieldValue<DateTime>(_readField(json, const ["created_at"]), "created_at", _readDateTime, requiredField: false, nullable: true),
+      decidedBy: _required(_readFieldValue<String>(_readField(json, const ["decided_by"]), "decided_by", _readString, requiredField: false, nullable: false, defaultValue: ""), "decided_by"),
+      decidedVia: _required(_readFieldValue<String>(_readField(json, const ["decided_via"]), "decided_via", _readString, requiredField: false, nullable: false, defaultValue: ""), "decided_via"),
+      decision: _required(_readFieldValue<String>(_readField(json, const ["decision"]), "decision", _readString, requiredField: false, nullable: false, defaultValue: ""), "decision"),
+      id: _required(_readFieldValue<String>(_readField(json, const ["id"]), "id", _readString, requiredField: true, nullable: false), "id"),
+      jobId: _required(_readFieldValue<String>(_readField(json, const ["job_id"]), "job_id", _readString, requiredField: false, nullable: false, defaultValue: ""), "job_id"),
+      jobTitle: _required(_readFieldValue<String>(_readField(json, const ["job_title"]), "job_title", _readString, requiredField: false, nullable: false, defaultValue: ""), "job_title"),
+      sessionId: _required(_readFieldValue<String>(_readField(json, const ["session_id"]), "session_id", _readString, requiredField: false, nullable: false, defaultValue: ""), "session_id"),
+      status: _required(_readFieldValue<String>(_readField(json, const ["status"]), "status", _readString, requiredField: false, nullable: false, defaultValue: ""), "status"),
+      summary: _required(_readFieldValue<String>(_readField(json, const ["summary"]), "summary", _readString, requiredField: false, nullable: false, defaultValue: ""), "summary"),
+      title: _required(_readFieldValue<String>(_readField(json, const ["title"]), "title", _readString, requiredField: false, nullable: false, defaultValue: ""), "title"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'agent': agent,
+      'created_at': createdAt?.toUtc().toIso8601String(),
+      'decided_by': decidedBy,
+      'decided_via': decidedVia,
+      'decision': decision,
+      'id': id,
+      'job_id': jobId,
+      'job_title': jobTitle,
+      'session_id': sessionId,
+      'status': status,
+      'summary': summary,
+      'title': title,
+    };
+  }
+}
+
+class GeneratedStudioApprovalsResponse {
+  final List<GeneratedStudioApproval>? approvals;
+  final String error;
+
+  const GeneratedStudioApprovalsResponse({
+    this.approvals,
+    this.error = "",
+  });
+
+  factory GeneratedStudioApprovalsResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedStudioApprovalsResponse(
+      approvals: _readFieldValue<List<GeneratedStudioApproval>>(_readField(json, const ["approvals"]), "approvals", (value) => _readObjectList(value, GeneratedStudioApproval.fromJson), requiredField: false, nullable: true),
+      error: _required(_readFieldValue<String>(_readField(json, const ["error"]), "error", _readString, requiredField: false, nullable: false, defaultValue: ""), "error"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'approvals': approvals?.map((value) => value.toJson()).toList(),
+      'error': error,
+    };
+  }
+}
+
+class GeneratedAnswerStudioApprovalRequest {
+  final String? by;
+  final String decision;
+
+  const GeneratedAnswerStudioApprovalRequest({
+    this.by,
+    required this.decision,
+  });
+
+  factory GeneratedAnswerStudioApprovalRequest.fromJson(Map<String, dynamic> json) {
+    return GeneratedAnswerStudioApprovalRequest(
+      by: _readFieldValue<String>(_readField(json, const ["by"]), "by", _readString, requiredField: false, nullable: true),
+      decision: _required(_readFieldValue<String>(_readField(json, const ["decision"]), "decision", _readString, requiredField: true, nullable: false), "decision"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'by': by,
+      'decision': decision,
+    };
+  }
+}
+
+class GeneratedStudioApprovalAnswerResponse {
+  final bool alreadyAnswered;
+  final GeneratedStudioApproval? approval;
+  final bool changed;
+  final String message;
+  final bool ok;
+
+  const GeneratedStudioApprovalAnswerResponse({
+    this.alreadyAnswered = false,
+    this.approval,
+    this.changed = false,
+    this.message = "",
+    required this.ok,
+  });
+
+  factory GeneratedStudioApprovalAnswerResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedStudioApprovalAnswerResponse(
+      alreadyAnswered: _required(_readFieldValue<bool>(_readField(json, const ["already_answered"]), "already_answered", _readBool, requiredField: false, nullable: false, defaultValue: false), "already_answered"),
+      approval: _readFieldValue<GeneratedStudioApproval>(_readField(json, const ["approval"]), "approval", (value) => _readObject(value, GeneratedStudioApproval.fromJson), requiredField: false, nullable: true),
+      changed: _required(_readFieldValue<bool>(_readField(json, const ["changed"]), "changed", _readBool, requiredField: false, nullable: false, defaultValue: false), "changed"),
+      message: _required(_readFieldValue<String>(_readField(json, const ["message"]), "message", _readString, requiredField: false, nullable: false, defaultValue: ""), "message"),
+      ok: _required(_readFieldValue<bool>(_readField(json, const ["ok"]), "ok", _readBool, requiredField: true, nullable: false), "ok"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'already_answered': alreadyAnswered,
+      'approval': approval?.toJson(),
+      'changed': changed,
+      'message': message,
+      'ok': ok,
+    };
+  }
+}
+
 class _WireField {
   final bool present;
   final dynamic value;

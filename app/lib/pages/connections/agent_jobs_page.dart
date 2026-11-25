@@ -8,8 +8,8 @@ import 'package:omi/utils/alerts/app_snackbar.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 
 /// omi-local: what the user sent to an agent (Odysseus, Hermes, Studio), its status, the agent's
-/// question when it asks before going on (Hermes: Allow once / Deny here; Studio: in Studio), and
-/// the result.
+/// question when it asks before going on (Hermes: Allow once / Deny here; a Studio chat's own
+/// question: in Studio), and the result. [StudioApprovalCard] answers Studio's Agent work approvals.
 class AgentJobsPage extends StatefulWidget {
   const AgentJobsPage({super.key, this.api = const ConnectionsApi()});
 
@@ -201,6 +201,105 @@ class _AgentJobCardState extends State<AgentJobCard> {
                   ],
                 ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Studio's Agent work waiting for an approval in a chat Omi started: Approve or Decline here.
+/// The first answer anywhere wins; when someone answered first, Studio's own sentence says who
+/// ("Already approved in Studio by Robin.") and the buttons go away.
+class StudioApprovalCard extends StatefulWidget {
+  const StudioApprovalCard({super.key, required this.approval, required this.api, required this.onChanged, this.by});
+
+  final StudioApproval approval;
+  final ConnectionsApi api;
+  final Future<void> Function() onChanged;
+
+  /// The name Studio shows for this answer ("Robin (Omi)"); empty: the Omi key's name.
+  final String? by;
+
+  @override
+  State<StudioApprovalCard> createState() => _StudioApprovalCardState();
+}
+
+class _StudioApprovalCardState extends State<StudioApprovalCard> {
+  bool _busy = false;
+  String? _answeredElsewhere;
+
+  Future<void> _answer(String decision) async {
+    setState(() => _busy = true);
+    final result = await widget.api.answerStudioApproval(widget.approval.id, decision, by: widget.by);
+    if (!mounted) return;
+    setState(() => _busy = false);
+    final answer = result.value;
+    if (answer == null) {
+      AppSnackbar.showSnackbarError(connectionProblem(context, result, context.l10n.agentJobsAnswerFailed));
+      return;
+    }
+    if (answer.alreadyAnswered) {
+      setState(() => _answeredElsewhere = answer.message);
+      return;
+    }
+    await widget.onChanged();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final approval = widget.approval;
+    final studio = l10n.connectionsStudioTitle;
+    final answered = _answeredElsewhere;
+    return Padding(
+      key: Key('studio_approval_${approval.id}'),
+      padding: const EdgeInsets.only(bottom: OmiSpacing.sm),
+      child: Material(
+        color: OmiColors.surface1,
+        borderRadius: OmiRadius.lgAll,
+        clipBehavior: Clip.antiAlias,
+        child: Padding(
+          padding: const EdgeInsets.all(OmiSpacing.sm),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(spacing: OmiSpacing.xs, children: [
+                Text(studio, style: OmiType.caption.copyWith(color: OmiColors.textSecondary)),
+                if (approval.agent.isNotEmpty)
+                  Text(approval.agent, style: OmiType.caption.copyWith(color: OmiColors.textTertiary)),
+                if (approval.jobTitle.isNotEmpty)
+                  Text(approval.jobTitle, style: OmiType.caption.copyWith(color: OmiColors.textTertiary)),
+              ]),
+              const SizedBox(height: OmiSpacing.xxs),
+              Text(approval.title.isEmpty ? l10n.agentJobsUntitled : approval.title,
+                  style: OmiType.headline.copyWith(color: OmiColors.textPrimary)),
+              const SizedBox(height: OmiSpacing.xs),
+              Text(l10n.agentJobsAsks(studio), style: OmiType.subhead.copyWith(color: OmiColors.warning)),
+              if (approval.summary.isNotEmpty)
+                Text(approval.summary, style: OmiType.footnote.copyWith(color: OmiColors.textPrimary)),
+              const SizedBox(height: OmiSpacing.xs),
+              if (answered != null)
+                Semantics(
+                  liveRegion: true,
+                  child: Text(answered,
+                      key: Key('studio_approval_answered_${approval.id}'),
+                      style: OmiType.footnote.copyWith(color: OmiColors.textSecondary)),
+                )
+              else
+                OmiButtonPair(
+                  first: OmiButton(
+                    key: Key('studio_approval_approve_${approval.id}'),
+                    label: l10n.approvalApprove,
+                    onPressed: _busy ? null : () => _answer('approve'),
+                  ),
+                  second: OmiButton.secondary(
+                    key: Key('studio_approval_reject_${approval.id}'),
+                    label: l10n.approvalDecline,
+                    onPressed: _busy ? null : () => _answer('reject'),
+                  ),
+                ),
             ],
           ),
         ),

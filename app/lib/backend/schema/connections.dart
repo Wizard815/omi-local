@@ -235,7 +235,8 @@ class AgentJobApproval {
 
   const AgentJobApproval({this.requestId = '', this.command = '', this.description = '', this.choices = const []});
 
-  /// Hermes' questions are answered from Omi; Studio's only in Studio.
+  /// Hermes' questions are answered from Omi. A Studio chat's own question ("Allow once / Deny")
+  /// only in Studio; Studio's Agent work approvals are a [StudioApproval] each, answered from Omi.
   bool get answerableHere => choices.contains('once');
 }
 
@@ -320,6 +321,56 @@ class AgentJob {
       conversationIds: g.conversationIds,
       createdAt: g.createdAt,
       finishedAt: g.finishedAt);
+}
+
+/// Agent work in a Studio chat Omi started, waiting for an approval (Studio's Agent work).
+class StudioApproval {
+  final String id;
+  final String title;
+  final String agent;
+  final String summary;
+  final String jobTitle;
+  final String decision;
+  final String decidedVia;
+  final String decidedBy;
+  final DateTime? createdAt;
+
+  const StudioApproval({
+    required this.id,
+    this.title = '',
+    this.agent = '',
+    this.summary = '',
+    this.jobTitle = '',
+    this.decision = '',
+    this.decidedVia = '',
+    this.decidedBy = '',
+    this.createdAt,
+  });
+
+  factory StudioApproval.fromGenerated(wire.GeneratedStudioApproval g) => StudioApproval(
+        id: g.id,
+        title: g.title,
+        agent: g.agent,
+        summary: g.summary,
+        jobTitle: g.jobTitle,
+        decision: g.decision,
+        decidedVia: g.decidedVia,
+        decidedBy: g.decidedBy,
+        createdAt: g.createdAt?.toLocal(),
+      );
+}
+
+/// Studio's answer to Approve / Reject. [alreadyAnswered]: someone answered first (or the work
+/// moved on), and [message] is Studio's own sentence saying who, e.g. "Already approved in Studio by Robin.".
+class StudioApprovalAnswer {
+  final bool ok;
+  final bool alreadyAnswered;
+  final String message;
+
+  const StudioApprovalAnswer({required this.ok, this.alreadyAnswered = false, this.message = ''});
+
+  factory StudioApprovalAnswer.fromGenerated(wire.GeneratedStudioApprovalAnswerResponse g) =>
+      StudioApprovalAnswer(ok: g.ok, alreadyAnswered: g.alreadyAnswered, message: g.message);
 }
 
 /// What "Send to agent" would give the agent.
