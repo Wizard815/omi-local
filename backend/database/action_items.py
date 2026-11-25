@@ -2188,7 +2188,7 @@ class FirestoreActionItems:
 
 def _caldav_dirty(uid: str) -> None:
     try:
-        from utils.caldav.sync import mark_dirty
+        from utils.caldav.dirty import mark_dirty
 
         mark_dirty(uid)
     except Exception:  # noqa: BLE001 — never let the sync hook fail a write
