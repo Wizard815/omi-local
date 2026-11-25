@@ -334,8 +334,8 @@ function LaunchAtLoginRow(): React.JSX.Element {
       title="Launch at login"
       subtitle={
         supported
-          ? 'Start Omi automatically when you sign in to Windows.'
-          : 'Start Omi automatically when you sign in to Windows. Available in installed builds only.'
+          ? 'Start Omi automatically when you sign in.'
+          : 'Start Omi automatically when you sign in. Available in installed builds only.'
       }
       keywords="startup autostart launch login boot start"
       control={

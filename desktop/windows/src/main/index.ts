@@ -36,6 +36,7 @@ import { registerMemoryExportHandlers } from './ipc/memoryExport'
 import { registerChatFilesHandlers } from './ipc/chatFiles'
 import { registerKgHandlers } from './ipc/kg'
 import { installNetworkHooks, registerOmiLocalHandlers } from './omiLocal'
+import { autostartExecutable, isLinuxAutostartEnabled, setLinuxAutostart } from './linuxAutostart'
 import { registerIntegrationsHandlers } from './ipc/integrations'
 import { registerLocalGraphHandlers } from './ipc/localGraph'
 import { registerUsageHandlers } from './ipc/usage'
@@ -1307,13 +1308,22 @@ app.whenReady().then(async () => {
   // Packaged builds only: in dev process.execPath is the bare electron.exe
   // WITHOUT the app path, so a dev-written Run entry would launch an empty
   // Electron shell at every login (found live during Phase 1 verification).
+  // Linux has no login-item API in Electron: an XDG autostart entry instead.
   ipcMain.handle('app:get-login-item', () => ({
-    openAtLogin: app.isPackaged ? app.getLoginItemSettings().openAtLogin : false,
+    openAtLogin: !app.isPackaged
+      ? false
+      : process.platform === 'linux'
+        ? isLinuxAutostartEnabled()
+        : app.getLoginItemSettings().openAtLogin,
     supported: app.isPackaged
   }))
   ipcMain.handle('app:set-login-item', (_e, enabled: boolean) => {
     if (!app.isPackaged) {
       console.log('[login-item] skipped in dev (execPath is bare electron.exe)')
+      return
+    }
+    if (process.platform === 'linux') {
+      setLinuxAutostart(!!enabled, autostartExecutable(process.env, process.execPath))
       return
     }
     app.setLoginItemSettings({ openAtLogin: !!enabled, path: process.execPath, args: ['--hidden'] })
