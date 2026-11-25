@@ -51,6 +51,7 @@ Both go in `omi-host/.env`. That is the file next to `docker-compose.yml`, which
 | Groq hosted Whisper, or any other hosted OpenAI-compatible API | [`frontier-groq.env.example`](frontier-groq.env.example) | **yes** |
 | The whole gateway on another machine, none here | [`remote-gateway.env.example`](remote-gateway.env.example) + [`no-bundled-audio.override.yml`](no-bundled-audio.override.yml) here; [`gateway-machine.compose.yml`](gateway-machine.compose.yml) there | no |
 | No local audio at all, cloud STT only (Deepgram / Modulate / Soniox) | [`cloud-stt-only.env.example`](cloud-stt-only.env.example) + [`no-bundled-audio.override.yml`](no-bundled-audio.override.yml) | **yes** |
+| Transcription on your Android phone (Termux whisper.cpp, app setting **Local Whisper**) | [`../../PHONE-LLM.md`](../../PHONE-LLM.md) | no |
 | Any of these on a host without the AMD gfx906 card | add [`no-gpu.override.yml`](no-gpu.override.yml) | — |
 
 ## Applying one
