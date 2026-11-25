@@ -68,9 +68,10 @@ Settings → Connections, for each service: the address (or the stack's), the pe
   (`once` or `deny`).
 - **Studio**: a long-lived admin JWT (set `HERMES_WEB_UI_AUTH_JWT_EXPIRES_IN` up to 365 days, or a
   dedicated Studio user). For results, register a webhook endpoint in Studio (Settings →
-  Webhooks) at `http://<omi>:8080/v1/integrations/studio/events` with *include content*,
+  Webhooks) at `http://<omi>:8000/v1/integrations/studio/events` with *include content*,
   *allow private network*, and the same secret as `STUDIO_WEBHOOK_SECRET` (or the person's
-  webhook secret in the app). Without it Omi polls `GET /api/studio/orb/work` for the status.
+  webhook secret in the app). The port is the backend's, `BACKEND_PORT` (default 8000); with
+  the wrong port, Studio's results never arrive. Without it Omi polls `GET /api/studio/orb/work` for the status.
 - **Coinpile**: a `cp_<person>_…` token with the `mcp` scope. Notes use `write_note`,
   transactions `record_transaction`; both only *ask*: nothing changes until Yes on Coinpile's
   Agent page.

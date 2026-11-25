@@ -9,7 +9,7 @@ the two commands to finish.
 | Artifact | Path | What it is |
 |---|---|---|
 | **Android APK** | `omi-dev-local.apk` | `com.friend.ios.dev` (dev flavor), built from `app/` with Flutter 3.44.5. Signs in with a server URL (`http://<server-ip>:8000/` or a tunnel URL) plus the username/password seeded on the server. Cleartext + `omi-dev://` callback scheme confirmed in the manifest. |
-| **Host stack package** | `omi-host/` | `Dockerfile` + `docker-compose.yml` + `entrypoint.sh` + `run-omi-local-host.sh`. Two containers (one compose project): **omi-local** (Firebase **Auth emulator** (container-internal), **Firestore emulator (:8085)**, **Redis (:6380)**, Python **backend (:8000)**) and **omi-audio** (fully-offline **CPU** speech: faster-whisper STT + speaker diarization + Piper TTS on `:8790`). All from this repo's own code (`backend/`), offline provider mode. |
+| **Host stack package** | `omi-host/` | `Dockerfile` + `docker-compose.yml` + `entrypoint.sh` + `run-omi-local-host.sh`. Three containers (one compose project): **omi-local** (Firebase **Auth emulator** (container-internal), **Firestore emulator (:8085)**, **Redis (:6380)**, Python **backend (:8000)**), **omi-proxy** (the model proxy the backend calls, `:4000`, see **Point Omi at your local models**) and **omi-audio** (offline speech on `:8790`: whisper.cpp STT on the **GPU** (ROCm build for gfx906, GPU 0 by default), speaker diarization, Piper TTS; faster-whisper on CPU is the fallback). All from this repo's own code (`backend/`), offline provider mode. |
 
 The APK is already at the repo root. The host package is in `omi-host/`.
 
@@ -56,11 +56,11 @@ The Omi app is architecturally a **Firebase-Auth + backend-API** client. To run 
 |---|---|---|
 | **Identity / sign-in** | ✅ Local | Username/password checked by the backend (`/v1/auth/local-login`), which signs its own session tokens. The Firebase **Auth emulator** (project `demo-omi-local`) only holds each account's uid, inside the container. See **Login** below. |
 | **All app data** (conversations, memories, settings, action items, chat) | ✅ Local | Python backend (`:8000`) + **Firestore emulator** (`:8085`) + Redis. The app makes **zero direct Firestore calls** — everything goes through the backend, so only `:8000` needs to be reachable. |
-| **Speech-to-text (live capture / memos / batch)** | ✅ Fully local (server-side CPU) | In-app **Settings → Transcription → "Omi Parakeet"** routes speech to the `omi-audio` container (faster-whisper on CPU, ~5× realtime on the ML350). The phone only streams raw audio; **no STT runs on the phone** in this path. This is the default. |
+| **Speech-to-text (live capture / memos / batch)** | ✅ Fully local (server-side CPU) | In-app **Settings → Transcription → "Omi Parakeet"** routes speech to the `omi-audio` container: whisper.cpp's `whisper-server` on the GPU (`OMI_ASR_ENGINE=whispercpp`, `WHISPER_MODEL=large-v3-turbo`, `HIP_VISIBLE_DEVICES=0`). `OMI_ASR_ENGINE=fasterwhisper` moves it to the CPU (faster-whisper small, ~5× realtime on the ML350). The phone only streams raw audio; **no STT runs on the phone** in this path. This is the default. |
 | **Speech-to-text (on-phone alternative)** | ✅ Fully local | **Settings → Transcription → "On-device (Whisper)"** runs Whisper entirely on the phone (downloads a model once), no network. Use this if you'd rather keep STT off the server; heavier on the phone's battery/CPU. |
 | **Speaker diarization ("who said what")** | ✅ Fully local | `omi-audio` does resemblyzer ECAPA embeddings + greedy clustering, wired to the backend's `HOSTED_SPEAKER_EMBEDDING_API_URL`. |
 | **Text-to-speech (Omi's spoken replies)** | ✅ Fully local | `omi-audio`'s Piper TTS, wired via `TTS_LOCAL_BASE_URL` in `routers/tts.py`. (Cloud ElevenLabs stays available if you set `ELEVENLABS_API_KEY`.) |
-| **AI chat / memory extraction / summaries** | ✅ Fully local (option 1 below) | The backend calls both an OpenAI-compatible API (`gpt-5.6-luna` / `gpt-5-nano`) and the Anthropic Messages API (`claude-sonnet-4-6`, the main agentic chat). Both are routed to your llama.cpp — the Anthropic side via `omi-host/local_llm_adapter.py`, an Anthropic→OpenAI translator. |
+| **AI chat / memory extraction / summaries** | ✅ Fully local (option 1 below) | The backend calls both an OpenAI-compatible API (`gpt-5.6-luna` / `gpt-5-nano`) and the Anthropic Messages API (`claude-sonnet-4-6`, the main agentic chat). Both go through `omi-proxy` to your llama.cpp or llama-swap — the Anthropic side via `omi-host/local_llm_adapter.py`, an Anthropic→OpenAI translator. |
 
 ### Local only, enforced
 
@@ -71,28 +71,29 @@ the audit behind it: [`omi-host/NETWORK.md`](omi-host/NETWORK.md).
 
 ### AI options (set when starting the host stack)
 
-1. **Fully local (your MI50 llama.cpp)** — start llama.cpp with an OpenAI server and pass it in:
+1. **Fully local (your llama.cpp or llama-swap)** — see **Point Omi at your local models**
+   below. In short:
    ```bash
-   OPENAI_BASE_URL=http://<server-ip>:8081/v1 \
-   OPENAI_API_KEY=*** \
-   LOCAL_LLM_MODEL=qwen-local \
+   UPSTREAMS='{"argos":"http://<argos-host>:<port>/v1"}' \
+   OPENAI_API_KEY=<argos key, or local> \
+   OMI_LOCAL_MODEL=argos/<chat alias> \
+   LOCAL_LLM_MODEL=argos/<chat alias> \
+   LOCAL_EMBEDDING_MODEL=argos/<embedding alias> \
    bash omi-host/run-omi-local-host.sh
    ```
+   Setting `OPENAI_BASE_URL` yourself does nothing: `docker-compose.yml` fixes it to
+   `http://omi-proxy:4000/v1`. The proxy decides where each model goes.
    This makes **every** LLM call local, both surfaces:
-   - **OpenAI path** (summaries, memory extraction): the backend's `ChatOpenAI`
-     client honors `OPENAI_BASE_URL` directly.
+   - **OpenAI path** (summaries, memory extraction, embeddings): the backend calls
+     `omi-proxy`, which sends `argos/<model>` to the `argos` upstream as `<model>`.
    - **Anthropic path** (the main agentic chat, model `claude-sonnet-4-6`):
      the container also starts `local_llm_adapter.py` on `:8788` and sets
      `ANTHROPIC_BASE_URL` to it. The adapter translates the Anthropic
      Messages API (streaming + tool calls) to OpenAI chat completions and
-     forwards to llama.cpp. Zero backend code changes.
+     sends them to the proxy as `LOCAL_LLM_MODEL`.
 
-   `LOCAL_LLM_MODEL` is the model name the adapter sends upstream — set it to
-   whatever your llama.cpp serves (or use llama.cpp `--alias` and leave it
-   empty to pass `claude-sonnet-4-6` through; llama.cpp also accepts unknown
-   names when it serves a single model). Adapter verified end-to-end with the
-   real Anthropic SDK 0.111.0: text + streaming + tool-call round trips
-   (`.local/test/test_adapter_e2e.py`).
+   Adapter verified end-to-end with the real Anthropic SDK 0.111.0: text + streaming +
+   tool-call round trips (`.local/test/test_adapter_e2e.py`).
 
 2. **Your own cloud key** — `OPENAI_API_KEY=*** PROVIDER_MODE=real bash omi-host/run-omi-local-host.sh`
    (chat/memories go to OpenAI; identity + storage stay local).
@@ -143,16 +144,85 @@ the audit behind it: [`omi-host/NETWORK.md`](omi-host/NETWORK.md).
 - **Desktop (macOS) app is out of scope** for a phone setup; the `backend/` runs the
   same code the macOS desktop uses, so it's not wasted.
 
+## Point Omi at your local models
+
+The backend never calls a model server directly. It calls `omi-proxy`
+(`OPENAI_BASE_URL=http://omi-proxy:4000/v1`, fixed in `omi-host/docker-compose.yml`).
+The proxy lists the models of every server in `UPSTREAMS` and routes by the tag in front
+of the model name. Four settings decide what Omi uses:
+
+| Setting | What it does |
+|---|---|
+| `UPSTREAMS` | JSON map of tag → OpenAI-compatible base URL, on `omi-proxy`. Unset: `{"llama":"http://LLAMA_HOST:LLAMA_PORT/v1"}`. |
+| `OMI_LOCAL_MODEL` | The main model (summaries, memories, day review), as `tag/model`. |
+| `LOCAL_LLM_MODEL` | The agentic chat, through `local_llm_adapter.py`. |
+| `LOCAL_EMBEDDING_MODEL` | Memory and conversation search. Unset: `text-embedding-3-large`, which a local server usually doesn't have, so search fails. |
+
+The dashboard's model picker (`http://<server-ip>:8000/`) is stored in Redis and wins over
+the model settings above. Clear it there if a change in `.env` seems ignored.
+
+For llama-swap (Argos), put this in `omi-host/.env` and run
+`bash omi-host/run-omi-local-host.sh` again:
+
+```bash
+UPSTREAMS={"argos":"http://<argos-host>:<port>/v1"}
+OPENAI_API_KEY=<argos key, or local if it has none>
+OMI_LOCAL_MODEL=argos/<chat alias>
+LOCAL_LLM_MODEL=argos/<chat alias>
+LOCAL_EMBEDDING_MODEL=argos/<embedding alias>
+```
+
+- Use llama-swap **aliases**, not file names, so a model swap doesn't break Omi.
+- Pick a chat model that does tool calls and holds about 8k tokens of input
+  (`DAY_REVIEW_MAX_INPUT_CHARS`, 28k characters).
+- The embedding alias must serve `/v1/embeddings`. Changing it later makes old memories
+  unsearchable until they are embedded again.
+- `OPENAI_API_KEY` goes to **every** upstream except OpenRouter, so two upstreams with
+  different keys don't work yet.
+- A cold model load counts against `OMI_LOCAL_LLM_TIMEOUT_SECONDS` (300). Share an alias
+  with your other apps so one model stays loaded.
+- Leave `OPENROUTER_API_KEY` unset to keep everything on your network.
+
+> **Don't expose port 8000 through a tunnel on an older build.** Before branch
+> `studio-herder`, `/_local/storage` served recordings, speech profiles and chat files to
+> anyone with the link, with no login. Update to this branch and rebuild first (see
+> **Recordings and files** below).
+
+## Recordings and files (`/_local/storage`)
+
+Recordings, speech profiles and chat files live under `LOCAL_STORAGE_PATH` and are served at
+`/_local/storage`. Every request needs one of:
+
+- a **signed link** (`?exp=…&sig=…`). The API hands these out only to the signed-in owner,
+  and each one opens one file until it expires: 15 or 60 minutes for playback and speech
+  samples, `OMI_LOCAL_STORAGE_URL_TTL_SECONDS` (default 7 days, also the longest allowed) for stored links
+  such as chat thumbnails. The app's audio player and image views use these, so the app
+  needs no rebuild.
+- the person's **login** (`Authorization: Bearer <token>`), for files under their own uid.
+
+Anything else gets 401 (no login), 403 (expired or forged link) or 404 (someone else's file,
+or a path with `..`). Answers carry `Cache-Control: private, no-store`, so a tunnel or CDN
+doesn't keep a copy.
+
+- Links are signed with `OMI_LOCAL_STORAGE_SIGNING_SECRET`, or else a key derived from
+  `LOCAL_AUTH_JWT_SECRET`. Changing either breaks every link already handed out; reopen the
+  item in the app to get a new one.
+- After updating, links the server cached in the last hour are unsigned and answer 401 until
+  they age out (at most 60 minutes). Reopen the conversation to get a fresh one.
+- `OMI_LOCAL_STORAGE_BASE_URL` is the address in the links (default
+  `http://omi-local:8000/_local/storage`, which only other containers can reach). Set it to an
+  address the phone reaches if you play recordings in the app.
+
 ## Files I created (all under the repo, gitignored or new)
 
 ```
 omi-dev-local.apk              # the Android APK
 omi-host/
   Dockerfile                   # omi-local host container image
-  Dockerfile.audio             # omi-audio image (pipecat base + faster-whisper/piper/resemblyzer)
+  Dockerfile.audio             # omi-audio image (whisper.cpp ROCm build + faster-whisper/piper/resemblyzer)
   docker-compose.yml           # pins <server-ip>:8000 + omi-audio (:8790 loopback)
   entrypoint.sh                # starts redis + firebase emulators + backend (+ local-audio env)
-  local_audio_service.py       # fully-offline CPU audio: WS /v3/stream + /v1//v2 transcribe
+  local_audio_service.py       # offline audio: WS /v3/stream + /v1//v2 transcribe
                                #   + /v2/embedding + /v1/tts (Piper) + /health
   local_llm_adapter.py         # Anthropic->OpenAI shim for the local LLM
   run-omi-local-host.sh        # the one host-side command (builds both images, starts both)

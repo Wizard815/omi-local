@@ -4,7 +4,8 @@
 # Starts THREE containers (one compose project, shared omi-data volume):
 #   omi-proxy  — auto-discovering model merge proxy (:4000)
 #   omi-local  — backend (:8000) + Firebase Auth/Firestore emulators + Redis
-#   omi-audio  — fully-offline CPU audio: faster-whisper STT + diarization + Piper TTS
+#   omi-audio  — offline audio: whisper.cpp STT on the GPU (ROCm, HIP_VISIBLE_DEVICES=0;
+#                OMI_ASR_ENGINE=fasterwhisper for CPU) + diarization + Piper TTS
 #
 # Usage:
 #   1. Copy the package:  scp omi-host.tar.gz root@host:~
@@ -13,11 +14,15 @@
 # Options via environment:
 #   BIND_IP=<server-ip>              (auto-detected from default route if unset)
 #   PROVIDER_MODE=offline|real        (default offline)
-#   LLAMA_HOST=172.19.0.4             (llama.cpp host — for merge proxy auto-discovery)
+#   UPSTREAMS='{"argos":"http://host:port/v1"}' (merge proxy upstreams, tag -> base URL;
+#                                      wins over LLAMA_HOST/LLAMA_PORT. The backend always
+#                                      calls the proxy: OPENAI_BASE_URL is fixed in compose)
+#   LLAMA_HOST=172.19.0.4             (llama.cpp host — used when UPSTREAMS is unset)
 #   LLAMA_PORT=8081                   (llama.cpp port)
 #   OPENROUTER_API_KEY=sk-or-...      (auto-adds OpenRouter to merge proxy if set)
 #   OMI_LOCAL_MODEL=llama/gemma-4-12b (default primary model — merge proxy name)
 #   LOCAL_LLM_MODEL=llama/gemma-4-12b (default chat agent model)
+#   LOCAL_EMBEDDING_MODEL=llama/embed (embedding model for memory search — merge proxy name)
 #   OPENAI_API_KEY=local              (key for llama.cpp / local backends)
 #   OMI_AUDIO_URL=http://host:8790    (audio service elsewhere, or "off"; default the
 #                                      bundled omi-audio — see examples/audio/README.md)
@@ -78,7 +83,11 @@ docker build -t omi-proxy:latest       -f "$HERE/Dockerfile.proxy"          "$HE
 _llama_host="${LLAMA_HOST:-172.19.0.4}"
 _llama_port="${LLAMA_PORT:-8081}"
 _llama_base="http://${_llama_host}:${_llama_port}/v1"
-echo "LLM backend (llama.cpp): ${_llama_base}"
+if [ -n "${UPSTREAMS:-}" ]; then
+  echo "LLM backends (UPSTREAMS): ${UPSTREAMS}"
+else
+  echo "LLM backend (llama.cpp): ${_llama_base}"
+fi
 
 if [ -n "${OPENROUTER_API_KEY:-}" ]; then
   echo "OpenRouter: enabled (models auto-discovered)"

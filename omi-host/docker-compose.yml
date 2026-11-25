@@ -37,6 +37,9 @@ services:
       # These must match tagged names from the merge proxy: llama/gemma-4-12b, or/openai/gpt-4o, etc.
       OMI_LOCAL_MODEL: ${OMI_LOCAL_MODEL:-}
       LOCAL_LLM_MODEL: ${LOCAL_LLM_MODEL:-}
+      # Embeddings (memory and conversation search) through the merge proxy,
+      # e.g. argos/embed. Empty: the dashboard's pick, else text-embedding-3-large.
+      LOCAL_EMBEDDING_MODEL: ${LOCAL_EMBEDDING_MODEL:-}
       # Audio: transcription, speaker embeddings and TTS all go to OMI_AUDIO_URL,
       # the bundled omi-audio container unless set (another machine running it,
       # or "off" for cloud STT only). entrypoint.sh/audio-env.sh derive the
@@ -78,6 +81,12 @@ services:
       # container on this Docker network, same as HOSTED_PARAKEET_API_URL
       # above uses http://omi-audio:8790 rather than a host-facing address.
       OMI_LOCAL_STORAGE_BASE_URL: ${OMI_LOCAL_STORAGE_BASE_URL:-http://omi-local:8000/_local/storage}
+      # /_local/storage answers only signed links (?exp=&sig=) or the owner's
+      # login (backend/utils/other/local_storage_gate.py). Links are signed with
+      # this, else LOCAL_AUTH_JWT_SECRET; changing either breaks links already
+      # handed out. Stored links (public_url) last this many seconds, at most 7 days.
+      OMI_LOCAL_STORAGE_SIGNING_SECRET: ${OMI_LOCAL_STORAGE_SIGNING_SECRET:-}
+      OMI_LOCAL_STORAGE_URL_TTL_SECONDS: ${OMI_LOCAL_STORAGE_URL_TTL_SECONDS:-}
       # Named buckets storage.py treats as optional-if-unset (BUCKET_TEMPORAL_SYNC_LOCAL
       # already defaults in storage.py itself, since sync has no opt-out path;
       # these two do have one, e.g. get_user_has_speech_profile()'s bucket=None
