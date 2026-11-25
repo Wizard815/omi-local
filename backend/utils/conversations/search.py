@@ -9,7 +9,12 @@ from uuid import UUID
 
 import typesense
 
-from database.conversation_scan import SPEAKER_BROWSE_BATCH, SPEAKER_BROWSE_SCAN_CAP
+from database.conversation_scan import (
+    SPEAKER_BROWSE_BATCH,
+    SPEAKER_BROWSE_SCAN_CAP,
+    conversation_scan_budget,
+    iter_conversations,
+)
 from utils.other.list_budget import ListReadBudget
 from utils.share_links import accepted_share_hosts, share_base_url
 
@@ -339,6 +344,126 @@ def browse_conversations_by_speaker(
     }
 
 
+# ---- self-hosted: no Typesense ------------------------------------------------------------
+# omi-local runs without a Typesense server. Instead of 500ing every keyword search, the
+# conversations are read newest-first from Firestore (one bounded pass) and matched on their
+# title, overview, tasks and transcript text.
+
+LOCAL_SEARCH_SCAN_CAP = 1000
+LOCAL_SEARCH_BATCH = 100
+_LOCAL_STOPWORDS = frozenset(
+    'a an and are about at be did do does for from had has have i in is it me my of on or our '
+    'said say that the to was we were what when where which who why will with you your'.split()
+)
+
+
+def typesense_configured() -> bool:
+    """A Typesense server is configured, or a test injected a client through ``client``."""
+    if not isinstance(client, _LazyTypesenseClient):
+        return True
+    return bool(os.getenv('TYPESENSE_HOST') and os.getenv('TYPESENSE_API_KEY'))
+
+
+def _query_terms(query: str) -> List[str]:
+    words = re.findall(r'\w+', (query or '').lower())
+    terms = [w for w in words if w not in _LOCAL_STOPWORDS]
+    return list(dict.fromkeys(terms or words))
+
+
+def _conversation_search_text(row: Dict[str, Any]) -> tuple[str, str]:
+    structured = row.get('structured') or {}
+    head = ' '.join(
+        str(part or '')
+        for part in (
+            structured.get('title'),
+            structured.get('overview'),
+            structured.get('category'),
+            ' '.join(str((item or {}).get('description') or '') for item in structured.get('action_items') or []),
+            ' '.join(str((event or {}).get('title') or '') for event in structured.get('events') or []),
+        )
+    ).lower()
+    body = ' '.join(str((seg or {}).get('text') or '') for seg in row.get('transcript_segments') or []).lower()
+    return head, body
+
+
+def local_text_search(
+    conversations: Iterable[Dict[str, Any]],
+    query: str,
+    *,
+    page: int,
+    per_page: int,
+    speaker_id: Optional[str] = None,
+    include_locked: bool = False,
+    include_discarded: bool = True,
+) -> Dict[str, Any]:
+    """One page of the conversations whose text holds the query's words, best first.
+
+    Every word in the title/overview/tasks beats every word in the transcript only;
+    a conversation holding only some of the words follows the ones holding all of them.
+    An empty query (a filter-only browse) keeps the scan's newest-first order.
+    """
+    terms = _query_terms(query)
+    scored: List[tuple] = []
+    for order, row in enumerate(conversations):
+        if row.get('discarded') and not include_discarded:
+            continue
+        if row.get('is_locked') and not include_locked:
+            continue
+        if not conversation_matches_speaker(row, speaker_id):
+            continue
+        if not terms:
+            scored.append((0, 0, order, row))
+            continue
+        head, body = _conversation_search_text(row)
+        in_head = sum(1 for t in terms if t in head)
+        found = sum(1 for t in terms if t in head or t in body)
+        if found == 0 or found * 2 < len(terms):
+            continue
+        scored.append((-found, -in_head, order, row))
+    scored.sort(key=lambda entry: entry[:3])
+    start = (page - 1) * per_page
+    items = [entry[3] for entry in scored[start : start + per_page]]
+    return {
+        'items': items,
+        'total_pages': page + 1 if len(scored) > start + per_page else page,
+        'current_page': page,
+        'per_page': per_page,
+    }
+
+
+def _local_search_conversations(
+    uid: str,
+    query: str,
+    *,
+    page: int,
+    per_page: int,
+    include_discarded: bool,
+    start_date: Optional[int],
+    end_date: Optional[int],
+    speaker_id: Optional[str],
+    include_locked: bool,
+) -> Dict[str, Any]:
+    budget = conversation_scan_budget(None, route='conversation-search-local')
+    rows = iter_conversations(
+        uid,
+        limit=LOCAL_SEARCH_SCAN_CAP,
+        batch=LOCAL_SEARCH_BATCH,
+        include_discarded=include_discarded,
+        start_date=datetime.fromtimestamp(start_date, tz=timezone.utc) if start_date is not None else None,
+        end_date=datetime.fromtimestamp(end_date, tz=timezone.utc) if end_date is not None else None,
+        budget=budget,
+    )
+    return local_text_search(
+        rows,
+        query,
+        page=page,
+        per_page=per_page,
+        speaker_id=speaker_id,
+        include_locked=include_locked,
+        include_discarded=include_discarded,
+    )
+
+
 def search_conversations(
     uid: str,
     query: str,
@@ -366,6 +491,19 @@ def search_conversations(
                 'current_page': page,
                 'per_page': per_page,
             }
+
+        if not typesense_configured():
+            return _local_search_conversations(
+                uid,
+                stripped_query,
+                page=page,
+                per_page=per_page,
+                include_discarded=include_discarded,
+                start_date=start_date,
+                end_date=end_date,
+                speaker_id=speaker_id,
+                include_locked=include_locked,
+            )
 
         filter_by = f'userId:={uid}'
         if not include_discarded:
