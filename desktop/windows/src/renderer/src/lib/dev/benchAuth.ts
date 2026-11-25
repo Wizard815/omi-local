@@ -1,4 +1,4 @@
-import type { User } from 'firebase/auth'
+import type { SessionUser as User } from '../session'
 
 // Dev-only fake auth for the perf bench (OMI_BENCH=1). A live Firebase session
 // can't survive a repeated bench loop — the project invalidates the refresh token

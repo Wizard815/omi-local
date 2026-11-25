@@ -19,7 +19,7 @@ import {
   type RecoveryDriver,
   type RecoveryStatus
 } from './dbRecovery'
-import { captureError } from '../sentry'
+import { captureError } from '../observability/localReport'
 import { wipeUserDataOn } from './dbWipe'
 import { ByokKeyStore } from '../agentKernel/byokStore'
 import { McpKeyStore } from '../mcp/mcpKeyStore'

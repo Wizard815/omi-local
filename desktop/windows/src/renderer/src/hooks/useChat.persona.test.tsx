@@ -18,7 +18,8 @@ import type {
 //   • leave the DEFAULT (no app selected) path byte-identical — no app_id anywhere,
 //     and the human turn still saved EXACTLY once (INV-CHAT-1).
 
-vi.mock('../lib/firebase', () => ({
+vi.mock('../lib/session', () => ({
+  serverUrl: () => 'http://omi.test:8000',
   auth: { currentUser: { getIdToken: async () => 'test-token' } }
 }))
 vi.mock('../lib/pageCache', () => ({ invalidateConversationsCache: vi.fn() }))

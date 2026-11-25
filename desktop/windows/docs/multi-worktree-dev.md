@@ -34,11 +34,11 @@ work from `upstream/main`.
 
 ## Why this is needed
 
-In dev the renderer is served by Vite at `http://localhost:<port>`, and the app's
-sign-in state persists **per origin**: Firebase auth uses `browserLocalPersistence`
-(`src/main/../lib/firebase.ts`), and onboarding/prefs live in `localStorage`
-(`omi-windows-prefs-v1`) — both keyed by the renderer's origin, which includes the
-port. So a single pinned port means only one dev app can run, and moving to a
+In dev the renderer is served by Vite at `http://localhost:<port>`, and
+onboarding/prefs live in `localStorage` (`omi-windows-prefs-v1`), keyed by the
+renderer's origin, which includes the port. (The omi-local session itself is kept
+by the main process in the instance's userData — `omi-local-session.bin` — so it
+follows the userData profile, not the port.) So a single pinned port means only one dev app can run, and moving to a
 different port silently signs you out (new origin = empty localStorage).
 
 Two dev instances therefore need **different ports** (so they don't fight over one)
@@ -75,9 +75,13 @@ so correctness never depends on that env being forwarded.
 instance into a running **target** instance:
 
 1. Connects to the source app's Chrome DevTools Protocol port and reads its
-   `localStorage` (the whole signed-in state: Firebase session + onboarding/prefs).
+   `localStorage` (onboarding/prefs).
 2. Connects to the target app's CDP port and writes those keys into its
-   `localStorage`, then reloads the target so Firebase rehydrates the session.
+   `localStorage`, then reloads the target.
+
+omi-local: the sign-in is not in `localStorage` any more (main keeps it in
+userData), so this copies prefs only; sign in on the target once, or start it with
+`OMI_SERVER_URL` and sign in there.
 
 Defaults to **primary (CDP 9222) -> this worktree** (target derived from cwd), so
 from a worktree you usually just run `pnpm seed:auth` with the primary app open.

@@ -29,6 +29,16 @@ describe('buildListenEndpoint', () => {
     expect(url).not.toContain('codec=pcm16')
   })
 
+  it("streams to the user's omi-local server (ws for http, wss for https)", () => {
+    expect(buildListenEndpoint('conversation', 'en', undefined, 'http://192.0.2.10:8000')).toMatch(
+      /^ws:\/\/192\.0\.2\.10:8000\/v4\/listen\?/
+    )
+    expect(buildListenEndpoint('ptt', 'en', undefined, 'https://omi.example.org')).toMatch(
+      /^wss:\/\/omi\.example\.org\/v2\/voice-message\/transcribe-stream\?/
+    )
+    expect(buildListenEndpoint('ptt', 'en')).not.toContain('omi.me')
+  })
+
   it('carries the language through (defaulting to en) for both modes', () => {
     expect(buildListenEndpoint('ptt', 'es')).toContain('language=es')
     expect(buildListenEndpoint('conversation', 'es')).toContain('language=es')

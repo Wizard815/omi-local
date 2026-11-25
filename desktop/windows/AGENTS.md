@@ -7,6 +7,15 @@ Windows and Linux builds (`electron-builder.config.mjs`'s `linux`/`win` targets)
 there is no separate Linux-only source tree. See `README.md` for the quickstart
 and feature overview.
 
+**omi-local:** the app talks only to the user's own server. Main owns the server
+URL and session (`src/main/omiLocal/`; username/password at
+`/v1/auth/local-login`); the renderer reads them through `src/renderer/src/lib/session.ts` (no
+Firebase SDK) and resolves the server per request — never bake a service URL into
+the build or `.env`. The renderer CSP is built from the server
+(`src/main/omiLocal/csp.ts`). No third-party telemetry: Sentry and PostHog are gone,
+`analytics.trackEvent` and `observability/localReport` write the local log only —
+do not add an analytics, crash-report or cloud host.
+
 ## Package manager: pnpm, not npm
 
 This directory is pnpm-managed (`pnpm-lock.yaml`, `pnpm-workspace.yaml`) and CI
@@ -82,13 +91,10 @@ leave a stale, unmerged PR behind after a release — see issue #10727. If you
 hit this, check for an open `chore(windows): sync release v<version> to main`
 PR before assuming something else broke.
 
-**Auto-update** (`src/main/updater.ts`, `windowsUpdateFeed.ts`): Windows-only
-today (`platform !== 'win32'` gate) — Linux gets no auto-update mechanism at
-all, and there's currently no release pipeline publishing Linux builds to
-GitHub Releases in the first place. Closing this gap needs both a new Linux
-release-publishing workflow and a backend update-feed endpoint mirroring
-`/v2/desktop/update-feed/windows` — check for an open tracking issue/PR before
-starting this from scratch.
+**Auto-update** (`src/main/updater.ts`, `windowsUpdateFeed.ts`): off unless
+`OMI_UPDATE_FEED_URL` names a user-hosted electron-builder "generic" feed; then
+Windows (NSIS) and Linux AppImage builds check it. There is no Omi update server
+and no backend update-feed endpoint on omi-local.
 
 ## Docs index
 

@@ -7,6 +7,11 @@ import { Tray, Menu, nativeImage, type NativeImage } from 'electron'
 import idleIconPath from '../../resources/tray/idle.ico?asset'
 import listeningIconPath from '../../resources/tray/listening.ico?asset'
 import pausedIconPath from '../../resources/tray/paused.ico?asset'
+// Linux (StatusNotifier/AppIndicator, XEmbed) trays take PNG; nativeImage reads
+// .ico only on Windows. The @2x frames sit next to these and load on HiDPI.
+import idlePngPath from '../../resources/tray/idle.png?asset'
+import listeningPngPath from '../../resources/tray/listening.png?asset'
+import pausedPngPath from '../../resources/tray/paused.png?asset'
 import { buildTrayMenuTemplate, describeTray, isTrayState, type TrayState } from './trayState'
 
 export interface TrayDeps {
@@ -43,11 +48,10 @@ let updateReady = false
 // or a future Settings switch. Seeded at createTray.
 let screenCaptureEnabled = false
 
-const iconPaths: Record<TrayState, string> = {
-  idle: idleIconPath,
-  listening: listeningIconPath,
-  paused: pausedIconPath
-}
+const iconPaths: Record<TrayState, string> =
+  process.platform === 'win32'
+    ? { idle: idleIconPath, listening: listeningIconPath, paused: pausedIconPath }
+    : { idle: idlePngPath, listening: listeningPngPath, paused: pausedPngPath }
 const iconCache: Partial<Record<TrayState, NativeImage>> = {}
 
 function iconFor(state: TrayState): NativeImage {
@@ -61,7 +65,10 @@ function iconFor(state: TrayState): NativeImage {
 export function createTray(d: TrayDeps): Tray {
   deps = d
   tray = new Tray(iconFor(currentState))
-  // Left-click toggles the main window (standard Windows tray behavior).
+  // Left-click toggles the main window (standard Windows tray behavior). Many
+  // Linux trays (GNOME's AppIndicator extension, KDE's StatusNotifier) never
+  // deliver a click and open the context menu instead, so everything here is
+  // also in the menu (Open Omi, Settings, Quit).
   tray.on('click', () => {
     if (!deps) return
     if (deps.isMainWindowVisible()) deps.hideMainWindow()

@@ -3,28 +3,28 @@
 // session). When an update is staged we tell the main window so it can offer a
 // "restart to update" action and mark the tray tooltip.
 //
-// Production checks first resolve an immutable Windows release directory from
-// the backend, then use electron-updater's generic provider for latest.yml and
-// its installer. This avoids GitHubProvider's repository-wide /releases/latest,
-// which can select a macOS release in this multi-platform repository.
+// omi-local has no update server: by default the updater never starts and the
+// app contacts no update host. A user who hosts their own builds sets
+// OMI_UPDATE_FEED_URL to an electron-builder "generic" feed directory (see
+// windowsUpdateFeed.ts selfHostedUpdateFeedUrl); then Windows (NSIS) and Linux
+// AppImage builds check it every 4 hours.
 //
 // For local testing, set OMI_UPDATER_DEV=1 and provide dev-app-update.yml. That
 // keeps electron-updater on the developer-supplied feed.
-import { app, net, type BrowserWindow } from 'electron'
+import { app, type BrowserWindow } from 'electron'
 import { autoUpdater, type CancellationToken } from 'electron-updater'
 import { setTrayUpdateReady } from './tray'
 import { markQuitting } from './lifecycle'
 import { getAppSettings, onAppSettingsChanged } from './appSettings'
 import { betaOptInToUpdateChannel, resolveBetaChannelChange } from './updaterChannel'
 import {
-  resolveWindowsUpdateFeedUrl,
+  selfHostedUpdateFeedUrl,
   WindowsUpdateFeedSelector,
   type WindowsUpdateChannel
 } from './windowsUpdateFeed'
 import type { UpdateCheckResult } from '../shared/types'
 
 const CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000
-const OMI_API_BASE = import.meta.env.VITE_OMI_API_BASE || 'https://api.omi.me'
 
 let started = false
 let selectedChannel: WindowsUpdateChannel = 'stable'
@@ -142,10 +142,16 @@ export function installUpdateNow(): boolean {
 
 export function initAutoUpdater(
   getMainWindow: () => BrowserWindow | null,
-  platform: NodeJS.Platform = process.platform
+  platform: NodeJS.Platform = process.platform,
+  env: NodeJS.ProcessEnv = process.env
 ): void {
-  if (started || platform !== 'win32') return
-  const devForced = process.env.OMI_UPDATER_DEV === '1'
+  // Windows installs and Linux AppImages can update themselves; a .deb is the
+  // package manager's job.
+  const updatable = platform === 'win32' || (platform === 'linux' && !!env.APPIMAGE)
+  if (started || !updatable) return
+  const devForced = env.OMI_UPDATER_DEV === '1'
+  const feedUrl = selfHostedUpdateFeedUrl(env.OMI_UPDATE_FEED_URL)
+  if (!feedUrl && !devForced) return
   if (!app.isPackaged && !devForced) return
   started = true
 
@@ -154,13 +160,12 @@ export function initAutoUpdater(
   if (devForced) autoUpdater.forceDevUpdateConfig = true
 
   selectedChannel = betaOptInToUpdateChannel(getAppSettings().betaUpdatesEnabled)
-  // Kept aligned for dev feeds and electron-updater's public state. Production
-  // channel selection is owned by the backend resolver below.
+  // Beta reads the same self-hosted feed with prereleases allowed.
   autoUpdater.allowPrerelease = selectedChannel === 'beta'
-  if (!devForced) {
+  if (feedUrl && !devForced) {
     feedSelector = new WindowsUpdateFeedSelector(
       selectedChannel,
-      (channel): Promise<string> => resolveWindowsUpdateFeedUrl(OMI_API_BASE, channel, net.fetch),
+      (): Promise<string> => Promise.resolve(feedUrl),
       (feedUrl): void => {
         autoUpdater.setFeedURL({ provider: 'generic', url: feedUrl })
       }

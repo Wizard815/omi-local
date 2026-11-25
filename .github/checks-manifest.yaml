@@ -4,6 +4,12 @@
 # Checks that consume PR metadata declare `requires_pr_body: true`; post-merge
 # push runs exclude only that category because no authoritative PR body is available.
 checks:
+  - id: omi-host-stdlib-tests
+    command: ["bash", "omi-host/run_stdlib_tests.sh"]
+    triggers: ["omi-host/*.py", "omi-host/*.sh", "omi-host/egress-guard/**", "omi-host/demo/caldav_demo.py", ".github/checks-manifest.yaml"]
+    lanes: ["local", "ci"]
+    platforms: ["linux"]
+    reason: "SELF_HOSTING_ROADMAP open item 4: the self-hosted stack's env scripts, egress guard, backups and merge proxy had tests that only ran by hand"
   - id: worker-image-only-tests
     command: ["python3", ".github/scripts/test_worker_image_only.py"]
     triggers: [".github/scripts/worker_image_only.py", ".github/scripts/test_worker_image_only.py", ".github/workflows/gcp_diarizer.yml", ".github/checks-manifest.yaml"]

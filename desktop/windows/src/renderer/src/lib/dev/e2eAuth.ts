@@ -1,4 +1,4 @@
-import type { User } from 'firebase/auth'
+import type { SessionUser as User } from '../session'
 
 // Offline fake auth for E2E, gated on the runtime flag OMI_E2E_FAKE_AUTH=1
 // (surfaced via the preload as window.omi.e2eFakeAuth). Unlike the perf-bench

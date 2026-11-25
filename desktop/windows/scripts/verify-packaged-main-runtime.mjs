@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Runtime guard for issues #10738 / #10849. electron-builder 26.8.1's pnpm dependency
-// collection packaged debug (used by Sentry) but omitted its hoisted `ms`
+// collection packaged debug (used by electron-updater) but omitted its hoisted `ms`
 // dependency. The installed tree and source build both passed; the shipped app
 // crashed on launch after in-app update ("Restart to update"). Newer builders
 // include the dependency, and this probe keeps that final-artifact contract from
@@ -71,12 +71,15 @@ export function packagedRuntimeDriver() {
     'const mainEntry = resolve(appRoot, manifest.main);',
     'manifestRequire.resolve(mainEntry);',
     'const runtimeRequire = createRequire(mainEntry);',
-    'const sentryMainPath = runtimeRequire.resolve("@sentry/electron/main");',
-    'const sentryRequire = createRequire(sentryMainPath);',
-    // debug loads `ms` from src/common.js. Resolving from Sentry's packaged entry
+    // electron-updater -> builder-util-runtime -> debug -> ms: the packaged debug
+    // chain (Sentry used to be its other consumer; omi-local ships no Sentry).
+    'const updaterPath = runtimeRequire.resolve("electron-updater");',
+    'const runtimePath = createRequire(updaterPath).resolve("builder-util-runtime");',
+    'const depRequire = createRequire(runtimePath);',
+    // debug loads `ms` from src/common.js. Resolving from the packaged entry
     // exercises the exact dependency boundary that failed in #10738 / #10849 without
-    // initializing Electron or sending telemetry from the release runner.
-    'const debugPath = sentryRequire.resolve("debug");',
+    // initializing Electron from the release runner.
+    'const debugPath = depRequire.resolve("debug");',
     'const debugRequire = createRequire(debugPath);',
     'const debug = debugRequire("debug");',
     'if (typeof debug !== "function") throw new Error("debug did not export a function");',
@@ -87,7 +90,7 @@ export function packagedRuntimeDriver() {
     'if (msRelative.startsWith("..") || isAbsolute(msRelative)) {',
     '  throw new Error("ms resolved outside packaged app root: " + msPath);',
     '}',
-    `console.log("${SUCCESS_MARKER} " + JSON.stringify({ mainEntry, sentryMainPath, msPath }));`
+    `console.log("${SUCCESS_MARKER} " + JSON.stringify({ mainEntry, updaterPath, msPath }));`
   ].join('\n')
 }
 
@@ -146,14 +149,14 @@ export function verifyPackagedMainRuntime({
   }
   if (
     typeof details?.mainEntry !== 'string' ||
-    typeof details?.sentryMainPath !== 'string' ||
+    typeof details?.updaterPath !== 'string' ||
     typeof details?.msPath !== 'string'
   ) {
     throw new Error(`packaged main dependency probe reported incomplete details:\n${output}`)
   }
 
   assertPathInsidePackagedRoot(appAsarPath, details.mainEntry, 'main entry')
-  assertPathInsidePackagedRoot(appAsarPath, details.sentryMainPath, 'Sentry main')
+  assertPathInsidePackagedRoot(appAsarPath, details.updaterPath, 'electron-updater')
   assertPathInsidePackagedRoot(appAsarPath, details.msPath, 'ms')
 
   return { executablePath, ...details, output }
@@ -165,10 +168,10 @@ const invokedAsScript =
 if (invokedAsScript) {
   try {
     const result = verifyPackagedMainRuntime()
-    console.log('[verify-packaged-main] PASS - packaged Sentry/debug runtime resolves ms.')
+    console.log('[verify-packaged-main] PASS - packaged debug runtime resolves ms.')
     console.log(`  binary: ${result.executablePath}`)
     console.log(`  main:   ${result.mainEntry}`)
-    console.log(`  sentry: ${result.sentryMainPath}`)
+    console.log(`  updater: ${result.updaterPath}`)
     console.log(`  ms:     ${result.msPath}`)
   } catch (error) {
     console.error(

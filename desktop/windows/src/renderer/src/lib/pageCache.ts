@@ -19,6 +19,10 @@ export type ConversationRow = {
   // True for optimistic placeholder rows shown immediately on finalize (titled
   // client-side, dropped once the backend's real conversation arrives).
   pending?: boolean
+  // True while the server is still writing this conversation's notes
+  // (`status: processing`). On a slow local model that takes minutes; the list
+  // shows "Writing notes…" and re-polls until it completes.
+  processing?: boolean
   // --- Track 4: folders / starred (cloud rows only) ---
   // Starred flag + folder assignment from the backend Conversation. Undefined for
   // local-only/chat rows (they have no backend id, so can't be starred/filed —

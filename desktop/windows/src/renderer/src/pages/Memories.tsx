@@ -21,7 +21,7 @@ import { MemoryCard } from '../components/memories/MemoryCard'
 import { MemoryFilterBar } from '../components/memories/MemoryFilterBar'
 import { MemoryDetailSheet } from '../components/memories/MemoryDetailSheet'
 import { UndoDeleteToast } from '../components/memories/UndoDeleteToast'
-import { auth } from '../lib/firebase'
+import { auth } from '../lib/session'
 import { useThrottledWindowFocus } from '../lib/focusRefetch'
 
 // Cap how many cards render at once so a multi-thousand list stays responsive;

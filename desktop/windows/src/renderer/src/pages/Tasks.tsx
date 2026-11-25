@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { ListChecks, Check, RefreshCw, Plus, Trash2, Calendar, X, Loader2 } from 'lucide-react'
 import { omiApi } from '../lib/apiClient'
 import { fetchAllActionItems } from '../lib/actionItems'
+import { approveTask, declineTask, fetchWaiting } from '../lib/approvals'
 import { PageHeader } from '../components/layout/PageHeader'
 import { TasksGoalsToggle } from '../components/layout/TasksGoalsToggle'
 import { EmptyState } from '../components/ui/EmptyState'
@@ -126,6 +127,36 @@ export function Tasks(): React.JSX.Element {
   const [keyboardSelectedTaskId, setKeyboardSelectedTaskId] = useState<number | null>(null)
   const scrollRef = useRef<HTMLDivElement | null>(null)
 
+  // omi-local: tasks extracted from conversations wait for the user's OK before
+  // they reach CalDAV, reminders or task apps. The local task mirror has no
+  // approval field, so the waiting set comes from the server's /v1/approvals and
+  // marks those rows "Waiting for your OK" with Approve / Decline.
+  const [waitingIds, setWaitingIds] = useState<Set<string>>(new Set())
+  const readWaiting = useCallback(async (): Promise<void> => {
+    try {
+      const w = await fetchWaiting()
+      setWaitingIds(new Set(w.tasks.map((t) => t.id)))
+    } catch {
+      // Best-effort: without it the rows simply show no waiting badge.
+    }
+  }, [])
+  const decide = async (t: ActionItemRecord, approve: boolean): Promise<void> => {
+    if (!t.backendId) return
+    const id = t.backendId
+    try {
+      if (approve) await approveTask(id)
+      else await declineTask(id)
+      setWaitingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
+      await window.omi.tasksReconcile().catch(() => {})
+    } catch (e) {
+      toast((e as Error).message, { tone: 'error' })
+    }
+  }
+
   // Re-read the local task store. Called on mount, on every `onTasksChanged`
   // (optimistic write OR a background sync landing), and on manual refresh.
   const readTasks = useCallback(async (): Promise<void> => {
@@ -183,6 +214,12 @@ export function Tasks(): React.JSX.Element {
   // and whenever a background sync lands, so a single subscription replaces the old
   // mount-refetch loop, window-focus refetch, and create→reload dance.
   useEffect(() => window.omi.onTasksChanged(() => void readTasks()), [readTasks])
+  useEffect(() => {
+    if (!tasksPanelIsActive) return
+    void (async () => {
+      await readWaiting()
+    })()
+  }, [tasksPanelIsActive, readWaiting])
 
   // A background task mutation failed (e.g. a delete that the server rejected and
   // whose row main restored). The delete IPC resolves before its HTTP call, so the
@@ -197,7 +234,7 @@ export function Tasks(): React.JSX.Element {
     if (refreshing) return
     setRefreshing(true)
     await window.omi.tasksReconcile().catch(() => {})
-    await Promise.all([readTasks(), readConvs()])
+    await Promise.all([readTasks(), readConvs(), readWaiting()])
     setRefreshing(false)
   }
 
@@ -606,6 +643,24 @@ export function Tasks(): React.JSX.Element {
               </button>
             )}
 
+            {t.backendId && waitingIds.has(t.backendId) && !t.completed && (
+              <span className="inline-flex items-center gap-1.5" data-waiting="true">
+                <span className="badge-warning">Waiting for your OK</span>
+                <button
+                  onClick={() => void decide(t, true)}
+                  className="rounded-md px-1.5 py-0.5 text-white/75 hover:bg-white/5 hover:text-white"
+                >
+                  Approve
+                </button>
+                <button
+                  onClick={() => void decide(t, false)}
+                  className="rounded-md px-1.5 py-0.5 text-white/45 hover:bg-white/5 hover:text-white/75"
+                >
+                  Decline
+                </button>
+              </span>
+            )}
+
             {conv && (
               <Link
                 to={`/conversations/${t.conversationId}`}
@@ -636,7 +691,13 @@ export function Tasks(): React.JSX.Element {
       <PageHeader
         title="Tasks"
         titleSlot={<TasksGoalsToggle />}
-        subtitle={loading ? 'Loading…' : `${openCount} open · ${doneCount} done`}
+        subtitle={
+          loading
+            ? 'Loading…'
+            : `${openCount} open · ${doneCount} done${
+                waitingIds.size ? ` · ${waitingIds.size} waiting for your OK` : ''
+              }`
+        }
         actions={
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 rounded-2xl border border-white/10 bg-black/20 p-1">

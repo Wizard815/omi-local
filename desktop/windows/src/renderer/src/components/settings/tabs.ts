@@ -7,7 +7,6 @@ import {
   Brain,
   Bot,
   AudioLines,
-  CreditCard,
   Keyboard,
   Bell,
   Info,
@@ -28,6 +27,8 @@ export type SettingsTabId =
   | 'advanced'
   | 'about'
 
+// 'plan-usage' stays a known id (old deep links) but is not listed or rendered:
+// omi-local has no plans, billing or cloud quota.
 export const SETTINGS_TABS: { id: SettingsTabId; label: string; Icon: LucideIcon }[] = [
   { id: 'general', label: 'General', Icon: SettingsIcon },
   { id: 'memories', label: 'Memories', Icon: Brain },
@@ -37,7 +38,6 @@ export const SETTINGS_TABS: { id: SettingsTabId; label: string; Icon: LucideIcon
   { id: 'notifications', label: 'Notifications', Icon: Bell },
   { id: 'privacy', label: 'Privacy', Icon: ShieldCheck },
   { id: 'account', label: 'Account', Icon: CircleUserRound },
-  { id: 'plan-usage', label: 'Plan & Usage', Icon: CreditCard },
   { id: 'shortcuts', label: 'Shortcuts', Icon: Keyboard },
   { id: 'advanced', label: 'Advanced', Icon: SlidersHorizontal },
   { id: 'about', label: 'About', Icon: Info }

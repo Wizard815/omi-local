@@ -4,11 +4,13 @@ from pathlib import Path
 import pytest
 
 from utils.other.local_storage import LocalStorageClient, local_storage_root_from_env
+from utils.other.local_storage_urls import reset_url_key_cache
 from google.api_core.exceptions import PreconditionFailed
 from utils.other import storage as storage_helpers
 
 
 def _configure(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
+    reset_url_key_cache()
     state_root = tmp_path / 'harness'
     storage_root = state_root / 'services' / 'storage'
     monkeypatch.setenv('OMI_HARNESS_STATE_ROOT', str(state_root))
@@ -29,9 +31,8 @@ def test_local_storage_round_trip_and_http_url(monkeypatch: pytest.MonkeyPatch, 
 
     assert blob.download_as_bytes() == b'voice-bytes'
     assert blob.size == len(b'voice-bytes')
-    assert blob.generate_signed_url() == (
-        'http://127.0.0.1:8000/_local/storage/speech-profiles/user-1/speech%20profile.wav'
-    )
+    url = blob.generate_signed_url()
+    assert url.startswith('http://127.0.0.1:8000/_local/storage/speech-profiles/user-1/speech%20profile.wav?sig=')
     assert (storage_root / 'speech-profiles' / 'user-1' / 'speech profile.wav').read_bytes() == b'voice-bytes'
 
 
@@ -63,7 +64,7 @@ def test_production_storage_helper_returns_reachable_local_url(monkeypatch: pyte
 
     url = storage_helpers.upload_profile_audio(str(source), 'user-1')
 
-    assert url == 'http://127.0.0.1:8000/_local/storage/speech-profiles/user-1/speech_profile.wav'
+    assert url.startswith('http://127.0.0.1:8000/_local/storage/speech-profiles/user-1/speech_profile.wav?sig=')
     assert (tmp_path / 'harness/services/storage/speech-profiles/user-1/speech_profile.wav').read_bytes() == (
         b'profile-audio'
     )

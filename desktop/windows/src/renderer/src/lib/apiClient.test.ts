@@ -9,7 +9,7 @@ const h = vi.hoisted(() => ({
   forceReauth: vi.fn(async () => {})
 }))
 
-vi.mock('./firebase', () => ({ auth: { currentUser: null } }))
+vi.mock('./session', () => ({ serverUrl: () => 'http://omi.test:8000', auth: { currentUser: null } }))
 vi.mock('./authSession', () => ({
   refreshIdToken: h.refreshIdToken,
   forceReauth: h.forceReauth

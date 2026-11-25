@@ -4,6 +4,8 @@ A home LLM or a CPU-only transcriber is slower than the cloud models Omi was tun
 for. This page lists the settings that decide how Omi copes with that, and what each
 one trades. All of them go in `omi-host/.env`; compose passes them to the containers.
 
+To run a small model and Whisper on an Android phone instead, see [PHONE-LLM.md](PHONE-LLM.md).
+
 ## A slow language model
 
 | Setting | Default | What it does |

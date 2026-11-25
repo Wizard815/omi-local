@@ -1,4 +1,5 @@
 import { ipcMain, net, type IpcMainInvokeEvent } from 'electron'
+import { serverUrl } from '../omiLocal'
 import {
   bulkDeleteMemories,
   type BulkDeleteArgs,
@@ -8,12 +9,12 @@ import {
 
 export type { BulkDeleteArgs, BulkDeleteResult }
 
-// The API base is main-owned config (VITE_OMI_API_BASE, frozen into the main
-// bundle at build time — same mechanism as ipc/auth.ts / ipc/byok.ts) and is
+// The API base is main-owned config (the omi-local server URL main keeps) and is
 // NEVER taken from the renderer: a compromised renderer must not be able to
 // redirect these bearer-token requests at an origin it controls.
 function apiBase(): string {
-  return import.meta.env.VITE_OMI_API_BASE || 'https://api.omi.me'
+  // The user's omi-local server (runtime config; see omiLocal/serverSession.ts).
+  return serverUrl()
 }
 
 // Bulk-delete memories from the main process so the job survives renderer

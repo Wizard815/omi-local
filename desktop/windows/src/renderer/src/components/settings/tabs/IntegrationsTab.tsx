@@ -5,7 +5,7 @@ import { readAndExtractStickyNotes, importStickyMemories } from '../../../lib/st
 import { toastImportTally } from '../../../lib/importToast'
 import { useMemories } from '../../../hooks/useMemories'
 import { GMAIL_SESSION_ENABLED } from '../../../lib/gmailSessionFeatureFlag'
-import { auth } from '../../../lib/firebase'
+import { auth } from '../../../lib/session'
 import { SettingRow } from '../SettingRow'
 import type { GmailSessionStatus } from '../../../../../shared/types'
 

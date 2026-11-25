@@ -14,8 +14,7 @@
 // Kept separate from aiProfileHost rather than folded into it: the two consumers
 // are owned by different tracks and neither should be able to break the other's
 // session by changing its own relay.
-import { onIdTokenChanged, type User } from 'firebase/auth'
-import { auth } from './firebase'
+import { onIdTokenChanged, type SessionUser as User, auth, serverUrl } from './session'
 
 let started = false
 
@@ -35,7 +34,7 @@ async function pushSession(user: User, seq: number): Promise<void> {
       return
     }
     await window.omi.rewindSetEmbedSession({
-      desktopApiBase: import.meta.env.VITE_OMI_DESKTOP_API_BASE as string,
+      desktopApiBase: serverUrl(),
       token
     })
   } catch (e) {

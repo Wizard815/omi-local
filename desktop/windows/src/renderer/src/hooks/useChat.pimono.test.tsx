@@ -14,7 +14,8 @@ import type {
 // mainChat event stream, makes the INV-CHAT-1 saveMessage calls, and honours the
 // C5 generation guards (dismiss mid-stream must not persist/save/unlatch).
 
-vi.mock('../lib/firebase', () => ({
+vi.mock('../lib/session', () => ({
+  serverUrl: () => 'http://omi.test:8000',
   auth: { currentUser: { getIdToken: async () => 'test-token' } }
 }))
 vi.mock('../lib/pageCache', () => ({ invalidateConversationsCache: vi.fn() }))
@@ -70,7 +71,9 @@ import {
   CHAT_NOT_READY_INTERIM,
   CHAT_NOT_READY_FINAL,
   CHAT_STREAM_TIMEOUT_MS,
-  CHAT_STREAM_TIMEOUT_COPY
+  CHAT_STREAM_TIMEOUT_COPY,
+  CHAT_STILL_WORKING_AFTER_MS,
+  CHAT_STILL_WORKING_COPY
 } from './useChat'
 import { CHAT_BUSY_RETRY_INTERIM } from '../lib/chat/chatRetry'
 import { clearAttachments } from '../lib/chatAttachments'
@@ -957,6 +960,29 @@ describe('useChat — pi_mono per-turn watchdog', () => {
       expect(saveSpy.mock.calls[0][0]).toMatchObject({ sender: 'human' })
       expect(speakSpy).not.toHaveBeenCalled()
       expect(result.current.quotaCheckSeq).toBe(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('SLOW MODEL: says "Still working…" until the first words, then shows the reply', async () => {
+    vi.useFakeTimers()
+    try {
+      const result = await mountFake()
+      await act(async () => {
+        void result.current.send('hello')
+        await pumpToSend()
+        acceptHosted(sendArgs!.requestId, 'run-slow')
+        await vi.advanceTimersByTimeAsync(CHAT_STILL_WORKING_AFTER_MS + 10)
+      })
+      expect(lastAssistant(result.current.history)?.content).toBe(CHAT_STILL_WORKING_COPY)
+      expect(result.current.sending).toBe(true)
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(4 * 60_000)
+        emit({ type: 'text_delta', requestId: sendArgs!.requestId, runId: 'run-slow', text: 'Hi' })
+        await vi.advanceTimersByTimeAsync(1)
+      })
+      expect(lastAssistant(result.current.history)?.content).toBe('Hi')
     } finally {
       vi.useRealTimers()
     }

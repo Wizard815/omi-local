@@ -7,7 +7,7 @@
     "desktop/windows/src/main/codingAgent/piMono.test.ts",
     "desktop/windows/src/main/codingAgent/taskRunner.test.ts",
     "desktop/windows/src/main/ipc/mainChat.test.ts",
-    "desktop/windows/src/renderer/src/components/settings/billing/UsageLimitTriggerHost.test.tsx",
+    "desktop/windows/src/renderer/src/lib/chatQuotaGate.test.ts",
     "desktop/windows/src/renderer/src/hooks/useChat.test.tsx",
     "desktop/windows/src/renderer/src/hooks/useChat.pimono.test.tsx"
   ],
@@ -18,7 +18,7 @@
     "desktop/windows/src/main/codingAgent/piMono.ts",
     "desktop/windows/src/main/codingAgent/taskRunner.ts",
     "desktop/windows/src/main/ipc/mainChat.ts",
-    "desktop/windows/src/renderer/src/components/settings/billing/UsageLimitTriggerHost.tsx",
+    "desktop/windows/src/renderer/src/lib/chatQuotaGate.ts",
     "desktop/windows/src/renderer/src/hooks/useChat.ts",
     "desktop/windows/src/shared/types.ts"
   ],

@@ -6,7 +6,8 @@ const { get, currentUser } = vi.hoisted(() => ({
   get: vi.fn(),
   currentUser: { uid: 'u1' } as { uid: string } | null
 }))
-vi.mock('../firebase', () => ({
+vi.mock('../session', () => ({
+  serverUrl: () => 'http://omi.test:8000',
   auth: {
     get currentUser() {
       return currentUser

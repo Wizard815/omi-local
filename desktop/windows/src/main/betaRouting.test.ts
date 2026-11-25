@@ -17,16 +17,16 @@ function readEnvFile(name: string): Record<string, string> {
 }
 
 describe('Windows release routing profiles', () => {
-  it('keeps the stable profile on production services', () => {
-    const env = readEnvFile('.env.example')
-    expect(env.VITE_OMI_API_BASE).toBe('https://api.omi.me')
-    expect(env.VITE_OMI_DESKTOP_API_BASE).toBe('https://desktop-backend-hhibjajaja-uc.a.run.app')
-  })
-
-  it('builds the Beta release against the development serving plane', () => {
-    const env = readEnvFile('.env.beta.example')
-    expect(env.VITE_OMI_API_BASE).toBe('https://api.omiapi.com')
-    expect(env.VITE_OMI_DESKTOP_API_BASE).toBe('https://desktop-backend-dt5lrfkkoa-uc.a.run.app')
+  // omi-local: no build profile names a service. The server is the user's runtime
+  // choice (src/main/omiLocal), so neither env file may bake in a cloud host, a
+  // Firebase project or an analytics/crash-report key.
+  it.each(['.env.example', '.env.beta.example'])('%s bakes in no service', (name) => {
+    const env = readEnvFile(name)
+    const raw = readFileSync(resolve(__dirname, '../../', name), 'utf8')
+    for (const key of Object.keys(env)) {
+      expect(key).not.toMatch(/FIREBASE|POSTHOG|SENTRY|OMI_API_BASE|OMI_DESKTOP_API_BASE/)
+    }
+    expect(raw).not.toMatch(/omi\.me|omiapi\.com|run\.app|posthog|AIza/i)
   })
 
   it('makes the existing release workflow consume the Beta profile', () => {

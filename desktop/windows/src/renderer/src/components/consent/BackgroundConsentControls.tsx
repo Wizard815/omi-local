@@ -73,8 +73,8 @@ export function BackgroundConsentControls({
         title="Launch at login"
         detail={
           launchSupported
-            ? 'Start Omi automatically when you sign in to Windows.'
-            : 'Start Omi automatically when you sign in to Windows. Available in installed builds only.'
+            ? 'Start Omi automatically when you sign in.'
+            : 'Start Omi automatically when you sign in. Available in installed builds only.'
         }
         control={
           <Toggle

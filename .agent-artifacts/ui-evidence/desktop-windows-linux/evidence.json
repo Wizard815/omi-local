@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "images": [
+    {
+      "file": "001-desktop-windows-before-login-cloud-accounts.png",
+      "platform": "desktop-windows",
+      "description": "Before: sign-in offered only Apple/Google accounts on Omi's cloud Firebase project",
+      "captured_by": "agent",
+      "source": "playwright-e2e"
+    },
+    {
+      "file": "002-desktop-windows-before-conversations-network-error.png",
+      "platform": "desktop-windows",
+      "description": "Before: pointed at an omi-local server the static CSP blocked it (Network Error, no data)",
+      "captured_by": "agent",
+      "source": "playwright-e2e"
+    },
+    {
+      "file": "003-desktop-windows-login-server-address.png",
+      "platform": "desktop-windows",
+      "description": "After: sign in with the server address, username and password",
+      "captured_by": "agent",
+      "source": "playwright-e2e"
+    },
+    {
+      "file": "004-desktop-windows-home-waiting-chip.png",
+      "platform": "desktop-windows",
+      "description": "Home with the 'N waiting for your OK' chip",
+      "captured_by": "agent",
+      "source": "playwright-e2e"
+    },
+    {
+      "file": "005-desktop-windows-conversations-writing-notes.png",
+      "platform": "desktop-windows",
+      "description": "Conversations: a conversation the server is still processing shows Writing notes",
+      "captured_by": "agent",
+      "source": "playwright-e2e"
+    },
+    {
+      "file": "006-desktop-windows-tasks-waiting-for-ok.png",
+      "platform": "desktop-windows",
+      "description": "Tasks: rows waiting for approval with Approve / Decline",
+      "captured_by": "agent",
+      "source": "playwright-e2e"
+    },
+    {
+      "file": "007-desktop-windows-waiting-for-your-ok.png",
+      "platform": "desktop-windows",
+      "description": "Waiting for your OK: day summary draft (read-only + Approve the day) and tasks",
+      "captured_by": "agent",
+      "source": "playwright-e2e"
+    },
+    {
+      "file": "008-desktop-windows-approve-all-undo.png",
+      "platform": "desktop-windows",
+      "description": "After Approve all: what was approved, Undo, and the approved day",
+      "captured_by": "agent",
+      "source": "playwright-e2e"
+    },
+    {
+      "file": "009-desktop-windows-chat-still-working.png",
+      "platform": "desktop-windows",
+      "description": "Chat on a slow model (30 s per call): Still working instead of an error",
+      "captured_by": "agent",
+      "source": "playwright-e2e"
+    },
+    {
+      "file": "010-desktop-windows-chat-answer-local-server.png",
+      "platform": "desktop-windows",
+      "description": "Chat answered by the omi-local server",
+      "captured_by": "agent",
+      "source": "playwright-e2e"
+    },
+    {
+      "file": "011-desktop-windows-settings-account-server.png",
+      "platform": "desktop-windows",
+      "description": "Settings > Account: server address, Test, signed-in user",
+      "captured_by": "agent",
+      "source": "playwright-e2e"
+    },
+    {
+      "file": "012-desktop-windows-linux-packaged-home.png",
+      "platform": "desktop-windows",
+      "description": "The packaged Linux build (linux-unpacked) signed in to the local server",
+      "captured_by": "agent",
+      "source": "playwright-e2e"
+    }
+  ]
+}

@@ -20,6 +20,7 @@ under the old LAN login stays with the account.
 
 from __future__ import annotations
 
+import ipaddress
 import os
 import time
 from dataclasses import dataclass
@@ -133,13 +134,56 @@ def _check_and_record_attempt(identifier: str, *, kind: str) -> None:
         raise HTTPException(status_code=429, detail='Too many attempts. Try again later.')
 
 
+TRUSTED_PROXY_NETWORKS_ENV = 'OMI_TRUSTED_PROXY_NETWORKS'
+
+
+def _trusted_proxy_networks() -> list:
+    networks = []
+    for item in os.environ.get(TRUSTED_PROXY_NETWORKS_ENV, '').split(','):
+        item = item.strip()
+        if item:
+            try:
+                networks.append(ipaddress.ip_network(item, strict=False))
+            except ValueError:
+                continue
+    return networks
+
+
+def login_client_ip(peer: Optional[str], headers) -> str:
+    """The address the login limiter counts against.
+
+    Normally the TCP peer. When the peer is a reverse proxy the operator listed in
+    OMI_TRUSTED_PROXY_NETWORKS (a cloudflared connector, say), the proxy's own
+    CF-Connecting-IP / X-Forwarded-For value is used instead. Without that every
+    tunnel caller shares the connector's address, so five bad passwords from
+    anyone lock everyone out (SELF_HOSTING_ROADMAP open item 2). The headers are
+    ignored from any other peer, because a direct caller can set them freely.
+    """
+    if not peer:
+        return 'unknown'
+    try:
+        peer_addr = ipaddress.ip_address(peer)
+    except ValueError:
+        return peer
+    if not any(peer_addr in network for network in _trusted_proxy_networks()):
+        return peer
+    forwarded = (headers.get('cf-connecting-ip') or '').strip()
+    if not forwarded:
+        # The right-most entry is the one the trusted proxy itself appended.
+        forwarded = (headers.get('x-forwarded-for') or '').split(',')[-1].strip()
+    try:
+        return str(ipaddress.ip_address(forwarded))
+    except ValueError:
+        return peer
+
+
 def enforce_login_rate_limit(*, client_ip: str, username: str) -> None:
-    # client_ip must be request.client.host (the real TCP peer), never a
-    # forwarded-for/CF-Connecting-IP header — this codebase deliberately
-    # never trusts those for rate-limit subjects (see
-    # routers/public_shared_conversation_chat.py) since any direct caller can
-    # set them to whatever they like. Behind a reverse proxy this collapses
-    # every remote caller to one IP bucket, which is exactly why the
+    # client_ip comes from login_client_ip(): the real TCP peer, or a forwarded
+    # address only when that peer is an operator-listed trusted proxy. A
+    # forwarded-for/CF-Connecting-IP header from anyone else is ignored, since
+    # any direct caller can set it to whatever they like. Behind an unlisted
+    # reverse proxy this collapses every remote caller to one IP bucket, which
+    # is exactly why the
     # username axis below — the actually load-bearing one here, since there
     # are only ever a handful of valid usernames — doesn't depend on it.
     _check_and_record_attempt(client_ip, kind='ip')

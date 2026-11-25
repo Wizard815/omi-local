@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { auth } from '../lib/firebase'
+import { auth, serverUrl } from '../lib/session'
 import { invalidateConversationsCache } from '../lib/pageCache'
 import { gatherLocalContext } from '../lib/localAgent'
 import { readCurrentScreen } from '../lib/screenContext'
@@ -79,18 +79,29 @@ export type ChatMsg = {
   blocks?: ChatContentBlock[]
 }
 
-const OMI_BASE = import.meta.env.VITE_OMI_API_BASE as string
 
-// Hard ceiling on a single streamed reply. Mirrors the macOS client's per-send
-// watchdog (ChatProvider.swift): if the SAME generation is still in flight after
-// this long, abort the fetch, unlatch the engine, and surface a timeout so a
-// wedged stream can't strand the chat forever.
-export const CHAT_STREAM_TIMEOUT_MS = 180_000
+// Hard ceiling on a single streamed reply: if the SAME generation is still in
+// flight after this long, abort the fetch, unlatch the engine, and surface a
+// timeout so a wedged stream can't strand the chat forever.
+//
+// omi-local runs chat on the user's own (often slow) model: the backend gives one
+// model call OMI_LOCAL_LLM_TIMEOUT_SECONDS (300 s by default) and an agentic turn
+// can take a few of them, so a reply may legitimately need up to 4× that. The
+// ceiling is that 20 minutes, not the cloud's 3; until the first words arrive the
+// bubble says "Still working…" instead of looking stuck (CHAT_STILL_WORKING_*).
+export const CHAT_STREAM_TIMEOUT_MS = 4 * 300_000
 
 // User-facing copy shown when a turn exceeds CHAT_STREAM_TIMEOUT_MS. Shared by BOTH
 // watchdogs — the legacy /v2/messages catch path and the pi_mono per-turn watchdog —
 // so the two can never drift. Exported so tests key off the same string (no copy drift).
-export const CHAT_STREAM_TIMEOUT_COPY = 'Response took too long. Try again.'
+export const CHAT_STREAM_TIMEOUT_COPY =
+  'Omi gave up waiting after 20 minutes. Your server may be busy; try again.'
+
+// No words yet after this long: say so in the reply bubble (a local model can
+// think for minutes before it streams anything).
+export const CHAT_STILL_WORKING_AFTER_MS = 12_000
+export const CHAT_STILL_WORKING_COPY =
+  'Still working… Omi runs on your own server, and its model can take a few minutes.'
 
 // First-chat readiness copy (#123). Right after sign-in the FIRST turn can race
 // session readiness — on legacy_sse the persisted Firebase user may not be
@@ -697,10 +708,18 @@ export function useChat(): UseChat {
     // `assistantText`. Without this the pi_mono door dropped tool_activity entirely, so
     // a long tool run looked like dead air / a stuck spinner.
     let toolActivity: string | null = null
-    const composeLive = (): string =>
-      toolActivity
-        ? `${assistantText}${assistantText ? '\n\n' : ''}_${toolActivity}…_`
-        : assistantText
+    // omi-local: until the first words arrive on a slow model, the bubble says
+    // "Still working…" instead of sitting empty (display-only, like toolActivity).
+    let stillWorking = false
+    const composeLive = (): string => {
+      const body =
+        !assistantText && stillWorking && !toolActivity ? CHAT_STILL_WORKING_COPY : assistantText
+      return toolActivity
+        ? `${body || (stillWorking ? CHAT_STILL_WORKING_COPY : '')}${
+            body || stillWorking ? '\n\n' : ''
+          }_${toolActivity}…_`
+        : body
+    }
 
     // INV-CHAT-1 site 1: persist the RAW user message at turn start (never the
     // context-prepended prompt). Fire-and-forget. session_id is OMITTED on the
@@ -836,6 +855,11 @@ export function useChat(): UseChat {
     // timer is set BEFORE the try so it covers context-gathering + BOTH attempts +
     // the 600ms retry delay, and is cleared at the top of the finally so a normal
     // completion cancels it (the success path is otherwise byte-identical).
+    const stillWorkingTimer = setTimeout(() => {
+      if (!isCurrent() || assistantText) return
+      stillWorking = true
+      writeAssistant(composeLive())
+    }, CHAT_STILL_WORKING_AFTER_MS)
     const watchdog = setTimeout(() => {
       if (!isCurrent()) return
       // Recover the bubble FIRST (writeAssistant guards on the still-current gen) and
@@ -974,6 +998,7 @@ export function useChat(): UseChat {
       // below is skipped — the recovered timeout state stands and there is no double
       // terminal. clearTimeout on an already-fired timer is a harmless no-op.
       clearTimeout(watchdog)
+      clearTimeout(stillWorkingTimer)
       // Terminal handling runs exactly once, after the FINAL attempt (each attempt
       // already released its own run handle + listener in its own finally). State
       // writes only for the still-current generation (a dismissed turn was already
@@ -1188,6 +1213,8 @@ export function useChat(): UseChat {
       timedOut = true
       ac.abort()
     }, CHAT_STREAM_TIMEOUT_MS)
+    let stillWorkingTimer: ReturnType<typeof setTimeout> | undefined
+    let stillWorking = false
     try {
       // First-chat readiness gate (#123, legacy_sse): right after sign-in the
       // persisted Firebase user may not be rehydrated yet, so auth.currentUser is
@@ -1233,8 +1260,8 @@ export function useChat(): UseChat {
       // app_id; omitted when no app is selected so the URL is byte-identical to today.
       const sendAppId = selectedAppIdRef.current
       const messagesUrl = sendAppId
-        ? `${OMI_BASE}/v2/messages?app_id=${encodeURIComponent(sendAppId)}`
-        : `${OMI_BASE}/v2/messages`
+        ? `${serverUrl()}/v2/messages?app_id=${encodeURIComponent(sendAppId)}`
+        : `${serverUrl()}/v2/messages`
       const doFetch = (): Promise<Response> => {
         const request = fetch(messagesUrl, {
           method: 'POST',
@@ -1261,6 +1288,20 @@ export function useChat(): UseChat {
         hostedRequestStarted = true
         return request
       }
+      // Until the first words arrive the bubble shows "Still working…" (and what
+      // the server says it is doing, from its `think:` frames) rather than an
+      // empty bubble that looks stuck. Replaced by the reply as soon as it streams.
+      let thinking = ''
+      const showStillWorking = (): void => {
+        if (!isCurrent() || assistantText) return
+        renderAssistant(
+          assistantMsg(thinking ? `${CHAT_STILL_WORKING_COPY}\n\n_${thinking}_` : CHAT_STILL_WORKING_COPY)
+        )
+      }
+      stillWorkingTimer = setTimeout(() => {
+        stillWorking = true
+        showStillWorking()
+      }, CHAT_STILL_WORKING_AFTER_MS)
       let res = await doFetch()
       // Transient rate-limit recovery (same policy as the pi_mono door): a 429 here
       // is a transient backend rate limit — not the user sending too fast — so back
@@ -1326,6 +1367,12 @@ export function useChat(): UseChat {
         for (const line of lines) {
           if (line.startsWith('done:')) {
             donePayload = parseDoneMessage(line) ?? donePayload
+            continue
+          }
+          const status = /^data: ?think:(.*)$/.exec(line)?.[1]
+          if (status !== undefined && !assistantText) {
+            thinking = status.replace(/\|app_id:.*$/, '').replace(/__CRLF__/g, ' ').trim()
+            if (stillWorking) showStillWorking()
             continue
           }
           const chunk = parseChunk(line)
@@ -1411,6 +1458,7 @@ export function useChat(): UseChat {
       }
     } finally {
       clearTimeout(watchdog)
+      clearTimeout(stillWorkingTimer)
       if (abortRef.current === ac) abortRef.current = null
       // Only the current generation may unlatch the busy flag and persist. A stale
       // (dismissed) generation leaves both alone: reset() already unlatched, and a

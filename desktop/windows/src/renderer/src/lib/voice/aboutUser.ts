@@ -10,7 +10,7 @@
 //
 // PII: the card holds the user's name and memory contents — it is never logged.
 
-import { auth } from '../firebase'
+import { auth } from '../session'
 import { omiApi } from '../apiClient'
 import { fetchTaskCounts, ZERO_TASK_COUNTS, type TaskCounts } from './taskCounts'
 

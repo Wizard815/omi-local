@@ -1,7 +1,6 @@
-import { auth } from './firebase'
+import { auth, serverUrl } from './session'
 import type { FileChat } from './omiApi.generated'
 
-const OMI_BASE = import.meta.env.VITE_OMI_API_BASE as string
 
 /** The bytes + metadata needed to upload one file. */
 export type UploadableFile = {
@@ -44,7 +43,7 @@ export async function uploadChatFile(
   bytes.set(file.bytes)
   form.append('files', new Blob([bytes], { type: file.mimeType }), file.name)
 
-  const res = await doFetch(`${OMI_BASE}/v2/files`, {
+  const res = await doFetch(`${serverUrl()}/v2/files`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,

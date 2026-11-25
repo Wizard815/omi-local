@@ -20,7 +20,8 @@ const h = vi.hoisted(() => ({
   frameCountCalls: 0
 }))
 
-vi.mock('../../../lib/firebase', () => ({
+vi.mock('../../../lib/session', () => ({
+  serverUrl: () => 'http://omi.test:8000',
   auth: {
     get currentUser() {
       return h.currentUser

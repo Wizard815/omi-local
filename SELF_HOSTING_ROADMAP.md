@@ -77,43 +77,46 @@ Each item is its own commit with a regression test; see `git log` on the branch.
   `device_calendar_sync.dart`; and the fair-use ARB edit was never regenerated into the Dart
   localizations, so the app still showed the SaaS text.
 
+## Fixed in the November 2026 follow-up (were open items 1, 2 and 4)
+
+- **`/_local/storage` served recordings to anyone with the link, forever.** Links are now signed
+  (`?sig=`, plus `exp=` when the caller asks for an expiry) with a key made on first start in
+  `/data/secrets/local_storage_url_key` (or `OMI_LOCAL_STORAGE_URL_KEY`), and the mount refuses
+  anything else with 403 (`backend/utils/other/local_storage_urls.py`). App logo and thumbnail
+  buckets stay unsigned. Most links are made fresh per request, so few saved links break;
+  `OMI_LOCAL_STORAGE_ALLOW_UNSIGNED=1` keeps old ones working while they are re-made. The key is
+  not `ENCRYPTION_SECRET`, because `entrypoint.sh` defaults that to a published string.
+- **One stranger could lock every tunnel user out of login.** List the cloudflared container in
+  `OMI_TRUSTED_PROXY_NETWORKS` and the limiter counts its `CF-Connecting-IP` instead of the
+  connector's address. Headers from any other peer are still ignored. The per-username budget is
+  unchanged, so someone who knows a username can still lock that one account for 15 minutes.
+- **omi-host tests ran only by hand.** The ones that need only python3 and bash run in the local
+  and CI lanes (`omi-host/run_stdlib_tests.sh`, check `omi-host-stdlib-tests`). The audio-service
+  tests need fastapi/numpy and still run by hand.
+
 ## Open items, priority order
 
-### 1. `/_local/storage` serves files without authentication
-`backend/main.py` mounts the local blob store (`StaticFiles`) on the same port a Cloudflare Tunnel
-exposes, and `local_storage.py`'s `generate_signed_url()` returns plain, non-expiring paths. Paths
-contain random Firebase uids and conversation UUIDs (no directory listing), so this is
-capability-by-obscurity, not open browsing — but any leaked URL (logs, a shared screenshot) is a
-permanent link to a recording. Recommended fix: HMAC-sign `generate_signed_url()` with an expiry
-(`?exp=&sig=`, key from `ENCRYPTION_SECRET`) and verify it in a thin ASGI wrapper in front of
-`StaticFiles`, keeping `public_url` (stored long-term for app logos/thumbnails) unsigned for those
-buckets only. Not changed in this pass because URLs already stored in Firestore would break.
+### 0. `ENCRYPTION_SECRET` defaults to a published value
+`omi-host/entrypoint.sh` falls back to `omi_local_dev_harness_32_byte_test_secret_not_prod`
+when `.env` sets nothing, and `utils/encryption.py` derives the data-encryption key from it.
+Set your own in `.env` before you store anything you care about. Changing it later makes data
+encrypted under the old value unreadable, so it needs a migration, not just a new default.
 
-### 2. Local-login lockout through the tunnel
-`utils/local_auth.py` keys its attempt budget on `request.client.host`. Behind cloudflared every
-internet request has the connector's IP, so five bad attempts from anyone lock *everyone* out for
-the lockout window (and the per-username axis lets anyone lock your account). Options: trust
-`CF-Connecting-IP` only when the TCP peer is the cloudflared container, or raise the window.
-
-### 3. Day review: rolled-up conversations and chat retrieval
+### 1. Day review: rolled-up conversations and chat retrieval
 Rolled-up conversations are discarded (hidden, restorable via *Reopen day*). The day summary itself
 is not yet indexed for Ask Omi, so "what happened on Tuesday?" may not see it. Next step: index a
 finalized day summary like a conversation (or add a `get_day_review` chat tool).
 
-### 4. omi-host tests are not in any CI lane
-`omi-host/test_merge_proxy_stream.py` and `test_audio_idle_unload.py` only run by hand. Register
-them in `.github/checks-manifest.yaml` (local + ci lanes).
-
-### 5. Remaining SaaS UI and Firebase packages
+### 2. Remaining SaaS UI and Firebase packages
 Plan & Usage / Stripe pages and the PostHog/Intercom settings entries are still present (inert
 without keys). `firebase_crashlytics`/`firebase_messaging` are neutered at call sites but still in
 `app/pubspec.yaml`; removing them needs a native-manifest pass and a device build.
 
-### 6. Translations for new UI
+### 3. Translations for new UI
 Day review, chat shortcuts and folder-tree strings exist in English only (`app_en.arb`); other
 locales fall back to English.
 
-### 7. Local analytics/crash reporting, if ever wanted
+### 4. Local analytics/crash reporting, if ever wanted
 - **Analytics**: self-hosted PostHog — the SDK is already wired in (`analytics_manager.dart`,
   `product_telemetry.py`), just point `POSTHOG_HOST` at your own instance.
 - **Crash reporting**: self-hosted Sentry — a real SDK swap (`sentry_flutter` instead of

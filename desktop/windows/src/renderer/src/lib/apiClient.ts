@@ -3,7 +3,7 @@ import axios, {
   type AxiosResponse,
   type InternalAxiosRequestConfig
 } from 'axios'
-import { auth } from './firebase'
+import { auth, serverUrl } from './session'
 import { forceReauth, refreshIdToken } from './authSession'
 import { withByokHeadersIfActive } from './byokKeys'
 import { getWindowsDeviceIdHash } from './clientDevice'
@@ -119,12 +119,17 @@ if (typeof window !== 'undefined') {
     .catch(() => {})
 }
 
-function makeClient(baseURL: string): AxiosInstance {
+function makeClient(baseURL: () => string): AxiosInstance {
   // 12s is enough for normal Omi responses and short enough that a stuck
-  // request doesn't lock the UI in a perpetual loading state.
-  const client = axios.create({ baseURL, timeout: 12_000 })
+  // request doesn't lock the UI in a perpetual loading state. (Slow local-model
+  // work never blocks a request: uploads answer `status: processing` and chat
+  // streams over fetch — see useChat.)
+  const client = axios.create({ baseURL: baseURL(), timeout: 12_000 })
 
   client.interceptors.request.use(async (config) => {
+    // The server is the user's runtime choice (lib/session), so resolve it per
+    // request: signing in to another server needs no reload.
+    config.baseURL = baseURL()
     // Platform + version tag on every request — same convention as the macOS/
     // Flutter clients (their shared header builders), so the backend can give
     // Windows-appropriate answers, version-gate features, and attribute quota.
@@ -150,5 +155,7 @@ function makeClient(baseURL: string): AxiosInstance {
   return client
 }
 
-export const omiApi = makeClient(import.meta.env.VITE_OMI_API_BASE as string)
-export const desktopApi = makeClient(import.meta.env.VITE_OMI_DESKTOP_API_BASE as string)
+// omi-local serves the Python API and the desktop routes (chat completions,
+// Gemini proxy, realtime) from one backend, so both clients target the same server.
+export const omiApi = makeClient(serverUrl)
+export const desktopApi = makeClient(serverUrl)

@@ -45,6 +45,14 @@ function SyncBadge({
   onRetry?: (id: string) => void
 }): React.JSX.Element | null {
   if (r.localKind === 'chat') return <span className="badge shrink-0">Chat</span>
+  if (r.processing) {
+    return (
+      <span className="badge flex shrink-0 items-center gap-1" title="Omi is still writing the notes">
+        <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+        Writing notes…
+      </span>
+    )
+  }
   if (r.source !== 'local') return null
   if (r.sync === 'pending') return <span className="badge shrink-0">Sync pending</span>
   if (r.sync === 'failed') {

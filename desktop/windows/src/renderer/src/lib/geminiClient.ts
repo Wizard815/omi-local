@@ -1,4 +1,4 @@
-import { auth } from './firebase'
+import { auth, serverUrl } from './session'
 import type { GeminiLane, GeminiWorkload } from '../../../shared/geminiAttribution'
 import { geminiClientPlatform, geminiProxyFetch } from '../../../shared/geminiProxy'
 
@@ -28,7 +28,7 @@ function sleep(ms: number): Promise<void> {
  */
 export async function generate(args: GenerateArgs): Promise<string> {
   const model = args.model || DEFAULT_MODEL
-  const base = import.meta.env.VITE_OMI_DESKTOP_API_BASE as string
+  const base = serverUrl()
 
   const body: Record<string, unknown> = {
     contents: [{ role: 'user', parts: args.parts }]

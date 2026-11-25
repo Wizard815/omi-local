@@ -1,6 +1,6 @@
 // pimono:setSession handler — the seam that wires the control-plane owner to the
-// signed-in user, HOST-DERIVED and SIGNATURE-VERIFIED from the relayed Firebase
-// ID token.
+// signed-in user, HOST-DERIVED: the relayed token counts only when it is exactly
+// the omi-local session token main fetched itself (omiLocal/serverSession.ts).
 //
 // This is the regression suite for the cross-account data-sharing fix: the owner
 // keys every kernel session/surface row (surfaceSession.ts), and before this
@@ -10,9 +10,9 @@
 // not a mere decode a forged unsigned token could spoof), switch per account, and
 // reset to the default on sign-out.
 //
-// The verifier (auth/firebaseIdToken.ts) is MOCKED here so this suite tests the
-// WIRING — verify-result → owner — decoupled from the crypto, which has its own
-// hermetic suite (auth/firebaseIdToken.test.ts). The kernel's heavy collaborators
+// main's session (omiLocal) is MOCKED here so this suite tests the WIRING —
+// session-check result → owner; ServerSession.uidForRelayedToken has its own suite
+// (omiLocal/serverSession.test.ts). The kernel's heavy collaborators
 // are mocked too (same pattern as controlPlane.pimono.test.ts); the owner functions
 // under test are the REAL ones.
 
@@ -59,14 +59,13 @@ vi.mock('../codingAgent/piMono', () => ({
     this.adapterId = 'pi-mono'
   })
 }))
-// The token verifier: mocked so the wiring test controls "genuine vs forged"
-// without real crypto/cert fetches. Its own suite proves it rejects bad tokens.
-vi.mock('../auth/firebaseIdToken', () => ({
-  verifyFirebaseIdToken: vi.fn(() => Promise.resolve(null))
+// main's own session: mocked so the wiring test controls "genuine vs forged".
+const uidForRelayedToken = vi.hoisted(() => vi.fn((_token: string): string | null => null))
+vi.mock('../omiLocal', () => ({
+  serverSession: () => ({ uidForRelayedToken })
 }))
 
 import { registerPiMonoHandlers } from './pimono'
-import { verifyFirebaseIdToken } from '../auth/firebaseIdToken'
 import {
   controlPlaneOwnerId,
   hasKnownControlPlaneOwner,
@@ -79,7 +78,7 @@ import {
 } from '../codingAgent/piMonoSession'
 import type { ByokKeyStore } from '../agentKernel/byokStore'
 
-const verify = vi.mocked(verifyFirebaseIdToken)
+const verify = uidForRelayedToken
 const noByok = { getAllKeys: () => ({}) } as unknown as ByokKeyStore
 
 async function setSession(payload: unknown): Promise<void> {
@@ -88,14 +87,14 @@ async function setSession(payload: unknown): Promise<void> {
   await handler({}, payload)
 }
 
-const base = 'https://api.omi.me'
+const base = 'http://omi.lan:8000'
 
 afterAll(() => rmSync(dir, { recursive: true, force: true }))
 
 beforeEach(() => {
   handlers.clear()
   verify.mockReset()
-  verify.mockResolvedValue(null)
+  verify.mockReturnValue(null)
   resetControlPlaneForTests()
   __resetPiMonoSessionForTests()
   __setByokKeyStoreForTests(noByok)
@@ -113,8 +112,8 @@ describe('pimono:setSession — control-plane owner wiring', () => {
     expect(hasKnownControlPlaneOwner()).toBe(false)
   })
 
-  it('sets the owner to the uid the verifier returns for a genuine token', async () => {
-    verify.mockResolvedValue('uid-A')
+  it("sets the owner to the session's uid when the relayed token is main's own", async () => {
+    verify.mockReturnValue('uid-A')
     await setSession({ token: 'genuine-A', desktopApiBase: base })
     expect(verify).toHaveBeenCalledWith('genuine-A')
     expect(controlPlaneOwnerId()).toBe('uid-A')
@@ -122,7 +121,7 @@ describe('pimono:setSession — control-plane owner wiring', () => {
   })
 
   it('resets the owner to the default on sign-out (null session)', async () => {
-    verify.mockResolvedValue('uid-A')
+    verify.mockReturnValue('uid-A')
     await setSession({ token: 'genuine-A', desktopApiBase: base })
     await setSession(null)
     expect(controlPlaneOwnerId()).toBe(DEFAULT_LOCAL_OWNER_ID)
@@ -132,22 +131,22 @@ describe('pimono:setSession — control-plane owner wiring', () => {
   it('switches the owner when a second account signs in — no stale first-account owner', async () => {
     // The account-switch case the fix exists for: signing out A then in as B must
     // scope subsequent kernel work to B, never A and never the shared constant.
-    verify.mockResolvedValue('account-A')
+    verify.mockReturnValue('account-A')
     await setSession({ token: 'genuine-A', desktopApiBase: base })
     expect(controlPlaneOwnerId()).toBe('account-A')
     await setSession(null)
-    verify.mockResolvedValue('account-B')
+    verify.mockReturnValue('account-B')
     await setSession({ token: 'genuine-B', desktopApiBase: base })
     expect(controlPlaneOwnerId()).toBe('account-B')
   })
 
-  it('is host-authoritative — a FORGED token the verifier rejects falls back to default, not a leaked owner', async () => {
+  it("is host-authoritative — a token that is not main's session falls back to default, not a leaked owner", async () => {
     // A valid session SHAPE with a token the verifier rejects (bad sig / unsigned /
     // wrong alg / expired / wrong aud-iss): verify → null, so the owner stays the
     // default constant. hasKnownControlPlaneOwner() is false, which the cold-start
     // gate uses to refuse — fail closed, never key rows under a forged owner. This
     // is the core of the access-control fix.
-    verify.mockResolvedValue(null)
+    verify.mockReturnValue(null)
     await setSession({ token: 'forged-victim-uid', desktopApiBase: base })
     expect(verify).toHaveBeenCalledWith('forged-victim-uid')
     expect(controlPlaneOwnerId()).toBe(DEFAULT_LOCAL_OWNER_ID)

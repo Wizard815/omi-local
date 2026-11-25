@@ -18,8 +18,7 @@
 // Relaying on every token refresh is the point, not a side effect: it keeps
 // main's cached token fresh so its backend calls don't start 401ing after the
 // initial token expires.
-import { onIdTokenChanged, type User } from 'firebase/auth'
-import { auth } from './firebase'
+import { onIdTokenChanged, type SessionUser as User, auth, serverUrl } from './session'
 
 let started = false
 
@@ -44,8 +43,8 @@ async function pushSession(user: User, seq: number): Promise<void> {
       return
     }
     await window.omi.aiProfileSetSession({
-      apiBase: import.meta.env.VITE_OMI_API_BASE as string,
-      desktopApiBase: import.meta.env.VITE_OMI_DESKTOP_API_BASE as string,
+      apiBase: serverUrl(),
+      desktopApiBase: serverUrl(),
       token
     })
     console.log('[ai-profile-host] session pushed')
@@ -75,8 +74,8 @@ async function respondTokenPull(requestId: number): Promise<void> {
       return
     }
     window.omi.respondSessionToken(requestId, {
-      apiBase: import.meta.env.VITE_OMI_API_BASE as string,
-      desktopApiBase: import.meta.env.VITE_OMI_DESKTOP_API_BASE as string,
+      apiBase: serverUrl(),
+      desktopApiBase: serverUrl(),
       token
     })
   } catch (e) {

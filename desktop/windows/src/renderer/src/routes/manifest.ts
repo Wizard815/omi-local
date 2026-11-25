@@ -1,13 +1,14 @@
 import { memo, createElement } from 'react'
 import type { ComponentType, ReactElement } from 'react'
 import type { LucideIcon } from 'lucide-react'
-import { House, GanttChartSquare, ListChecks, History, LayoutGrid } from 'lucide-react'
+import { House, GanttChartSquare, ListChecks, History, LayoutGrid, Inbox } from 'lucide-react'
 import { Home } from '../pages/Home'
 import { Conversations } from '../pages/Conversations'
 import { Memories } from '../pages/Memories'
 import { Settings } from '../pages/Settings'
 import { ConversationDetail } from '../pages/ConversationDetail'
 import { Tasks } from '../pages/Tasks'
+import { Approvals, APPROVALS_PATH } from '../pages/Approvals'
 import { Goals } from '../pages/Goals'
 import { Apps } from '../pages/Apps'
 import { Rewind } from '../pages/Rewind'
@@ -74,6 +75,7 @@ const ConversationsPanel = memo(Conversations)
 const MemoriesPanel = memo(Memories)
 const SettingsPanel = memo(Settings)
 const TasksPanel = memo(Tasks)
+const ApprovalsPanel = memo(Approvals)
 const GoalsPanel = memo(Goals)
 const AppsPanel = memo(Apps)
 const RewindPanel = memo(Rewind)
@@ -159,6 +161,17 @@ export const routeManifest: RouteEntry[] = [
     escapeToHome: true
   },
   { id: 'goals', kind: 'panel', path: '/goals', Component: GoalsPanel },
+  {
+    // omi-local: tasks, events and day summaries wait for the user's OK here
+    // (and the day review, read-only + approve). No Ctrl+N shortcut: macOS parity
+    // pins 1-6.
+    id: 'approvals',
+    kind: 'panel',
+    path: APPROVALS_PATH,
+    Component: ApprovalsPanel,
+    nav: { label: 'Waiting for your OK', Icon: Inbox, order: 1.5 },
+    escapeToHome: true
+  },
   {
     id: 'apps',
     kind: 'panel',
