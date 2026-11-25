@@ -1459,9 +1459,11 @@ class _TranscriptWidgetState extends State<TranscriptWidget> {
   }
 
   Widget _buildSegmentText(TranscriptSegment data, int segmentIdx, bool isUser, {TextStyle? style}) {
-    final richText = RichText(
+    // Text.rich, not RichText: RichText ignores the reader's text size (its textScaler defaults to
+    // no scaling) and the theme's font, so transcripts stayed small at large accessibility text.
+    final richText = Text.rich(
       textAlign: TextAlign.left,
-      text: TextSpan(
+      TextSpan(
         style: style ?? OmiType.subhead.copyWith(letterSpacing: 0.0, height: 1.4),
         children: widget.searchQuery.isNotEmpty
             ? _highlightSearchMatchesWithKeys(_getDecodedText(data.text), widget.searchQuery, segmentIdx)

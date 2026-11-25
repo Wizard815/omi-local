@@ -4,14 +4,18 @@ import 'package:intl/intl.dart';
 
 import 'package:omi/backend/http/api/day_reviews.dart';
 import 'package:omi/backend/schema/day_review.dart';
-import 'package:omi/ui/omi_tokens.dart';
+import 'package:omi/ui/ui.dart';
 import 'package:omi/pages/day_review/day_review_page.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 import 'package:omi/utils/other/temp.dart';
 
 /// Days waiting to be sorted, and past day reviews.
 class DayReviewsListPage extends StatefulWidget {
-  const DayReviewsListPage({super.key});
+  const DayReviewsListPage({super.key, this.loadPending = getPendingDayReviews, this.loadReviews = listDayReviews});
+
+  /// The days waiting to be sorted; null when the read failed.
+  final Future<({String today, List<String> pendingDates, List<String> draftDates})?> Function({int days}) loadPending;
+  final Future<List<DayReview>> Function({int limit}) loadReviews;
 
   @override
   State<DayReviewsListPage> createState() => _DayReviewsListPageState();
@@ -22,6 +26,9 @@ class _DayReviewsListPageState extends State<DayReviewsListPage> {
   List<DayReview> _reviews = const [];
   bool _loading = true;
 
+  /// The pending-days read failed (the list read cannot tell a failure from no reviews).
+  bool _failed = false;
+
   @override
   void initState() {
     super.initState();
@@ -29,19 +36,25 @@ class _DayReviewsListPageState extends State<DayReviewsListPage> {
   }
 
   Future<void> _load() async {
-    final results = await Future.wait([getPendingDayReviews(days: 14), listDayReviews()]);
+    final results = await Future.wait([widget.loadPending(days: 14), widget.loadReviews()]);
     if (!mounted) return;
     final pending = results[0] as ({String today, List<String> pendingDates, List<String> draftDates})?;
     setState(() {
       _pending = (pending?.pendingDates ?? const <String>[]).reversed.toList();
       _reviews = results[1] as List<DayReview>;
+      _failed = pending == null;
       _loading = false;
     });
   }
 
+  Future<void> _retry() async {
+    setState(() => _loading = true);
+    await _load();
+  }
+
   String _pretty(String date) {
     final parsed = DateTime.tryParse(date);
-    return parsed == null ? date : DateFormat.yMMMEd().format(parsed);
+    return parsed == null ? date : DateFormat.yMMMEd(OmiDateFormat.of(context).localeName).format(parsed);
   }
 
   Future<void> _open(String date) async {
@@ -63,53 +76,67 @@ class _DayReviewsListPageState extends State<DayReviewsListPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final Widget body;
+    if (_loading) {
+      body = const OmiLoadingState();
+    } else if (_failed) {
+      body = OmiErrorState(message: l10n.dayReviewsLoadFailed, onRetry: _retry);
+    } else if (_pending.isEmpty && _reviews.isEmpty) {
+      body =
+          OmiEmptyState(icon: Icons.auto_stories_outlined, title: l10n.dayReviewsTitle, message: l10n.dayReviewsNone);
+    } else {
+      body = RefreshIndicator(
+        onRefresh: _load,
+        child: ListView(
+          padding: const EdgeInsets.all(OmiSpacing.md),
+          children: [
+            if (_pending.isNotEmpty) ...[
+              OmiSectionHeader(l10n.dayReviewsToSort),
+              OmiSettingsGroup(
+                children: [
+                  for (final date in _pending)
+                    OmiSettingsRow(
+                      key: ValueKey('day_reviews_pending_$date'),
+                      leading: const Icon(Icons.inbox_outlined),
+                      title: _pretty(date),
+                      onTap: () => _open(date),
+                    ),
+                ],
+              ),
+              const SizedBox(height: OmiSpacing.lg),
+            ],
+            OmiSectionHeader(l10n.dayReviewsDone),
+            if (_reviews.isEmpty)
+              Text(l10n.dayReviewsNone, style: OmiType.subhead.copyWith(color: OmiColors.textSecondary))
+            else
+              OmiSettingsGroup(
+                children: [
+                  for (final review in _reviews)
+                    OmiSettingsRow(
+                      key: ValueKey('day_reviews_done_${review.date}'),
+                      leading: const Icon(Icons.auto_stories_outlined),
+                      // An untitled review is named by its day.
+                      title: review.title.trim().isEmpty ? _pretty(review.date) : review.title,
+                      subtitle: review.title.trim().isEmpty ? null : _pretty(review.date),
+                      onTap: () => _open(review.date),
+                    ),
+                ],
+              ),
+          ],
+        ),
+      );
+    }
     return Scaffold(
       backgroundColor: OmiColors.surface0,
       appBar: AppBar(
         backgroundColor: OmiColors.surface0,
+        leading: const OmiBackButton(),
         title: Text(l10n.dayReviewsTitle),
         actions: [
-          IconButton(tooltip: l10n.dayReviewPickDate, icon: const Icon(Icons.calendar_month), onPressed: _pickDate),
+          OmiIconButton(icon: const Icon(Icons.calendar_month), label: l10n.dayReviewPickDate, onPressed: _pickDate),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _load,
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  if (_pending.isNotEmpty) ...[
-                    Text(l10n.dayReviewsToSort,
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 8),
-                    for (final date in _pending)
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.inbox_outlined, color: Colors.white70),
-                        title: Text(_pretty(date), style: const TextStyle(color: Colors.white)),
-                        trailing: const Icon(Icons.chevron_right, color: Colors.white38),
-                        onTap: () => _open(date),
-                      ),
-                    const SizedBox(height: 16),
-                  ],
-                  Text(l10n.dayReviewsDone, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 8),
-                  if (_reviews.isEmpty)
-                    Text(l10n.dayReviewsNone, style: TextStyle(color: Colors.grey.shade500))
-                  else
-                    for (final review in _reviews)
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.auto_stories_outlined, color: Colors.white70),
-                        title: Text(review.title, style: const TextStyle(color: Colors.white)),
-                        subtitle: Text(_pretty(review.date), style: TextStyle(color: Colors.grey.shade500)),
-                        trailing: const Icon(Icons.chevron_right, color: Colors.white38),
-                        onTap: () => _open(review.date),
-                      ),
-                ],
-              ),
-            ),
+      body: body,
     );
   }
 }

@@ -83,6 +83,7 @@ There are exactly two ways out, and they mean different things.
 | Need | Use | Not |
 |---|---|---|
 | Text action | `OmiButton` — `.primary` (white fill and black label in dark mode; inverse in light mode), `.secondary`, `.destructive`, `.tertiary`; size regular (48) or compact (36 visual, 44 target); `isLoading` | `ElevatedButton.styleFrom(...)` with a local colour, height or radius |
+| Two actions side by side ("Allow Once" / "Deny", "Sync Now" / "Test Connection") | `OmiButtonPair(first:, second:)` — half width each; stacked full width (first on top) on a narrow screen or at large text, so no label is cut | a `Row` of two `Expanded` buttons that ellipsize at 320 pt or 2x text |
 | Icon-only action | `OmiIconButton(icon, label: …)` — `label` is required and is the tooltip and the screen-reader name | a bare `GestureDetector`/`InkWell` around an `Icon`, an `IconButton` with no tooltip |
 | Header circle button | `OmiIconButton` filled-circle style (`HeaderCircleButton` is an alias) | a 36 pt circle with a 36 pt target |
 | On/off setting | `OmiSwitch` in an `OmiSettingsRow` | a checkbox, a purple/green/indigo switch |

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:intl/intl.dart';
-
 import 'package:omi/backend/http/api/connections.dart';
 import 'package:omi/backend/schema/connections.dart';
 import 'package:omi/pages/connections/connections_page.dart' show connectionProblem;
@@ -46,7 +44,8 @@ class _AgentJobsPageState extends State<AgentJobsPage> {
     final jobs = _jobs;
     return Scaffold(
       backgroundColor: OmiColors.surface0,
-      appBar: AppBar(backgroundColor: OmiColors.surface0, title: Text(l10n.agentJobsTitle)),
+      appBar:
+          AppBar(backgroundColor: OmiColors.surface0, leading: const OmiBackButton(), title: Text(l10n.agentJobsTitle)),
       body: jobs == null
           ? const Center(child: OmiSpinner())
           : RefreshIndicator(
@@ -131,14 +130,17 @@ class _AgentJobCardState extends State<AgentJobCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(children: [
-                Text(_agent(job.target), style: OmiType.caption.copyWith(color: OmiColors.textSecondary)),
-                if (job.createdAt != null) ...[
-                  const SizedBox(width: OmiSpacing.xs),
-                  Text(DateFormat.MMMd().add_jm().format(job.createdAt!),
-                      style: OmiType.caption.copyWith(color: OmiColors.textTertiary)),
-                ],
-                const Spacer(),
+              Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                // Agent and time wrap under each other before they push the status off the card.
+                Expanded(
+                  child: Wrap(spacing: OmiSpacing.xs, children: [
+                    Text(_agent(job.target), style: OmiType.caption.copyWith(color: OmiColors.textSecondary)),
+                    if (job.createdAt != null)
+                      Text(OmiDateFormat.of(context).timestamp(job.createdAt!.toLocal()),
+                          style: OmiType.caption.copyWith(color: OmiColors.textTertiary)),
+                  ]),
+                ),
+                const SizedBox(width: OmiSpacing.xs),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: OmiSpacing.xs, vertical: 2),
                   decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: OmiRadius.mdAll),
@@ -163,23 +165,18 @@ class _AgentJobCardState extends State<AgentJobCard> {
                   ),
                 const SizedBox(height: OmiSpacing.xs),
                 if (approval.answerableHere)
-                  Row(children: [
-                    Expanded(
-                      child: OmiButton(
-                        key: Key('agent_job_allow_${job.id}'),
-                        label: l10n.agentJobsAllowOnce,
-                        onPressed: _busy ? null : () => _answer('once'),
-                      ),
+                  OmiButtonPair(
+                    first: OmiButton(
+                      key: Key('agent_job_allow_${job.id}'),
+                      label: l10n.agentJobsAllowOnce,
+                      onPressed: _busy ? null : () => _answer('once'),
                     ),
-                    const SizedBox(width: OmiSpacing.sm),
-                    Expanded(
-                      child: OmiButton.secondary(
-                        key: Key('agent_job_deny_${job.id}'),
-                        label: l10n.agentJobsDeny,
-                        onPressed: _busy ? null : () => _answer('deny'),
-                      ),
+                    second: OmiButton.secondary(
+                      key: Key('agent_job_deny_${job.id}'),
+                      label: l10n.agentJobsDeny,
+                      onPressed: _busy ? null : () => _answer('deny'),
                     ),
-                  ])
+                  )
                 else
                   Text(l10n.agentJobsAnswerInStudio, style: OmiType.footnote.copyWith(color: OmiColors.textSecondary)),
               ],

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:intl/intl.dart';
-
 import 'package:omi/backend/http/api/approvals.dart';
 import 'package:omi/backend/http/api/caldav.dart' as caldav;
 import 'package:omi/backend/http/api_result.dart';
@@ -360,7 +358,8 @@ class _CalDavSettingsPageState extends State<CalDavSettingsPage> {
     final configured = settings != null && settings.configured;
     return Scaffold(
       backgroundColor: OmiColors.surface0,
-      appBar: AppBar(backgroundColor: OmiColors.surface0, title: Text(l10n.caldavSettingsTitle)),
+      appBar: AppBar(
+          backgroundColor: OmiColors.surface0, leading: const OmiBackButton(), title: Text(l10n.caldavSettingsTitle)),
       body: _loading
           ? const Center(child: OmiSpinner())
           : ListView(
@@ -378,25 +377,18 @@ class _CalDavSettingsPageState extends State<CalDavSettingsPage> {
                 _approvalGroup(),
                 if (configured) ...[
                   const SizedBox(height: OmiSpacing.md),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OmiButton(
-                          key: const Key('caldav_sync_now'),
-                          label: l10n.caldavSyncNow,
-                          icon: Icons.sync_rounded,
-                          onPressed: _busy ? null : _sync,
-                        ),
-                      ),
-                      const SizedBox(width: OmiSpacing.sm),
-                      Expanded(
-                        child: OmiButton.secondary(
-                          key: const Key('caldav_test'),
-                          label: l10n.caldavTestConnection,
-                          onPressed: _busy ? null : _test,
-                        ),
-                      ),
-                    ],
+                  OmiButtonPair(
+                    first: OmiButton(
+                      key: const Key('caldav_sync_now'),
+                      label: l10n.caldavSyncNow,
+                      icon: Icons.sync_rounded,
+                      onPressed: _busy ? null : _sync,
+                    ),
+                    second: OmiButton.secondary(
+                      key: const Key('caldav_test'),
+                      label: l10n.caldavTestConnection,
+                      onPressed: _busy ? null : _test,
+                    ),
                   ),
                   const SizedBox(height: OmiSpacing.md),
                   OmiSettingsGroup(
@@ -430,7 +422,7 @@ class _CalDavSettingsPageState extends State<CalDavSettingsPage> {
       if (settings.sharedAccount) lines.add((l10n.caldavSharedAccount, false));
     }
     if (settings?.lastSyncAt != null) {
-      lines.add((l10n.caldavLastSync(DateFormat.yMMMd().add_jm().format(settings!.lastSyncAt!)), false));
+      lines.add((l10n.caldavLastSync(OmiDateFormat.of(context).dateTime(settings!.lastSyncAt!.toLocal())), false));
       if (settings.lastReport.isNotEmpty) {
         lines.add((
           l10n.caldavLastReport(

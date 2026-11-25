@@ -133,6 +133,23 @@ void main() {
       expect(find.text(_l10n(tester).processingConversationProgress), findsOneWidget);
     });
 
+    testWidgets(
+        'notes still being written over a stored transcript: the transcript reads, the strip says Writing notes',
+        (tester) async {
+      final detail = _detail(_conversation(status: ConversationStatus.processing, segments: [_segment('Stored line')]),
+          fetch: (_) async => null);
+      addTearDown(detail.dispose);
+
+      await tester.pumpWidget(_app(
+        detail,
+        const Column(children: [ConversationActivityStrip(), Expanded(child: TranscriptWidgets())]),
+      ));
+      expect(find.byKey(const Key('transcript_processing')), findsNothing);
+      expect(find.text('Stored line', findRichText: true), findsOneWidget);
+      expect(find.text(_l10n(tester).episodeWritingNotes), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
     testWidgets('a conversation the server failed to process offers Try Again, which reprocesses', (tester) async {
       final calls = <String>[];
       final gate = Completer<ServerConversation?>();
@@ -213,6 +230,45 @@ void main() {
 
       await tester.pump(const Duration(seconds: 3));
       expect(fetches, 2, reason: 'polling stops once the conversation is no longer processing');
+    });
+
+    testWidgets('a slow model: after the quick reads it keeps checking, less often, until the notes land',
+        (tester) async {
+      var fetches = 0;
+      final detail = _detail(
+        _conversation(status: ConversationStatus.processing),
+        fetch: (_) async {
+          fetches++;
+          return _conversation(
+            segments: [_segment('Done')],
+            status: fetches >= 5 ? ConversationStatus.completed : ConversationStatus.processing,
+          );
+        },
+      );
+      addTearDown(detail.dispose);
+
+      await tester.pumpWidget(_app(
+        detail,
+        const ConversationActivityStrip(
+          pollInterval: Duration(seconds: 1),
+          maxPolls: 2,
+          slowPollInterval: Duration(seconds: 10),
+        ),
+      ));
+      for (var i = 0; i < 3; i++) {
+        await tester.pump(const Duration(seconds: 1));
+        await tester.pump();
+      }
+      expect(fetches, 2, reason: 'the quick reads end after maxPolls');
+      await tester.pump(const Duration(seconds: 5));
+      expect(fetches, 2, reason: 'the slow reads are spaced by slowPollInterval');
+      for (var i = 0; i < 3; i++) {
+        await tester.pump(const Duration(seconds: 10));
+        await tester.pump();
+      }
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(fetches, 5, reason: 'a slow model is still being watched long after the quick reads');
+      expect(find.byKey(const Key('conversation_activity_strip')), findsNothing);
     });
   });
 

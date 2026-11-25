@@ -32,7 +32,7 @@ void main() {
   testWidgets('a waiting task is approved with one tap and leaves the list', (tester) async {
     final api = FakeApprovals(tasks: [waitingTask('t1', 'Call the plumber'), waitingTask('t2', 'Order the cake')]);
     await _open(tester, api);
-    expect(find.text('Waiting for your OK'), findsOneWidget);
+    expect(find.text('Waiting for Your OK'), findsOneWidget);
     expect(find.text('Call the plumber'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('approve_task_t1')));

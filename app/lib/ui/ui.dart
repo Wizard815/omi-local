@@ -10,6 +10,7 @@
 /// | A bottom sheet | `showOmiSheet(context:, title:, builder:)`; an editing sheet `showOmiEditSheet` |
 /// | A row's long-press menu | `showOmiRowMenu(context, title:, actions:)` |
 /// | A text action | `OmiButton` (`.secondary`, `.destructive`, `.tertiary`; `size: OmiButtonSize.compact`) |
+/// | Two actions side by side | `OmiButtonPair(first:, second:)` — stacks when a label would be cut |
 /// | An icon-only action | `OmiIconButton(icon:, label:, onPressed:)` / `OmiIconButton.filled` |
 /// | A spinner | `OmiSpinner` |
 /// | Live / background-work state on a glyph | `OmiLiveDot` (green only while live), `OmiActivityRing` (sync ring, no text) |
@@ -31,6 +32,7 @@
 library;
 
 export 'components/omi_button.dart';
+export 'components/omi_button_pair.dart';
 export 'components/omi_date_filter_chip.dart';
 export 'components/omi_edit_sheet.dart';
 export 'components/omi_filter_chip.dart';

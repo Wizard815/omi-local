@@ -477,7 +477,13 @@ class GetAppsWidgets extends StatelessWidget {
               return SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.only(top: 18.0),
-                  child: OmiLoadingState(label: context.l10n.processingConversationProgress),
+                  // A self-hosted server stores the transcript at once and writes the notes in the
+                  // background, which a slow model can take minutes over: say the transcript is there.
+                  child: OmiLoadingState(
+                    label: conversation.transcriptSegments.isNotEmpty
+                        ? context.l10n.conversationWritingNotesTranscriptReady
+                        : context.l10n.processingConversationProgress,
+                  ),
                 ),
               );
             }

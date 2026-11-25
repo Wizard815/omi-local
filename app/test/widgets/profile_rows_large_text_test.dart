@@ -85,4 +85,27 @@ void main() {
     expect(titleRect.right, lessThanOrEqualTo(valueRect.left));
     expect(find.byIcon(Icons.chevron_right), findsOneWidget);
   });
+
+  testWidgets('at 2x text a value moves under the title, so the title never breaks inside a word', (tester) async {
+    await tester.pumpWidget(
+      _app(
+        OmiSettingsRow(
+          leading: const Icon(Icons.person_outline),
+          title: 'Add events as',
+          value: 'Whole family',
+          onTap: () {},
+        ),
+        textScale: 2.0,
+        width: 360,
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    final titleRect = tester.getRect(find.text('Add events as'));
+    final valueRect = tester.getRect(find.text('Whole family'));
+    expect(valueRect.top, greaterThanOrEqualTo(titleRect.bottom), reason: 'the value sits under the title');
+    expect(valueRect.left, titleRect.left);
+    expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+  });
 }

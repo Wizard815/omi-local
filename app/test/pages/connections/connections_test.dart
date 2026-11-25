@@ -163,7 +163,7 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
     await open();
     expect(find.byKey(const Key('send_to_wiki_already_sent')), findsOneWidget);
-    expect(find.text('Send revised copy'), findsOneWidget);
+    expect(find.text('Send Revised Copy'), findsOneWidget);
     await tester.tap(find.byKey(const Key('send_to_wiki_send')));
     await tester.pumpAndSettle();
     expect(api.sends.last, (id: 'conv-1', revised: true));

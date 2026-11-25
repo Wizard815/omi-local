@@ -18,18 +18,23 @@ import 'package:omi/utils/l10n_extensions.dart';
 /// Transcript tab (the ⋯ menu, the speaker refresh) still shows progress.
 ///
 /// While the server reports the conversation as processing, the strip re-reads it every
-/// [pollInterval] (at most [maxPolls] times) so the result replaces the strip without the reader
-/// leaving and coming back.
+/// [pollInterval] (at most [maxPolls] times), then every [slowPollInterval] (at most [maxSlowPolls]
+/// times), so the result replaces the strip without the reader leaving and coming back — also when
+/// a slow self-hosted model takes many minutes to write the notes in the background.
 class ConversationActivityStrip extends StatefulWidget {
   const ConversationActivityStrip({
     super.key,
     this.pollInterval = const Duration(seconds: 5),
     this.maxPolls = 36,
+    this.slowPollInterval = const Duration(seconds: 30),
+    this.maxSlowPolls = 60,
     this.summaryTabVisible = true,
   });
 
   final Duration pollInterval;
   final int maxPolls;
+  final Duration slowPollInterval;
+  final int maxSlowPolls;
 
   /// Whether the Summary tab — the reprocess's primary progress surface — is on screen.
   final bool summaryTabVisible;
@@ -59,9 +64,23 @@ class _ConversationActivityStripState extends State<ConversationActivityStrip> {
     _pollingId = processingId;
     _polls = 0;
     if (processingId == null) return;
-    _poll = Timer.periodic(widget.pollInterval, (timer) async {
-      if (!mounted || _polls >= widget.maxPolls || provider.conversationOrNull?.id != processingId) {
+    _startPolling(provider, processingId, widget.pollInterval);
+  }
+
+  void _startPolling(ConversationDetailProvider provider, String processingId, Duration interval) {
+    _poll = Timer.periodic(interval, (timer) async {
+      if (!mounted || provider.conversationOrNull?.id != processingId) {
         timer.cancel();
+        return;
+      }
+      if (_polls >= widget.maxPolls + widget.maxSlowPolls) {
+        timer.cancel();
+        return;
+      }
+      if (_polls >= widget.maxPolls && interval != widget.slowPollInterval) {
+        // The notes are taking long (a slow model): keep checking, less often.
+        timer.cancel();
+        _startPolling(provider, processingId, widget.slowPollInterval);
         return;
       }
       // One read at a time: a slow read is not overtaken by the next tick.
@@ -89,7 +108,9 @@ class _ConversationActivityStripState extends State<ConversationActivityStrip> {
       // request started from this tab never runs invisibly.
       label = l10n.summarySummarizingWith(summarySourceName(provider, provider.reprocessingAppId, l10n));
     } else if (!provider.isReprocessingOpenConversation && conversation?.status == ConversationStatus.processing) {
-      label = l10n.processingConversationProgress;
+      // The transcript is stored and only the notes are left: the same words as the Home row.
+      label =
+          conversation!.transcriptSegments.isNotEmpty ? l10n.episodeWritingNotes : l10n.processingConversationProgress;
     } else {
       label = null;
     }
