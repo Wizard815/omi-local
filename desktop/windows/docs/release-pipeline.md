@@ -1,5 +1,10 @@
 # Windows release pipeline
 
+> **omi-local:** this documents upstream Based Hardware's Windows release
+> pipeline (GitHub Releases, api.omi.me update feed). omi-local does not use it:
+> builds carry no service config, and updates come only from a feed the user hosts
+> (`OMI_UPDATE_FEED_URL`, see README → Updates).
+
 The Windows desktop app ships through `.github/workflows/desktop_windows_release.yml`.
 It mirrors the macOS auto-release shape (`.github/workflows/desktop_auto_release.yml`)
 in what it produces — a tagged version, a beta build — but unlike the macOS workflow
