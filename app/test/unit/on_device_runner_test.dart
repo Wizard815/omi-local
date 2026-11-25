@@ -22,7 +22,6 @@ import 'package:omi/services/wals/wal.dart';
 import 'package:omi/services/wals/wal_interfaces.dart';
 import '../support/on_device_fakes.dart';
 import '../support/refactor_flag_adapter.dart';
-import 'package:omi/utils/analytics/analytics_manager.dart';
 import 'package:omi/utils/analytics/registry/events.g.dart';
 
 class _Listener implements IWalSyncListener {
@@ -43,7 +42,7 @@ void main() {
         .setMockMethodCallHandler(const MethodChannel('plugins.flutter.io/path_provider'), (_) async => directory.path);
   });
   tearDown(() async {
-    AnalyticsManager.resetForTesting();
+    resetRefactorFlags();
     await directory.delete(recursive: true);
   });
 

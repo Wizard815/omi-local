@@ -184,5 +184,84 @@
             android:stopWithTask="false"
             android:exported="false" />
 
+        <!-- Home-screen widgets (com.friend.ios.widgets): each draws the document the app last wrote. -->
+        <receiver
+            android:name="com.friend.ios.widgets.OmiTodayWidget"
+            android:exported="false"
+            android:label="@string/omi_widget_today_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/omi_widget_today_info" />
+        </receiver>
+        <receiver
+            android:name="com.friend.ios.widgets.OmiSummaryWidget"
+            android:exported="false"
+            android:label="@string/omi_widget_summary_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/omi_widget_summary_info" />
+        </receiver>
+        <receiver
+            android:name="com.friend.ios.widgets.OmiQuickCaptureWidget"
+            android:exported="false"
+            android:label="@string/omi_widget_capture_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/omi_widget_capture_info" />
+        </receiver>
+        <receiver
+            android:name="com.friend.ios.widgets.OmiListeningWidget"
+            android:exported="false"
+            android:label="@string/omi_widget_listening_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/omi_widget_listening_info" />
+        </receiver>
+        <receiver
+            android:name="com.friend.ios.widgets.OmiTranslationWidget"
+            android:exported="false"
+            android:label="@string/omi_widget_translation_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/omi_widget_translation_info" />
+        </receiver>
+        <receiver
+            android:name="com.friend.ios.widgets.OmiTasksWidget"
+            android:exported="false"
+            android:label="@string/omi_widget_tasks_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/omi_widget_tasks_info" />
+        </receiver>
+        <receiver
+            android:name="com.friend.ios.widgets.OmiApprovalsWidget"
+            android:exported="false"
+            android:label="@string/omi_widget_approvals_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/omi_widget_approvals_info" />
+        </receiver>
+
     </application>
 </manifest>

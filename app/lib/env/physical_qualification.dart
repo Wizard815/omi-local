@@ -154,10 +154,6 @@ class PhysicalQualification {
         native['firebase_data_collection'] != false) {
       throw StateError('Physical qualification requires a separate bundle and disabled native Firebase collection.');
     }
-    if ([Env.posthogApiKey, Env.intercomAppId, Env.intercomIOSApiKey, Env.intercomAndroidApiKey]
-        .any((value) => value != null && value.isNotEmpty)) {
-      throw StateError('Physical qualification refuses external analytics credentials.');
-    }
   }
 }
 

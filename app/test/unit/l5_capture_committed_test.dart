@@ -11,7 +11,6 @@ import 'package:omi/services/wals/capture_committed_journal.dart';
 import 'package:omi/services/wals/local_wal_sync.dart';
 import 'package:omi/services/wals/sync_upload_batch.dart';
 import 'package:omi/services/wals/wal.dart';
-import 'package:omi/utils/analytics/analytics_manager.dart';
 import '../support/custody_test_helpers.dart';
 import '../support/refactor_flag_adapter.dart';
 
@@ -49,15 +48,8 @@ void main() {
     directory = await custodyDirectory();
   });
   tearDown(() async {
-    AnalyticsManager.resetForTesting();
+    resetRefactorFlags();
     await directory.delete(recursive: true);
-  });
-  test('cached serving and deleting opt-ins fail closed across an identity change', () async {
-    final adapter = await setRefactorFlags({'clients_refactor': true});
-    expect(AnalyticsManager().refactorClientsEnabled('clients_refactor'), isTrue);
-    adapter.onCachedRead = () => AnalyticsManager().bindIdentity('successor');
-    expect(AnalyticsManager().refactorClientsEnabled('clients_refactor'), isFalse);
-    expect(await AnalyticsManager().isBooleanFeatureEnabled('custody_capture_committed_release'), isFalse);
   });
   test('socket parser validates ranges and preserves source identity', () {
     final event = MessageEvent.fromJson(receipt(0, 100).toJson());

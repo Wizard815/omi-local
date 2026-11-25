@@ -20,12 +20,9 @@ import 'package:omi/widgets/conversation_bottom_bar.dart' show ConversationTab;
 import 'package:omi/pages/conversations/conversation_action_analytics.dart';
 import 'package:omi/pages/conversations/conversation_actions.dart';
 import 'package:omi/pages/on_device/on_device_provenance_section.dart';
-import 'package:omi/pages/paywall/value_moment_paywall.dart';
-import 'package:omi/pages/held_audio/held_audio_views.dart';
 import 'package:omi/pages/held_audio/processing_backlog_view.dart';
 import 'package:omi/providers/conversation_provider.dart';
 import 'package:omi/providers/conversation_task_presence_provider.dart';
-import 'package:omi/providers/usage_provider.dart';
 import 'package:omi/ui/ui.dart';
 import 'package:omi/utils/alerts/app_snackbar.dart';
 import 'package:omi/utils/analytics/registry/events.g.dart' show ConversationUntitledRenderedSurface;
@@ -167,28 +164,6 @@ class _ConversationListItemState extends State<ConversationListItem> {
       ]);
 
   @override
-  void initState() {
-    super.initState();
-    _offerAtCapIfLocked();
-  }
-
-  @override
-  void didUpdateWidget(covariant ConversationListItem oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!oldWidget.conversation.isLocked) _offerAtCapIfLocked();
-  }
-
-  /// The free allowance locked a conversation the reader can see: the cap offer, once.
-  void _offerAtCapIfLocked() {
-    if (!widget.conversation.isLocked) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !widget.conversation.isLocked || ModalRoute.of(context)?.isCurrent == false) return;
-      ValueMomentPaywall.offer(PaywallMoment.freeCap,
-          conversation: widget.conversation, usage: context.read<UsageProvider?>());
-    });
-  }
-
-  @override
   void dispose() {
     _conversationNewStatusResetTimer?.cancel();
     super.dispose();
@@ -247,11 +222,8 @@ class _ConversationListItemState extends State<ConversationListItem> {
   }
 
   Future<void> _open(BuildContext context, ConversationProvider provider) async {
-    if (widget.conversation.isLocked) {
-      if (!context.read<UsageProvider>().showSubscriptionUI) return;
-      openHeldAudioPlans(context);
-      return;
-    }
+    // A locked row waits for an allowance; a self-hosted server has no plan to offer.
+    if (widget.conversation.isLocked) return;
     if (widget.homeCard case final card? when card.kind == 'episode') {
       await routeToPage(context, EpisodePage(episode: card.episodeSeed(), displaySeedOnly: true));
       if (context.mounted) unawaited(context.read<HomeFeedProvider?>()?.refresh());
@@ -1019,8 +991,6 @@ class LockedConversationRun extends StatelessWidget {
       OmiFeedback.info(context, context.l10n.conversationCannotBeMerged);
       return;
     }
-    if (!context.read<UsageProvider>().showSubscriptionUI) return;
-    openHeldAudioPlans(context);
   }
 
   @override

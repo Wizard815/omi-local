@@ -9,20 +9,10 @@ import 'package:omi/l10n/app_localizations.dart';
 import 'package:omi/pages/conversation_detail/widgets/feedback_prompt_policy.dart';
 import 'package:omi/pages/conversation_detail/widgets/summary_tab.dart';
 import 'package:omi/utils/analytics/analytics_manager.dart';
-import 'package:omi/utils/analytics/product_telemetry.dart';
-import 'package:omi/utils/analytics/registry/events.g.dart';
 
 class _EnvNoIntercom implements EnvFields {
   @override
-  String? get posthogApiKey => null;
-  @override
   String? get apiBaseUrl => null;
-  @override
-  String? get intercomAppId => null;
-  @override
-  String? get intercomIOSApiKey => null;
-  @override
-  String? get intercomAndroidApiKey => null;
   @override
   String? get googleClientId => null;
   @override
@@ -71,7 +61,6 @@ void main() {
     VisibilityDetectorController.instance.updateInterval = Duration.zero;
     SharedPreferences.setMockInitialValues({});
     AnalyticsManager().bindIdentity('feedback-test-owner');
-    ProductTelemetry.instance = ProductTelemetry(emit: (_) {});
   });
 
   // Must run inside the test body's zone: a policy created in setUp (a
@@ -153,11 +142,9 @@ void main() {
     expect(find.byKey(const ValueKey('recording_feedback_give_feedback')), findsNothing);
   });
 
-  testWidgets('"All good" submits +1 without a reason and keeps the helpful value signal', (tester) async {
+  testWidgets('"All good" submits +1 without a reason and closes the prompt', (tester) async {
     resetFeedbackPolicy();
     final calls = <CapturedFeedback>[];
-    final emitted = <RegisteredEvent>[];
-    ProductTelemetry.instance = ProductTelemetry(emit: emitted.add);
     await pumpPrompt(
         tester, SummaryFeedbackPrompt(conversationId: 'conversation-2', submitFeedback: recordingSubmitter(calls)));
 
@@ -171,10 +158,6 @@ void main() {
     expect(request.kind, MobileFeedbackKind.summaryHelpfulness);
     expect(request.value, 1);
     expect(request.reason, isNull);
-    expect(
-      emitted.any((event) => event is ProductValueEvent && event.kind == ProductValueEventKind.feedbackHelpful),
-      isTrue,
-    );
     expect(find.byKey(const ValueKey('summary_feedback_give_feedback')), findsNothing);
   });
 

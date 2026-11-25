@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:omi/providers/usage_provider.dart';
-import 'package:omi/pages/paywall/trial_paywall_page.dart';
 
 import 'package:url_launcher/url_launcher.dart';
 
@@ -38,7 +35,7 @@ import 'package:omi/pages/settings/settings_groups.dart';
 import 'package:omi/pages/settings/settings_search_index.dart';
 import 'package:omi/pages/settings/sign_out.dart';
 import 'package:omi/pages/settings/transcription_settings_page.dart';
-import 'package:omi/pages/settings/usage_page.dart';
+import 'package:omi/pages/settings/server_usage_page.dart';
 import 'package:omi/pages/settings/voice_settings_page.dart';
 import 'package:omi/ui/ui.dart';
 import 'package:omi/utils/other/temp.dart';
@@ -70,16 +67,8 @@ Future<void> openSettingsDestination(BuildContext context, SettingsDestination d
       await routeToPage(context, const HelpAboutGroupPage());
     case SettingsDestination.notifications:
       await routeToPage(context, const NotificationsSettingsPage());
-    case SettingsDestination.planAndUsage:
-      await routeToPage(context, const UsagePage());
-    case SettingsDestination.upgrade:
-      PlatformManager.instance.analytics.track('Settings Upgrade Row Tapped');
-      final usage = context.read<UsageProvider>();
-      if (usage.subscription?.trialEligible == true && usage.subscription?.subscription.plan.isPaid != true) {
-        await routeToPage(context, const TrialPaywallPage(source: 'settings'));
-      } else {
-        await routeToPage(context, const UsagePage());
-      }
+    case SettingsDestination.serverUsage:
+      await routeToPage(context, const ServerUsagePage());
     case SettingsDestination.offlineSync:
       final page = SharedPreferencesUtil().deviceSupportsMultiFileSync ? const AutoSyncPage() : const SyncPage();
       await routeToPage(context, page);

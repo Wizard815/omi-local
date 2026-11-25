@@ -48,6 +48,8 @@ class MainActivity: FlutterActivity() {
 
 
         com.friend.ios.ondevice.PhoneBatteryChannel.register(this, flutterEngine)
+        // Home-screen widgets: the app writes each widget's document here.
+        com.friend.ios.widgets.OmiWidgetChannel.register(this, flutterEngine)
         // On-device live preview for local-preview listen sessions (display only).
         com.friend.ios.livepreview.LivePreviewPlugin.register(this, flutterEngine)
 

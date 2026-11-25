@@ -35,7 +35,6 @@ import 'package:omi/services/wals/recording_transfer_coordinator.dart';
 import 'package:omi/services/wals/sync_rate_limiter.dart';
 import 'package:omi/services/wals/sync_upload_gate.dart';
 import 'package:omi/services/wals/wal.dart';
-import 'package:omi/services/wals/wal_backlog_telemetry.dart';
 import 'package:omi/services/wals/wal_interfaces.dart';
 import 'package:omi/ui/ui.dart';
 import 'package:omi/utils/platform/platform_manager.dart';
@@ -449,7 +448,7 @@ Future<void> main() async {
     telemetryEmitter: (event, data) => unawaited(proof.event('upload_telemetry', {'event': event, ...data})),
   );
   final service = _FixtureService();
-  service.phone = LocalWalSyncImpl(service, uploadGate: gate, backlogTelemetry: WalBacklogTelemetry(emit: (_) {}));
+  service.phone = LocalWalSyncImpl(service, uploadGate: gate);
   await service.phone.loadForOnDeviceWorker();
   final provider = SyncProvider(walService: service, uploadGate: gate, captureWedgeMonitor: monitor);
   await provider.initialized;

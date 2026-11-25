@@ -8,7 +8,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:omi/backend/preferences.dart';
 
 import '../journeys/support/hermetic_boot.dart';
-import 'demo_billing.dart';
+import 'fakes.dart';
 import 'harness.dart';
 import 'registry.dart';
 import 'walks.dart';
@@ -38,7 +38,7 @@ void main() {
     final suite = AuditSuite(
       name: 'demo-walk',
       scenarios: auditSuite.scenarios,
-      providers: demoAuditProviders,
+      providers: defaultAuditProviders,
       theme: auditSuite.theme,
       hostBackground: auditSuite.hostBackground,
     );

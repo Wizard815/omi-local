@@ -12,7 +12,6 @@ import 'package:omi/pages/settings/chat_apps/chat_app_widgets.dart';
 import 'package:omi/pages/settings/chat_apps/chat_apps_problem.dart';
 import 'package:omi/providers/messaging_channels_provider.dart';
 import 'package:omi/ui/ui.dart';
-import 'package:omi/utils/analytics/chat_apps_analytics.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 
 /// Connect iMessage: the person texts Omi a one-time code from the number to link. Messages opens
@@ -103,7 +102,6 @@ class _IMessageConnectSheetState extends State<IMessageConnectSheet>
 
   @override
   void onLinked(ChannelLink link) {
-    ChatAppsAnalytics.connected(widget.channel);
     Navigator.of(context).pop(link.withAddress(_address(_proof)));
   }
 
@@ -147,7 +145,6 @@ class _IMessageConnectSheetState extends State<IMessageConnectSheet>
     final endpoint = _endpoint;
     final proof = _proof;
     if (endpoint == null || proof == null) return;
-    if (!_sent) ChatAppsAnalytics.connectStarted(widget.channel);
     final opened = await openChatAppProof(
       widget.channel,
       endpoint,

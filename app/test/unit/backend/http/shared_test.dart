@@ -285,18 +285,6 @@ class _TestEnvFields implements EnvFields {
 
   @override
   @override
-  String? get intercomAppId => null;
-
-  @override
-  String? get intercomIOSApiKey => null;
-
-  @override
-  String? get intercomAndroidApiKey => null;
-
-  @override
-  String? get posthogApiKey => null;
-
-  @override
   bool? get useAuthCustomToken => false;
 
   @override

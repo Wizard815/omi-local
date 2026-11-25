@@ -70,15 +70,7 @@ class _Capture extends ChangeNotifier implements CaptureProvider {
 
 class _TestEnvFields implements EnvFields {
   @override
-  String? get posthogApiKey => null;
-  @override
   String? get apiBaseUrl => 'http://127.0.0.1:1/';
-  @override
-  String? get intercomAppId => null;
-  @override
-  String? get intercomIOSApiKey => null;
-  @override
-  String? get intercomAndroidApiKey => null;
   @override
   String? get googleClientId => null;
   @override
@@ -159,7 +151,7 @@ void main() {
   }
 
   testWidgets(
-      'the sheet is Account, Plan, the groups, Connect an Agent, Memories, Goals and Feedback, in order, keyed (omi-local has no Referral row)',
+      'the sheet is Account, server usage, the groups, Connect an Agent, Memories, Goals and Feedback, in order, keyed (omi-local has no Referral row)',
       (
     tester,
   ) async {
@@ -167,7 +159,7 @@ void main() {
     final rows = _rowsOnScreen(tester);
     expect(rows.map(_keyOf).toList(), [
       'settings_account',
-      'settings_row_planAndUsage',
+      'settings_row_serverUsage',
       'settings_group_device',
       'settings_group_recording',
       'settings_group_voice',
@@ -190,7 +182,7 @@ void main() {
     expect(rows.first.title, 'Ada');
     expect(rows.first.subtitle, 'ada@example.com');
     expect(rows.skip(1).map((r) => r.title).toList(), [
-      en.planAndUsage,
+      en.serverUsageTitle,
       en.device,
       en.recordingAndTranscription,
       en.assistantVoiceSettingsTitle,
@@ -254,7 +246,7 @@ void main() {
       SettingsDestination.caldav: 'settings_row_caldav',
       SettingsDestination.familyCalendar: 'settings_row_family_calendar',
       SettingsDestination.connections: 'settings_row_connections',
-      SettingsDestination.planAndUsage: 'settings_row_planAndUsage',
+      SettingsDestination.serverUsage: 'settings_row_serverUsage',
       SettingsDestination.feedback: 'settings_row_feedback', // where Intercom is supported (the host test is)
       SettingsDestination.voice: 'settings_group_voice',
       // Memories and Goals moved onto the sheet when they left the Home tabs (2026-09-29).
@@ -330,9 +322,6 @@ void main() {
       SettingsDestination.helpGroup,
       // Hidden for now (PhoneCallsFeature.visible); the destination stays wired for when it returns.
       if (!PhoneCallsFeature.visible) SettingsDestination.phoneCalls,
-      // Shown on the sheet only to trial-eligible free readers (settings_upgrade_row_test.dart covers
-      // both states); this walk runs without a subscription, so the row is absent here.
-      SettingsDestination.upgrade,
     };
     expect(covered, SettingsDestination.values.toSet(), reason: 'a destination is missing from this walk');
 

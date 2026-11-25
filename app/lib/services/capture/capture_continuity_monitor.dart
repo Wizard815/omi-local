@@ -1,9 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'package:omi/services/capture/capture_composition.dart';
-import 'package:omi/services/telemetry/client_telemetry.dart';
 import 'package:omi/utils/logger.dart';
-import 'package:uuid/uuid.dart';
 
 /// What capture looks like at one check. Built by the controller every
 /// [CaptureContinuityMonitor.checkInterval].
@@ -133,15 +131,6 @@ class CaptureContinuityMonitor {
       'capture_phase': probe.phase,
       'sync_fenced': probe.syncFenced,
     });
-    try {
-      // The replacement collector, for when PostHog emission is retired.
-      ClientTelemetry.instance.observeWedge(
-        operationId: const Uuid().v4(),
-        phase: 'detected',
-        trigger: trigger,
-        outcome: 'pending',
-      );
-    } catch (_) {}
     if (_dogfood()) dogfoodAlert.value = CaptureContinuityAlert(deviceId: deviceId, since: silentSince);
   }
 

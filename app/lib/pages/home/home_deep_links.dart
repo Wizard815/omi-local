@@ -20,10 +20,13 @@ import 'package:omi/pages/action_items/widgets/action_item_form_sheet.dart';
 import 'package:omi/pages/conversation_detail/page.dart';
 import 'package:omi/pages/home/item_list_sheet.dart';
 import 'package:omi/pages/memories/page.dart';
+import 'package:omi/pages/approvals/approvals_page.dart';
+import 'package:omi/pages/memories/widgets/memory_dialog.dart';
 import 'package:omi/pages/memories/widgets/memory_edit_sheet.dart';
 import 'package:omi/pages/settings/daily_summary_detail_page.dart';
 import 'package:omi/pages/settings/data_privacy_page.dart';
 import 'package:omi/pages/settings/device_settings.dart';
+import 'package:omi/pages/settings/language_settings_page.dart';
 import 'package:omi/pages/settings/wrapped_2025_page.dart';
 import 'package:omi/providers/app_provider.dart';
 import 'package:omi/providers/memories_provider.dart';
@@ -135,7 +138,7 @@ class HomeDeepLink {
   /// The home tab the link belongs to, so the parent (the tab) shows before the child (the page
   /// pushed over it). Null keeps the current tab.
   int? get tabIndex => switch (alias) {
-        'action-items' || 'task' => HomeProvider.tasksTab,
+        'action-items' || 'task' || 'new-task' => HomeProvider.tasksTab,
         'capture' ||
         'memories' ||
         'facts' ||
@@ -179,6 +182,23 @@ Future<bool> openHomeDeepLink(
       context.read<HomeProvider>().setIndex(HomeProvider.homeTab);
     case 'action-items':
       context.read<HomeProvider>().setIndex(HomeProvider.tasksTab);
+    // The Android home-screen widgets (android/app/src/main/kotlin/com/friend/ios/widgets).
+    case 'new-task':
+      context.read<HomeProvider>().setIndex(HomeProvider.tasksTab);
+      unawaited(showActionItemFormSheet(context));
+    case 'new-memory':
+      unawaited(showMemoryDialog(context, context.read<MemoriesProvider>()));
+    case 'approvals':
+      unawaited(routeToPage(context, const ApprovalsPage()));
+    case 'listening':
+      final capture = context.read<CaptureProvider>();
+      if (id == 'pause') {
+        await capture.pauseCapture();
+      } else if (id == 'resume') {
+        await capture.resumeCapture();
+      } else {
+        return false;
+      }
     case 'memory':
       if (id == null) return false;
       final provider = context.read<MemoriesProvider>();
@@ -248,6 +268,7 @@ Future<bool> openHomeDeepLink(
       unawaited(openSettings());
       if (id == 'data-privacy') unawaited(routeToPage(context, const DataPrivacyPage()));
       if (id == 'device') unawaited(routeToPage(context, const DeviceSettings()));
+      if (id == 'language') unawaited(routeToPage(context, const LanguageSettingsPage()));
     case 'memories':
     case 'facts':
       unawaited(routeToPage(context, const MemoriesPage()));

@@ -9,7 +9,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:omi/backend/preferences.dart';
-import 'package:omi/utils/analytics/analytics_manager.dart';
 import 'package:omi/models/custom_stt_config.dart';
 import 'package:omi/models/stt_provider.dart';
 import '../../support/refactor_flag_adapter.dart';
@@ -31,7 +30,7 @@ void main() {
   late CaptureReplayWorld world;
 
   setUp(() async {
-    AnalyticsManager.resetForTesting();
+    resetRefactorFlags();
     directory = await Directory.systemTemp.createTemp('capture_safety_copy_');
     // These custody fixtures intentionally delay transcripts for several minutes.
     // Keep capture admitted using the existing four-hour setting; default silence
@@ -45,7 +44,7 @@ void main() {
 
   tearDown(() async {
     await world.dispose();
-    AnalyticsManager.resetForTesting();
+    resetRefactorFlags();
     if (directory.existsSync()) directory.deleteSync(recursive: true);
   });
 

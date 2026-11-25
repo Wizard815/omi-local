@@ -22,7 +22,6 @@ import 'package:omi/pages/conversations/widgets/processing_conversation_row.dart
 import 'package:omi/services/capture/capture_external_actions.dart';
 import 'package:omi/services/capture/local_segment_store.dart';
 import 'package:omi/ui/ui.dart';
-import 'package:omi/utils/analytics/analytics_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import '../helpers/sfpro_font_fixtures.dart';
@@ -108,7 +107,7 @@ void main() {
       debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
       addTearDown(() {
         debugDefaultTargetPlatformOverride = null;
-        AnalyticsManager.resetForTesting();
+        resetRefactorFlags();
       });
       tester.view.physicalSize = const Size(393, 852);
       tester.view.devicePixelRatio = 1;
@@ -248,7 +247,7 @@ void main() {
     addTearDown(history.dispose);
     addTearDown(episodes.dispose);
     addTearDown(capture.dispose);
-    addTearDown(AnalyticsManager.resetForTesting);
+    addTearDown(resetRefactorFlags);
     final screen = await buildTypedConversationScreen(history,
         captureProvider: capture, episodes: episodes, initializePreferences: false);
     await tester.pumpWidget(screen);
@@ -272,7 +271,7 @@ void main() {
       debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
       addTearDown(() {
         debugDefaultTargetPlatformOverride = null;
-        AnalyticsManager.resetForTesting();
+        resetRefactorFlags();
       });
       tester.view.physicalSize = const Size(393, 852);
       tester.view.devicePixelRatio = 1;

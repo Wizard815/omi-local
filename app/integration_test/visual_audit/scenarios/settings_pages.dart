@@ -26,16 +26,13 @@ import 'package:omi/pages/settings/people.dart';
 import 'package:omi/pages/settings/person_detail_page.dart';
 import 'package:omi/pages/settings/phone_call_settings_page.dart';
 import 'package:omi/pages/settings/transcription_settings_page.dart';
-import 'package:omi/pages/settings/usage_page.dart';
+import 'package:omi/pages/settings/server_usage_page.dart';
 import 'package:omi/pages/settings/widgets/leave_flow_widgets.dart';
-import 'package:omi/pages/settings/widgets/plans_sheet.dart';
-import 'package:omi/providers/usage_provider.dart';
 import 'package:omi/providers/people_provider.dart';
 import 'package:omi/providers/phone_call_provider.dart';
 import 'package:omi/ui/ui.dart';
 
 import '../fakes.dart';
-import '../demo_billing.dart';
 import '../harness.dart';
 
 const _account = 'Signed-in fixture account; no device connected';
@@ -73,45 +70,13 @@ final settingsPagesScenarios = <AuditScenario>[
     },
   ),
   AuditScenario(
-    id: 'settings-usage',
-    title: 'Plan & Usage before the subscription loads',
-    page: 'lib/pages/settings/usage_page.dart (UsagePage)',
-    state: 'Signed-in fixture account; the fixture backend serves no subscription or usage',
+    id: 'settings-server-usage',
+    title: 'Your usage on this server before it loads',
+    page: 'lib/pages/settings/server_usage_page.dart (ServerUsagePage)',
+    state: 'Signed-in fixture account; the fixture backend serves no usage',
     run: (a) async {
-      await a.pump(const UsagePage());
-      await a.shot('Open Plan & Usage');
-    },
-  ),
-  AuditScenario(
-    id: 'settings-plans-sheet',
-    title: 'Plans sheet when plans fail to load',
-    page: 'lib/pages/settings/widgets/plans_sheet.dart (PlansSheet)',
-    state: 'Signed-in fixture account; the fixture backend serves no plans; opened on a neutral host',
-    run: (a) async {
-      await a.pumpHost(
-        (context) => showOmiSheet(context: context, padding: EdgeInsets.zero, builder: (_) => _PlansHost()),
-      );
-      await a.shot('Open the Plans sheet');
-    },
-  ),
-  AuditScenario(
-    id: 'settings-plans-ready',
-    title: 'Plans sheet on the demo catalog',
-    page: 'lib/pages/settings/widgets/plans_sheet.dart (PlansSheet)',
-    state: 'Signed-in free account; a local plan catalog, no StoreKit charge and no payment request',
-    run: (a) async {
-      await a.pumpHost(
-        (context) => showOmiSheet(context: context, padding: EdgeInsets.zero, builder: (_) => _PlansHost()),
-        providers: [ChangeNotifierProvider<UsageProvider>(create: (_) => DemoBillingUsage())],
-      );
-      final list = find.descendant(of: find.byType(PlansSheet), matching: find.byType(Scrollable));
-      await a.tester.scrollUntilVisible(find.text('Omi Pro'), 280, scrollable: list);
-      await a.settle();
-      expect(find.text('Unable to load plans'), findsNothing);
-      expect(find.byType(OmiErrorState), findsNothing);
-      expect(find.text('Upgrade Your Plan'), findsOneWidget);
-      expect(find.text('Omi Pro'), findsWidgets);
-      await a.shot('Open the plans sheet on the demo catalog');
+      await a.pump(const ServerUsagePage());
+      await a.shot('Open Your usage on this server');
     },
   ),
   AuditScenario(
@@ -347,36 +312,6 @@ class _SilentGuidedVoiceIO implements GuidedVoiceIO {
 }
 
 /// PlansSheet borrows its animation controllers from the page that opens it.
-class _PlansHost extends StatefulWidget {
-  @override
-  State<_PlansHost> createState() => _PlansHostState();
-}
-
-class _PlansHostState extends State<_PlansHost> with TickerProviderStateMixin {
-  late final _wave = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat();
-  late final _arrow = AnimationController(vsync: this, duration: const Duration(milliseconds: 800))..repeat();
-  late final _notes = AnimationController(vsync: this, duration: const Duration(seconds: 3))..repeat();
-  late final _arrowAnimation = Tween<double>(
-    begin: 0,
-    end: 10,
-  ).animate(CurvedAnimation(parent: _arrow, curve: Curves.easeInOut));
-
-  @override
-  void dispose() {
-    _wave.dispose();
-    _arrow.dispose();
-    _notes.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => PlansSheet(
-        waveController: _wave,
-        notesController: _notes,
-        arrowController: _arrow,
-        arrowAnimation: _arrowAnimation,
-      );
-}
 
 PeopleProvider _auditPeople() {
   final now = DateTime.now();

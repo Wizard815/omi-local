@@ -4,16 +4,11 @@ import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
-import 'package:omi/backend/http/api_result.dart';
-import 'package:omi/backend/http/plan_storefront_api.dart';
 import 'package:omi/models/local_recording.dart';
-import 'package:omi/models/plan_storefront.dart';
 import 'package:omi/pages/on_device/on_device_components.dart';
 import 'package:omi/pages/on_device/on_device_setup_page.dart';
-import 'package:omi/pages/settings/widgets/plans/contextual_plans.dart';
 import 'package:omi/providers/local_recordings_provider.dart';
 import 'package:omi/providers/usage_provider.dart';
-import 'package:omi/services/experiments/plan_storefront_gate.dart';
 import 'package:omi/services/on_device/on_device_model.dart';
 import 'package:omi/services/on_device/on_device_schedule_policy.dart';
 import 'package:omi/services/on_device/on_device_settings.dart';
@@ -21,39 +16,12 @@ import 'package:omi/services/on_device/on_device_transcription_controller.dart';
 import 'package:omi/ui/ui.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 
-/// Opens the plans sheet for the shared usage budget. There is no legacy usage-page fallback.
-void openOnDeviceUpgrade(BuildContext context) => unawaited(openOnDeviceUsagePlans(context));
-
-/// Opens that sheet from the settings "Get more usage" row.
-///
-/// Returns false when the sheet is unavailable. This row does not open the legacy usage page.
-Future<bool> openOnDeviceUsagePlans(BuildContext context) {
-  return openContextualPlans(context, source: 'on_device_overflow', trigger: 'usage_budget');
-}
-
-/// The storefront `usage` object. Null when the sheet is off or the payload is not the shared
-/// budget. The client never invents hours from a local counter.
-Future<StorefrontUsage?> loadOnDeviceUsage(String locale) async {
-  final result = await PlanStorefrontApi().load(source: 'on_device_overflow', trigger: 'usage_budget', locale: locale);
-  if (result is! ApiSuccess<PlanStorefront>) return null;
-  final usage = result.data.usage;
-  if (usage == null || usage.kind != 'usage_budget') return null;
-  return usage;
-}
-
-Future<bool> onDevicePlansSheetAvailable(BuildContext context) async {
-  final provider = context.read<UsageProvider>();
-  return provider.showSubscriptionUI && await PlanStorefrontGate.sheetEnabled();
-}
-
 /// The conversations list's banner for recordings waiting on this phone. Renders nothing unless the
 /// on-device flag is on and something is waiting.
 class OnDeviceQueueBanner extends StatefulWidget {
-  const OnDeviceQueueBanner({super.key, this.controller, this.loadUsage, this.plansSheetAvailable});
+  const OnDeviceQueueBanner({super.key, this.controller});
 
   final OnDeviceTranscriptionController? controller;
-  final Future<StorefrontUsage?> Function(String locale)? loadUsage;
-  final Future<bool> Function(BuildContext context)? plansSheetAvailable;
 
   @override
   State<OnDeviceQueueBanner> createState() => _OnDeviceQueueBannerState();
@@ -62,36 +30,11 @@ class OnDeviceQueueBanner extends StatefulWidget {
 class _OnDeviceQueueBannerState extends State<OnDeviceQueueBanner> {
   OnDeviceTranscriptionController get _controller => widget.controller ?? OnDeviceTranscriptionController.instance;
   int _evaluatedSeconds = -1;
-  String? _moreLabel;
-  bool _plansSheet = false;
-  Future<void>? _usageLoad;
 
   @override
   void initState() {
     super.initState();
     unawaited(_controller.ensureLoaded());
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _usageLoad ??= _loadUsage();
-  }
-
-  Future<void> _loadUsage() async {
-    await _controller.ensureLoaded();
-    // The conversations page mounts this banner while the flag is off. Do not
-    // construct the storefront client until the gate is on; that reads Env.
-    if (!mounted || !_controller.isActive) return;
-    final sheet = await (widget.plansSheetAvailable ?? onDevicePlansSheetAvailable)(context);
-    if (!mounted) return;
-    final usage = await (widget.loadUsage ?? loadOnDeviceUsage)(context.l10n.localeName);
-    if (mounted) {
-      setState(() {
-        _plansSheet = sheet;
-        _moreLabel = usage?.moreLabel;
-      });
-    }
   }
 
   @override
@@ -113,17 +56,11 @@ class _OnDeviceQueueBannerState extends State<OnDeviceQueueBanner> {
           return OmiErrorState(
               message: context.l10n.failedToTranscribeAudio, onRetry: () => unawaited(_controller.transcribeNow()));
         }
-        final moreLabel = onDeviceMoreUsageTitle(
-          plansSheetAvailable: _plansSheet,
-          moreLabel: _moreLabel,
-        );
         return OnDeviceQueueBannerView(
           controller: _controller,
           pendingSeconds: pendingSeconds,
           atCap: atCap,
           onSetUp: () => unawaited(openOnDeviceSetup(context, controller: widget.controller)),
-          moreLabel: moreLabel,
-          onGetMoreUsage: () => openOnDeviceUpgrade(context),
         );
       },
     );
@@ -143,18 +80,12 @@ class OnDeviceQueueBannerView extends StatelessWidget {
     required this.pendingSeconds,
     required this.atCap,
     required this.onSetUp,
-    required this.onGetMoreUsage,
-    this.moreLabel,
   });
 
   final OnDeviceTranscriptionController controller;
   final int pendingSeconds;
   final bool atCap;
   final VoidCallback onSetUp;
-  final VoidCallback onGetMoreUsage;
-
-  /// Backend-owned label for the plans row. Hidden when the storefront did not send one.
-  final String? moreLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -291,14 +222,6 @@ class OnDeviceQueueBannerView extends StatelessWidget {
             expand: true,
             onPressed: onSetUp,
           ),
-        if (moreLabel != null && moreLabel!.isNotEmpty)
-          OmiButton.tertiary(
-            key: const Key('on_device_finish_setup_upgrade'),
-            label: moreLabel!,
-            size: OmiButtonSize.compact,
-            expand: true,
-            onPressed: onGetMoreUsage,
-          ),
       ],
     );
   }
@@ -329,14 +252,6 @@ class OnDeviceQueueBannerView extends StatelessWidget {
         _title(Icons.graphic_eq, l10n.onDeviceQueueWaiting(_duration(context))),
         _body(l10n.onDeviceUnsupportedBody),
         const SizedBox(height: OmiSpacing.sm),
-        if (moreLabel != null && moreLabel!.isNotEmpty)
-          OmiButton.secondary(
-            key: const Key('on_device_unsupported_upgrade'),
-            label: moreLabel!,
-            size: OmiButtonSize.compact,
-            expand: true,
-            onPressed: onGetMoreUsage,
-          ),
       ],
     );
   }

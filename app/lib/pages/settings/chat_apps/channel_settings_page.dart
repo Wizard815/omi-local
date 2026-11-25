@@ -8,7 +8,6 @@ import 'package:omi/pages/settings/chat_apps/chat_app_widgets.dart';
 import 'package:omi/pages/settings/chat_apps/chat_apps_problem.dart';
 import 'package:omi/providers/messaging_channels_provider.dart';
 import 'package:omi/ui/ui.dart';
-import 'package:omi/utils/analytics/chat_apps_analytics.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 import 'package:omi/utils/other/temp.dart';
 
@@ -171,7 +170,6 @@ class ChannelSettingsPage extends StatelessWidget {
     if (!context.mounted) return;
     switch (result) {
       case ApiSuccess():
-        ChatAppsAnalytics.disconnected(channel);
         OmiFeedback.confirm(context, l10n.disconnectedFrom(name));
         Navigator.of(context).maybePop();
       case ApiFailure(:final problem):

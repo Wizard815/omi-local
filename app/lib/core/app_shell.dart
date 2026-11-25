@@ -14,7 +14,6 @@ import 'package:omi/pages/action_items/widgets/accept_shared_tasks_sheet.dart';
 import 'package:omi/pages/apps/app_detail/app_detail.dart';
 import 'package:omi/pages/settings/asana_settings_page.dart';
 import 'package:omi/pages/settings/clickup_settings_page.dart';
-import 'package:omi/pages/settings/usage_page.dart';
 import 'package:omi/pages/home/home_deep_links.dart';
 import 'package:omi/pages/home/home_navigation.dart';
 import 'package:omi/pages/settings/wrapped_2025_page.dart';
@@ -53,7 +52,6 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
-  Future<void>? _subscriptionReady;
   Future<void> initDeepLinks() async {
     _appLinks = AppLinks();
 
@@ -72,7 +70,19 @@ class _AppShellState extends State<AppShell> {
   }
 
   /// The places Omi's own links open (see [openAppLink]).
-  static const Set<String> _appLinkRoutes = {'action-items', 'capture', 'conversation', 'conversations', 'settings'};
+  static const Set<String> _appLinkRoutes = {
+    'action-items',
+    'capture',
+    'conversation',
+    'conversations',
+    'settings',
+    // The Android home-screen widgets.
+    'task',
+    'new-task',
+    'new-memory',
+    'approvals',
+    'listening',
+  };
 
   void openAppLink(Uri uri) async {
     final auth = context.read<AuthenticationProvider>();
@@ -153,17 +163,6 @@ class _AppShellState extends State<AppShell> {
         final token = uri.pathSegments[1];
         PlatformManager.instance.analytics.track('Shared Tasks Opened From DeepLink', properties: {'token': token});
         _handleSharedTasksDeepLink(token);
-      }
-    } else if (uri.pathSegments.first == 'unlimited') {
-      // This destination needs the server's paid-surface policy, rather than
-      // support identity readiness. Other links need only hydrated caches.
-      await _subscriptionReady;
-      if (mounted) {
-        if (!context.read<UsageProvider>().showSubscriptionUI) return;
-        final plan = context.read<UsageProvider>().subscription?.subscription.plan.wireName ?? 'unknown';
-        PlatformManager.instance.analytics.track('Plans Opened From DeepLink');
-        PlatformManager.instance.analytics.paywallOpened('unlimited_deeplink', currentPlan: plan);
-        routeToPage(context, const UsagePage(showUpgradeDialog: true, paywallSource: 'unlimited_deeplink'));
       }
     } else if (uri.host == 'todoist' && uri.pathSegments.isNotEmpty && uri.pathSegments.first == 'callback') {
       // Handle Todoist OAuth callback
@@ -439,7 +438,7 @@ class _AppShellState extends State<AppShell> {
       context.read<MessageProvider>().setMessagesFromCache();
       context.read<AppProvider>().setAppsFromCache();
       context.read<MessageProvider>().refreshMessages();
-      _subscriptionReady = context.read<UsageProvider>().fetchSubscription();
+      context.read<UsageProvider>().fetchSubscription();
       context.read<TaskIntegrationProvider>().loadFromBackend();
       // Same fire-and-forget as task integrations: chat/settings must not
       // treat an empty in-memory map as "not connected" after process death.

@@ -5173,5 +5173,18 @@
     "connectionsNotReady": "This connection is off or has no address or token. Set it up in Settings > Connections.",
     "chatReplyStillWorking": "Still working on it. This can take a few minutes.",
     "dayReviewsLoadFailed": "Couldn't load your day reviews.",
-    "conversationWritingNotesTranscriptReady": "Writing notes… The transcript is ready to read now."
+    "conversationWritingNotesTranscriptReady": "Writing notes… The transcript is ready to read now.",
+    "serverUsageTitle": "Your usage on this server",
+    "serverUsageIntro": "Counted and kept on your own server. Only you see this, and nothing is sent anywhere else.",
+    "serverUsageOff": "Usage counting is turned off on this server.",
+    "serverUsageEmpty": "Nothing counted yet.",
+    "serverUsageTotal": "{count, plural, =1{1 action in the last {days} days} other{{count} actions in the last {days} days}}",
+    "serverUsageMostUsed": "Most used",
+    "serverUsageRecent": "Recent activity",
+    "serverUsageLoadFailed": "Couldn't load your usage.",
+    "transcriptionSourceOwnEngine": "Your own engine",
+    "transcriptionOwnEngineHelp": "Runs on an engine you host, such as a Whisper server. Nothing goes to a cloud provider.",
+    "widgetConversationsToday": "{count, plural, =0{No conversations today} =1{1 conversation today} other{{count} conversations today}}",
+    "widgetNewNote": "New Note",
+    "widgetTranslationInto": "Into {language}"
 }

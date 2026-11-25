@@ -14,11 +14,9 @@ import 'package:omi/services/wals/local_wal_sync.dart';
 import 'package:omi/services/wals/recording_transfer_coordinator.dart';
 import 'package:omi/services/wals/wal.dart';
 import 'package:omi/services/wals/wal_interfaces.dart';
-import 'package:omi/services/wals/wal_backlog_telemetry.dart';
 import 'package:omi/services/wals/sync_upload_gate.dart';
 import 'package:omi/services/wals/sync_job_poller.dart';
 import 'package:omi/services/wals/sync_rate_limiter.dart';
-import 'package:omi/utils/analytics/registry/events.g.dart';
 import 'package:omi/utils/wal_file_manager.dart';
 
 class _Listener implements IWalSyncListener {
@@ -210,7 +208,6 @@ void main() {
   });
 
   test('daily refusal recovery survives restart, keeps bytes, stops at seven days', () async {
-    final events = <RegisteredEvent>[];
     var calls = 0;
     var success = false;
     final gate = SyncUploadGate(
@@ -229,15 +226,13 @@ void main() {
           if (success) return UploadFilesResult.queued('fixed');
           throw const SyncUploadHttpException(400, 'arbitrary prose', reasonCode: 'invalid_file');
         });
-    LocalWalSyncImpl instance() => LocalWalSyncImpl(_Listener(),
-        now: () => now, uploadGate: gate, backlogTelemetry: WalBacklogTelemetry(emit: events.add));
+    LocalWalSyncImpl instance() => LocalWalSyncImpl(_Listener(), now: () => now, uploadGate: gate);
     var sync = instance();
     final bytes = [1, 0, 0, 0, 42]; // A complete tiny frame is still retained audio.
     await File('${dir.path}/audio.bin').writeAsBytes(bytes);
     sync.testWals = [_wal(now)];
     await sync.syncAll();
     expect(calls, 1);
-    expect(events.single.properties, {'reason': 'invalid_file', 'status_code': 400});
     var restored = (await WalFileManager.loadWals()).single;
     expect(restored.uploadRejectionReason, 'invalid_file');
     expect(restored.uploadRejectionStatusCode, 400);

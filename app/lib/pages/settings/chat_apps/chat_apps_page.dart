@@ -13,14 +13,12 @@ import 'package:omi/pages/settings/chat_apps/telegram_connect_sheet.dart';
 import 'package:omi/pages/settings/chat_apps/whatsapp_waitlist_sheet.dart';
 import 'package:omi/pages/settings/integration_selection_card.dart';
 import 'package:omi/pages/settings/settings_groups.dart';
-import 'package:omi/pages/settings/usage_page.dart';
 import 'package:omi/providers/connectivity_provider.dart';
 import 'package:omi/providers/messaging_channels_provider.dart';
 import 'package:omi/providers/usage_provider.dart';
 import 'package:omi/ui/ui.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 import 'package:omi/utils/other/temp.dart';
-import 'package:omi/utils/platform/platform_manager.dart';
 
 /// "Chat apps" on Integrations: one row opening [ChatAppsPage]. Hidden unless the surface is on
 /// for this account or a link already exists (so Disconnect stays reachable).
@@ -90,18 +88,11 @@ class _ChatAppsPageState extends State<ChatAppsPage> {
   }
 
   _ProStatus _proStatus(UsageProvider usage) {
+    // No plans on a self-hosted server: every channel is open.
+    if (!usage.showSubscriptionUI) return _ProStatus.pro;
     final plan = usage.subscription?.subscription.plan;
     if (plan == null) return _ProStatus.unknown;
     return plan.isPaid ? _ProStatus.pro : _ProStatus.free;
-  }
-
-  void _openPlans() {
-    if (!context.read<UsageProvider>().showSubscriptionUI) return;
-    PlatformManager.instance.analytics.paywallOpened(
-      'chat_apps',
-      currentPlan: context.read<UsageProvider>().subscription?.subscription.plan.wireName ?? 'unknown',
-    );
-    routeToPage(context, const UsagePage(showUpgradeDialog: true, paywallSource: 'chat_apps'));
   }
 
   Future<void> _connect(ChatChannel channel) async {
@@ -206,12 +197,7 @@ class _ChatAppsPageState extends State<ChatAppsPage> {
               children: [for (final channel in ChatChannel.values) _channelRow(context, provider, channel, pro)],
             ),
             const SizedBox(height: OmiSpacing.xl),
-            if (pro == _ProStatus.free)
-              _ProCard(onUpgrade: _openPlans)
-            else if (anyConnected)
-              const _TryAsking()
-            else
-              const _WhatOmiDoes(),
+            if (anyConnected) const _TryAsking() else const _WhatOmiDoes(),
           ],
         ),
       );
@@ -290,7 +276,6 @@ class _ChatAppsPageState extends State<ChatAppsPage> {
         title: channel.displayName,
         subtitle: l10n.chatAppsChannelPlanRequired,
         trailing: IntegrationStatusChip(l10n.upgrade),
-        onTap: _openPlans,
       );
     }
     if (access == ChannelAccess.seatCap) {
@@ -326,7 +311,6 @@ class _ChatAppsPageState extends State<ChatAppsPage> {
             label: l10n.chatAppsLocked,
             child: Icon(Icons.lock_outline_rounded, size: 18, color: OmiColors.textSecondary),
           ),
-          onTap: _openPlans,
         ),
       );
     }
@@ -500,47 +484,6 @@ class _TryAsking extends StatelessWidget {
           const SizedBox(height: OmiSpacing.xs),
         ],
       ],
-    );
-  }
-}
-
-class _ProCard extends StatelessWidget {
-  const _ProCard({required this.onUpgrade});
-
-  final VoidCallback onUpgrade;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final check = OmiColors.success;
-    return Container(
-      key: const ValueKey('chat_apps_pro_card'),
-      padding: const EdgeInsets.all(OmiSpacing.lg),
-      decoration: BoxDecoration(
-        border: Border.all(color: OmiColors.border),
-        borderRadius: OmiRadius.lgAll,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Align(alignment: Alignment.centerLeft, child: ChatAppsFilledTag(l10n.chatAppsOmiPro)),
-          const SizedBox(height: OmiSpacing.sm),
-          Semantics(header: true, child: Text(l10n.chatAppsPartOfPro, style: OmiType.title3)),
-          const SizedBox(height: OmiSpacing.sm),
-          ChatAppsBullet(icon: Icons.check_rounded, iconColor: check, text: l10n.chatAppsProPerkText),
-          const SizedBox(height: OmiSpacing.sm),
-          ChatAppsBullet(icon: Icons.check_rounded, iconColor: check, text: l10n.chatAppsProPerkSave),
-          const SizedBox(height: OmiSpacing.sm),
-          ChatAppsBullet(icon: Icons.check_rounded, iconColor: check, text: l10n.chatAppsProPerkContext),
-          const SizedBox(height: OmiSpacing.lg),
-          OmiButton(
-            key: const ValueKey('chat_apps_upgrade'),
-            label: l10n.upgradeToPro,
-            expand: true,
-            onPressed: onUpgrade,
-          ),
-        ],
-      ),
     );
   }
 }

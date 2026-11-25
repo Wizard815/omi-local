@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:omi/backend/preferences.dart';
-import 'package:omi/services/experiments/on_device_overflow_gate.dart';
 import 'package:omi/services/on_device/on_device_provenance.dart';
 import 'package:omi/services/on_device/on_device_schedule_policy.dart';
 import 'package:omi/services/on_device/on_device_settings.dart';
@@ -47,21 +46,6 @@ void main() {
 
     test('schedule storage ids are stable', () {
       expect(OnDeviceSchedule.values.map((s) => s.storageId), ['while_charging', 'every_few_hours', 'as_you_talk']);
-    });
-  });
-
-  group('OnDeviceOverflowGate', () {
-    test('reads the PostHog key and fails closed', () async {
-      String? asked;
-      expect(
-          await OnDeviceOverflowGate.read(readFlag: (key) async {
-            asked = key;
-            return true;
-          }),
-          isTrue);
-      expect(asked, 'mobile-on-device-overflow');
-      expect(await OnDeviceOverflowGate.read(readFlag: (_) async => throw StateError('offline')), isFalse);
-      expect(await OnDeviceOverflowGate.read(readFlag: (_) async => false), isFalse);
     });
   });
 

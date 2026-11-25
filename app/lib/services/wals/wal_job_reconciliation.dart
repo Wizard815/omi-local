@@ -8,7 +8,6 @@ extension _WalJobCompletion on LocalWalSyncImpl {
     final completed = <SyncLocalFilesResponse>[];
     bool changed = false;
     bool heldChanged = false;
-    var polledJobs = 0, transientJobs = 0, throttledJobs = 0, missingConfirmationJobs = 0;
     final nowSecs = _now().millisecondsSinceEpoch ~/ 1000;
     // A restored uploaded row with no job handle cannot ever be polled.
     // Retained audio re-enters the normal deduplicated upload path; missing
@@ -58,12 +57,10 @@ extension _WalJobCompletion on LocalWalSyncImpl {
 
       for (final (members, fetch) in fetched) {
         if (!fetch.pollAdmitted) continue;
-        polledJobs++;
         final jobId = members.first.jobId;
         final memberWalIds = members.map((w) => w.id).toList();
         switch (fetch.outcome) {
           case SyncJobFetchOutcome.throttled:
-            throttledJobs++;
             if (!SyncRateLimiter.instance.isLimited) {
               final limit = fetch.rateLimit;
               SyncRateLimiter.instance.markLimited(
@@ -73,11 +70,6 @@ extension _WalJobCompletion on LocalWalSyncImpl {
             }
             break; // 429 rate limit cooldown installed; stop reconcile pass below (#21279).
           case SyncJobFetchOutcome.transient:
-            if (fetch.missingConfirmationPending) {
-              missingConfirmationJobs++;
-            } else {
-              transientJobs++;
-            }
             // Network/5xx — leave as `uploaded`, retry on the next pass.
             DebugLogManager.logEvent('reconcile_poll', {
               'jobId': jobId,
@@ -155,11 +147,6 @@ extension _WalJobCompletion on LocalWalSyncImpl {
                 'newConversations': s.result?.newConversationIds.length ?? 0,
                 'updatedConversations': s.result?.updatedConversationIds.length ?? 0,
               });
-              try {
-                ClientTelemetry.instance.observeUploadDurableCompleted(jobId: jobId, confirmedAt: _now());
-              } catch (_) {
-                // Completion telemetry must not change WAL acknowledgement.
-              }
               for (final w in members) {
                 if (!_stillUploadedUnder(w, jobId)) continue;
                 if ((s.result?.newConversationIds.length ?? 0) == 0 &&
@@ -245,14 +232,6 @@ extension _WalJobCompletion on LocalWalSyncImpl {
       if (SyncRateLimiter.instance.isLimited) break;
     }
 
-    if (_isCurrent(generation)) {
-      _backlogTelemetry.reconcilePass(
-          backlogJobs: byJob.length,
-          polledJobs: polledJobs,
-          transientJobs: transientJobs,
-          throttledJobs: throttledJobs,
-          missingConfirmationJobs: missingConfirmationJobs);
-    }
     if (changed) {
       await _saveWalsToFile(generation);
       _notifyUpdated(generation);

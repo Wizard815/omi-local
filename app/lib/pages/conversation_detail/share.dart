@@ -13,7 +13,6 @@ import 'package:omi/ui/format/omi_date_format.dart';
 import 'package:omi/utils/conversations/conversation_title.dart';
 import 'package:omi/backend/schema/conversation.dart';
 import 'package:omi/utils/share_links.dart';
-import 'package:omi/utils/platform/platform_manager.dart';
 
 /// Opens the system share sheet with the conversation's public link. Resolves with the platform's
 /// result: [ShareResultStatus.dismissed] means the reader closed the sheet without sharing
@@ -30,15 +29,6 @@ Future<ShareResult> shareConversationLink(ServerConversation conversation, {Rect
       sharePositionOrigin: sharePositionOrigin,
     ),
   );
-  final analytics = PlatformManager.instance.analytics;
-  final targetApp = outcome.status == ShareResultStatus.success ? shareTargetApp(outcome.raw) : null;
-  analytics.track('Conversation Shared', properties: {
-    ...analytics.getConversationEventProperties(conversation),
-    'share_method': 'url_share',
-    'share_id': sid,
-    'share_status': outcome.status.name,
-    if (targetApp != null) 'target_app': targetApp,
-  });
   return outcome;
 }
 

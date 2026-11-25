@@ -20520,5 +20520,75 @@
     "conversationWritingNotesTranscriptReady": "Writing notes… The transcript is ready to read now.",
     "@conversationWritingNotesTranscriptReady": {
         "description": "Summary tab of a conversation whose transcript is stored while its notes are still being written (a slow model can take minutes)."
+    },
+    "serverUsageTitle": "Your usage on this server",
+    "@serverUsageTitle": {
+        "description": "Settings row and page title: the signed-in person's own usage counts, kept on their self-hosted server"
+    },
+    "serverUsageIntro": "Counted and kept on your own server. Only you see this, and nothing is sent anywhere else.",
+    "@serverUsageIntro": {
+        "description": "Usage page: what this page shows and that it stays local"
+    },
+    "serverUsageOff": "Usage counting is turned off on this server.",
+    "@serverUsageOff": {
+        "description": "Usage page: the server does not count usage"
+    },
+    "serverUsageEmpty": "Nothing counted yet.",
+    "@serverUsageEmpty": {
+        "description": "Usage page: no usage in the window"
+    },
+    "serverUsageTotal": "{count, plural, =1{1 action in the last {days} days} other{{count} actions in the last {days} days}}",
+    "@serverUsageTotal": {
+        "description": "Usage page summary line",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            },
+            "days": {
+                "type": "int"
+            }
+        }
+    },
+    "serverUsageMostUsed": "Most used",
+    "@serverUsageMostUsed": {
+        "description": "Usage page section: actions by count"
+    },
+    "serverUsageRecent": "Recent activity",
+    "@serverUsageRecent": {
+        "description": "Usage page section: the newest counted actions"
+    },
+    "serverUsageLoadFailed": "Couldn't load your usage.",
+    "@serverUsageLoadFailed": {
+        "description": "Usage page: the request failed"
+    },
+    "transcriptionSourceOwnEngine": "Your own engine",
+    "@transcriptionSourceOwnEngine": {
+        "description": "Transcription source choice: an engine the user hosts (a Whisper server or a custom endpoint)"
+    },
+    "transcriptionOwnEngineHelp": "Runs on an engine you host, such as a Whisper server. Nothing goes to a cloud provider.",
+    "@transcriptionOwnEngineHelp": {
+        "description": "Help text under the own-engine transcription choice"
+    },
+    "widgetConversationsToday": "{count, plural, =0{No conversations today} =1{1 conversation today} other{{count} conversations today}}",
+    "@widgetConversationsToday": {
+        "description": "Android home-screen Today widget: how many conversations started today",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "widgetNewNote": "New Note",
+    "@widgetNewNote": {
+        "description": "Android home-screen Quick capture widget button: opens a new memory"
+    },
+    "widgetTranslationInto": "Into {language}",
+    "@widgetTranslationInto": {
+        "description": "Android home-screen Live translation widget: the language transcripts are translated into",
+        "placeholders": {
+            "language": {
+                "type": "String"
+            }
+        }
     }
 }

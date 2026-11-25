@@ -76,11 +76,6 @@ void main() {
     Env.clearApiBaseUrlOverrideForTesting();
   });
 
-  Future<int> completionEvents(WidgetTester tester) async {
-    await tester.runAsync(() => AnalyticsManager.flushPending(force: true));
-    return adapter.events.where((e) => e.$1 == 'Action Item Completed').length;
-  }
-
   group('Tasks list', () {
     Future<ActionItemsProvider> pumpTasks(WidgetTester tester, {required bool accept}) async {
       final provider = _provider(accept: accept);
@@ -97,7 +92,7 @@ void main() {
       expect(tester.widget<TaskCompletionMark>(find.byType(TaskCompletionMark)).completed, isFalse);
     }
 
-    testWidgets('a rejected checkbox save keeps the task open, says so, and records no completion', (tester) async {
+    testWidgets('a rejected checkbox save keeps the task open and says so', (tester) async {
       final provider = await pumpTasks(tester, accept: false);
 
       await tester.tap(find.byType(TaskCompletionMark));
@@ -105,10 +100,9 @@ void main() {
 
       expectStillOpen(tester, provider);
       expect(find.text(_failure), findsOneWidget);
-      expect(await completionEvents(tester), 0);
     });
 
-    testWidgets('a rejected swipe save keeps the task open, says so, and records no completion', (tester) async {
+    testWidgets('a rejected swipe save keeps the task open and says so', (tester) async {
       final provider = await pumpTasks(tester, accept: false);
 
       await tester.drag(find.text('Buy milk'), const Offset(400, 0));
@@ -116,10 +110,9 @@ void main() {
 
       expectStillOpen(tester, provider);
       expect(find.text(_failure), findsOneWidget);
-      expect(await completionEvents(tester), 0);
     });
 
-    testWidgets('an accepted checkbox save records exactly one completion and no error', (tester) async {
+    testWidgets('an accepted checkbox save completes the task with no error', (tester) async {
       final provider = await pumpTasks(tester, accept: true);
 
       await tester.tap(find.byType(TaskCompletionMark));
@@ -127,7 +120,6 @@ void main() {
 
       expect(provider.actionItems.single.completed, isTrue);
       expect(find.text(_failure), findsNothing);
-      expect(await completionEvents(tester), 1);
     });
   });
 

@@ -2,31 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:omi/l10n/app_localizations.dart';
-import 'package:omi/models/plan_storefront.dart';
 import 'package:omi/services/on_device/on_device_model.dart';
 import 'package:omi/ui/ui.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 
 /// The copy names the iPhone on iOS ("Transcribed on this iPhone") and the phone elsewhere.
 bool get onDeviceIsIphone => defaultTargetPlatform == TargetPlatform.iOS;
-
-/// The plans sheet and this meter share the storefront catalog. The backend string is the
-/// only copy; the device locale is sent on the request that produced [usage].
-String? onDeviceMeterLine(StorefrontUsage usage) {
-  final sent = usage.meterLine;
-  if (sent == null || sent.isEmpty) return null;
-  return sent;
-}
-
-/// Shown only when the plans sheet can open. [moreLabel] is the catalog string for the
-/// locale the client already sent.
-String? onDeviceMoreUsageTitle({
-  required bool plansSheetAvailable,
-  required String? moreLabel,
-}) {
-  if (!plansSheetAvailable || moreLabel == null || moreLabel.trim().isEmpty) return null;
-  return moreLabel;
-}
 
 /// The glyph for "this phone", matching the platform.
 IconData get onDevicePhoneIcon => onDeviceIsIphone ? Icons.phone_iphone : Icons.phone_android;

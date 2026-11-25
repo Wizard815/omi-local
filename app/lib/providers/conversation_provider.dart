@@ -22,7 +22,6 @@ import 'package:omi/backend/schema/structured.dart';
 import 'package:omi/services/capture/empty_recording_notice.dart';
 import 'package:omi/services/capture/optimistic_processing.dart';
 import 'package:omi/services/auth_service.dart';
-import 'package:omi/services/telemetry/client_telemetry.dart';
 import 'package:omi/services/siri_integration.dart';
 import 'package:omi/services/notifications/merge_notification_handler.dart';
 import 'package:omi/utils/conversations/capture_groups.dart';
@@ -123,10 +122,6 @@ class ConversationProvider extends ChangeNotifier {
   final Set<String> _failedHomeProcessingIds = {};
   Timer? _processingPlaceholderTimeout;
   Timer? _processingReconcileTimer;
-
-  /// Replacement processing telemetry. Production uses the process-wide client.
-  ClientTelemetry? clientTelemetry;
-  ClientTelemetry get _clientTelemetry => clientTelemetry ?? ClientTelemetry.instance;
 
   // Per-conversation websocket transition versions. Reconciliation snapshots
   // these before lifecycle probes so a completion/removal for row B cannot
@@ -580,8 +575,7 @@ class ConversationProvider extends ChangeNotifier {
     return -1;
   }
 
-  void addProcessingConversation(ServerConversation conversation, {bool freshProcessingAttempt = false}) =>
-      _addProcessingConversation(conversation, freshProcessingAttempt: freshProcessingAttempt);
+  void addProcessingConversation(ServerConversation conversation) => _addProcessingConversation(conversation);
 
   /// Apply a list-row reprocess response: processing/merging rows leave the
   /// completed list and join the processing skeleton; a titled (or otherwise

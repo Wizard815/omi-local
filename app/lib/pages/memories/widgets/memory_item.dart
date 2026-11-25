@@ -8,7 +8,6 @@ import 'package:omi/backend/schema/memory.dart';
 import 'package:omi/pages/conversation_detail/conversation_detail_provider.dart';
 import 'package:omi/pages/conversation_detail/page.dart';
 import 'package:omi/services/client_device_service.dart';
-import 'package:omi/pages/settings/usage_page.dart';
 import 'package:omi/providers/conversation_provider.dart';
 import 'package:omi/providers/memories_provider.dart';
 import 'package:omi/providers/usage_provider.dart';
@@ -50,11 +49,7 @@ class MemoryItem extends StatelessWidget {
     final editable = memoryIsEditable(memory);
     void openMemory() {
       if (memory.isLocked) {
-        if (!context.read<UsageProvider>().showSubscriptionUI) {
-          showMemoryQuickEditSheet(context, memory, provider, readOnly: true);
-          return;
-        }
-        routeToPage(context, const UsagePage(showUpgradeDialog: true, paywallSource: 'locked_memory'));
+        showMemoryQuickEditSheet(context, memory, provider, readOnly: true);
         return;
       }
       if (editable) {

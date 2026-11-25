@@ -2,8 +2,8 @@ import '../analytics_manager.dart';
 import 'events.g.dart';
 export 'event_context.dart';
 
-/// Only this seam forwards generated events into AnalyticsManager.track.
-/// The builder keeps the manager queue, consent, adapter and provenance behavior.
+/// Upstream's single seam for registered events. It forwards to [AnalyticsManager.track], which
+/// drops every event in the self-hosted app (no adapter is ever installed).
 class TypedEvents {
   const TypedEvents();
 

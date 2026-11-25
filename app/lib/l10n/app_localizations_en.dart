@@ -16888,4 +16888,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get conversationWritingNotesTranscriptReady => 'Writing notes… The transcript is ready to read now.';
+
+  @override
+  String get serverUsageTitle => 'Your usage on this server';
+
+  @override
+  String get serverUsageIntro =>
+      'Counted and kept on your own server. Only you see this, and nothing is sent anywhere else.';
+
+  @override
+  String get serverUsageOff => 'Usage counting is turned off on this server.';
+
+  @override
+  String get serverUsageEmpty => 'Nothing counted yet.';
+
+  @override
+  String serverUsageTotal(int count, int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count actions in the last $days days',
+      one: '1 action in the last $days days',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get serverUsageMostUsed => 'Most used';
+
+  @override
+  String get serverUsageRecent => 'Recent activity';
+
+  @override
+  String get serverUsageLoadFailed => 'Couldn\'t load your usage.';
+
+  @override
+  String get transcriptionSourceOwnEngine => 'Your own engine';
+
+  @override
+  String get transcriptionOwnEngineHelp =>
+      'Runs on an engine you host, such as a Whisper server. Nothing goes to a cloud provider.';
+
+  @override
+  String widgetConversationsToday(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count conversations today',
+      one: '1 conversation today',
+      zero: 'No conversations today',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get widgetNewNote => 'New Note';
+
+  @override
+  String widgetTranslationInto(String language) {
+    return 'Into $language';
+  }
 }

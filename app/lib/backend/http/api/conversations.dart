@@ -1,4 +1,3 @@
-import 'package:omi/utils/analytics/lag_work_registry.dart';
 import 'sync_upload_refusal.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -1156,104 +1155,99 @@ Future<UploadFilesResult> uploadLocalFilesV2(
   bool claimLiveCapture = false,
   Geolocation? geolocation,
 }) async {
-  final work = lagWork.begin(LagWork.upload);
-  try {
-    assertWalSyncFilesAreFramedBins(files.map((file) => file.path));
-    // Measurement only; absent when nothing was parked for this upload.
-    final uploadTrace = files.isEmpty ? null : UploadTrace.instance.take(files.first.path);
-    String? captureManifest;
-    if (shouldRequestSyncCaptureManifest(conversationId, claimLiveCapture)) {
-      captureManifest = await _createSyncCaptureManifest(files, conversationId!);
-    }
-    var url = '${Env.apiBaseUrl}v2/sync-local-files';
-    final query = <String, String>{
-      if (conversationId != null && conversationId.isNotEmpty) 'conversation_id': conversationId,
-      if (recordingSessionId != null && recordingSessionId.isNotEmpty) 'recording_session_id': recordingSessionId,
-      if (audioStartSeconds != null) 'audio_start_seconds': audioStartSeconds.toString(),
-      if (audioEndSeconds != null) 'audio_end_seconds': audioEndSeconds.toString(),
-    };
-    if (query.isNotEmpty) {
-      url += '?${query.entries.map((entry) => '${entry.key}=${Uri.encodeQueryComponent(entry.value)}').join('&')}';
-    }
-    var response = await makeMultipartApiCall(
-      url: url,
-      files: files,
-      headers: {
-        if (captureManifest != null) 'X-Omi-Sync-Capture-Manifest': captureManifest,
-        if (captureEvidence != null) 'X-Omi-Capture-Evidence': captureEvidence,
-        if (geolocation != null) 'X-Omi-Conversation-Geolocation': jsonEncode(geolocation.toJson()),
-        if (uploadTrace != null) 'X-Omi-Upload-Trace': uploadTrace,
-      },
-      onUploadProgress: onUploadProgress,
-    );
-
-    if (response.statusCode == 200) {
-      // Fast-path: server processed synchronously and returned the result. A
-      // legacy server can still encode partial work in a 200, which must follow
-      // the retry path rather than acknowledging/deleting the local WAL.
-      final completed = SyncLocalFilesResponse.fromGenerated(
-        wire.GeneratedSyncLocalFilesResultResponse.fromJson(jsonDecode(response.body) as Map<String, dynamic>),
-      );
-      return UploadFilesResult.done(requireCompleteSyncUpload(completed));
-    }
-    if (response.statusCode == 202) {
-      final start = SyncJobStartResponse.fromGenerated(
-        wire.GeneratedSyncJobStartResponse.fromJson(jsonDecode(response.body) as Map<String, dynamic>),
-      );
-      if (start.jobId.isEmpty) {
-        throw Exception('Upload accepted but no job id returned');
-      }
-      return UploadFilesResult.queued(start.jobId, pollAfterMs: start.pollAfterMs);
-    }
-    if (response.statusCode == 400) {
-      final refusal = switch (decodeSyncUploadRefusal(response)) {
-        ApiSuccess(:final data) => data,
-        ApiFailure() => const SyncUploadRefusalBody(),
-      };
-      if (refusal.invalidCaptureTime) {
-        throw const SyncInvalidCaptureTimeException(serverReason: 'invalid_capture_time');
-      }
-      // Other 400s stay terminal, but the server's own reason travels with the
-      // refusal instead of being dropped at the HTTP boundary.
-      throw SyncUploadHttpException(
-        response.statusCode,
-        'Audio file could not be processed by server',
-        reasonCode: refusal.reasonCode,
-      );
-    } else if (response.statusCode == 401 || response.statusCode == 403) {
-      throw SyncUploadHttpException(response.statusCode, 'Upload authentication failed');
-    } else if (response.statusCode == 413) {
-      throw SyncUploadHttpException(response.statusCode, 'Audio file is too large to upload', reasonCode: 'too_large');
-    } else if (isSyncContentInProgressResponse(response)) {
-      final existingJob = syncContentInProgressResult(response);
-      if (existingJob != null) return existingJob;
-      throw SyncRateLimitedException(
-        kind: SyncRateLimitKind.edgeThrottle,
-        retryAfterSeconds: max(60, _parseRetryAfterSeconds(response) ?? 60),
-        reasonCode: 'sync_content_in_progress',
-      );
-    } else if (isSyncUploadRateLimitResponse(response)) {
-      throw SyncRateLimitedException(
-        kind: syncRateLimitKindForResponse(response),
-        retryAfterSeconds: _parseRetryAfterSeconds(response),
-        reasonCode: syncRateLimitReasonCode(response),
-        statusCode: response.statusCode,
-      );
-    } else if (isSyncRecoveryWindowExceededResponse(response)) {
-      throw const SyncRecoveryWindowExceededException();
-    } else if (response.statusCode >= 500) {
-      throw SyncUploadHttpException(
-        response.statusCode,
-        'Server is temporarily unavailable',
-        retryAfterSeconds: _parseRetryAfterSeconds(response),
-        reasonCode: syncUploadServerWaitReasonCode(response),
-        recordingWaitSeconds: syncUploadServerWaitSeconds(response),
-      );
-    }
-    throw SyncUploadHttpException(response.statusCode, 'Upload failed unexpectedly');
-  } finally {
-    lagWork.end(work);
+  assertWalSyncFilesAreFramedBins(files.map((file) => file.path));
+  // Measurement only; absent when nothing was parked for this upload.
+  final uploadTrace = files.isEmpty ? null : UploadTrace.instance.take(files.first.path);
+  String? captureManifest;
+  if (shouldRequestSyncCaptureManifest(conversationId, claimLiveCapture)) {
+    captureManifest = await _createSyncCaptureManifest(files, conversationId!);
   }
+  var url = '${Env.apiBaseUrl}v2/sync-local-files';
+  final query = <String, String>{
+    if (conversationId != null && conversationId.isNotEmpty) 'conversation_id': conversationId,
+    if (recordingSessionId != null && recordingSessionId.isNotEmpty) 'recording_session_id': recordingSessionId,
+    if (audioStartSeconds != null) 'audio_start_seconds': audioStartSeconds.toString(),
+    if (audioEndSeconds != null) 'audio_end_seconds': audioEndSeconds.toString(),
+  };
+  if (query.isNotEmpty) {
+    url += '?${query.entries.map((entry) => '${entry.key}=${Uri.encodeQueryComponent(entry.value)}').join('&')}';
+  }
+  var response = await makeMultipartApiCall(
+    url: url,
+    files: files,
+    headers: {
+      if (captureManifest != null) 'X-Omi-Sync-Capture-Manifest': captureManifest,
+      if (captureEvidence != null) 'X-Omi-Capture-Evidence': captureEvidence,
+      if (geolocation != null) 'X-Omi-Conversation-Geolocation': jsonEncode(geolocation.toJson()),
+      if (uploadTrace != null) 'X-Omi-Upload-Trace': uploadTrace,
+    },
+    onUploadProgress: onUploadProgress,
+  );
+
+  if (response.statusCode == 200) {
+    // Fast-path: server processed synchronously and returned the result. A
+    // legacy server can still encode partial work in a 200, which must follow
+    // the retry path rather than acknowledging/deleting the local WAL.
+    final completed = SyncLocalFilesResponse.fromGenerated(
+      wire.GeneratedSyncLocalFilesResultResponse.fromJson(jsonDecode(response.body) as Map<String, dynamic>),
+    );
+    return UploadFilesResult.done(requireCompleteSyncUpload(completed));
+  }
+  if (response.statusCode == 202) {
+    final start = SyncJobStartResponse.fromGenerated(
+      wire.GeneratedSyncJobStartResponse.fromJson(jsonDecode(response.body) as Map<String, dynamic>),
+    );
+    if (start.jobId.isEmpty) {
+      throw Exception('Upload accepted but no job id returned');
+    }
+    return UploadFilesResult.queued(start.jobId, pollAfterMs: start.pollAfterMs);
+  }
+  if (response.statusCode == 400) {
+    final refusal = switch (decodeSyncUploadRefusal(response)) {
+      ApiSuccess(:final data) => data,
+      ApiFailure() => const SyncUploadRefusalBody(),
+    };
+    if (refusal.invalidCaptureTime) {
+      throw const SyncInvalidCaptureTimeException(serverReason: 'invalid_capture_time');
+    }
+    // Other 400s stay terminal, but the server's own reason travels with the
+    // refusal instead of being dropped at the HTTP boundary.
+    throw SyncUploadHttpException(
+      response.statusCode,
+      'Audio file could not be processed by server',
+      reasonCode: refusal.reasonCode,
+    );
+  } else if (response.statusCode == 401 || response.statusCode == 403) {
+    throw SyncUploadHttpException(response.statusCode, 'Upload authentication failed');
+  } else if (response.statusCode == 413) {
+    throw SyncUploadHttpException(response.statusCode, 'Audio file is too large to upload', reasonCode: 'too_large');
+  } else if (isSyncContentInProgressResponse(response)) {
+    final existingJob = syncContentInProgressResult(response);
+    if (existingJob != null) return existingJob;
+    throw SyncRateLimitedException(
+      kind: SyncRateLimitKind.edgeThrottle,
+      retryAfterSeconds: max(60, _parseRetryAfterSeconds(response) ?? 60),
+      reasonCode: 'sync_content_in_progress',
+    );
+  } else if (isSyncUploadRateLimitResponse(response)) {
+    throw SyncRateLimitedException(
+      kind: syncRateLimitKindForResponse(response),
+      retryAfterSeconds: _parseRetryAfterSeconds(response),
+      reasonCode: syncRateLimitReasonCode(response),
+      statusCode: response.statusCode,
+    );
+  } else if (isSyncRecoveryWindowExceededResponse(response)) {
+    throw const SyncRecoveryWindowExceededException();
+  } else if (response.statusCode >= 500) {
+    throw SyncUploadHttpException(
+      response.statusCode,
+      'Server is temporarily unavailable',
+      retryAfterSeconds: _parseRetryAfterSeconds(response),
+      reasonCode: syncUploadServerWaitReasonCode(response),
+      recordingWaitSeconds: syncUploadServerWaitSeconds(response),
+    );
+  }
+  throw SyncUploadHttpException(response.statusCode, 'Upload failed unexpectedly');
 }
 
 /// Why a single job-status fetch did not yield a usable status.
@@ -1283,53 +1277,48 @@ SyncJobFetchOutcome syncJobFetchOutcomeForStatusCode(int statusCode) {
 /// Single GET of a sync job's status — no polling loop. The reconciler owns
 /// the polling cadence and decides what to do per [SyncJobFetchOutcome].
 Future<SyncJobFetch> fetchSyncJobStatus(String jobId) async {
-  final work = lagWork.begin(LagWork.reconcilePoll);
+  final response = await makeApiCall(
+    url: '${Env.apiBaseUrl}v2/sync-local-files/$jobId',
+    headers: {},
+    method: 'GET',
+    body: '',
+  );
+  if (response == null) {
+    DebugLogManager.logEvent('fetch_sync_job_status', {'jobId': jobId, 'httpStatus': null, 'outcome': 'transient'});
+    return const SyncJobFetch(SyncJobFetchOutcome.transient);
+  }
+  final outcome = syncJobFetchOutcomeForStatusCode(response.statusCode);
+  if (outcome == SyncJobFetchOutcome.throttled) {
+    return SyncJobFetch.throttled(SyncRateLimitedException(
+      kind: syncRateLimitKindForResponse(response),
+      retryAfterSeconds: _parseRetryAfterSeconds(response),
+      reasonCode: syncRateLimitReasonCode(response),
+    ));
+  }
+  if (outcome == SyncJobFetchOutcome.notFound) {
+    DebugLogManager.logEvent('fetch_sync_job_status', {
+      'jobId': jobId,
+      'httpStatus': response.statusCode,
+      'outcome': 'notFound',
+    });
+    return const SyncJobFetch(SyncJobFetchOutcome.notFound);
+  }
+  if (outcome == SyncJobFetchOutcome.transient) {
+    DebugLogManager.logEvent('fetch_sync_job_status', {
+      'jobId': jobId,
+      'httpStatus': response.statusCode,
+      'outcome': 'transient',
+    });
+    return const SyncJobFetch(SyncJobFetchOutcome.transient);
+  }
   try {
-    final response = await makeApiCall(
-      url: '${Env.apiBaseUrl}v2/sync-local-files/$jobId',
-      headers: {},
-      method: 'GET',
-      body: '',
+    return SyncJobFetch(
+      SyncJobFetchOutcome.ok,
+      SyncJobStatusResponse.fromJson(jsonDecode(response.body) as Map<String, dynamic>),
     );
-    if (response == null) {
-      DebugLogManager.logEvent('fetch_sync_job_status', {'jobId': jobId, 'httpStatus': null, 'outcome': 'transient'});
-      return const SyncJobFetch(SyncJobFetchOutcome.transient);
-    }
-    final outcome = syncJobFetchOutcomeForStatusCode(response.statusCode);
-    if (outcome == SyncJobFetchOutcome.throttled) {
-      return SyncJobFetch.throttled(SyncRateLimitedException(
-        kind: syncRateLimitKindForResponse(response),
-        retryAfterSeconds: _parseRetryAfterSeconds(response),
-        reasonCode: syncRateLimitReasonCode(response),
-      ));
-    }
-    if (outcome == SyncJobFetchOutcome.notFound) {
-      DebugLogManager.logEvent('fetch_sync_job_status', {
-        'jobId': jobId,
-        'httpStatus': response.statusCode,
-        'outcome': 'notFound',
-      });
-      return const SyncJobFetch(SyncJobFetchOutcome.notFound);
-    }
-    if (outcome == SyncJobFetchOutcome.transient) {
-      DebugLogManager.logEvent('fetch_sync_job_status', {
-        'jobId': jobId,
-        'httpStatus': response.statusCode,
-        'outcome': 'transient',
-      });
-      return const SyncJobFetch(SyncJobFetchOutcome.transient);
-    }
-    try {
-      return SyncJobFetch(
-        SyncJobFetchOutcome.ok,
-        SyncJobStatusResponse.fromJson(jsonDecode(response.body) as Map<String, dynamic>),
-      );
-    } catch (e) {
-      Logger.debug('fetchSyncJobStatus parse error: $e');
-      return const SyncJobFetch(SyncJobFetchOutcome.transient);
-    }
-  } finally {
-    lagWork.end(work);
+  } catch (e) {
+    Logger.debug('fetchSyncJobStatus parse error: $e');
+    return const SyncJobFetch(SyncJobFetchOutcome.transient);
   }
 }
 

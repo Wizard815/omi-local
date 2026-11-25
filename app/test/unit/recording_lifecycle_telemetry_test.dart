@@ -10,15 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class _TestEnvFields implements EnvFields {
   @override
-  String? get posthogApiKey => null;
-  @override
   String? get apiBaseUrl => 'https://api.example.test/';
-  @override
-  String? get intercomAppId => null;
-  @override
-  String? get intercomIOSApiKey => null;
-  @override
-  String? get intercomAndroidApiKey => null;
   @override
   String? get googleClientId => null;
   @override

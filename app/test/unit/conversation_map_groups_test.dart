@@ -11,15 +11,7 @@ import 'package:omi/pages/conversations/conversation_map_page.dart';
 
 class _TestEnvFields implements EnvFields {
   @override
-  String? get posthogApiKey => null;
-  @override
   String? get apiBaseUrl => null;
-  @override
-  String? get intercomAppId => null;
-  @override
-  String? get intercomIOSApiKey => null;
-  @override
-  String? get intercomAndroidApiKey => null;
   @override
   String? get googleClientId => null;
   @override

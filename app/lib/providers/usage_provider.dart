@@ -4,8 +4,6 @@ import 'package:omi/utils/platform/platform_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
-import 'package:omi/backend/http/api/payment.dart';
-import 'package:omi/backend/http/api_result.dart';
 import 'package:omi/backend/preferences.dart';
 import 'package:omi/backend/http/api/users.dart';
 import 'package:omi/models/custom_stt_config.dart';
@@ -13,8 +11,6 @@ import 'package:omi/models/subscription.dart';
 import 'package:omi/models/user_usage.dart';
 import 'package:omi/services/capture/transcription_allowance_cache.dart';
 import 'package:omi/utils/logger.dart';
-
-typedef SubscriptionCodeRequest = Future<ApiResult<bool>> Function(String code, {bool Function()? canSend});
 
 typedef UsageRequest = Future<UserUsageResponse?> Function({required String period, required String? timeZone});
 
@@ -26,19 +22,16 @@ class UsageProvider with ChangeNotifier {
     UsageRequest? usageRequest,
     Future<UserSubscriptionResponse?> Function()? subscriptionRequest,
     ProcessingBacklogRequest? processBacklogRequest,
-    SubscriptionCodeRequest? redeemCodeRequest,
     DateTime Function()? now,
   })  : _deviceTimeZone = deviceTimeZone ?? getUsageDeviceTimeZone,
         _usageRequest = usageRequest ?? getUserUsage,
         _subscriptionRequest = subscriptionRequest ?? getUserSubscription,
         _processBacklogRequest = processBacklogRequest ?? processProcessingBacklog,
-        _redeemCodeRequest = redeemCodeRequest ?? redeemSubscriptionCode,
         _now = now ?? DateTime.now;
 
   final Future<String?> Function() _deviceTimeZone;
   final UsageRequest _usageRequest;
   final Future<UserSubscriptionResponse?> Function() _subscriptionRequest;
-  final SubscriptionCodeRequest _redeemCodeRequest;
   final DateTime Function() _now;
   final ProcessingBacklogRequest _processBacklogRequest;
   String? _backlogIdempotencyKey;
@@ -153,8 +146,7 @@ class UsageProvider with ChangeNotifier {
 
   bool _isUsageLoading = false;
   bool _isSubscriptionLoading = false;
-  bool _isPaymentLoading = false;
-  bool get isLoading => _isUsageLoading || _isSubscriptionLoading || _isPaymentLoading;
+  bool get isLoading => _isUsageLoading || _isSubscriptionLoading;
 
   String? _error;
   String? get error => _error;
@@ -186,12 +178,6 @@ class UsageProvider with ChangeNotifier {
     return showSubscriptionUI;
   }
 
-  // Payment-related state
-  Map<String, dynamic>? _availablePlans;
-  Map<String, dynamic>? get availablePlans => _availablePlans;
-  bool _isLoadingPlans = false;
-  bool get isLoadingPlans => _isLoadingPlans;
-
   bool get isOutOfCredits {
     if (selfHosted) return false;
     final allowance = _subscription?.transcriptionAllowance;
@@ -214,12 +200,6 @@ class UsageProvider with ChangeNotifier {
   void debugSetSubscription(UserSubscriptionResponse? value) {
     _subscription = value;
     TranscriptionAllowanceCache.replace(value?.transcriptionAllowance);
-    notifyListeners();
-  }
-
-  @visibleForTesting
-  void debugSetAvailablePlans(Map<String, dynamic>? value) {
-    _availablePlans = value;
     notifyListeners();
   }
 
@@ -271,13 +251,10 @@ class UsageProvider with ChangeNotifier {
     _usageTimeZoneGeneration++;
     _timeZoneLookupInFlight = null;
     _usageFetchInFlight = null;
-    _availablePlans = null;
     _error = null;
     _sessionGeneration++;
     _isSubscriptionLoading = false;
     _isUsageLoading = false;
-    _isPaymentLoading = false;
-    _isLoadingPlans = false;
     notifyListeners();
   }
 
@@ -499,170 +476,6 @@ class UsageProvider with ChangeNotifier {
         _isUsageLoading = false;
         notifyListeners();
       }
-    }
-  }
-
-  /// The backend maps both Stripe active and trialing to active. Stripe itself
-  /// rechecks eligibility on redemption; this snapshot never grants a benefit.
-  bool get canRedeemSubscriptionCode {
-    final sub = _subscription?.subscription;
-    return showSubscriptionUI &&
-        sub != null &&
-        sub.plan.isPaid &&
-        sub.status == SubscriptionStatus.active &&
-        !sub.cancelAtPeriodEnd &&
-        sub.stripeSubscriptionId?.isNotEmpty == true;
-  }
-
-  Future<ApiResult<bool>> redeemUserSubscriptionCode(String code) async {
-    if (_isPaymentLoading || !canRedeemSubscriptionCode) {
-      return const ApiFailure(ApiProblem(ApiProblemKind.rejected, statusCode: 400));
-    }
-    final generation = _sessionGeneration;
-    _isPaymentLoading = true;
-    notifyListeners();
-    try {
-      final result = await _redeemCodeRequest(code, canSend: () => generation == _sessionGeneration);
-      if (generation != _sessionGeneration) {
-        return const ApiFailure(ApiProblem(ApiProblemKind.authTerminal));
-      }
-      if (result is ApiSuccess<bool> && result.data) {
-        // Finish any pre-application read before requesting post-application truth.
-        final pending = _subscriptionFetch;
-        if (pending != null) {
-          await pending;
-        }
-        if (generation != _sessionGeneration) {
-          return const ApiFailure(ApiProblem(ApiProblemKind.authTerminal));
-        }
-        await fetchSubscription(); // also replaces authoritative allowance cache
-        if (generation != _sessionGeneration) {
-          return const ApiFailure(ApiProblem(ApiProblemKind.authTerminal));
-        }
-      }
-      return result;
-    } finally {
-      if (generation == _sessionGeneration) {
-        _isPaymentLoading = false;
-        notifyListeners();
-      }
-    }
-  }
-
-  // Payment-related methods
-  Future<void> loadAvailablePlans() async {
-    if (_isLoadingPlans) return;
-
-    _isLoadingPlans = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      final response = await getAvailablePlans();
-      if (response != null) {
-        _availablePlans = response;
-      } else {
-        _error = 'Failed to load available plans. Please try again later.';
-      }
-    } catch (e) {
-      _error = 'Failed to load available plans. Please try again later.';
-      Logger.debug('Error loading available plans: $e');
-    } finally {
-      _isLoadingPlans = false;
-      notifyListeners();
-    }
-  }
-
-  Future<bool> cancelUserSubscription({String? reason, String? reasonDetails}) async {
-    if (_isPaymentLoading) return false;
-
-    _isPaymentLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      final success = await cancelSubscription(reason: reason, reasonDetails: reasonDetails);
-      if (success) {
-        await fetchSubscription();
-        await loadAvailablePlans();
-      }
-      return success;
-    } catch (e) {
-      _error = 'Failed to cancel subscription. Please try again later.';
-      Logger.debug('Error canceling subscription: $e');
-      return false;
-    } finally {
-      _isPaymentLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<Map<String, dynamic>?> upgradeUserSubscription({required String priceId, String? promotionCode}) async {
-    if (_isPaymentLoading) return null;
-
-    _isPaymentLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      final result = await upgradeSubscription(priceId: priceId, promotionCode: promotionCode);
-      if (result != null && result['error'] != true) {
-        await fetchSubscription();
-        await loadAvailablePlans();
-      }
-      return result;
-    } catch (e) {
-      _error = 'Failed to upgrade subscription. Please try again later.';
-      Logger.debug('Error upgrading subscription: $e');
-      return null;
-    } finally {
-      _isPaymentLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<Map<String, dynamic>?> createUserCheckoutSession({
-    required String priceId,
-    String? promotionCode,
-    int? trialDays,
-  }) async {
-    if (_isPaymentLoading) return null;
-
-    _isPaymentLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      final sessionData =
-          await createCheckoutSession(priceId: priceId, promotionCode: promotionCode, trialDays: trialDays);
-      return sessionData;
-    } catch (e) {
-      _error = 'Failed to create checkout session. Please try again later.';
-      Logger.debug('Error creating checkout session: $e');
-      return null;
-    } finally {
-      _isPaymentLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<Map<String, String>?> openCustomerPortal() async {
-    if (_isPaymentLoading) return null;
-
-    _isPaymentLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      final sessionData = await createCustomerPortalSession();
-      return sessionData;
-    } catch (e) {
-      _error = 'Failed to open customer portal. Please try again.';
-      Logger.debug('Error opening customer portal: $e');
-      return null;
-    } finally {
-      _isPaymentLoading = false;
-      notifyListeners();
     }
   }
 }

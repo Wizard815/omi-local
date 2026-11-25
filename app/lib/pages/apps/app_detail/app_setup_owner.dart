@@ -6,7 +6,6 @@ mixin _AppSetupOwner on State<AppDetailPage>, WidgetsBindingObserver {
   App get app;
   set app(App value);
   void setIsLoading(bool value);
-  Future<void> _loadSubscriptionData();
   ConnectionRead<App?>? _detailRead;
   bool _detailFailed = false;
   Future<void> _tryAutoInstallAfterSetup();
@@ -68,7 +67,6 @@ mixin _AppSetupOwner on State<AppDetailPage>, WidgetsBindingObserver {
       if (fresh == null) return false;
       provider.checkIsAppOwner(app.uid);
       provider.setIsAppPublicToggled(!app.private);
-      if (app.isPaid) unawaited(_loadSubscriptionData());
       return true;
     } catch (_) {
       if (current()) setState(() => _detailFailed = true);

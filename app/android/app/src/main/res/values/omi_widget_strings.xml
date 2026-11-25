@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget picker names and descriptions, and the text shown before the app has written a widget.
+     Everything else a widget shows arrives from the app, already in the app's language. -->
+<resources>
+    <string name="omi_widget_open">Open Omi</string>
+    <string name="omi_widget_today_name">Today</string>
+    <string name="omi_widget_today_description">The date, today\'s conversations and your next event</string>
+    <string name="omi_widget_summary_name">Summary</string>
+    <string name="omi_widget_summary_description">The latest conversation in a few lines</string>
+    <string name="omi_widget_capture_name">Quick capture</string>
+    <string name="omi_widget_capture_description">Start a note or a task in one tap</string>
+    <string name="omi_widget_capture_note">New Note</string>
+    <string name="omi_widget_capture_task">Add Task</string>
+    <string name="omi_widget_listening_name">Mute</string>
+    <string name="omi_widget_listening_description">Whether Omi is listening, with a button to mute or unmute</string>
+    <string name="omi_widget_translation_name">Live translation</string>
+    <string name="omi_widget_translation_description">Whether automatic translation is on, and into which language</string>
+    <string name="omi_widget_tasks_name">Tasks</string>
+    <string name="omi_widget_tasks_description">Your next open tasks</string>
+    <string name="omi_widget_approvals_name">Waiting for your OK</string>
+    <string name="omi_widget_approvals_description">What waits for your OK before it reaches your lists and calendar</string>
+    <string name="omi_widget_preview_value">3 conversations today</string>
+    <string name="omi_widget_preview_row">Send the slides to Maya</string>
+</resources>

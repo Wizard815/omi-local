@@ -9,24 +9,8 @@ final class ProdEnv implements EnvFields {
   ProdEnv();
 
   @override
-  @EnviedField(varName: 'POSTHOG_API_KEY', obfuscate: true)
-  final String? posthogApiKey = _ProdEnv.posthogApiKey;
-
-  @override
   @EnviedField(varName: 'API_BASE_URL', obfuscate: true)
   final String? apiBaseUrl = _ProdEnv.apiBaseUrl;
-
-  @override
-  @EnviedField(varName: 'INTERCOM_APP_ID', obfuscate: true)
-  final String? intercomAppId = _ProdEnv.intercomAppId;
-
-  @override
-  @EnviedField(varName: 'INTERCOM_IOS_API_KEY', obfuscate: true)
-  final String? intercomIOSApiKey = _ProdEnv.intercomIOSApiKey;
-
-  @override
-  @EnviedField(varName: 'INTERCOM_ANDROID_API_KEY', obfuscate: true)
-  final String? intercomAndroidApiKey = _ProdEnv.intercomAndroidApiKey;
 
   @override
   @EnviedField(varName: 'GOOGLE_CLIENT_ID', obfuscate: true)

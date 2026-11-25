@@ -289,7 +289,6 @@ extension InvalidCaptureTimeRepair on LocalWalSyncImpl {
     if (!_isCurrent(generation)) return;
     final now = _now().millisecondsSinceEpoch ~/ 1000;
     wal.markUploadRejected(reasonCode: empty ? 'empty_clip' : reason, statusCode: statusCode, nowSeconds: now);
-    _backlogTelemetry.uploadRefused(reason: empty ? 'empty_clip' : reason, statusCode: statusCode);
     if (empty) {
       // A four-byte length prefix without payload contains no audio frames.
       // This is a local no-op receipt; short encoded speech never takes it.

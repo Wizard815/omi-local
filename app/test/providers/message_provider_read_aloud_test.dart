@@ -18,15 +18,7 @@ import 'package:omi/utils/platform/platform_manager.dart';
 
 class _TestEnvFields implements EnvFields {
   @override
-  String? get posthogApiKey => null;
-  @override
   String? get apiBaseUrl => null;
-  @override
-  String? get intercomAppId => null;
-  @override
-  String? get intercomIOSApiKey => null;
-  @override
-  String? get intercomAndroidApiKey => null;
   @override
   String? get googleClientId => null;
   @override

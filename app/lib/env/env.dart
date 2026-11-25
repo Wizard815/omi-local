@@ -124,8 +124,6 @@ abstract class Env {
     }
   }
 
-  static String? get posthogApiKey => _instance.posthogApiKey;
-
   // static String? get apiBaseUrl => 'https://omi-backend.ngrok.app/';
   static String? get apiBaseUrl {
     if (_apiBaseUrlOverride != null) return _normalizeBaseUrl(_apiBaseUrlOverride!);
@@ -284,12 +282,6 @@ abstract class Env {
         (first == 127);
   }
 
-  static String? get intercomAppId => _instance.intercomAppId;
-
-  static String? get intercomIOSApiKey => _instance.intercomIOSApiKey;
-
-  static String? get intercomAndroidApiKey => _instance.intercomAndroidApiKey;
-
   static String? get googleClientId => _instance.googleClientId;
 
   static String? get googleClientSecret => _instance.googleClientSecret;
@@ -300,15 +292,7 @@ abstract class Env {
 }
 
 abstract class EnvFields {
-  String? get posthogApiKey;
-
   String? get apiBaseUrl;
-
-  String? get intercomAppId;
-
-  String? get intercomIOSApiKey;
-
-  String? get intercomAndroidApiKey;
 
   String? get googleClientId;
 

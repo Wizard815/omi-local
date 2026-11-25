@@ -180,7 +180,7 @@ Scaffold key (`settings_page_<page>`); rows on group/Account pages are `settings
 │   ├── Name → Change name dialog; Email (read-only)
 │   ├── User ID (tap copies)
 │   └── Sign Out → Confirmation dialog; Delete Account (delete_account.dart)
-├── Plan & Usage [settings_row_planAndUsage] (usage_page.dart) — "Pro" value when paid
+├── Your usage on this server [settings_row_serverUsage] (server_usage_page.dart)
 ├── Referral Program [settings_row_referral] (referral_page.dart) — NEW tag
 ├── Device [settings_group_device] → settings_groups.dart
 │   ├── Device Settings (device_settings.dart) (only when a device is connected)

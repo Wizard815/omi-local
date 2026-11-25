@@ -30,13 +30,11 @@ import 'package:omi/services/capture/conversation_location_capture.dart';
 import 'package:omi/services/capture/local_segment_store.dart';
 import 'package:omi/services/capture/recording_lifecycle_telemetry.dart';
 import 'package:omi/services/services.dart';
-import 'package:omi/services/telemetry/client_telemetry_flags.dart';
 import 'package:omi/services/devices/connectors/device_connection.dart';
 import 'package:omi/services/wals/recording_transfer_coordinator.dart';
 import 'package:omi/services/wals/wal_interfaces.dart';
 import 'package:omi/utils/analytics/analytics_manager.dart';
 import 'package:omi/utils/audio/foreground.dart';
-import 'package:omi/utils/platform/platform_manager.dart';
 import 'package:omi/services/wals/local_wal_sync.dart';
 import 'package:omi/services/experiments/capture_end_marker.dart';
 import 'package:omi/services/capture/capture_end.dart';
@@ -198,11 +196,7 @@ CaptureWedgeMonitor composeCaptureWedgeMonitor() {
   late final CaptureWedgeMonitor monitor;
   monitor = CaptureWedgeMonitor(
     featureGate: () => AnalyticsManager().isFeatureEnabled(captureRecoveryFeatureFlag),
-    track: (event, properties) {
-      final moved = event == 'Capture Ingress Health' || event == 'Capture Wedge Detected';
-      if (moved && ClientTelemetryFlags.posthogRetirementEnabled) return;
-      PlatformManager.instance.analytics.track(event, properties: properties);
-    },
+    track: (event, properties) {},
     bleRetry: (deviceId) async {
       final deviceService = ServiceManager.instance().device;
       await deviceService.recoverConnection(deviceId, shouldRetry: () => monitor.hasActiveEpisode(deviceId));
@@ -219,10 +213,7 @@ CaptureWedgeMonitor composeCaptureWedgeMonitor() {
 CaptureContinuityMonitor composeCaptureContinuityMonitor() {
   return CaptureContinuityMonitor(
     now: DateTime.now,
-    track: (event, properties) {
-      if (ClientTelemetryFlags.posthogRetirementEnabled) return;
-      PlatformManager.instance.analytics.track(event, properties: properties);
-    },
+    track: (event, properties) {},
     dogfood: () => kDebugMode || Env.isTestFlight,
     appBuild: () => AnalyticsManager.appBuild,
     platform: () => AnalyticsManager.mobilePlatform,

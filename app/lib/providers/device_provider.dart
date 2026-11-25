@@ -34,7 +34,6 @@ import 'package:omi/services/bridges/ble_bridge.dart';
 import 'package:omi/services/notifications.dart';
 import 'package:omi/services/services.dart';
 import 'package:omi/services/sync_health_watchdog.dart';
-import 'package:omi/services/telemetry/client_telemetry.dart';
 import 'package:omi/services/battery_widget_service.dart';
 import 'package:omi/services/wals/wal_syncs.dart';
 import 'package:omi/services/wals/recording_transfer_coordinator.dart';
@@ -45,12 +44,10 @@ import 'package:omi/utils/firmware_install_verification.dart';
 import 'package:omi/utils/firmware_update_battery.dart';
 import 'package:omi/utils/firmware_update_check_session.dart';
 import 'package:omi/utils/firmware_update_prompt_coordinator.dart';
-import 'package:omi/utils/analytics/device_health_telemetry.dart';
 import 'package:omi/utils/logger.dart';
 import 'package:omi/utils/other/debouncer.dart';
 import 'package:omi/utils/platform/platform_manager.dart';
 import 'package:omi/widgets/confirmation_dialog.dart';
-import 'package:uuid/uuid.dart';
 import 'package:omi/ui/feedback/omi_dialogs.dart';
 
 typedef BleDiagnosticsLoader = Future<BleDeviceDiagnostics> Function(String deviceId);
@@ -95,7 +92,6 @@ class DeviceProvider extends ChangeNotifier implements IDeviceServiceSubsciption
   }
 
   DateTime? _deviceSessionStartedAt;
-  String? _deviceSessionOperationId;
   final BleDiagnosticsLoader _bleDiagnosticsLoader;
   final FindDeviceRunner _findDeviceRunner;
   final Future<DeviceConnection?> Function(String) _chargingConnectionLoader;
@@ -147,7 +143,6 @@ class DeviceProvider extends ChangeNotifier implements IDeviceServiceSubsciption
   Timer? _discoveryTimer;
   Timer? _disconnectRescanTimer;
   Timer? _firmwarePromptTimer;
-  Timer? _deviceHealthTimer;
   bool _isDisposed = false;
   final Debouncer _disconnectDebouncer = Debouncer(delay: const Duration(milliseconds: 500));
   final Debouncer _connectDebouncer = Debouncer(delay: const Duration(milliseconds: 100));
@@ -265,8 +260,6 @@ class DeviceProvider extends ChangeNotifier implements IDeviceServiceSubsciption
     _resetBatteryState();
     _admittedLink = null;
     _readoptExpectedPair = null;
-    _deviceHealthTimer?.cancel();
-    _deviceHealthTimer = null;
     _admittedConnectGeneration = -1;
     _fullyChargedAlert.reset();
     _discoveryTimer?.cancel();
@@ -356,7 +349,6 @@ class DeviceProvider extends ChangeNotifier implements IDeviceServiceSubsciption
     final generation = _sessionGeneration;
     final endedDevice = device == null ? (pairedDevice ?? connectedDevice) : null;
     final sessionStartedAt = _deviceSessionStartedAt;
-    final sessionOperationId = _deviceSessionOperationId;
     final now = DateTime.now();
     final capture = captureProvider;
     final liveCaptureDevice = capture?.recordingDevice;
@@ -377,11 +369,9 @@ class DeviceProvider extends ChangeNotifier implements IDeviceServiceSubsciption
       _firmwareUpdateDeviceId = device.id;
       _firmwareUpdateCheckSessionGuard.start(device.id);
       _deviceSessionStartedAt = now;
-      _deviceSessionOperationId = const Uuid().v4();
     } else if (device == null) {
       _firmwareUpdateCheckSessionGuard.invalidate();
       _deviceSessionStartedAt = null;
-      _deviceSessionOperationId = null;
     }
     await getDeviceInfo(forceRefresh: isNewConnection);
     if (!_isCurrent(generation)) return;
@@ -429,17 +419,6 @@ class DeviceProvider extends ChangeNotifier implements IDeviceServiceSubsciption
         reason: disconnect?.reason,
         hciReasonCode: disconnect?.reasonCode,
       );
-      try {
-        ClientTelemetry.instance.observeDeviceSession(
-          operationId: sessionOperationId ?? const Uuid().v4(),
-          analyticsVendor: endedDevice.type.analyticsVendor,
-          duration: sessionDuration,
-          reason: disconnect?.reason,
-          hciReasonCode: disconnect?.reasonCode,
-          intentional: endedSessionWasIntentional,
-          recoveryOutcome: endedSessionWasIntentional ? 'none' : 'unknown',
-        );
-      } catch (_) {}
     }
     if (!_isCurrent(generation)) return;
     Logger.debug('setConnectedDevice: $device');
@@ -835,10 +814,6 @@ class DeviceProvider extends ChangeNotifier implements IDeviceServiceSubsciption
   Future<void> initiateConnection(String caller, {bool boundDeviceOnly = false}) async {
     if (_isDisposed) return;
     final pairedDeviceId = SharedPreferencesUtil().btDevice.id;
-    if (pairedDeviceId.isNotEmpty) {
-      unawaited(DeviceHealthTelemetry.maybeEmit(SharedPreferencesUtil().btDevice));
-    }
-
     if (ServiceManager.instance().device.staleBondRecoveryRequired) {
       Logger.debug('initiateConnection ($caller): blocked until stale bond recovery');
       return;
@@ -970,8 +945,6 @@ class DeviceProvider extends ChangeNotifier implements IDeviceServiceSubsciption
     _isDisposed = true;
     _sessionGeneration++;
     nativeLink.dispose();
-    _deviceHealthTimer?.cancel();
-    _deviceHealthTimer = null;
     _admittedConnectGeneration = -1;
     _firmwareUpdatePromptCoordinator.invalidatePresentation();
     if (BleBridge.instance.pairingLostCallback == _handlePairingLost) {
@@ -983,7 +956,6 @@ class DeviceProvider extends ChangeNotifier implements IDeviceServiceSubsciption
     _discoveryTimer?.cancel();
     _disconnectRescanTimer?.cancel();
     _firmwarePromptTimer?.cancel();
-    _deviceHealthTimer?.cancel();
     _disconnectDebouncer.cancel();
     _connectDebouncer.cancel();
     if (SyncHealthWatchdog.instance.onEvaluation == _onSyncHealthEvaluation) {
@@ -1220,13 +1192,6 @@ class DeviceProvider extends ChangeNotifier implements IDeviceServiceSubsciption
 
     // Auto-sync: check if device has offline files
     unawaited(_checkAndStartAutoSync(device, generation));
-    if (pairedDevice != null) unawaited(DeviceHealthTelemetry.maybeEmit(pairedDevice!));
-    final healthDevice = pairedDevice;
-    _deviceHealthTimer ??= Timer.periodic(const Duration(hours: 1), (_) {
-      if (!_isCurrent(generation)) return;
-      final current = pairedDevice ?? healthDevice;
-      if (current != null) unawaited(DeviceHealthTelemetry.maybeEmit(current));
-    });
 
     notifyListeners();
 

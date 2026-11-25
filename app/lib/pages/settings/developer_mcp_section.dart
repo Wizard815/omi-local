@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:omi/pages/settings/widgets/plans/contextual_plans.dart';
 
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
@@ -64,7 +63,6 @@ class DeveloperMcpSection extends StatelessWidget {
             ],
           ),
         ),
-        const McpCapUpsellEntry(),
         const _McpKeysList(),
         const SizedBox(height: OmiSpacing.xl),
         OmiSettingsGroup(

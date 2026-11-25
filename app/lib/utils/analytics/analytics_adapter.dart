@@ -1,8 +1,5 @@
-/// Provider-agnostic primitives every analytics SDK wrapper must satisfy.
-///
-/// Adding a new analytics SDK is one file under `analytics/adapters/` plus
-/// a single `AnalyticsManager.configure(...)` call at boot. No call site in
-/// the rest of the app needs to know which adapter is active.
+/// The sink [AnalyticsManager] hands events to. The self-hosted app ships without one and never
+/// installs one; only a test does (upstream's protected C7 contract in `app/test/spine/`).
 abstract class AnalyticsAdapter {
   /// Initialize the underlying SDK. Calls before this resolves should be no-ops
   /// inside the implementation, so the manager can fan calls through without
@@ -43,39 +40,4 @@ abstract class AnalyticsAdapter {
 
   /// Forget the current identity (e.g. on logout). Does not disable capture.
   void reset();
-}
-
-/// An acknowledged SDK handoff, not a server ingestion receipt. SDK persistence
-/// and delivery remain SDK-owned; production consumers also monitor ingestion.
-abstract interface class AnalyticsDeliveryAdapter {
-  Future<void> deliver({required String eventName, required Map<String, Object> properties});
-}
-
-abstract interface class AnalyticsIdentityAdapter {
-  /// Serializes reset/identify behind preceding SDK captures and resolves the
-  /// actual SDK distinct ID used for both assignments and product events.
-  Future<String> settleIdentity(String? identity, {required bool reset});
-}
-
-abstract interface class AnalyticsFeatureFlagAdapter {
-  Future<bool> isFeatureEnabled(String key);
-  Future<Object?> getFeatureFlagPayload(String key);
-
-  /// The multivariate arm for [key], or null when the flag is off, boolean or unresolved.
-  Future<String?> getFeatureFlagVariant(String key);
-
-  /// Re-fetches flags for the current identity. True only when fresh values for that identity are now
-  /// cached; false on failure, timeout, or an identity change while the request was in flight.
-  Future<bool> reloadFeatureFlags();
-}
-
-/// Boolean kill switches must not treat multivariate arms as enabled.
-abstract interface class AnalyticsBooleanFlagAdapter {
-  bool isBooleanFeatureEnabledCached(String key);
-  Future<bool> isBooleanFeatureEnabled(String key);
-}
-
-/// Supports callers that must distinguish disabled from an unresolved flag.
-abstract interface class AnalyticsResolvedFlagAdapter {
-  Future<bool?> resolvedFeatureEnabled(String key);
 }

@@ -55,12 +55,10 @@ import 'package:omi/services/capture/conversation_source_for_device.dart';
 import 'package:omi/services/capture/conversation_location_capture.dart';
 import 'package:omi/services/capture/native_batch_geolocation.dart';
 import 'package:omi/services/capture/native_ble_stream_config.dart';
-import 'package:omi/services/capture/freemium_threshold_tracker.dart';
 import 'package:omi/services/on_device/on_device_transcription_controller.dart';
 import 'package:omi/services/capture/stt_mode_resolver.dart';
 import 'package:omi/services/capture/recording_lifecycle_telemetry.dart';
 import 'package:omi/backend/http/shared.dart' show accountDeletionWebSocketCloseCode;
-import 'package:omi/services/telemetry/client_telemetry.dart';
 import 'package:omi/services/capture/capture_seams.dart';
 import 'package:omi/services/capture/capture_session_owner.dart';
 import 'package:omi/services/capture/capture_wedge_monitor.dart';
@@ -339,14 +337,6 @@ class CaptureController extends ChangeNotifier
   bool get outOfCredits => externalActions.isOutOfCredits ?? false;
 
   String? get topConversationId => externalActions.topConversationId;
-
-  final FreemiumThresholdTracker _freemiumThreshold = FreemiumThresholdTracker();
-
-  bool get freemiumThresholdReached => _freemiumThreshold.reached;
-  int get freemiumRemainingSeconds => _freemiumThreshold.remainingSeconds;
-
-  /// Whether user needs to take action (e.g., setup on-device STT)
-  bool get freemiumRequiresUserAction => _freemiumThreshold.requiresUserAction;
 
   List<MessageEvent> _transcriptionServiceStatuses = [];
   List<MessageEvent> get transcriptionServiceStatuses => _transcriptionServiceStatuses;
@@ -4038,13 +4028,6 @@ class CaptureController extends ChangeNotifier
       final segmentArrivals = _closingSegmentArrivals.remove(event.memory.id) ?? const <String, int>{};
       event.memory.isNew = true;
       externalActions.removeProcessingConversation(OptimisticProcessingPlaceholder.id);
-      try {
-        ClientTelemetry.instance.noteProcessingRowLeft(
-          id: event.memory.id,
-          lifecycleOk: true,
-          lifecycleStatus: event.memory.status.name,
-        );
-      } catch (_) {}
       externalActions.removeProcessingConversation(event.memory.id);
       _processConversationCreated(event.memory, event.messages.cast<ServerMessage>());
       if (_pendingAutoSyncSessionStart > 0 && _pendingAutoSyncConversationId == event.memory.id) {
@@ -4108,13 +4091,8 @@ class CaptureController extends ChangeNotifier
           return;
         }
       }
-      // Handle freemium threshold event via status field
-      if (event.status == 'freemium_threshold_reached') {
-        // Parse as FreemiumThresholdReachedEvent for consistent handling
-        final thresholdEvent = FreemiumThresholdReachedEvent.fromJson({'status_text': event.statusText});
-        _handleFreemiumThresholdReached(thresholdEvent);
-        return;
-      }
+      // A plan threshold warning: a self-hosted server has no plan limit, so it is dropped.
+      if (event.status == 'freemium_threshold_reached') return;
 
       // The backend sends stt_failed immediately before it closes the socket.
       // Keep this terminal state separate from the connection-scoped status
@@ -4131,10 +4109,7 @@ class CaptureController extends ChangeNotifier
       return;
     }
 
-    if (event is FreemiumThresholdReachedEvent) {
-      _handleFreemiumThresholdReached(event);
-      return;
-    }
+    if (event is FreemiumThresholdReachedEvent) return;
 
     if (event is SttCapLiveHeldEvent) {
       if (liveHeldAudio.apply(event)) notifyListeners();
@@ -4671,38 +4646,6 @@ class CaptureController extends ChangeNotifier
     _isConnected = isConnected;
     if (isConnected) _kickLiveRecovery('connectivity_restored');
     notifyListeners();
-  }
-
-  // ============== Freemium: Threshold Notification ==============
-
-  /// Handle freemium threshold reached: Notify user based on required action
-  void _handleFreemiumThresholdReached(FreemiumThresholdReachedEvent event) {
-    if (!_freemiumThreshold.handle(event)) return;
-
-    // Update usage provider to reflect approaching limit
-    externalActions.refreshSubscription();
-
-    notifyListeners();
-  }
-
-  /// Callback for external components to reset their freemium session state
-  VoidCallback? onFreemiumSessionReset;
-
-  /// Reset freemium threshold state (e.g., when credits reset or on new session)
-  void resetFreemiumThresholdState() {
-    _freemiumThreshold.reset();
-    // Notify external handlers (e.g., FreemiumSwitchHandler)
-    onFreemiumSessionReset?.call();
-    notifyListeners();
-  }
-
-  /// Check if credits were restored and reset threshold state
-  Future<void> checkCreditsAndResetThresholdIfNeeded() async {
-    await externalActions.fetchSubscription();
-    if (externalActions.isOutOfCredits == false && _freemiumThreshold.reached) {
-      Logger.debug('[Freemium] Credits restored! Resetting threshold state.');
-      resetFreemiumThresholdState();
-    }
   }
 
   void setIsWalSupported(bool value) {
