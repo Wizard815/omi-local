@@ -235,6 +235,25 @@ void main() {
     expect(reloads, 1);
   });
 
+  testWidgets('a Studio approval card stays full width once someone else answered it', (tester) async {
+    final api = FakeConnections(studioApprovals: const [StudioApproval(id: 'aw-3', title: 'Tag release')]);
+    api.studioAnsweredElsewhere['aw-3'] = 'Done by Robin.';
+    // The Approvals page lays its cards out in a start-aligned column, not a stretching list.
+    await _pump(
+      tester,
+      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        StudioApprovalCard(approval: api.studioApprovals.single, api: api, by: 'Sam', onChanged: () async {}),
+      ]),
+    );
+    // A wide screen, so the card's own text (test font: every glyph a square) is narrower than it.
+    tester.view.physicalSize = const Size(1200 * 3, 1400 * 3);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('studio_approval_reject_aw-3')));
+    await tester.pumpAndSettle();
+    expect(find.text('Done by Robin.'), findsOneWidget);
+    expect(tester.getSize(find.byKey(const Key('studio_approval_aw-3'))).width, 1200);
+  });
+
   testWidgets('Send to Coinpile: a transaction needs an account and sends exactly the fields', (tester) async {
     final api = FakeConnections();
     await _pump(tester, SendToCoinpileSheet(conversationId: 'c1', api: api));

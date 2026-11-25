@@ -256,51 +256,55 @@ class _StudioApprovalCardState extends State<StudioApprovalCard> {
     return Padding(
       key: Key('studio_approval_${approval.id}'),
       padding: const EdgeInsets.only(bottom: OmiSpacing.sm),
-      child: Material(
-        color: OmiColors.surface1,
-        borderRadius: OmiRadius.lgAll,
-        clipBehavior: Clip.antiAlias,
-        child: Padding(
-          padding: const EdgeInsets.all(OmiSpacing.sm),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Wrap(spacing: OmiSpacing.xs, children: [
-                Text(studio, style: OmiType.caption.copyWith(color: OmiColors.textSecondary)),
-                if (approval.agent.isNotEmpty)
-                  Text(approval.agent, style: OmiType.caption.copyWith(color: OmiColors.textTertiary)),
-                if (approval.jobTitle.isNotEmpty)
-                  Text(approval.jobTitle, style: OmiType.caption.copyWith(color: OmiColors.textTertiary)),
-              ]),
-              const SizedBox(height: OmiSpacing.xxs),
-              Text(approval.title.isEmpty ? l10n.agentJobsUntitled : approval.title,
-                  style: OmiType.headline.copyWith(color: OmiColors.textPrimary)),
-              const SizedBox(height: OmiSpacing.xs),
-              Text(l10n.agentJobsAsks(studio), style: OmiType.subhead.copyWith(color: OmiColors.warning)),
-              if (approval.summary.isNotEmpty)
-                Text(approval.summary, style: OmiType.footnote.copyWith(color: OmiColors.textPrimary)),
-              const SizedBox(height: OmiSpacing.xs),
-              if (answered != null)
-                Semantics(
-                  liveRegion: true,
-                  child: Text(answered,
-                      key: Key('studio_approval_answered_${approval.id}'),
-                      style: OmiType.footnote.copyWith(color: OmiColors.textSecondary)),
-                )
-              else
-                OmiButtonPair(
-                  first: OmiButton(
-                    key: Key('studio_approval_approve_${approval.id}'),
-                    label: l10n.approvalApprove,
-                    onPressed: _busy ? null : () => _answer('approve'),
+      // Full width even when the buttons give way to who answered (the page's column is start-aligned).
+      child: SizedBox(
+        width: double.infinity,
+        child: Material(
+          color: OmiColors.surface1,
+          borderRadius: OmiRadius.lgAll,
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.all(OmiSpacing.sm),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(spacing: OmiSpacing.xs, children: [
+                  Text(studio, style: OmiType.caption.copyWith(color: OmiColors.textSecondary)),
+                  if (approval.agent.isNotEmpty)
+                    Text(approval.agent, style: OmiType.caption.copyWith(color: OmiColors.textTertiary)),
+                  if (approval.jobTitle.isNotEmpty)
+                    Text(approval.jobTitle, style: OmiType.caption.copyWith(color: OmiColors.textTertiary)),
+                ]),
+                const SizedBox(height: OmiSpacing.xxs),
+                Text(approval.title.isEmpty ? l10n.agentJobsUntitled : approval.title,
+                    style: OmiType.headline.copyWith(color: OmiColors.textPrimary)),
+                const SizedBox(height: OmiSpacing.xs),
+                Text(l10n.agentJobsAsks(studio), style: OmiType.subhead.copyWith(color: OmiColors.warning)),
+                if (approval.summary.isNotEmpty)
+                  Text(approval.summary, style: OmiType.footnote.copyWith(color: OmiColors.textPrimary)),
+                const SizedBox(height: OmiSpacing.xs),
+                if (answered != null)
+                  Semantics(
+                    liveRegion: true,
+                    child: Text(answered,
+                        key: Key('studio_approval_answered_${approval.id}'),
+                        style: OmiType.footnote.copyWith(color: OmiColors.textSecondary)),
+                  )
+                else
+                  OmiButtonPair(
+                    first: OmiButton(
+                      key: Key('studio_approval_approve_${approval.id}'),
+                      label: l10n.approvalApprove,
+                      onPressed: _busy ? null : () => _answer('approve'),
+                    ),
+                    second: OmiButton.secondary(
+                      key: Key('studio_approval_reject_${approval.id}'),
+                      label: l10n.approvalDecline,
+                      onPressed: _busy ? null : () => _answer('reject'),
+                    ),
                   ),
-                  second: OmiButton.secondary(
-                    key: Key('studio_approval_reject_${approval.id}'),
-                    label: l10n.approvalDecline,
-                    onPressed: _busy ? null : () => _answer('reject'),
-                  ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
