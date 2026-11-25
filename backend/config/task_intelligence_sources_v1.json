@@ -248,7 +248,8 @@
         "backend/utils/conversations/merge_conversations.py",
         "backend/utils/task_intelligence/conversation_capture.py",
         "backend/utils/task_intelligence/reminder_policy.py",
-        "backend/routers/conversations.py"
+        "backend/routers/conversations.py",
+        "backend/utils/conversations/task_merge.py"
       ],
       "test_adapter": "transcript_capture_v2",
       "writer_anchors": [
@@ -274,6 +275,11 @@
         },
         {
           "path": "backend/routers/conversations.py",
+          "symbol": "action_items_db.update_action_item",
+          "discover": true
+        },
+        {
+          "path": "backend/utils/conversations/task_merge.py",
           "symbol": "action_items_db.update_action_item",
           "discover": true
         }

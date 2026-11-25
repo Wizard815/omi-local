@@ -405,6 +405,13 @@
       "kind": "submit_with_context",
       "count": 1,
       "why": "pre-existing; unreviewed"
+    },
+    {
+      "path": "utils/product_telemetry.py",
+      "function": "LocalUsageSink.capture",
+      "kind": "submit_with_context",
+      "count": 1,
+      "why": "Self-hosted usage counter (omi-local). One best-effort telemetry row per event, written off the caller's thread so a request never waits on it. Losing the rows in flight at SIGKILL only undercounts usage; nothing the user sees or relies on depends on them."
     }
   ]
 }

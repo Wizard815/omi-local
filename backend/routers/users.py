@@ -2498,7 +2498,30 @@ def get_llm_usage(
     }
 
 
-@router.get('/v1/users/me/local-usage', tags=['users'])
+class LocalUsageDay(BaseModel):
+    day: str
+    counts: Dict[str, int] = Field(default_factory=dict)
+    total: int = 0
+
+
+class LocalUsageEvent(BaseModel):
+    event: str = ''
+    at: str = ''
+    properties: Dict[str, Any] = Field(default_factory=dict)
+
+
+class LocalUsageResponse(BaseModel):
+    """Your own usage on this server (omi-local): counts per event and day, and recent events."""
+
+    enabled: bool
+    retention_days: int
+    window_days: int
+    totals: Dict[str, int] = Field(default_factory=dict)
+    days: List[LocalUsageDay] = Field(default_factory=list)
+    recent: List[LocalUsageEvent] = Field(default_factory=list)
+
+
+@router.get('/v1/users/me/local-usage', tags=['users'], response_model=LocalUsageResponse)
 def get_my_local_usage(
     days: int = Query(default=30, ge=1, le=365),
     uid: str = Depends(auth.get_current_user_uid),

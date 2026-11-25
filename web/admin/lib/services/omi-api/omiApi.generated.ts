@@ -3894,6 +3894,27 @@ export interface LlmUsageResponse {
   top_features?: Array<LlmUsageFeatureResponse>;
 }
 
+export interface LocalUsageDay {
+  counts?: Record<string, number>;
+  day: string;
+  total?: number;
+}
+
+export interface LocalUsageEvent {
+  at?: string;
+  event?: string;
+  properties?: Record<string, unknown>;
+}
+
+export interface LocalUsageResponse {
+  days?: Array<LocalUsageDay>;
+  enabled: boolean;
+  recent?: Array<LocalUsageEvent>;
+  retention_days: number;
+  totals?: Record<string, number>;
+  window_days: number;
+}
+
 export interface LocationContextConsentResponse {
   disclosed_providers?: Array<unknown>;
   enabled: boolean;
@@ -7975,6 +7996,9 @@ export interface OmiApiSchemas {
   "LlmUsageFeatureResponse": LlmUsageFeatureResponse;
   "LlmUsageRecordResponse": LlmUsageRecordResponse;
   "LlmUsageResponse": LlmUsageResponse;
+  "LocalUsageDay": LocalUsageDay;
+  "LocalUsageEvent": LocalUsageEvent;
+  "LocalUsageResponse": LocalUsageResponse;
   "LocationContextConsentResponse": LocationContextConsentResponse;
   "LocationContextConsentUpdate": LocationContextConsentUpdate;
   "MaterializableProactiveIntent": MaterializableProactiveIntent;
@@ -13289,7 +13313,7 @@ export interface OmiApiPaths {
     get: {
       operationId: "get_my_local_usage_v1_users_me_local_usage_get";
       responses: {
-        "200": unknown;
+        "200": LocalUsageResponse;
         "401": void;
         "422": HTTPValidationError;
       };
@@ -24012,7 +24036,7 @@ export async function get_total_llm_cost_v1_users_me_llm_usage_total_get(header:
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
-export async function get_my_local_usage_v1_users_me_local_usage_get(query: { days?: number }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<unknown> {
+export async function get_my_local_usage_v1_users_me_local_usage_get(query: { days?: number }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<LocalUsageResponse> {
   const _base = init?.baseURL ?? "";
   const _path = `/v1/users/me/local-usage`;
   const _params = query ? Object.entries(query)

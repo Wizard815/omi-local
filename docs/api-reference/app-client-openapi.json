@@ -24147,6 +24147,97 @@
         "title": "LlmUsageResponse",
         "type": "object"
       },
+      "LocalUsageDay": {
+        "properties": {
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "day": {
+            "title": "Day",
+            "type": "string"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "day"
+        ],
+        "title": "LocalUsageDay",
+        "type": "object"
+      },
+      "LocalUsageEvent": {
+        "properties": {
+          "at": {
+            "default": "",
+            "title": "At",
+            "type": "string"
+          },
+          "event": {
+            "default": "",
+            "title": "Event",
+            "type": "string"
+          },
+          "properties": {
+            "additionalProperties": true,
+            "title": "Properties",
+            "type": "object"
+          }
+        },
+        "title": "LocalUsageEvent",
+        "type": "object"
+      },
+      "LocalUsageResponse": {
+        "description": "Your own usage on this server (omi-local): counts per event and day, and recent events.",
+        "properties": {
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/LocalUsageDay"
+            },
+            "title": "Days",
+            "type": "array"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "recent": {
+            "items": {
+              "$ref": "#/components/schemas/LocalUsageEvent"
+            },
+            "title": "Recent",
+            "type": "array"
+          },
+          "retention_days": {
+            "title": "Retention Days",
+            "type": "integer"
+          },
+          "totals": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Totals",
+            "type": "object"
+          },
+          "window_days": {
+            "title": "Window Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "enabled",
+          "retention_days",
+          "window_days"
+        ],
+        "title": "LocalUsageResponse",
+        "type": "object"
+      },
       "LocationContextConsentResponse": {
         "properties": {
           "disclosed_providers": {
@@ -88691,7 +88782,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/LocalUsageResponse"
+                }
               }
             },
             "description": "Successful Response"

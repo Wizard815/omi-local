@@ -17,8 +17,9 @@ from utils.other.owned_paths import owned_scratch_path
 from utils.other.local_storage_urls import signed_query
 
 from google.cloud import storage
-from google.cloud.exceptions import NotFound
-from google.api_core.exceptions import PreconditionFailed
+
+# google.cloud.exceptions.NotFound is the same class as google.api_core.exceptions.NotFound.
+from google.api_core.exceptions import NotFound, PreconditionFailed
 from google.oauth2 import service_account
 
 LOCAL_STORAGE_ROOT_ENV = 'OMI_LOCAL_STORAGE_ROOT'

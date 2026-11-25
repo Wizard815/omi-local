@@ -111,6 +111,7 @@ _SYS_MODULE_NAMES = [
     "utils.conversations.mcp_transcript_search",
     "utils.conversations.transcript_chunks",
     "utils.conversations.transcript_for_llm",
+    "utils.conversations.day_rollup",
     "utils.retrieval",
     "utils.retrieval.tools",
     "utils.retrieval.tools.calendar_tools",
@@ -305,6 +306,12 @@ render_mod.conversations_to_string = MagicMock(
 factory_mod = _stub_module("utils.conversations.factory")
 factory_mod.deserialize_conversation = MagicMock(
     side_effect=lambda d: d if not isinstance(d, dict) else type('FakeConv', (), d)()
+)
+# No approved days here: every discarded conversation stays hidden from chat.
+day_rollup_mod = _stub_module("utils.conversations.day_rollup")
+day_rollup_mod.rolled_up_ids = MagicMock(return_value=set())
+day_rollup_mod.hidden_from_chat = (
+    lambda row, rolled_up: bool(row.get('discarded')) and str(row.get('id')) not in rolled_up
 )
 search_mod = _stub_module("utils.conversations.search")
 search_mod.keyword_search_conversation_ids = MagicMock(return_value=[])

@@ -1390,6 +1390,102 @@ class GeneratedFamilyDayResponse {
   }
 }
 
+class GeneratedLocalUsageDay {
+  final Map<String, dynamic>? counts;
+  final String day;
+  final int total;
+
+  const GeneratedLocalUsageDay({
+    this.counts,
+    required this.day,
+    this.total = 0,
+  });
+
+  factory GeneratedLocalUsageDay.fromJson(Map<String, dynamic> json) {
+    return GeneratedLocalUsageDay(
+      counts: _readFieldValue<Map<String, dynamic>>(_readField(json, const ["counts"]), "counts", _readMap, requiredField: false, nullable: true),
+      day: _required(_readFieldValue<String>(_readField(json, const ["day"]), "day", _readString, requiredField: true, nullable: false), "day"),
+      total: _required(_readFieldValue<int>(_readField(json, const ["total"]), "total", _readInt, requiredField: false, nullable: false, defaultValue: 0), "total"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'counts': counts,
+      'day': day,
+      'total': total,
+    };
+  }
+}
+
+class GeneratedLocalUsageEvent {
+  final String at;
+  final String event;
+  final Map<String, dynamic>? properties;
+
+  const GeneratedLocalUsageEvent({
+    this.at = "",
+    this.event = "",
+    this.properties,
+  });
+
+  factory GeneratedLocalUsageEvent.fromJson(Map<String, dynamic> json) {
+    return GeneratedLocalUsageEvent(
+      at: _required(_readFieldValue<String>(_readField(json, const ["at"]), "at", _readString, requiredField: false, nullable: false, defaultValue: ""), "at"),
+      event: _required(_readFieldValue<String>(_readField(json, const ["event"]), "event", _readString, requiredField: false, nullable: false, defaultValue: ""), "event"),
+      properties: _readFieldValue<Map<String, dynamic>>(_readField(json, const ["properties"]), "properties", _readMap, requiredField: false, nullable: true),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'at': at,
+      'event': event,
+      'properties': properties,
+    };
+  }
+}
+
+class GeneratedLocalUsageResponse {
+  final List<GeneratedLocalUsageDay>? days;
+  final bool enabled;
+  final List<GeneratedLocalUsageEvent>? recent;
+  final int retentionDays;
+  final Map<String, dynamic>? totals;
+  final int windowDays;
+
+  const GeneratedLocalUsageResponse({
+    this.days,
+    required this.enabled,
+    this.recent,
+    required this.retentionDays,
+    this.totals,
+    required this.windowDays,
+  });
+
+  factory GeneratedLocalUsageResponse.fromJson(Map<String, dynamic> json) {
+    return GeneratedLocalUsageResponse(
+      days: _readFieldValue<List<GeneratedLocalUsageDay>>(_readField(json, const ["days"]), "days", (value) => _readObjectList(value, GeneratedLocalUsageDay.fromJson), requiredField: false, nullable: true),
+      enabled: _required(_readFieldValue<bool>(_readField(json, const ["enabled"]), "enabled", _readBool, requiredField: true, nullable: false), "enabled"),
+      recent: _readFieldValue<List<GeneratedLocalUsageEvent>>(_readField(json, const ["recent"]), "recent", (value) => _readObjectList(value, GeneratedLocalUsageEvent.fromJson), requiredField: false, nullable: true),
+      retentionDays: _required(_readFieldValue<int>(_readField(json, const ["retention_days"]), "retention_days", _readInt, requiredField: true, nullable: false), "retention_days"),
+      totals: _readFieldValue<Map<String, dynamic>>(_readField(json, const ["totals"]), "totals", _readMap, requiredField: false, nullable: true),
+      windowDays: _required(_readFieldValue<int>(_readField(json, const ["window_days"]), "window_days", _readInt, requiredField: true, nullable: false), "window_days"),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'days': days?.map((value) => value.toJson()).toList(),
+      'enabled': enabled,
+      'recent': recent?.map((value) => value.toJson()).toList(),
+      'retention_days': retentionDays,
+      'totals': totals,
+      'window_days': windowDays,
+    };
+  }
+}
+
 class GeneratedKeepDayReviewConversationRequest {
   final bool kept;
 

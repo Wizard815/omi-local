@@ -1258,23 +1258,6 @@ def upsert_action_item_vectors_batch(uid: str, items: List[Dict[str, Any]]) -> i
 _ACTION_ITEM_QUERY_MAX_CHARS = 8000
 
 
-def _action_item_matches(
-    uid: str, vector: List[float], limit: int, filter_data: Dict[str, Any], caller: str
-) -> List[Any]:
-    """Pinecone-shaped matches (``id``/``score``/``metadata``) from Pinecone or the local Chroma store."""
-    if _use_chroma:
-        return _chroma().chroma_query_action_items(vector, uid, limit)
-    xc = owner_index(index, uid, index_name=_pinecone_index_name).query(
-        caller=caller,
-        vector=vector,
-        top_k=limit,
-        include_metadata=True,
-        filter=filter_data,
-        namespace=ACTION_ITEMS_NAMESPACE,
-    )
-    return xc.get('matches', [])
-
-
 def _prepare_action_item_query(query: str) -> Optional[str]:
     """Strip, reject empty, and clip untrusted action-item query text."""
     prepared = (query or "").strip()
@@ -1293,7 +1276,22 @@ def search_action_items_by_vector(uid: str, query: str, limit: int = 10, min_sco
         vector = embeddings.embed_query(prepared_query)
         filter_data: Dict[str, Any] = {'uid': uid}
 
-        matches: List[Any] = _action_item_matches(uid, vector, limit, filter_data, 'search_action_items_by_vector')
+        # Pinecone-shaped matches (``id``/``score``/``metadata``) from Pinecone or the local Chroma store.
+        if _use_chroma:
+            matches: List[Any] = _chroma().chroma_query_action_items(vector, uid, limit)
+        else:
+            matches = (
+                owner_index(index, uid, index_name=_pinecone_index_name)
+                .query(
+                    caller='search_action_items_by_vector',
+                    vector=vector,
+                    top_k=limit,
+                    include_metadata=True,
+                    filter=filter_data,
+                    namespace=ACTION_ITEMS_NAMESPACE,
+                )
+                .get('matches', [])
+            )
         top_score = matches[0]['score'] if matches else None
         kept = [m for m in matches if m.get('score', 0.0) >= min_score]
         logger.info(
@@ -1334,7 +1332,22 @@ def find_similar_action_items(uid: str, query: str, threshold: float = 0.6, limi
 
     try:
         vector = embeddings.embed_query(prepared_query)
-        matches: List[Any] = _action_item_matches(uid, vector, limit, {'uid': uid}, 'find_similar_action_items')
+        # Pinecone-shaped matches (``id``/``score``/``metadata``) from Pinecone or the local Chroma store.
+        if _use_chroma:
+            matches: List[Any] = _chroma().chroma_query_action_items(vector, uid, limit)
+        else:
+            matches = (
+                owner_index(index, uid, index_name=_pinecone_index_name)
+                .query(
+                    caller='find_similar_action_items',
+                    vector=vector,
+                    top_k=limit,
+                    include_metadata=True,
+                    filter={'uid': uid},
+                    namespace=ACTION_ITEMS_NAMESPACE,
+                )
+                .get('matches', [])
+            )
         kept: List[Dict[str, Any]] = []
         dropped_no_id = 0
         for m in matches:

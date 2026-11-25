@@ -3686,7 +3686,9 @@ def read_lever_sources():
 
 
 def test_generated_read_lever_manifest_is_current_and_records_unresolved_sources():
-    generated = read_lever_manifest.build_manifest()
+    # Pinned like the other manifest tests: the 7-day lever expiry window is checked against
+    # the date the policy was approved, so this test does not start failing on a calendar date.
+    generated = read_lever_manifest.build_manifest(today=date(2026, 11, 11))
     assert json.loads(read_lever_manifest.OUTPUT.read_text()) == generated
     notes = '\n'.join(generated['notes'])
     assert 'RESOLVED: prod chart-vs-CR batch_timeliness_leader is 100' in notes

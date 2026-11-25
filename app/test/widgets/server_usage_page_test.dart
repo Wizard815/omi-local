@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'package:omi/backend/http/api_result.dart';
+import 'package:omi/backend/schema/gen/self_hosted_wire.g.dart' as wire;
 import 'package:omi/backend/schema/local_usage.dart';
 import 'package:omi/l10n/app_localizations.dart';
 import 'package:omi/pages/settings/server_usage_page.dart';
@@ -10,6 +11,10 @@ import 'package:omi/ui/ui.dart';
 
 /// "Your usage on this server" reads the person's own counts from GET /v1/users/me/local-usage.
 void main() {
+  /// Decodes like the API: the server always sends enabled, retention_days and window_days.
+  LocalUsageReport report(Map<String, dynamic> json) => LocalUsageReport.fromGenerated(
+      wire.GeneratedLocalUsageResponse.fromJson({'enabled': true, 'retention_days': 90, 'window_days': 30, ...json}));
+
   setUpAll(() => initializeDateFormatting());
 
   Future<void> pump(WidgetTester tester, Future<ApiResult<LocalUsageReport>> Function() load) async {
@@ -23,8 +28,9 @@ void main() {
   }
 
   group('LocalUsageReport', () {
-    test('reads totals most used first and recent events newest first, skipping malformed rows', () {
-      final report = LocalUsageReport.fromJson({
+    test('reads totals most used first and recent events newest first, skipping rows without a count, name or time',
+        () {
+      final result = report({
         'enabled': true,
         'window_days': 30,
         'totals': {'Memory Created': 2, 'Chat Message Sent': 5, 'Bad': 'x', 'Zero': 0},
@@ -32,25 +38,25 @@ void main() {
           {'event': 'Memory Created', 'at': '2026-11-24T10:00:00+00:00'},
           {'event': 'Chat Message Sent', 'at': '2026-11-25T10:00:00+00:00'},
           {'event': '', 'at': '2026-11-25T11:00:00+00:00'},
-          'junk',
+          {'event': 'No time', 'at': ''},
         ],
       });
-      expect(report.totals.map((t) => t.event), ['Chat Message Sent', 'Memory Created']);
-      expect(report.total, 7);
-      expect(report.recent.map((e) => e.event), ['Chat Message Sent', 'Memory Created']);
-      expect(report.windowDays, 30);
+      expect(result.totals.map((t) => t.event), ['Chat Message Sent', 'Memory Created']);
+      expect(result.total, 7);
+      expect(result.recent.map((e) => e.event), ['Chat Message Sent', 'Memory Created']);
+      expect(result.windowDays, 30);
     });
 
     test('a server with counting off says so', () {
-      expect(LocalUsageReport.fromJson({'enabled': false}).enabled, isFalse);
-      expect(LocalUsageReport.fromJson(const {}).totals, isEmpty);
+      expect(report({'enabled': false}).enabled, isFalse);
+      expect(report(const {}).totals, isEmpty);
     });
   });
 
   testWidgets('shows the total, the most used actions and recent activity', (tester) async {
     await pump(
         tester,
-        () async => ApiSuccess(LocalUsageReport.fromJson({
+        () async => ApiSuccess(report({
               'enabled': true,
               'window_days': 30,
               'totals': {'Chat Message Sent': 5, 'Memory Created': 2},
@@ -66,12 +72,12 @@ void main() {
   });
 
   testWidgets('counting off says so', (tester) async {
-    await pump(tester, () async => ApiSuccess(LocalUsageReport.fromJson({'enabled': false})));
+    await pump(tester, () async => ApiSuccess(report({'enabled': false})));
     expect(find.text('Usage counting is turned off on this server.'), findsOneWidget);
   });
 
   testWidgets('nothing counted says so', (tester) async {
-    await pump(tester, () async => ApiSuccess(LocalUsageReport.fromJson({'enabled': true})));
+    await pump(tester, () async => ApiSuccess(report({'enabled': true})));
     expect(find.text('Nothing counted yet.'), findsOneWidget);
   });
 

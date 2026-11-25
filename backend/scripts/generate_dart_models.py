@@ -68,6 +68,10 @@ SCHEMA_GROUPS = {
             # Today on the family calendar, for the Android Family day and Next event widgets.
             'FamilyDayBlock',
             'FamilyDayResponse',
+            # Your own usage on this server (Settings, Server usage).
+            'LocalUsageDay',
+            'LocalUsageEvent',
+            'LocalUsageResponse',
             # Per-clip keep in the day review.
             'KeepDayReviewConversationRequest',
             # Connections (outbound integrations) and their sends.
