@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "images": [
+    {
+      "file": "001-mobile-android-chat-slow-reply.png",
+      "platform": "mobile-android",
+      "description": "BEFORE | AFTER: Chat waiting minutes on a slow model: keep-alive lines vs one step and a still-working line",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "002-mobile-android-chat-slow-reply-2x-text.png",
+      "platform": "mobile-android",
+      "description": "BEFORE | AFTER: The same at 2x text",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "003-mobile-android-writing-notes-summary-tab.png",
+      "platform": "mobile-android",
+      "description": "BEFORE | AFTER: Notes being written over a stored transcript: Summary tab says the transcript is ready",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "004-mobile-android-writing-notes-transcript-tab.png",
+      "platform": "mobile-android",
+      "description": "BEFORE | AFTER: Same conversation, Transcript tab: strip says Writing notes like the Home row",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "005-mobile-android-day-review-sort-light.png",
+      "platform": "mobile-android",
+      "description": "BEFORE | AFTER: Light theme day review sort: Bundle and Keep/Summarize were black on black",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "006-mobile-android-day-review-banner-light.png",
+      "platform": "mobile-android",
+      "description": "BEFORE | AFTER: Light theme Home banner: was a fixed dark card",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "007-mobile-android-day-reviews-list-failed.png",
+      "platform": "mobile-android",
+      "description": "BEFORE | AFTER: Day reviews list read fails: looked like a normal list, now error with Try Again",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "008-mobile-android-day-reviews-list-light.png",
+      "platform": "mobile-android",
+      "description": "BEFORE | AFTER: Day reviews list in light theme: was white text on white",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "009-mobile-android-waiting-for-your-ok.png",
+      "platform": "mobile-android",
+      "description": "BEFORE | AFTER: Waiting for Your OK: Title Case, summary row named by its day",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "010-mobile-android-approve-checklist-320.png",
+      "platform": "mobile-android",
+      "description": "BEFORE | AFTER: Approve all checklist at 320 pt: Cancel / Approve Selected no longer cut",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "011-mobile-android-agent-jobs-2x-text.png",
+      "platform": "mobile-android",
+      "description": "BEFORE | AFTER: Agent jobs at 2x text: header overflow and cut Allow Once",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "012-mobile-android-agent-jobs-320.png",
+      "platform": "mobile-android",
+      "description": "BEFORE | AFTER: Agent jobs at 320 pt: Allow Once / Deny stack",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "013-mobile-android-caldav-buttons-320.png",
+      "platform": "mobile-android",
+      "description": "BEFORE | AFTER: CalDAV settings at 320 pt: Sync Now / Test Connection stack",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "014-mobile-android-calendar-check-2x-text.png",
+      "platform": "mobile-android",
+      "description": "BEFORE | AFTER: Calendar check at 2x text: Add events as no longer breaks inside words; buttons wrap",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "015-mobile-android-transcript-2x-text.png",
+      "platform": "mobile-android",
+      "description": "BEFORE | AFTER: Transcript at 2x text: lines now follow the reader's text size",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "016-mobile-android-conversation-menu.png",
+      "platform": "mobile-android",
+      "description": "BEFORE | AFTER: Conversation menu: Send to Wiki / Agent now Title Case like the rest",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "017-mobile-android-day-review-times.png",
+      "platform": "mobile-android",
+      "description": "BEFORE | AFTER: Day review times in the reader's format (7:48 \u2013 8:32 AM)",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "018-mobile-android-home-processing-row.png",
+      "platform": "mobile-android",
+      "description": "BEFORE | AFTER: Home processing row (unchanged, for reference)",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    }
+  ]
+}
