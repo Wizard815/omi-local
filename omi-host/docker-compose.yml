@@ -184,8 +184,6 @@ services:
       ORB_URL: ${ORB_URL:-}
       # An approved day summary waits this long before it leaves (Approve all's Undo is 10 minutes).
       OMI_OUTBOUND_DAY_DELAY_SECONDS: ${OMI_OUTBOUND_DAY_DELAY_SECONDS:-600}
-      # Private LAN addresses Omi may call (webhooks and Connections), comma-separated IPs/CIDRs.
-      OMI_WEBHOOK_ALLOWED_PRIVATE_NETWORKS: ${OMI_WEBHOOK_ALLOWED_PRIVATE_NETWORKS:-}
       # Hourly daily-recap job, run in-process (no Cloud Scheduler here). The
       # recap is generated at each user's chosen local hour (default 22:00) —
       # set 0 to disable.
@@ -242,7 +240,10 @@ services:
     container_name: omi-proxy
     restart: unless-stopped
     environment:
-      UPSTREAMS: ${UPSTREAMS:-{"llama":"http://${LLAMA_HOST:-172.19.0.4}:${LLAMA_PORT:-8081}/v1"}}
+      # Every model call goes through Argos (the homelab model hub on the
+      # shared ai_net network), so it shows up in Argos' metrics and captures.
+      # The tag stays "llama" so model picks saved as llama/<model> keep working.
+      UPSTREAMS: ${UPSTREAMS:-{"llama":"http://${LLAMA_HOST:-argos}:${LLAMA_PORT:-8080}/v1"}}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-local}
       MODEL_ALLOW: ${MODEL_ALLOW:-}
@@ -258,6 +259,11 @@ services:
       REDIS_DB_HOST: ${REDIS_DB_HOST:-omi-local}
       REDIS_DB_PORT: ${REDIS_DB_PORT:-6380}
       REDIS_DB_PASSWORD: ${REDIS_DB_PASSWORD:-}
+    networks:
+      - default
+      # Reaches Argos by name (http://argos:8080). Create it once with
+      # `docker network create ai_net` if this host has no Argos yet.
+      - ai_net
     logging:
       driver: json-file
       options: { max-size: "20m", max-file: "3" }
@@ -473,6 +479,10 @@ services:
     logging:
       driver: json-file
       options: { max-size: "10m", max-file: "3" }
+
+networks:
+  ai_net:
+    external: true
 
 volumes:
   omi-data:

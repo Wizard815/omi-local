@@ -71,6 +71,13 @@ the audit behind it: [`omi-host/NETWORK.md`](omi-host/NETWORK.md).
 
 ### AI options (set when starting the host stack)
 
+**Default: Argos.** The merge proxy (`omi-proxy`) sends every model call to Argos, the homelab
+model hub, at `http://argos:8080/v1` on the shared `ai_net` Docker network (the run script
+creates the network if it is missing). Argos then shows each call in its metrics and captures.
+Set `LLAMA_HOST`/`LLAMA_PORT` to use another server, and `OPENAI_API_KEY` to an Argos key if
+Argos has `apiKeys` set. Model names keep the `llama/` tag, for example `llama/gemma-4-12b`,
+where `gemma-4-12b` must be a model name in Argos' config.
+
 1. **Fully local (your MI50 llama.cpp)** — start llama.cpp with an OpenAI server and pass it in:
    ```bash
    OPENAI_BASE_URL=http://<server-ip>:8081/v1 \

@@ -13,8 +13,8 @@
 # Options via environment:
 #   BIND_IP=<server-ip>              (auto-detected from default route if unset)
 #   PROVIDER_MODE=offline|real        (default offline)
-#   LLAMA_HOST=172.19.0.4             (llama.cpp host — for merge proxy auto-discovery)
-#   LLAMA_PORT=8081                   (llama.cpp port)
+#   LLAMA_HOST=argos                  (model server host, default Argos on ai_net)
+#   LLAMA_PORT=8080                   (model server port, default Argos' port)
 #   OPENROUTER_API_KEY=sk-or-...      (auto-adds OpenRouter to merge proxy if set)
 #   OMI_LOCAL_MODEL=llama/gemma-4-12b (default primary model — merge proxy name)
 #   LOCAL_LLM_MODEL=llama/gemma-4-12b (default chat agent model)
@@ -73,12 +73,17 @@ if [ -z "${OMI_AUDIO_URL:-}" ]; then
 fi
 docker build -t omi-proxy:latest       -f "$HERE/Dockerfile.proxy"          "$HERE"
 
-# 2. Build UPSTREAMS JSON from env — adds llama.cpp and optionally OpenRouter.
-#    Default: just llama.cpp at LLAMA_HOST:LLAMA_PORT
-_llama_host="${LLAMA_HOST:-172.19.0.4}"
-_llama_port="${LLAMA_PORT:-8081}"
+# 2. Build UPSTREAMS JSON from env — adds the model server and optionally OpenRouter.
+#    Default: Argos (the homelab model hub) at argos:8080 on the ai_net network,
+#    so every model call shows up in Argos' metrics and captures.
+_llama_host="${LLAMA_HOST:-argos}"
+_llama_port="${LLAMA_PORT:-8080}"
 _llama_base="http://${_llama_host}:${_llama_port}/v1"
-echo "LLM backend (llama.cpp): ${_llama_base}"
+echo "LLM backend: ${_llama_base}"
+if ! docker network inspect ai_net >/dev/null 2>&1; then
+  echo "Creating the ai_net Docker network (shared with Argos)"
+  docker network create ai_net >/dev/null
+fi
 
 if [ -n "${OPENROUTER_API_KEY:-}" ]; then
   echo "OpenRouter: enabled (models auto-discovered)"
@@ -202,7 +207,7 @@ echo
 echo "Local only:    container traffic is limited to the LAN; attempts are logged in /data/logs/egress.jsonl"
 echo "               (docker exec omi-local tail /data/logs/egress.jsonl) and as 'omi-egress-drop' in dmesg."
 echo "Cloud on purpose (OpenRouter): OMI_EGRESS_FIREWALL=0 OMI_EGRESS_ALLOW=openrouter.ai \\"
-echo "  LLAMA_HOST=172.19.0.4 OPENROUTER_API_KEY=sk-or-... bash run-omi-local-host.sh"
+echo "  OPENROUTER_API_KEY=sk-or-... bash run-omi-local-host.sh"
 echo
 echo "Phone setup:"
 echo "  1. Seed your login account (once):"
