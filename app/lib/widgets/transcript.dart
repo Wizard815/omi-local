@@ -1459,12 +1459,16 @@ class _TranscriptWidgetState extends State<TranscriptWidget> {
   }
 
   Widget _buildSegmentText(TranscriptSegment data, int segmentIdx, bool isUser, {TextStyle? style}) {
-    // Text.rich, not RichText: RichText ignores the reader's text size (its textScaler defaults to
-    // no scaling) and the theme's font, so transcripts stayed small at large accessibility text.
-    final richText = Text.rich(
+    // RichText ignores the reader's text size (its textScaler defaults to no scaling) and the
+    // theme's font, so transcripts stayed small at large accessibility text: pass both. (Not
+    // Text.rich: one more element per line costs the detail scroll's rebuild budget.)
+    final richText = RichText(
       textAlign: TextAlign.left,
-      TextSpan(
-        style: style ?? OmiType.subhead.copyWith(letterSpacing: 0.0, height: 1.4),
+      textScaler: MediaQuery.textScalerOf(context),
+      text: TextSpan(
+        style: DefaultTextStyle.of(context)
+            .style
+            .merge(style ?? OmiType.subhead.copyWith(letterSpacing: 0.0, height: 1.4)),
         children: widget.searchQuery.isNotEmpty
             ? _highlightSearchMatchesWithKeys(_getDecodedText(data.text), widget.searchQuery, segmentIdx)
             : [TextSpan(text: _getDecodedText(data.text))],

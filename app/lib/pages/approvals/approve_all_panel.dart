@@ -203,7 +203,9 @@ class _ApprovalChecklistState extends State<ApprovalChecklist> {
             child: OmiCheckboxRow(
               label: () {
                 final event = events[_eventKey(ref)];
-                return event == null ? _eventKey(ref) : '${event.title} · ${dates.timestamp(event.start.toLocal())}';
+                return event == null
+                    ? _eventKey(ref)
+                    : '${event.title} · ${dates.weekdayDate(event.start.toLocal())} ${dates.time(event.start.toLocal())}';
               }(),
               value: _events.contains(_eventKey(ref)),
               onChanged: (on) => _toggle(_events, _eventKey(ref), on),
