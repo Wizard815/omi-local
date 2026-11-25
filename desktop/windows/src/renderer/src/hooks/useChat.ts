@@ -708,10 +708,18 @@ export function useChat(): UseChat {
     // `assistantText`. Without this the pi_mono door dropped tool_activity entirely, so
     // a long tool run looked like dead air / a stuck spinner.
     let toolActivity: string | null = null
-    const composeLive = (): string =>
-      toolActivity
-        ? `${assistantText}${assistantText ? '\n\n' : ''}_${toolActivity}…_`
-        : assistantText
+    // omi-local: until the first words arrive on a slow model, the bubble says
+    // "Still working…" instead of sitting empty (display-only, like toolActivity).
+    let stillWorking = false
+    const composeLive = (): string => {
+      const body =
+        !assistantText && stillWorking && !toolActivity ? CHAT_STILL_WORKING_COPY : assistantText
+      return toolActivity
+        ? `${body || (stillWorking ? CHAT_STILL_WORKING_COPY : '')}${
+            body || stillWorking ? '\n\n' : ''
+          }_${toolActivity}…_`
+        : body
+    }
 
     // INV-CHAT-1 site 1: persist the RAW user message at turn start (never the
     // context-prepended prompt). Fire-and-forget. session_id is OMITTED on the
@@ -847,6 +855,11 @@ export function useChat(): UseChat {
     // timer is set BEFORE the try so it covers context-gathering + BOTH attempts +
     // the 600ms retry delay, and is cleared at the top of the finally so a normal
     // completion cancels it (the success path is otherwise byte-identical).
+    const stillWorkingTimer = setTimeout(() => {
+      if (!isCurrent() || assistantText) return
+      stillWorking = true
+      writeAssistant(composeLive())
+    }, CHAT_STILL_WORKING_AFTER_MS)
     const watchdog = setTimeout(() => {
       if (!isCurrent()) return
       // Recover the bubble FIRST (writeAssistant guards on the still-current gen) and
@@ -985,6 +998,7 @@ export function useChat(): UseChat {
       // below is skipped — the recovered timeout state stands and there is no double
       // terminal. clearTimeout on an already-fired timer is a harmless no-op.
       clearTimeout(watchdog)
+      clearTimeout(stillWorkingTimer)
       // Terminal handling runs exactly once, after the FINAL attempt (each attempt
       // already released its own run handle + listener in its own finally). State
       // writes only for the still-current generation (a dismissed turn was already
