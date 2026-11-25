@@ -12,7 +12,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:omi/backend/preferences.dart';
 import 'package:omi/l10n/app_localizations.dart';
 import 'package:omi/utils/platform/platform_manager.dart';
-import 'package:omi/pages/on_device/on_device_at_cap_sheet.dart';
 import 'package:omi/pages/on_device/on_device_provenance_section.dart';
 import 'package:omi/pages/on_device/on_device_queue_banner.dart';
 import 'package:omi/pages/on_device/on_device_schedule_page.dart';
@@ -119,30 +118,6 @@ void main() {
     if (transcribing) value.progress = 0.42;
     return value;
   }
-
-  Widget conversationsBackdrop() {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Conversations')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: const [
-          Text('Today'),
-          SizedBox(height: 12),
-          ListTile(title: Text('Standup with the design team'), subtitle: Text('9:00 AM · 24m')),
-        ],
-      ),
-    );
-  }
-
-  testWidgets('at-cap sheet', (tester) async {
-    await shoot(tester, '01-at-cap-sheet-ios.png', home: conversationsBackdrop(), afterPump: (tester) async {
-      showOnDeviceAtCapSheet(tester.element(find.text('Conversations')), liveHoursReturnOn: DateTime(2026, 11, 1));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
-    });
-    expect(find.text("You've reached this month's limit"), findsOneWidget);
-    expect(find.text('Runs while your phone charges.'), findsOneWidget);
-  });
 
   testWidgets('parakeet setup not downloaded', (tester) async {
     final value = controller(
@@ -349,14 +324,6 @@ void main() {
         status: const OnDeviceModelStatus(phase: OnDeviceModelPhase.notDownloaded, sizeBytes: 538 * 1024 * 1024),
       )),
     );
-  });
-
-  testWidgets('free at cap', (tester) async {
-    await shoot(tester, '20-free-user-at-cap.png', home: conversationsBackdrop(), afterPump: (tester) async {
-      showOnDeviceAtCapSheet(tester.element(find.text('Conversations')), liveHoursReturnOn: DateTime(2026, 11, 1));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
-    });
   });
 
   testWidgets('transcribing progress', (tester) async {

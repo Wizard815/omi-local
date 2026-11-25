@@ -12,7 +12,6 @@ import 'package:omi/services/devices.dart';
 import 'package:omi/services/devices/connectors/device_connection.dart';
 import 'package:omi/services/wals/wal.dart';
 import 'package:omi/utils/firmware_update_battery.dart';
-import 'package:omi/utils/analytics/analytics_adapter.dart';
 import 'package:omi/utils/analytics/analytics_manager.dart';
 
 class _TestConnectivityPlatform extends ConnectivityPlatform {
