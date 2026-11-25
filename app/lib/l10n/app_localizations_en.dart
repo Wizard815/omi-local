@@ -16948,4 +16948,81 @@ class AppLocalizationsEn extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'AI on this phone';
+
+  @override
+  String get phoneLlmHint => 'Answer chat with a model that runs on this phone, such as llama-server in Termux.';
+
+  @override
+  String get phoneLlmSource => 'AI source';
+
+  @override
+  String get phoneLlmModeServer => 'Server';
+
+  @override
+  String get phoneLlmModePhone => 'This phone';
+
+  @override
+  String get phoneLlmModeAuto => 'Phone when the server can\'t be reached';
+
+  @override
+  String get phoneLlmAddress => 'Phone model address';
+
+  @override
+  String get phoneLlmNoModels => 'No models found. Is the phone model running?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Answered in $ms ms';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'The phone model didn\'t answer.';
+
+  @override
+  String get phoneLlmUnauthorized => 'The phone model refused the API key.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Include my recent conversations as context';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Answered on this phone ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Not saved on your server. Kept until Omi closes.';
+
+  @override
+  String get phoneLlmAskPhone => 'Ask This Phone Instead';
+
+  @override
+  String get phoneLlmReplyFailed => 'The phone model didn\'t answer. Check that it\'s running.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Phone model running';
+
+  @override
+  String get phoneLlmStatusLoading => 'Phone model loading';
+
+  @override
+  String get phoneLlmStatusOff => 'Phone model off';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Checked $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'AI source: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Switch';
+
+  @override
+  String get sendToHermesTitle => 'Send to Hermes';
 }

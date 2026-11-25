@@ -140,6 +140,16 @@
                 android:value="false" />
             <!-- omi.me App Links removed in this fork: Android would verify them against
                  h.omi.me / try.omi.me on every install, and the pages live in Omi's cloud. -->
+            <!-- Studio Own (com.ekkostudio.own) opens Omi on a screen with omi://approvals,
+                 omi://tasks and omi://capture, sent to this package only (hermes-studio docs/omi.md).
+                 In every flavor; the prod flavor's broader omi:// filter also matches. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="omi" android:host="approvals" />
+                <data android:scheme="omi" android:host="tasks" />
+                <data android:scheme="omi" android:host="capture" />
+            </intent-filter>
         </activity>
 
         <!-- Local only: no Firebase Messaging token fetch (it calls Google on every launch;
@@ -262,6 +272,22 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/omi_widget_approvals_info" />
         </receiver>
+        <receiver
+            android:name="com.friend.ios.widgets.OmiAiSourceWidget"
+            android:exported="false"
+            android:label="@string/omi_widget_ai_source_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/omi_widget_ai_source_info" />
+        </receiver>
 
     </application>
+
+    <!-- "Send to Hermes" checks whether Studio Own is installed before opening it. -->
+    <queries>
+        <package android:name="com.ekkostudio.own" />
+    </queries>
 </manifest>

@@ -16955,4 +16955,81 @@ class AppLocalizationsDa extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'AI på denne telefon';
+
+  @override
+  String get phoneLlmHint => 'Besvar chat med en model, der kører på denne telefon, f.eks. llama-server i Termux.';
+
+  @override
+  String get phoneLlmSource => 'AI-kilde';
+
+  @override
+  String get phoneLlmModeServer => 'Server';
+
+  @override
+  String get phoneLlmModePhone => 'Denne telefon';
+
+  @override
+  String get phoneLlmModeAuto => 'Telefonen, når serveren ikke kan nås';
+
+  @override
+  String get phoneLlmAddress => 'Telefonmodellens adresse';
+
+  @override
+  String get phoneLlmNoModels => 'Ingen modeller fundet. Kører telefonmodellen?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Svarede på $ms ms';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Telefonmodellen svarede ikke.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Telefonmodellen afviste API-nøglen.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Medtag mine seneste samtaler som kontekst';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Besvaret på denne telefon ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Gemmes ikke på din server. Bevares, indtil Omi lukkes.';
+
+  @override
+  String get phoneLlmAskPhone => 'Spørg denne telefon i stedet';
+
+  @override
+  String get phoneLlmReplyFailed => 'Telefonmodellen svarede ikke. Tjek, at den kører.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Telefonmodellen kører';
+
+  @override
+  String get phoneLlmStatusLoading => 'Telefonmodellen indlæses';
+
+  @override
+  String get phoneLlmStatusOff => 'Telefonmodellen er slukket';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Tjekket $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'AI-kilde: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Skift';
+
+  @override
+  String get sendToHermesTitle => 'Send til Hermes';
 }

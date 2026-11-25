@@ -16731,4 +16731,81 @@ class AppLocalizationsJa extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'このスマホのAI';
+
+  @override
+  String get phoneLlmHint => 'このスマホで動くモデル（Termux の llama-server など）でチャットに答えます。';
+
+  @override
+  String get phoneLlmSource => 'AIの実行場所';
+
+  @override
+  String get phoneLlmModeServer => 'サーバー';
+
+  @override
+  String get phoneLlmModePhone => 'このスマホ';
+
+  @override
+  String get phoneLlmModeAuto => 'サーバーに接続できないときはスマホ';
+
+  @override
+  String get phoneLlmAddress => 'スマホモデルのアドレス';
+
+  @override
+  String get phoneLlmNoModels => 'モデルが見つかりません。スマホのモデルは起動していますか？';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return '$ms ms で応答';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'スマホのモデルが応答しませんでした。';
+
+  @override
+  String get phoneLlmUnauthorized => 'スマホのモデルが API キーを拒否しました。';
+
+  @override
+  String get phoneLlmIncludeConversations => '最近の会話をコンテキストとして含める';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'このスマホで回答（$model）';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'サーバーには保存されません。Omi を閉じるまで残ります。';
+
+  @override
+  String get phoneLlmAskPhone => 'このスマホに聞く';
+
+  @override
+  String get phoneLlmReplyFailed => 'スマホのモデルが応答しませんでした。起動しているか確認してください。';
+
+  @override
+  String get phoneLlmStatusRunning => 'スマホのモデル: 実行中';
+
+  @override
+  String get phoneLlmStatusLoading => 'スマホのモデル: 読み込み中';
+
+  @override
+  String get phoneLlmStatusOff => 'スマホのモデル: 停止中';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return '$time に確認';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'AIの実行場所: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => '切り替え';
+
+  @override
+  String get sendToHermesTitle => 'Hermes に送信';
 }

@@ -30,6 +30,7 @@ import 'package:omi/pages/settings/notifications_settings_page.dart';
 import 'package:omi/pages/settings/people.dart';
 import 'package:omi/pages/settings/permissions_page.dart';
 import 'package:omi/pages/settings/phone_call_settings_page.dart';
+import 'package:omi/pages/settings/phone_llm_settings_page.dart';
 import 'package:omi/pages/settings/profile.dart';
 import 'package:omi/pages/settings/settings_groups.dart';
 import 'package:omi/pages/settings/settings_search_index.dart';
@@ -97,6 +98,8 @@ Future<void> openSettingsDestination(BuildContext context, SettingsDestination d
       await routeToPage(context, const CustomVocabularyPage());
     case SettingsDestination.voice:
       await routeToPage(context, const VoiceSettingsPage());
+    case SettingsDestination.phoneAi:
+      await routeToPage(context, const PhoneLlmSettingsPage());
     case SettingsDestination.voiceProfile:
       await openVoiceProfile(context);
     case SettingsDestination.people:

@@ -16,6 +16,7 @@ object OmiWidgetKeys {
     const val TRANSLATION = "widget_translation"
     const val TASKS = "widget_up_next"
     const val APPROVALS = "widget_approvals"
+    const val AI_SOURCE = "widget_ai_source"
 }
 
 data class TodayData(
@@ -38,6 +39,23 @@ data class CaptureData(val title: String, val note: String, val task: String)
 data class ListeningData(val title: String, val muted: Boolean, val available: Boolean, val state: String, val action: String)
 
 data class TranslationData(val title: String, val on: Boolean, val state: String, val target: String)
+
+/**
+ * Where chat is answered (`mode`: server, phone or auto) and the phone model's last known state
+ * (`status`: running, loading, off or unknown), with the app's "Checked 10:43" line.
+ */
+data class AiSourceData(
+    val title: String,
+    val mode: String,
+    val modeLabel: String,
+    val status: String,
+    val statusLabel: String,
+    val checkedLabel: String,
+    val action: String,
+) {
+    /** The detail line: the model's state and, once checked, when. */
+    val detail: String get() = listOf(statusLabel, checkedLabel).filter { it.isNotBlank() }.joinToString(" · ")
+}
 
 data class WidgetRow(val id: String?, val title: String, val detail: String?)
 
@@ -114,6 +132,22 @@ object OmiWidgetData {
             rows = rows,
         )
     }
+
+    fun aiSource(json: String?): AiSourceData? = parse(json) { o ->
+        val mode = o.text("mode")?.takeIf { it in AI_MODES } ?: return@parse null
+        AiSourceData(
+            title = o.text("title") ?: "",
+            mode = mode,
+            modeLabel = o.text("mode_label") ?: return@parse null,
+            status = o.text("status")?.takeIf { it in AI_STATUSES } ?: "unknown",
+            statusLabel = o.text("status_label") ?: "",
+            checkedLabel = o.text("checked_label") ?: "",
+            action = o.text("action") ?: "",
+        )
+    }
+
+    private val AI_MODES = setOf("server", "phone", "auto")
+    private val AI_STATUSES = setOf("running", "loading", "off", "unknown")
 
     private fun <T> parse(json: String?, read: (JSONObject) -> T?): T? {
         if (json.isNullOrBlank()) return null

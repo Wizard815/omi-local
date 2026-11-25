@@ -16958,4 +16958,81 @@ class AppLocalizationsFa extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'هوش مصنوعی روی این گوشی';
+
+  @override
+  String get phoneLlmHint => 'با مدلی که روی این گوشی اجرا می‌شود، مانند llama-server در Termux، به گفتگو پاسخ دهید.';
+
+  @override
+  String get phoneLlmSource => 'منبع هوش مصنوعی';
+
+  @override
+  String get phoneLlmModeServer => 'سرور';
+
+  @override
+  String get phoneLlmModePhone => 'این گوشی';
+
+  @override
+  String get phoneLlmModeAuto => 'گوشی، وقتی سرور در دسترس نیست';
+
+  @override
+  String get phoneLlmAddress => 'نشانی مدل گوشی';
+
+  @override
+  String get phoneLlmNoModels => 'مدلی پیدا نشد. آیا مدل گوشی در حال اجراست؟';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'در $ms میلی‌ثانیه پاسخ داد';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'مدل گوشی پاسخ نداد.';
+
+  @override
+  String get phoneLlmUnauthorized => 'مدل گوشی کلید API را رد کرد.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'گفتگوهای اخیرم را به‌عنوان زمینه بفرست';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'پاسخ روی این گوشی ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'روی سرور شما ذخیره نمی‌شود. تا بسته شدن Omi نگه داشته می‌شود.';
+
+  @override
+  String get phoneLlmAskPhone => 'به‌جای آن از این گوشی بپرس';
+
+  @override
+  String get phoneLlmReplyFailed => 'مدل گوشی پاسخ نداد. بررسی کنید که در حال اجرا باشد.';
+
+  @override
+  String get phoneLlmStatusRunning => 'مدل گوشی در حال اجراست';
+
+  @override
+  String get phoneLlmStatusLoading => 'مدل گوشی در حال بارگیری است';
+
+  @override
+  String get phoneLlmStatusOff => 'مدل گوشی خاموش است';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'بررسی‌شده $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'منبع هوش مصنوعی: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'تغییر';
+
+  @override
+  String get sendToHermesTitle => 'ارسال به Hermes';
 }

@@ -12,7 +12,8 @@ What this pins down:
   * a backup is one tarball of firebase-export, redis, storage, chroma,
     secrets and radicale (whatever exists), model caches excluded, and only the newest
     OMI_BACKUP_KEEP tarballs survive,
-  * a failed export fails the backup instead of archiving stale data.
+  * a failed export fails the backup instead of archiving stale data,
+  * a snapshot request from the backup sidecar is answered with its own id.
 
 Run:  python3 test_maintenance.py     (no pytest required)
 """
@@ -130,12 +131,37 @@ def test_backup_refuses_to_archive_a_stale_export():
     assert not os.path.exists(os.path.join(state, "backups"))
 
 
+def test_a_snapshot_request_is_answered_with_its_id():
+    """The omi-backup sidecar has no Docker socket: it asks through a file on the volume."""
+    import json
+
+    state = _state()
+    code, out = run(state, "omi_snapshot_on_request")
+    assert code == 1, "no request, nothing done"
+    assert not os.path.exists(os.path.join(state, ".snapshot-done"))
+    with open(os.path.join(state, ".snapshot-request"), "w") as f:
+        f.write("abc123\n")
+    code, out = run(state, "omi_snapshot_on_request")
+    assert code == 0, out
+    answer = json.load(open(os.path.join(state, ".snapshot-done")))
+    assert answer["id"] == "abc123" and answer["ok"] is True, answer
+    assert not os.path.exists(os.path.join(state, ".snapshot-request"))
+    assert open(os.path.join(state, "firebase-export", "firebase-export-metadata.json")).read().strip() == '{"version":"fake"}'
+
+    with open(os.path.join(state, ".snapshot-request"), "w") as f:
+        f.write("def456")
+    code, out = run(state, "omi_snapshot_on_request", FAKE_FIREBASE_FAIL="1")
+    answer = json.load(open(os.path.join(state, ".snapshot-done")))
+    assert answer == {**answer, "id": "def456", "ok": False}, answer
+
+
 def main() -> None:
     tests = [
         test_export_swaps_in_atomically_and_keeps_the_previous_one,
         test_a_failed_export_leaves_the_current_export_untouched,
         test_backup_archives_the_irreplaceable_data_and_prunes_old_ones,
         test_backup_refuses_to_archive_a_stale_export,
+        test_a_snapshot_request_is_answered_with_its_id,
     ]
     for t in tests:
         t()

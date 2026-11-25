@@ -18,6 +18,7 @@
 #   OMI_DEMO_CALDAV_PORT=5232 OMI_DEMO_REDIS_PORT=6390 OMI_DEMO_HUB_PORT=4410
 #   OMI_DEMO_ALLGLANCE_PORT=8791
 # Driver: OMI_DEMO_DRIVER (default caldav_demo.py; hermes_demo.sh runs hermes_demo.py on this stack).
+# OMI_DEMO_FIRESTORE_IMPORT=<dir>: the emulators import that export on start (backup_demo.sh).
 # Binaries: OMI_RADICALE_BIN (radicale 3.5.x), OMI_DEMO_PYTHON (backend venv
 # python, default backend/.venv/bin/python), FIREBASE_BIN (default the repo's
 # node_modules/.bin/firebase; `npm ci` at the repo root installs it).
@@ -112,7 +113,9 @@ cat > "$STATE/emulators/firebase.json" <<JSON
   }
 }
 JSON
-(cd "$STATE/emulators" && exec "$FIREBASE_BIN" emulators:start --only firestore,auth --project demo-omi-local) \
+# OMI_DEMO_FIRESTORE_IMPORT: start from an export, as the container does (backup_demo.sh restores into one).
+(cd "$STATE/emulators" && exec "$FIREBASE_BIN" emulators:start --only firestore,auth --project demo-omi-local \
+  ${OMI_DEMO_FIRESTORE_IMPORT:+--import "$OMI_DEMO_FIRESTORE_IMPORT"}) \
   > "$STATE/logs/emulators.log" 2>&1 &
 PIDS+=($!)
 

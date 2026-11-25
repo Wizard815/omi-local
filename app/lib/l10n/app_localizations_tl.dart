@@ -17087,4 +17087,82 @@ class AppLocalizationsTl extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'AI sa teleponong ito';
+
+  @override
+  String get phoneLlmHint =>
+      'Sagutin ang chat gamit ang modelong tumatakbo sa teleponong ito, gaya ng llama-server sa Termux.';
+
+  @override
+  String get phoneLlmSource => 'Pinagmulan ng AI';
+
+  @override
+  String get phoneLlmModeServer => 'Server';
+
+  @override
+  String get phoneLlmModePhone => 'Ang teleponong ito';
+
+  @override
+  String get phoneLlmModeAuto => 'Ang telepono kapag hindi maabot ang server';
+
+  @override
+  String get phoneLlmAddress => 'Address ng modelo sa telepono';
+
+  @override
+  String get phoneLlmNoModels => 'Walang nakitang modelo. Tumatakbo ba ang modelo sa telepono?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Sumagot sa loob ng $ms ms';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Hindi sumagot ang modelo sa telepono.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Tinanggihan ng modelo sa telepono ang API key.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Isama ang mga kamakailan kong pag-uusap bilang konteksto';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Sinagot sa teleponong ito ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Hindi naka-save sa iyong server. Nananatili hanggang isara ang Omi.';
+
+  @override
+  String get phoneLlmAskPhone => 'Itanong sa Teleponong Ito';
+
+  @override
+  String get phoneLlmReplyFailed => 'Hindi sumagot ang modelo sa telepono. Tingnan kung tumatakbo ito.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Tumatakbo ang modelo sa telepono';
+
+  @override
+  String get phoneLlmStatusLoading => 'Nilo-load ang modelo sa telepono';
+
+  @override
+  String get phoneLlmStatusOff => 'Nakapatay ang modelo sa telepono';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Sinuri noong $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'Pinagmulan ng AI: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Palitan';
+
+  @override
+  String get sendToHermesTitle => 'Ipadala sa Hermes';
 }

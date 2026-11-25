@@ -17029,4 +17029,82 @@ class AppLocalizationsMk extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'ВИ на овој телефон';
+
+  @override
+  String get phoneLlmHint =>
+      'Одговарајте во разговорот со модел што работи на овој телефон, како llama-server во Termux.';
+
+  @override
+  String get phoneLlmSource => 'Извор на ВИ';
+
+  @override
+  String get phoneLlmModeServer => 'Сервер';
+
+  @override
+  String get phoneLlmModePhone => 'Овој телефон';
+
+  @override
+  String get phoneLlmModeAuto => 'Телефонот кога серверот е недостапен';
+
+  @override
+  String get phoneLlmAddress => 'Адреса на моделот на телефонот';
+
+  @override
+  String get phoneLlmNoModels => 'Не се пронајдени модели. Дали работи моделот на телефонот?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Одговори за $ms ms';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Моделот на телефонот не одговори.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Моделот на телефонот го одби API клучот.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Вклучи ги моите неодамнешни разговори како контекст';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Одговорено на овој телефон ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Не се зачувува на вашиот сервер. Се чува додека Omi не се затвори.';
+
+  @override
+  String get phoneLlmAskPhone => 'Прашај го овој телефон';
+
+  @override
+  String get phoneLlmReplyFailed => 'Моделот на телефонот не одговори. Проверете дали работи.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Моделот на телефонот работи';
+
+  @override
+  String get phoneLlmStatusLoading => 'Моделот на телефонот се вчитува';
+
+  @override
+  String get phoneLlmStatusOff => 'Моделот на телефонот е исклучен';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Проверено $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'Извор на ВИ: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Промени';
+
+  @override
+  String get sendToHermesTitle => 'Испрати до Hermes';
 }

@@ -17028,4 +17028,81 @@ class AppLocalizationsTe extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'ఈ ఫోన్‌లో AI';
+
+  @override
+  String get phoneLlmHint => 'ఈ ఫోన్‌లో నడిచే మోడల్‌తో చాట్‌కు సమాధానం ఇవ్వండి, ఉదా. Termux లో llama-server.';
+
+  @override
+  String get phoneLlmSource => 'AI మూలం';
+
+  @override
+  String get phoneLlmModeServer => 'సర్వర్';
+
+  @override
+  String get phoneLlmModePhone => 'ఈ ఫోన్';
+
+  @override
+  String get phoneLlmModeAuto => 'సర్వర్ చేరలేనప్పుడు ఫోన్';
+
+  @override
+  String get phoneLlmAddress => 'ఫోన్ మోడల్ చిరునామా';
+
+  @override
+  String get phoneLlmNoModels => 'మోడల్‌లు కనబడలేదు. ఫోన్ మోడల్ నడుస్తోందా?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return '$ms ms లో సమాధానం ఇచ్చింది';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'ఫోన్ మోడల్ సమాధానం ఇవ్వలేదు.';
+
+  @override
+  String get phoneLlmUnauthorized => 'ఫోన్ మోడల్ API కీని తిరస్కరించింది.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'నా ఇటీవలి సంభాషణలను సందర్భంగా చేర్చండి';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'ఈ ఫోన్‌లో సమాధానం ఇచ్చింది ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'మీ సర్వర్‌లో సేవ్ కాలేదు. Omi మూసే వరకు ఉంటుంది.';
+
+  @override
+  String get phoneLlmAskPhone => 'బదులుగా ఈ ఫోన్‌ను అడగండి';
+
+  @override
+  String get phoneLlmReplyFailed => 'ఫోన్ మోడల్ సమాధానం ఇవ్వలేదు. అది నడుస్తోందో చూడండి.';
+
+  @override
+  String get phoneLlmStatusRunning => 'ఫోన్ మోడల్ నడుస్తోంది';
+
+  @override
+  String get phoneLlmStatusLoading => 'ఫోన్ మోడల్ లోడ్ అవుతోంది';
+
+  @override
+  String get phoneLlmStatusOff => 'ఫోన్ మోడల్ ఆఫ్‌లో ఉంది';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return '$time కి తనిఖీ చేశారు';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'AI మూలం: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'మార్చు';
+
+  @override
+  String get sendToHermesTitle => 'Hermes కు పంపండి';
 }

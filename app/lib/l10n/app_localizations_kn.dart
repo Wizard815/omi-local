@@ -17016,4 +17016,81 @@ class AppLocalizationsKn extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'ಈ ಫೋನ್‌ನಲ್ಲಿ AI';
+
+  @override
+  String get phoneLlmHint => 'ಈ ಫೋನ್‌ನಲ್ಲಿ ಚಲಿಸುವ ಮಾದರಿಯಿಂದ ಚಾಟ್‌ಗೆ ಉತ್ತರಿಸಿ, ಉದಾ. Termux ನಲ್ಲಿ llama-server.';
+
+  @override
+  String get phoneLlmSource => 'AI ಮೂಲ';
+
+  @override
+  String get phoneLlmModeServer => 'ಸರ್ವರ್';
+
+  @override
+  String get phoneLlmModePhone => 'ಈ ಫೋನ್';
+
+  @override
+  String get phoneLlmModeAuto => 'ಸರ್ವರ್ ತಲುಪಲಾಗದಿದ್ದಾಗ ಫೋನ್';
+
+  @override
+  String get phoneLlmAddress => 'ಫೋನ್ ಮಾದರಿಯ ವಿಳಾಸ';
+
+  @override
+  String get phoneLlmNoModels => 'ಯಾವುದೇ ಮಾದರಿ ಕಂಡುಬಂದಿಲ್ಲ. ಫೋನ್ ಮಾದರಿ ಚಾಲನೆಯಲ್ಲಿದೆಯೇ?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return '$ms ms ನಲ್ಲಿ ಉತ್ತರಿಸಿದೆ';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'ಫೋನ್ ಮಾದರಿ ಉತ್ತರಿಸಲಿಲ್ಲ.';
+
+  @override
+  String get phoneLlmUnauthorized => 'ಫೋನ್ ಮಾದರಿ API ಕೀಯನ್ನು ನಿರಾಕರಿಸಿದೆ.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'ನನ್ನ ಇತ್ತೀಚಿನ ಸಂಭಾಷಣೆಗಳನ್ನು ಸಂದರ್ಭವಾಗಿ ಸೇರಿಸಿ';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'ಈ ಫೋನ್‌ನಲ್ಲಿ ಉತ್ತರಿಸಲಾಗಿದೆ ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'ನಿಮ್ಮ ಸರ್ವರ್‌ನಲ್ಲಿ ಉಳಿಸಲಾಗಿಲ್ಲ. Omi ಮುಚ್ಚುವವರೆಗೆ ಇರುತ್ತದೆ.';
+
+  @override
+  String get phoneLlmAskPhone => 'ಬದಲಿಗೆ ಈ ಫೋನ್ ಅನ್ನು ಕೇಳಿ';
+
+  @override
+  String get phoneLlmReplyFailed => 'ಫೋನ್ ಮಾದರಿ ಉತ್ತರಿಸಲಿಲ್ಲ. ಅದು ಚಾಲನೆಯಲ್ಲಿದೆಯೇ ಎಂದು ಪರಿಶೀಲಿಸಿ.';
+
+  @override
+  String get phoneLlmStatusRunning => 'ಫೋನ್ ಮಾದರಿ ಚಾಲನೆಯಲ್ಲಿದೆ';
+
+  @override
+  String get phoneLlmStatusLoading => 'ಫೋನ್ ಮಾದರಿ ಲೋಡ್ ಆಗುತ್ತಿದೆ';
+
+  @override
+  String get phoneLlmStatusOff => 'ಫೋನ್ ಮಾದರಿ ಆಫ್ ಆಗಿದೆ';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return '$time ಕ್ಕೆ ಪರಿಶೀಲಿಸಲಾಗಿದೆ';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'AI ಮೂಲ: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'ಬದಲಿಸಿ';
+
+  @override
+  String get sendToHermesTitle => 'Hermes ಗೆ ಕಳುಹಿಸಿ';
 }

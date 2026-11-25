@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
 import 'package:omi/backend/http/api/chat_model_shortcuts.dart';
+import 'package:omi/pages/chat/widgets/phone_llm_section.dart';
 import 'package:omi/providers/message_provider.dart';
 import 'package:omi/utils/alerts/app_snackbar.dart';
 import 'package:omi/utils/l10n_extensions.dart';
@@ -141,6 +144,11 @@ class _ChatModelShortcutsSheetState extends State<ChatModelShortcutsSheet> {
                     ),
                   ],
                 ),
+              ],
+              // Android: this phone's own model, shown even when the server has no shortcuts.
+              if (Platform.isAndroid) ...[
+                const SizedBox(height: 24),
+                const PhoneLlmSection(isAndroid: true),
               ],
             ],
           ),

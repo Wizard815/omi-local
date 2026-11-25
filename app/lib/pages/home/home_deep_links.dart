@@ -27,9 +27,12 @@ import 'package:omi/pages/settings/daily_summary_detail_page.dart';
 import 'package:omi/pages/settings/data_privacy_page.dart';
 import 'package:omi/pages/settings/device_settings.dart';
 import 'package:omi/pages/settings/language_settings_page.dart';
+import 'package:omi/pages/settings/phone_llm_settings_page.dart';
 import 'package:omi/pages/settings/wrapped_2025_page.dart';
 import 'package:omi/providers/app_provider.dart';
 import 'package:omi/providers/memories_provider.dart';
+import 'package:omi/services/android_home_widgets.dart';
+import 'package:omi/services/phone_llm/phone_llm_settings.dart';
 import 'package:omi/services/siri_integration.dart';
 import 'package:omi/providers/message_provider.dart';
 import 'package:omi/providers/capture_provider.dart';
@@ -99,6 +102,19 @@ class HomeDeepLink {
     }
     if (segments.length != 2 || !itemLinkKinds.contains(segments[0])) return null;
     return '/${segments[0]}/${Uri.encodeComponent(segments[1])}';
+  }
+
+  /// Studio Own (`com.ekkostudio.own`) opens Omi with `omi://approvals`, `omi://tasks` and
+  /// `omi://capture` (hermes-studio `docs/omi.md`). Returns the in-app route, or null for any other
+  /// link; an unknown host just opens Omi.
+  static String? studioRoute(Uri uri) {
+    if (uri.scheme != 'omi' || uri.pathSegments.any((s) => s.isNotEmpty)) return null;
+    return switch (uri.host.toLowerCase()) {
+      'approvals' => '/approvals',
+      'tasks' => '/action-items',
+      'capture' => '/new-memory',
+      _ => null,
+    };
   }
 
   /// Most items one `/items` link lists; later pairs are ignored.
@@ -190,6 +206,20 @@ Future<bool> openHomeDeepLink(
       unawaited(showMemoryDialog(context, context.read<MemoriesProvider>()));
     case 'approvals':
       unawaited(routeToPage(context, const ApprovalsPage()));
+    // The AI source widget: Switch moves on from the source it showed (`from`; a stale or repeated
+    // tap changes nothing), a tap elsewhere opens the setting.
+    case 'ai-source':
+      if (id == 'next') {
+        final settings = PhoneLlmSettings.instance;
+        await settings.ensureLoaded();
+        final from = link.query['from'];
+        final mode = from == null || from == settings.mode.wire ? await settings.cycleMode() : settings.mode;
+        if (!context.mounted) return false;
+        OmiFeedback.confirm(
+            context, context.l10n.phoneLlmSourceChanged(AndroidWidgetDocuments.sourceLabel(mode, context.l10n)));
+      } else {
+        unawaited(routeToPage(context, const PhoneLlmSettingsPage()));
+      }
     case 'listening':
       final capture = context.read<CaptureProvider>();
       if (id == 'pause') {
