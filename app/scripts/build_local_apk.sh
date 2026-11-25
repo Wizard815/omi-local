@@ -7,6 +7,13 @@
 # keystore (android/app/build.gradle: productFlavors.dev.signingConfig
 # signingConfigs.debug), so no release keystore is needed.
 #
+# --split-per-abi: --target-platform only limits the Dart/Flutter libraries;
+# plugins (onnxruntime, twilio) still bring x86_64 and armeabi-v7a native libs,
+# about 55 MB, and the APK then claims x86_64 too, where it can't find
+# libflutter.so. The split build keeps only arm64-v8a (about 96 MB instead of
+# 152 MB, under GitHub's 100 MB file limit). Flutter adds 2000 to the
+# versionCode for the arm64 split, so it installs over an earlier unsplit build.
+#
 # Usage: app/scripts/build_local_apk.sh [extra flutter build args]
 set -euo pipefail
 
@@ -19,9 +26,10 @@ flutter build apk \
   --target-platform android-arm64 \
   --split-debug-info=build/symbols \
   --obfuscate \
+  --split-per-abi \
   "$@"
 
-APK="$APP_DIR/build/app/outputs/flutter-apk/app-dev-release.apk"
+APK="$APP_DIR/build/app/outputs/flutter-apk/app-arm64-v8a-dev-release.apk"
 if [[ ! -f "$APK" ]]; then
   echo "error: expected APK not found at $APK" >&2
   exit 1

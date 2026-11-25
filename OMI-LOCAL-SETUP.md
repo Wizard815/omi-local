@@ -36,8 +36,8 @@ the Docker-bridge network this dev container sits on.
 # release keystore is needed. Prints the APK path and size.
 app/scripts/build_local_apk.sh
 # from a machine that can reach the repo (or scp the apk straight to the phone):
-adb install -r app/build/app/outputs/flutter-apk/app-dev-release.apk   # path printed by the script
-# or: copy app-dev-release.apk to the phone, open it and tap install
+adb install -r app/build/app/outputs/flutter-apk/app-arm64-v8a-dev-release.apk   # path printed by the script
+# or: copy app-arm64-v8a-dev-release.apk to the phone, open it and tap install
 #     (allow "install unknown apps" for your file manager)
 ```
 
