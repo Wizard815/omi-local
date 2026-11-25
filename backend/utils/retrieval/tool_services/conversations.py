@@ -21,6 +21,7 @@ from utils.conversations.mcp_transcript_search import (
     merge_chat_conversation_ids,
     search_chat_transcript_chunks,
 )
+from utils.conversations.day_rollup import hidden_from_chat, rolled_up_ids
 from utils.conversations.render import conversations_to_string
 from utils.conversations.transcript_for_llm import owner_safe_transcript_segments
 from utils.conversations.search import (
@@ -365,13 +366,15 @@ def search_conversations_text(
 
         # Search indexes can contain stale date metadata; the hydrated document is authoritative.
         conversations_data = [c for c in conversations_data if conversation_matches_date_range(c, starts_at, ends_at)]
+        # A conversation rolled into an approved day is part of that day, not dropped.
+        rolled_up = rolled_up_ids(uid, conversations_data)
         # Count withheld metadata only; locked rows never become model-facing Conversation objects.
         locked_count = sum(
-            1 for row in conversations_data if not row.get('discarded', False) and row.get('is_locked', False)
+            1 for row in conversations_data if not hidden_from_chat(row, rolled_up) and row.get('is_locked', False)
         )
-        discarded_count = sum(1 for row in conversations_data if row.get('discarded', False))
+        discarded_count = sum(1 for row in conversations_data if hidden_from_chat(row, rolled_up))
         conversations_data = [
-            c for c in conversations_data if not c.get('is_locked', False) and not c.get('discarded', False)
+            c for c in conversations_data if not c.get('is_locked', False) and not hidden_from_chat(c, rolled_up)
         ]
         if not conversations_data:
             scope = f" in {_date_scope(start_dt, end_dt, display_clock)}" if start_dt or end_dt else ''
