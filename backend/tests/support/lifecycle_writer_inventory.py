@@ -1362,18 +1362,9 @@ FIELD_SITES = {
         ('_complete_unstampable_orphan_conversation_txn', 'status', "'completed'", ('status',)),
     ],
     'database/conversation_quiet_checks.py': [
-        # Dark quiet-check retirement names the orphan-repair exit; it does
-        # not terminalize the capture or create another arm site.
-        ('_evaluate_quiet_check.evaluate', 'status', "'done'", ('exit', 'reason', 'status')),
         ('_evaluate_quiet_check.evaluate', 'status', "'done'", ('reason', 'status')),
         ('_evaluate_quiet_check.evaluate', 'status', "'done'", ('reason', 'status')),
         ('_evaluate_quiet_check.evaluate', 'status', "'done'", ('status',)),
-        (
-            '_evaluate_quiet_check.evaluate',
-            'status',
-            "'quiet_done'",
-            ('last_failure_code', 'reconcile_after_at', 'status', 'updated_at'),
-        ),
         ('_evaluate_quiet_check.evaluate', 'status', "'quiet_done'", ('reconcile_after_at', 'status', 'updated_at')),
         ('_evaluate_quiet_check.evaluate', 'status', "'quiet_done'", ('reconcile_after_at', 'status', 'updated_at')),
         ('_evaluate_quiet_check.evaluate', 'status', "'quiet_done'", ('reconcile_after_at', 'status', 'updated_at')),
@@ -1388,7 +1379,7 @@ FIELD_SITES = {
         (
             'arm_quiet_check.arm',
             'status',
-            "QUIET_CHECK_STATUS; literal aliases=[('QUIET_CHECK_STATUS', " "('waiting_quiet',))]",
+            "QUIET_CHECK_STATUS; literal aliases=[('QUIET_CHECK_STATUS', ('waiting_quiet',))]",
             (
                 'conversation_id',
                 'created_at',
@@ -3659,12 +3650,6 @@ FIELD_SITES = {
     ],
     'utils/memory/canonical_memory_adapter.py': [
         (
-            'read_canonical_scan_page',
-            'status',
-            "'active'",
-            ('processing_state', 'source_state', 'source_states', 'status', 'tiers'),
-        ),
-        (
             'refine_canonical_memory.build_patch',
             'status',
             'REQUIRED_PROMOTION_STATUS_PENDING',
@@ -4516,6 +4501,66 @@ FIELD_SITES = {
             ('merged_groups', 'status', 'updated_at'),
         ),
     ],
+    # Agent requests (MCP create_calendar_event): a proposed event waits for the user's OK on its own
+    # small completed holder conversation; list_events only projects event status for the read.
+    'utils/agent_calendar.py': [
+        (
+            'list_events',
+            'status',
+            "'on_calendar'",
+            ('all_day', 'calendar', 'description', 'end', 'location', 'source', 'start', 'status', 'title'),
+        ),
+        (
+            'list_events',
+            'status',
+            "status; literal aliases=[('status', ('declined', 'on_calendar', 'waiting_for_approval'))]",
+            (
+                'all_day',
+                'conversation_id',
+                'description',
+                'end',
+                'event_idx',
+                'heard_in',
+                'source',
+                'start',
+                'status',
+                'title',
+            ),
+        ),
+        (
+            'propose_event',
+            'status',
+            "'waiting_for_approval'",
+            ('conversation_id', 'description', 'duration', 'event_idx', 'start', 'status', 'title'),
+        ),
+    ],
+    # Agent jobs (Send to agent): a job document starts queued; no conversation lifecycle write.
+    'utils/agent_jobs.py': [
+        (
+            'create',
+            'status',
+            "'queued'",
+            (
+                'agent_id',
+                'approval',
+                'attach_result',
+                'conversation_ids',
+                'error',
+                'external_id',
+                'prompt',
+                'result',
+                'section',
+                'status',
+                'target',
+                'task_id',
+                'title',
+            ),
+        ),
+    ],
+    # Self-hosted background processing: a failed attempt re-arms the deferred row as processing.
+    'utils/local_processing_worker.py': [
+        ('run_one', 'status', 'ConversationStatus.processing', ('status',)),
+    ],
 }
 
 # Phase 3 baseline reviewed against origin/main 148bf4c1c57073dba4ec9a750415f2c72f5adb87.
@@ -4526,6 +4571,8 @@ KNOWN_TERMINAL_WRITERS = {
     'conversation': {
         ('database/conversation_finalization_jobs.py', '_apply_snapshot_bound_projection'): 'unclassified',
         ('database/conversation_recorded_time.py', 'create_if_absent.create'): 'unclassified',
+        # MCP create_calendar_event: the holder conversation of an agent's proposal, created completed.
+        ('utils/agent_calendar.py', 'propose_event'): 'unclassified',
         ('database/conversations.py', 'release_share_email_recipients'): 'unclassified',
         ('database/review_transcript_changes.py', 'record_change.build.write'): 'unclassified',
         ('database/review_transcript_changes.py', 'set_undone.build.write'): 'unclassified',
