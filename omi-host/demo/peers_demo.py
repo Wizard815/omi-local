@@ -85,7 +85,7 @@ class PeersDemo:
     def faith(self, calls: list) -> Dict[str, Any]:
         with tempfile.TemporaryDirectory() as tmp:
             text = open(os.path.join(REPO, 'omi-host/examples/faith/omi-connector.yaml')).read()
-            text = text.replace('url: http://192.168.1.5:8000/v1/mcp', f"url: {self.args.backend.rstrip('/')}/v1/mcp")
+            text = text.replace('url: http://<omi-host>:8000/v1/mcp', f"url: {self.args.backend.rstrip('/')}/v1/mcp")
             with open(os.path.join(tmp, 'omi.yaml'), 'w') as handle:
                 handle.write(text)
             with open(os.path.join(tmp, 'calls.json'), 'w') as handle:

@@ -25,7 +25,7 @@ a bearer token per view, which is exactly what Omi's MCP server takes. No FAITH 
    ```yaml
      - id: omi
        type: mcp
-       url: http://192.168.1.5:8000/v1/mcp
+       url: http://<omi-host>:8000/v1/mcp
        description: "Omi: what this person heard and approved: conversations, approved day summaries, tasks, calendar, memories"
        person_token_env: OMI_MCP_KEY_{ID}
        roles: [admin, adult]
