@@ -1,14 +1,16 @@
 """Send to agent (omi-local): Odysseus for simple asks, Hermes for agentic jobs (its approval
-questions answered from Omi), Studio for coding agents (results on its signed webhook).
+questions answered from Omi), Studio for coding agents (results on its signed webhook, its
+Agent work approvals answered from Omi with a Studio key made for Omi).
 
 Fakes: tests/unit/fixtures/outbound_fakes.py, shaped after hermes-agent api_server_runs.py
 (POST /v1/runs -> 202 {run_id}; GET /v1/runs/{id}; POST /v1/runs/{id}/approval), odysseus
-routes/session_routes.py + routes/chat_routes.py, and hermes-studio controllers/orb.ts +
-services/webhooks/dispatcher.ts."""
+routes/session_routes.py + routes/chat_routes.py, and hermes-studio controllers/orb.ts,
+services/webhooks/dispatcher.ts, services/omi/ and services/agent-work/service.ts."""
 
 import hashlib
 import hmac
 import json
+import logging
 import os
 import time
 from datetime import datetime, timedelta, timezone
@@ -71,6 +73,7 @@ def env(monkeypatch):
         'ODYSSEUS_URL',
         'ODYSSEUS_API_TOKEN',
         'STUDIO_URL',
+        'STUDIO_API_KEY',
         'STUDIO_WEBHOOK_SECRET',
     ):
         monkeypatch.delenv(name, raising=False)
@@ -359,3 +362,202 @@ def test_the_approvals_banner_lists_the_agents_questions(env, monkeypatch):
     jobs_db.create('u1', 'j-done', {'target': 'hermes', 'title': 'Other', 'status': 'completed'})
     summary = WaitingForApprovalResponse.model_validate(auto_approve.waiting_summary('u1'))
     assert [j.id for j in summary.agent_jobs] == ['j-ask'] and summary.agent_jobs[0].approval.command == 'rm x'
+
+
+# ---- Studio key, signature and Agent work approvals ---------------------------------------------
+
+
+def test_the_studio_key_signature_matches_a_vector_from_studios_own_signer():
+    # Made with dispatcher.ts signChatWebhookPayload (node crypto): JSON.stringify output, UTF-8.
+    raw = (
+        '{"schema_version":1,"type":"chat.run.completed","subject":{"session_id":"studio-sess-1"},'
+        '"message":{"role":"assistant","text":"Fertig \u2014 3 Bretter \u2713","truncated":false}}'
+    ).encode()
+    raw = json.dumps(json.loads(raw), ensure_ascii=False, separators=(',', ':')).encode()
+    sig = 'sha256=ce5e227768362409c99c8c64d52cb5af798492eb7072ef85e14c5738932d320b'
+    assert agent_jobs.verify_studio_signature('whsec-\u00f6l-1', '1764000000', raw, sig, now=1764000010)
+    assert not agent_jobs.verify_studio_signature('whsec-\u00f6l-1', '1764000000', raw + b' ', sig, now=1764000010)
+    assert not agent_jobs.verify_studio_signature('whsec-\u00f6l-1', '1764000001', raw, sig, now=1764000010)
+    assert not agent_jobs.verify_studio_signature('whsec-\u00f6l-1', 'soon', raw, sig, now=1764000010)
+    assert not agent_jobs.verify_studio_signature('whsec-\u00f6l-1', '1764000000', raw, sig[7:], now=1764000010)
+
+
+async def _studio_job(studio, prompt='Merge the shelf branch'):
+    job = await agent_jobs.create('u1', {'target': 'studio', 'prompt': prompt})
+    assert job['status'] == 'running', job.get('error')
+    return job
+
+
+@pytest.mark.asyncio
+async def test_the_studio_key_comes_from_the_stack_and_the_apps_own_token_wins(client, env, monkeypatch, caplog):
+    studio = StudioFake()
+    try:
+        monkeypatch.setenv('STUDIO_URL', studio.url)
+        monkeypatch.setenv('STUDIO_API_KEY', studio.token)
+        settings_db.set_target('u1', 'studio', {'enabled': True})
+        caplog.set_level(logging.DEBUG)
+        await _studio_job(studio)
+        sent = studio.server.requests[-1]
+        assert sent.headers['Authorization'] == f'Bearer {studio.token}'
+        assert studio.token not in sent.path and not sent.query  # never in the URL
+        shown = client.get('/v1/agent-jobs/studio/approvals')
+        assert shown.status_code == 200 and studio.token not in shown.text
+        assert studio.token not in caplog.text
+
+        # The person's own token (Settings > Connections > Studio) wins over the stack's.
+        settings_db.set_target('u1', 'studio', {}, secrets={'token': 'sk-studio-omi-mine'})
+        out = client.get('/v1/agent-jobs/studio/approvals').json()
+        assert studio.server.requests[-1].headers['Authorization'] == 'Bearer sk-studio-omi-mine'
+        assert out['approvals'] == [] and 'not valid any more' in out['error']
+    finally:
+        studio.close()
+
+
+@pytest.mark.asyncio
+async def test_studio_events_must_be_signed_with_the_webhook_secret(client, env, monkeypatch):
+    studio = StudioFake()
+    try:
+        settings_db.set_target('u1', 'studio', {'enabled': True, 'url': studio.url}, secrets={'token': studio.token})
+        job = await _studio_job(studio)
+        raw = json.dumps(
+            {'type': 'chat.run.completed', 'subject': {'session_id': job['external_id']}, 'message': {'text': 'ok'}}
+        ).encode()
+        # No secret set anywhere: even a "signed" call is refused.
+        assert client.post('/v1/integrations/studio/events', content=raw, headers=_signed('x', raw)).status_code == 401
+        monkeypatch.setenv('STUDIO_WEBHOOK_SECRET', 'from-the-stack')
+        unsigned = client.post('/v1/integrations/studio/events', content=raw, headers={'X-Hermes-Timestamp': '1'})
+        assert unsigned.status_code == 401
+        no_time = _signed('from-the-stack', raw)
+        no_time.pop('X-Hermes-Timestamp')
+        assert client.post('/v1/integrations/studio/events', content=raw, headers=no_time).status_code == 401
+        bad = client.post('/v1/integrations/studio/events', content=raw, headers=_signed('other', raw))
+        assert bad.status_code == 401 and jobs_db.get('u1', job['id'])['status'] == 'running'
+        # The secret saved in the app wins over the stack's.
+        settings_db.set_target('u1', 'studio', {}, secrets={'webhook_secret': 'from-the-app'})
+        stack = client.post('/v1/integrations/studio/events', content=raw, headers=_signed('from-the-stack', raw))
+        assert stack.status_code == 401
+        ok = client.post('/v1/integrations/studio/events', content=raw, headers=_signed('from-the-app', raw))
+        assert ok.status_code == 200 and jobs_db.get('u1', job['id'])['result'] == 'ok'
+    finally:
+        studio.close()
+
+
+@pytest.mark.asyncio
+async def test_studio_approvals_are_listed_and_answered_from_omi(client, env):
+    studio = StudioFake()
+    try:
+        assert client.get('/v1/agent-jobs/studio/approvals').json() == {'approvals': [], 'error': ''}  # Studio off
+        settings_db.set_target('u1', 'studio', {'enabled': True, 'url': studio.url}, secrets={'token': studio.token})
+        job = await _studio_job(studio)
+        studio.add_agent_work('aw-1', job['external_id'], title='Merge shelves', summary='Tests pass')
+        studio.add_agent_work('aw-other', 'someone-elses-chat')  # Studio itself hides this from Omi
+        studio.add_agent_work('aw-done', job['external_id'], status='done')
+
+        listed = client.get('/v1/agent-jobs/studio/approvals').json()
+        assert listed['error'] == ''
+        assert [a['id'] for a in listed['approvals']] == ['aw-1']
+        first = listed['approvals'][0]
+        assert first['title'] == 'Merge shelves' and first['summary'] == 'Tests pass'
+        assert first['job_id'] == job['id'] and first['job_title'] == job['title']
+        assert first['created_at'].startswith('2025-11-24')
+        assert studio.server.requests[-1].path == '/api/studio/omi/approvals'
+
+        answered = client.post('/v1/agent-jobs/studio/approvals/aw-1', json={'decision': 'approve', 'by': 'Robin'})
+        assert answered.status_code == 200
+        out = answered.json()
+        assert out['ok'] and out['changed'] and not out['already_answered'] and out['message'] == 'Approved.'
+        assert out['approval']['decided_via'] == 'omi' and out['approval']['decided_by'] == 'Robin (Omi)'
+        call = studio.server.requests[-1]
+        assert (call.method, call.path, call.json()) == ('POST', '/api/studio/agent-work/aw-1/approve', {'by': 'Robin'})
+        assert call.headers['Authorization'] == f'Bearer {studio.token}'
+        assert client.get('/v1/agent-jobs/studio/approvals').json()['approvals'] == []
+
+        # Without a name, Studio names the key.
+        studio.add_agent_work('aw-2', job['external_id'])
+        assert [a['id'] for a in client.get('/v1/agent-jobs/studio/approvals').json()['approvals']] == ['aw-2']
+        out = client.post('/v1/agent-jobs/studio/approvals/aw-2', json={'decision': 'reject'}).json()
+        assert studio.server.requests[-1].json() == {}
+        assert (
+            out['ok']
+            and out['approval']['decision'] == 'rejected'
+            and out['approval']['decided_by'] == 'Omi (omi-home)'
+        )
+    finally:
+        studio.close()
+
+
+@pytest.mark.asyncio
+async def test_an_approval_answered_elsewhere_says_who_answered(client, env):
+    studio = StudioFake()
+    try:
+        settings_db.set_target('u1', 'studio', {'enabled': True, 'url': studio.url}, secrets={'token': studio.token})
+        job = await _studio_job(studio)
+        studio.add_agent_work('aw-1', job['external_id'])
+        studio.add_agent_work('aw-2', job['external_id'])
+        assert len(client.get('/v1/agent-jobs/studio/approvals').json()['approvals']) == 2
+        studio.decide('aw-1', 'approved', 'studio', 'Robin')  # in Studio, while Omi still shows it
+        out = client.post('/v1/agent-jobs/studio/approvals/aw-1', json={'decision': 'reject'}).json()
+        assert not out['ok'] and out['already_answered'] and not out['changed']
+        assert out['message'] == 'Already approved in Studio by Robin.'
+        assert out['approval']['decided_via'] == 'studio' and out['approval']['decided_by'] == 'Robin'
+
+        # Moved on in Studio without anyone's answer: Studio's 409, in its own words.
+        studio.agent_work['aw-2']['status'] = 'working'
+        out = client.post('/v1/agent-jobs/studio/approvals/aw-2', json={'decision': 'approve'}).json()
+        assert (
+            out['already_answered']
+            and not out['ok']
+            and out['message'] == 'This work is working, not awaiting approval'
+        )
+
+        # Never listed for this person (here: a chat Omi did not start): not sent to Studio at all.
+        studio.add_agent_work('aw-3', 'someone-elses-chat')
+        calls = len(studio.server.requests)
+        missing = client.post('/v1/agent-jobs/studio/approvals/aw-3', json={'decision': 'approve'})
+        assert missing.status_code == 404 and studio.agent_work['aw-3']['decision'] == ''
+        assert len(studio.server.requests) == calls
+        bad_id = client.post('/v1/agent-jobs/studio/approvals/a.b', json={'decision': 'approve'})
+        assert bad_id.status_code == 404
+        assert client.post('/v1/agent-jobs/studio/approvals/aw-1', json={'decision': 'maybe'}).status_code == 422
+    finally:
+        studio.close()
+
+
+@pytest.mark.asyncio
+async def test_a_refused_studio_key_is_reported_not_hidden(client, env):
+    studio = StudioFake()
+    try:
+        settings_db.set_target('u1', 'studio', {'enabled': True, 'url': studio.url}, secrets={'token': studio.token})
+        job = await _studio_job(studio)
+        studio.add_agent_work('aw-1', job['external_id'])
+        client.get('/v1/agent-jobs/studio/approvals')
+        studio.token = 'sk-studio-omi-revoked'
+        out = client.post('/v1/agent-jobs/studio/approvals/aw-1', json={'decision': 'approve'})
+        assert out.status_code == 502 and 'Studio refused the key' in out.json()['detail']
+        settings_db.set_target('u1', 'studio', {'enabled': False})
+        off = client.post('/v1/agent-jobs/studio/approvals/aw-1', json={'decision': 'approve'})
+        assert off.status_code == 409 and 'Connections' in off.json()['detail']
+    finally:
+        studio.close()
+
+
+@pytest.mark.asyncio
+async def test_a_household_studio_key_shows_each_person_only_their_own_approvals(env, monkeypatch):
+    studio = StudioFake()
+    try:
+        monkeypatch.setenv('STUDIO_URL', studio.url)
+        monkeypatch.setenv('STUDIO_API_KEY', studio.token)
+        for uid in ('u1', 'u2'):
+            settings_db.set_target(uid, 'studio', {'enabled': True})
+        job = await _studio_job(studio)  # u1's chat
+        studio.add_agent_work('aw-1', job['external_id'])
+        app = FastAPI()
+        app.include_router(router_module.router)
+        app.dependency_overrides[auth.get_current_user_uid] = lambda: 'u2'
+        other = TestClient(app)
+        assert other.get('/v1/agent-jobs/studio/approvals').json() == {'approvals': [], 'error': ''}
+        refused = other.post('/v1/agent-jobs/studio/approvals/aw-1', json={'decision': 'approve'})
+        assert refused.status_code == 404 and studio.agent_work['aw-1']['status'] == 'awaiting_approval'
+        assert (await agent_jobs.studio_approvals('u1'))['approvals'][0]['id'] == 'aw-1'
+    finally:
+        studio.close()

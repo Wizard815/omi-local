@@ -2351,6 +2351,36 @@
         "title": "AnswerAgentApprovalRequest",
         "type": "object"
       },
+      "AnswerStudioApprovalRequest": {
+        "properties": {
+          "by": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Who answers, as Studio shows it",
+            "title": "By"
+          },
+          "decision": {
+            "enum": [
+              "approve",
+              "reject"
+            ],
+            "title": "Decision",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision"
+        ],
+        "title": "AnswerStudioApprovalRequest",
+        "type": "object"
+      },
       "App": {
         "description": "Full App model - includes large/internal fields for detail views.",
         "properties": {
@@ -38343,6 +38373,150 @@
         "title": "SttAvailabilityResponse",
         "type": "object"
       },
+      "StudioApproval": {
+        "description": "Agent work in a Studio chat Omi started, waiting for an approval (Studio's AgentWork).",
+        "properties": {
+          "agent": {
+            "default": "",
+            "description": "The Studio agent doing the work",
+            "title": "Agent",
+            "type": "string"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "decided_by": {
+            "default": "",
+            "description": "Who answered",
+            "title": "Decided By",
+            "type": "string"
+          },
+          "decided_via": {
+            "default": "",
+            "description": "Where it was answered: studio, mattermost, orb or omi",
+            "title": "Decided Via",
+            "type": "string"
+          },
+          "decision": {
+            "default": "",
+            "description": "'approved' or 'rejected' once someone answered",
+            "title": "Decision",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "job_id": {
+            "default": "",
+            "description": "The Omi agent job that started this chat, if it is one of the user's",
+            "title": "Job Id",
+            "type": "string"
+          },
+          "job_title": {
+            "default": "",
+            "title": "Job Title",
+            "type": "string"
+          },
+          "session_id": {
+            "default": "",
+            "description": "The Studio chat",
+            "title": "Session Id",
+            "type": "string"
+          },
+          "status": {
+            "default": "",
+            "description": "Studio's state: 'awaiting_approval' while it waits",
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "default": "",
+            "description": "What the agent says it did or wants to do",
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "StudioApproval",
+        "type": "object"
+      },
+      "StudioApprovalAnswerResponse": {
+        "properties": {
+          "already_answered": {
+            "default": false,
+            "description": "Someone answered first, or the work moved on: `message` says who or why",
+            "title": "Already Answered",
+            "type": "boolean"
+          },
+          "approval": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StudioApproval"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "changed": {
+            "default": false,
+            "title": "Changed",
+            "type": "boolean"
+          },
+          "message": {
+            "default": "",
+            "description": "Studio's words, e.g. \"Already approved in Studio by Robin.\"",
+            "title": "Message",
+            "type": "string"
+          },
+          "ok": {
+            "description": "This answer was the one that counted",
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "StudioApprovalAnswerResponse",
+        "type": "object"
+      },
+      "StudioApprovalsResponse": {
+        "properties": {
+          "approvals": {
+            "items": {
+              "$ref": "#/components/schemas/StudioApproval"
+            },
+            "title": "Approvals",
+            "type": "array"
+          },
+          "error": {
+            "default": "",
+            "description": "Why Studio's approvals could not be read (Studio itself is on)",
+            "title": "Error",
+            "type": "string"
+          }
+        },
+        "title": "StudioApprovalsResponse",
+        "type": "object"
+      },
       "StudioOutboundSettings": {
         "properties": {
           "default_agent": {
@@ -48160,6 +48334,181 @@
           }
         ],
         "summary": "Preview Agent Job",
+        "tags": [
+          "agent-jobs"
+        ]
+      }
+    },
+    "/v1/agent-jobs/studio/approvals": {
+      "get": {
+        "description": "Studio's Agent work waiting for approval in the chats Omi started (empty while Studio is off).",
+        "operationId": "list_studio_approvals_v1_agent_jobs_studio_approvals_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioApprovalsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "List Studio Approvals",
+        "tags": [
+          "agent-jobs"
+        ]
+      }
+    },
+    "/v1/agent-jobs/studio/approvals/{work_id}": {
+      "post": {
+        "description": "Approve or reject in Studio. If someone answered first, ``already_answered`` and Studio's\n``message`` say who.",
+        "operationId": "answer_studio_approval_v1_agent_jobs_studio_approvals__work_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "work_id",
+            "required": true,
+            "schema": {
+              "title": "Work Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnswerStudioApprovalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioApprovalAnswerResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Answer Studio Approval",
         "tags": [
           "agent-jobs"
         ]

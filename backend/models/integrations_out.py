@@ -277,3 +277,40 @@ class AnswerAgentApprovalRequest(BaseModel):
 class StudioEventResponse(BaseModel):
     ok: bool
     job_id: str = ''
+
+
+class StudioApproval(BaseModel):
+    """Agent work in a Studio chat Omi started, waiting for an approval (Studio's AgentWork)."""
+
+    id: str
+    title: str = ''
+    agent: str = Field(default='', description='The Studio agent doing the work')
+    summary: str = Field(default='', description='What the agent says it did or wants to do')
+    status: str = Field(default='', description="Studio's state: 'awaiting_approval' while it waits")
+    session_id: str = Field(default='', description='The Studio chat')
+    decision: str = Field(default='', description="'approved' or 'rejected' once someone answered")
+    decided_via: str = Field(default='', description='Where it was answered: studio, mattermost, orb or omi')
+    decided_by: str = Field(default='', description='Who answered')
+    job_id: str = Field(default='', description="The Omi agent job that started this chat, if it is one of the user's")
+    job_title: str = ''
+    created_at: Optional[datetime] = None
+
+
+class StudioApprovalsResponse(BaseModel):
+    approvals: List[StudioApproval] = Field(default_factory=list)
+    error: str = Field(default='', description="Why Studio's approvals could not be read (Studio itself is on)")
+
+
+class AnswerStudioApprovalRequest(BaseModel):
+    decision: Literal['approve', 'reject']
+    by: Optional[str] = Field(default=None, max_length=60, description='Who answers, as Studio shows it')
+
+
+class StudioApprovalAnswerResponse(BaseModel):
+    ok: bool = Field(description='This answer was the one that counted')
+    changed: bool = False
+    already_answered: bool = Field(
+        default=False, description='Someone answered first, or the work moved on: `message` says who or why'
+    )
+    message: str = Field(default='', description="Studio's words, e.g. \"Already approved in Studio by Robin.\"")
+    approval: Optional[StudioApproval] = None

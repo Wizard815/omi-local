@@ -100,6 +100,11 @@ SCHEMA_GROUPS = {
             'AgentJobsResponse',
             'AgentJobResponse',
             'AnswerAgentApprovalRequest',
+            # Studio's Agent work approvals in Omi's chats, answered from Omi.
+            'StudioApproval',
+            'StudioApprovalsResponse',
+            'AnswerStudioApprovalRequest',
+            'StudioApprovalAnswerResponse',
         ),
     },
     **additional_schema_groups(DEFAULT_OUTPUT_DIR),

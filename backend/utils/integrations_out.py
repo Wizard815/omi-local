@@ -6,7 +6,9 @@ Targets and what each is for:
   conversations become sources in the user's own folder (utils/wiki_outbound.py);
 - odysseus (self-hosted AI workspace): simple asks, one chat turn (utils/agent_jobs.py);
 - hermes (Hermes Agent's API server): agentic jobs as runs, their approvals answered in Omi;
-- studio (Ekko / Hermes Studio): coding agents through /api/studio/orb/work;
+- studio (Ekko / Hermes Studio): coding agents through /api/studio/orb/work, with a Studio key
+  made for Omi (``sk-studio-omi-…``, Studio: Connections → Omi); Omi also lists and answers the
+  Agent work approvals in Omi's Studio chats (utils/agent_jobs.py);
 - coinpile: a money note or transaction, which Coinpile asks about again on its side;
 - orb (Pondering Orb): an optional log line when a day is approved.
 
@@ -17,8 +19,9 @@ tap after a preview.
 
 Each target can take its address (and, for Hermes and Odysseus, a household token) from the
 stack's env (omi-host/docker-compose.yml): LLMWIKI_URL, HERMES_API_URL / HERMES_API_KEY,
-ODYSSEUS_URL / ODYSSEUS_API_TOKEN, STUDIO_URL (+ STUDIO_WEBHOOK_SECRET for results),
-COINPILE_URL, ORB_URL. The user's own address and token win.
+ODYSSEUS_URL / ODYSSEUS_API_TOKEN, STUDIO_URL / STUDIO_API_KEY (+ STUDIO_WEBHOOK_SECRET for
+results), COINPILE_URL, ORB_URL. The user's own address, token and webhook secret (Settings >
+Connections) win over the stack's. Tokens and secrets are never logged or returned.
 """
 
 from __future__ import annotations
@@ -39,7 +42,7 @@ ENV: Dict[str, Tuple[str, Optional[str]]] = {
     'wiki': ('LLMWIKI_URL', None),
     'hermes': ('HERMES_API_URL', 'HERMES_API_KEY'),
     'odysseus': ('ODYSSEUS_URL', 'ODYSSEUS_API_TOKEN'),
-    'studio': ('STUDIO_URL', None),
+    'studio': ('STUDIO_URL', 'STUDIO_API_KEY'),
     'coinpile': ('COINPILE_URL', None),
     'orb': ('ORB_URL', None),
 }

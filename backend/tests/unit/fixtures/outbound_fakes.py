@@ -14,7 +14,12 @@ where (paths are in the Wizard815 repositories):
   {id,name,model}), routes/chat_routes.py chat_endpoint (JSON {message,session} ->
   {response,model,...}); auth app.py AuthMiddleware ("Bearer ody_...");
 - Studio: hermes-studio/packages/server/src/modules/studio/controllers/orb.ts startWork
-  ({work:{sessionId,status,...}}), services/webhooks/dispatcher.ts signChatWebhookPayload;
+  ({work:{sessionId,status,...}}), services/webhooks/dispatcher.ts signChatWebhookPayload,
+  services/omi/scope.ts + key-auth.ts (an ``sk-studio-omi-`` key only in the Authorization
+  header, only on Omi's paths: else 403/401), services/omi/service.ts approvals/decide (work in
+  a chat Omi did not start is 404) and services/agent-work/service.ts decide ({work, changed,
+  message}; the first answer wins, later ones get "Already approved in Studio by Robin."; work no
+  longer awaiting approval without a decision is 409);
 - Coinpile: coinpile/src/coinpile/agent.py mcp_handle (change tools answer an action_id and
   a note that nothing changed until Yes);
 - Orb: pondering-orb/server/src/tools.ts orb_add_log ({project,text}).
@@ -24,6 +29,7 @@ from __future__ import annotations
 
 import copy
 import json
+import re
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -371,19 +377,67 @@ class OdysseusFake:
 
 
 class StudioFake:
-    """Studio /api/studio/orb/work (admin JWT): starts a chat and answers {work:{sessionId,...}}."""
+    """Studio with a Studio key made for Omi: /api/studio/orb/work (start, list), Omi's Agent work
+    approvals and their approve/reject, answering like Studio (see the module docstring)."""
 
-    def __init__(self, token: str = 'studio-jwt'):
+    VIA_WORDS = {'studio': 'Studio', 'mattermost': 'Mattermost', 'orb': 'Pondering Orb', 'omi': 'Omi'}
+    ALLOWED = (
+        ('GET', re.compile(r'^/api/studio/(?:omi|orb)/work/?$')),
+        ('POST', re.compile(r'^/api/studio/(?:omi|orb)/work/?$')),
+        ('GET', re.compile(r'^/api/studio/omi/approvals/?$')),
+        ('POST', re.compile(r'^/api/studio/agent-work/[A-Za-z0-9_-]{1,80}/(?:approve|reject)/?$')),
+    )
+
+    def __init__(self, token: str = 'sk-studio-omi-test0123456789', key_name: str = 'omi-home'):
         self.token = token
+        self.key_name = key_name
         self.work: List[Dict[str, Any]] = []
+        self.agent_work: Dict[str, Dict[str, Any]] = {}
         self.server = FakeServer(self._respond)
 
+    def add_agent_work(self, work_id: str, session_id: str, **fields: Any) -> Dict[str, Any]:
+        row = {
+            'id': work_id,
+            'title': fields.pop('title', 'Merge the shelf branch'),
+            'vikunjaTaskId': '',
+            'agent': fields.pop('agent', 'claude-code'),
+            'sessionId': session_id,
+            'status': fields.pop('status', 'awaiting_approval'),
+            'summary': fields.pop('summary', 'Tests pass; ready to merge.'),
+            'decision': '',
+            'decidedVia': '',
+            'decidedBy': '',
+            'decidedAt': 0,
+            'createdAt': 1764000000000,
+            'updatedAt': 1764000000000,
+            **fields,
+        }
+        self.agent_work[work_id] = row
+        return row
+
+    def decide(self, work_id: str, verdict: str, via: str, by: str) -> None:
+        """Someone answers elsewhere (Studio, Mattermost, Orb)."""
+        row = self.agent_work[work_id]
+        row.update(
+            status='done' if verdict == 'approved' else 'rejected', decision=verdict, decidedVia=via, decidedBy=by
+        )
+
+    def _omi_session(self, session_id: str) -> bool:
+        return any(w.get('sessionId') == session_id for w in self.work)
+
     def _respond(self, rec: Recorded) -> Tuple[int, Any]:
-        if rec.headers.get('Authorization') != f'Bearer {self.token}':
-            return 401, {'error': 'Sign in to Studio first'}
-        if rec.path == '/api/studio/orb/work' and rec.method == 'GET':
+        header = rec.headers.get('Authorization') or ''
+        if any(v and v[0].startswith('sk-studio-omi-') for v in rec.query.values()):
+            return 401, {'error': 'Send the Omi key in the Authorization header.'}
+        if header != f'Bearer {self.token}':
+            return 401, {'error': 'This Omi key is not valid any more. Make a new one in Studio: Connections → Omi.'}
+        if not any(m == rec.method and p.match(rec.path) for m, p in self.ALLOWED):
+            return 403, {
+                'error': "This key is for Omi: it can only start and follow Omi's work chats and answer their approvals."
+            }
+        if rec.path.endswith('/work') and rec.method == 'GET':
             return 200, {'work': self.work}
-        if rec.path == '/api/studio/orb/work' and rec.method == 'POST':
+        if rec.path.endswith('/work') and rec.method == 'POST':
             body = rec.json()
             item = {
                 'sessionId': f'studio-sess-{len(self.work) + 1}',
@@ -396,7 +450,27 @@ class StudioFake:
             }
             self.work.insert(0, item)
             return 200, {'work': item}
-        return 404, {'error': 'not found'}
+        if rec.path == '/api/studio/omi/approvals':
+            waiting = [
+                w
+                for w in self.agent_work.values()
+                if w['status'] == 'awaiting_approval' and self._omi_session(w['sessionId'])
+            ]
+            return 200, {'approvals': waiting}
+        _, _, _, _, work_id, decision = rec.path.rstrip('/').split('/')
+        row = self.agent_work.get(work_id)
+        if row is None or not self._omi_session(row['sessionId']):
+            return 404, {'error': 'No such agent work'}
+        by = str((rec.json() or {}).get('by') or '').strip()[:60]
+        if row['status'] != 'awaiting_approval':
+            if row['decision']:
+                who = f" by {row['decidedBy']}" if row['decidedBy'] else ''
+                message = f"Already {row['decision']} in {self.VIA_WORDS[row['decidedVia']]}{who}."
+                return 200, {'work': row, 'changed': False, 'message': message}
+            return 409, {'error': f"This work is {row['status']}, not awaiting approval"}
+        verdict = 'approved' if decision == 'approve' else 'rejected'
+        self.decide(work_id, verdict, 'omi', f'{by} (Omi)' if by else f'Omi ({self.key_name})')
+        return 200, {'work': row, 'changed': True, 'message': f'{verdict.capitalize()}.'}
 
     @property
     def url(self) -> str:

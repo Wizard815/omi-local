@@ -15,10 +15,16 @@ Routing (the app suggests, the user picks):
   ``waiting_for_approval`` is kept (unlike the chat bridge, which stops it): the question shows in
   Omi's Approvals and the user's answer goes to ``POST /v1/runs/{id}/approval {choice, request_id}``.
 - **Studio** (Ekko / Hermes Studio) for coding agents: ``POST /api/studio/orb/work {agentId,
-  title, prompt, workspace?}`` (admin JWT) starts a Studio chat; its result arrives on Omi's
-  signed webhook (``POST /v1/integrations/studio/events``, X-Hermes-Signature-256 =
-  sha256 HMAC of "<timestamp>.<body>", services/webhooks/dispatcher.ts), and Omi also polls
-  ``GET /api/studio/orb/work`` for the status. A Studio approval is answered in Studio.
+  title, prompt, workspace?}`` with a Studio key made for Omi (``Authorization: Bearer
+  sk-studio-omi-…``; Studio's services/omi/scope.ts) starts a Studio chat; its result arrives on
+  Omi's signed webhook (``POST /v1/integrations/studio/events``, X-Hermes-Signature-256 =
+  ``sha256=`` + hex HMAC-SHA256 of "<X-Hermes-Timestamp>.<raw body>",
+  services/webhooks/dispatcher.ts signChatWebhookPayload), and Omi also polls
+  ``GET /api/studio/orb/work`` for the status. A chat's own command question ("Allow once /
+  Deny") is answered in Studio. Agent work approvals in Omi's chats are listed from
+  ``GET /api/studio/omi/approvals`` and answered with ``POST /api/studio/agent-work/<id>/approve``
+  or ``/reject`` ``{by}``; the first answer anywhere wins, and a later one gets Studio's
+  "Already approved in Studio by …" (services/agent-work/service.ts decide).
 
 herdr is not a target: Studio's coding agents or a Hermes skill on the herdr host reach it.
 
@@ -33,6 +39,7 @@ import hashlib
 import hmac
 import json
 import logging
+import re
 import time
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -48,7 +55,7 @@ from models.conversation import Conversation
 from utils import day_review_service, integrations_out
 from utils.executors import db_executor, run_blocking, start_background_task
 from utils.notification_dispatch import dispatch_agent_job
-from utils.outbound_http import OutboundError, error_text, request_ok
+from utils.outbound_http import OutboundError, error_text, request, request_ok
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +67,11 @@ GIVE_UP_AFTER = timedelta(hours=24)
 ODYSSEUS_TIMEOUT_SECONDS = 180.0
 ODYSSEUS_STALE_CLAIM = timedelta(minutes=10)
 STUDIO_SIGNATURE_MAX_AGE_SECONDS = 300
+STUDIO_APPROVALS_TIMEOUT_SECONDS = 10.0
+STUDIO_JOBS_LOOKBACK = 100
+STUDIO_WORK_IDS_KEPT = 20
+# Studio's key scope only allows these ids on /api/studio/agent-work/<id>/approve|reject.
+STUDIO_WORK_ID = re.compile(r'^[A-Za-z0-9_-]{1,80}$')
 SHORT_ASK_CHARS = 300
 RESULT_MAX_CHARS = 20_000
 
@@ -593,6 +605,8 @@ def verify_studio_signature(
 async def studio_event(raw_body: bytes, headers: Dict[str, str]) -> Tuple[int, str]:
     """A signed Studio webhook. Returns (http status, job id). Unknown chats and bad signatures
     look the same (401) to the sender."""
+    if not headers.get('x-hermes-signature-256') or not headers.get('x-hermes-timestamp'):
+        return 401, ''  # unsigned: refused before anything is looked up
     try:
         event = json.loads(raw_body.decode() or '{}')
     except ValueError:
@@ -635,3 +649,138 @@ async def studio_event(raw_body: bytes, headers: Dict[str, str]) -> Tuple[int, s
             },
         )
     return 200, job_id
+
+
+# ---- Studio's Agent work approvals, answered from Omi ------------------------------------------
+
+
+def _ms_time(value: Any) -> Optional[datetime]:
+    """Studio's times are epoch milliseconds."""
+    if isinstance(value, (int, float)) and value > 0:
+        return datetime.fromtimestamp(value / 1000, tz=timezone.utc)
+    return None
+
+
+def _studio_jobs_by_session(uid: str) -> Dict[str, Dict[str, Any]]:
+    """This user's Studio jobs by their Studio chat. A household key (STUDIO_API_KEY) sees every
+    Omi chat in Studio; Omi shows and answers only the ones this user started."""
+    return {
+        str(j.get('external_id')): j
+        for j in jobs_db.list_recent(uid, limit=STUDIO_JOBS_LOOKBACK)
+        if j.get('target') == 'studio' and j.get('external_id')
+    }
+
+
+def _remember_studio_work(uid: str, job: Dict[str, Any], work_id: str) -> None:
+    """The approval was shown to this user: only such ids may be answered by them."""
+    ids = list(job.get('studio_work_ids') or [])
+    if work_id not in ids:
+        job['studio_work_ids'] = (ids + [work_id])[-STUDIO_WORK_IDS_KEPT:]
+        jobs_db.update(uid, job['id'], {'studio_work_ids': job['studio_work_ids']})
+
+
+def _job_for_studio_work(uid: str, work_id: str) -> Optional[Dict[str, Any]]:
+    return next((j for j in _studio_jobs_by_session(uid).values() if work_id in (j.get('studio_work_ids') or [])), None)
+
+
+def studio_work(work: Dict[str, Any], jobs: Optional[Dict[str, Dict[str, Any]]] = None) -> Dict[str, Any]:
+    """One Studio AgentWork (services/agent-work/store.ts) as Omi shows it, linked to the Omi job
+    that started its chat when there is one."""
+    session_id = str(work.get('sessionId') or '')
+    job = (jobs or {}).get(session_id) or {}
+    return {
+        'id': str(work.get('id') or ''),
+        'title': str(work.get('title') or ''),
+        'agent': str(work.get('agent') or ''),
+        'summary': str(work.get('summary') or ''),
+        'status': str(work.get('status') or ''),
+        'session_id': session_id,
+        'decision': str(work.get('decision') or ''),
+        'decided_via': str(work.get('decidedVia') or ''),
+        'decided_by': str(work.get('decidedBy') or ''),
+        'job_id': str(job.get('id') or ''),
+        'job_title': str(job.get('title') or ''),
+        'created_at': _ms_time(work.get('createdAt')),
+    }
+
+
+async def studio_approvals(uid: str) -> Dict[str, Any]:
+    """Agent work waiting for approval in the Studio chats Omi started. Studio off or not set
+    up: nothing, and no error (Approvals stands without it)."""
+    settings = (await run_blocking(db_executor, integrations_out.effective, uid))['studio']
+    if not integrations_out.ready(settings):
+        return {'approvals': [], 'error': ''}
+    try:
+        body = await request_ok(
+            'GET',
+            f"{settings['url']}/api/studio/omi/approvals",
+            headers={'Authorization': f"Bearer {settings['token']}"},
+            timeout=STUDIO_APPROVALS_TIMEOUT_SECONDS,
+        )
+    except OutboundError as error:
+        return {'approvals': [], 'error': f'Could not get Studio\'s approvals: {error.message}'}
+    items = (body or {}).get('approvals') if isinstance(body, dict) else None
+    jobs = await run_blocking(db_executor, _studio_jobs_by_session, uid)
+    approvals = []
+    for work in items or []:
+        if not isinstance(work, dict) or not STUDIO_WORK_ID.match(str(work.get('id') or '')):
+            continue
+        job = jobs.get(str(work.get('sessionId') or ''))
+        if job is None or str(work.get('status') or 'awaiting_approval') != 'awaiting_approval':
+            continue  # another person's chat (a household key sees them all), or no longer waiting
+        await run_blocking(db_executor, _remember_studio_work, uid, job, str(work['id']))
+        approvals.append(studio_work(work, jobs))
+    return {'approvals': approvals, 'error': ''}
+
+
+async def answer_studio_approval(uid: str, work_id: str, decision: str, by: str = '') -> Dict[str, Any]:
+    """Approve or reject one of Studio's Agent work approvals. The first answer anywhere wins:
+    when someone already answered (in Studio, Mattermost, Pondering Orb or another Omi), the
+    result says who (``already_answered``) and nothing changes. Only approvals Omi listed for
+    this user (``studio_approvals``) can be answered."""
+    if decision not in ('approve', 'reject'):
+        raise AgentJobError(422, 'Answer approve or reject')
+    if not STUDIO_WORK_ID.match(work_id or ''):
+        raise AgentJobError(404, 'No such Studio approval')
+    settings = await run_blocking(db_executor, _settings, uid, 'studio')
+    if await run_blocking(db_executor, _job_for_studio_work, uid, work_id) is None:
+        # Only an approval Omi showed this user, in a chat this user started.
+        raise AgentJobError(404, 'No such Studio approval')
+    payload: Dict[str, Any] = {}
+    who = str(by or '').strip()[:60]
+    if who:
+        payload['by'] = who
+    url = f"{settings['url']}/api/studio/agent-work/{work_id}/{decision}"
+    try:
+        status, body = await request(
+            'POST', url, headers={'Authorization': f"Bearer {settings['token']}"}, json_body=payload
+        )
+    except OutboundError as error:
+        raise AgentJobError(502, error.message)
+    reason = error_text(body)
+    if status == 404:
+        raise AgentJobError(404, 'Studio has no such approval in Omi\'s chats (it may have been removed)')
+    if status == 409:
+        # Not awaiting approval any more, without a decision (the work moved on in Studio).
+        return {'ok': False, 'changed': False, 'already_answered': True, 'message': reason, 'approval': None}
+    if status in (401, 403):
+        raise AgentJobError(502, f'Studio refused the key: {reason} (Settings > Connections > Studio)')
+    if status >= 400 or not isinstance(body, dict):
+        raise AgentJobError(502, f'Studio answered {status}: {reason}')
+    work = body.get('work') if isinstance(body.get('work'), dict) else {}
+    changed = bool(body.get('changed'))
+    jobs = await run_blocking(db_executor, _studio_jobs_by_session, uid)
+    shown = studio_work(work, jobs) if work else None
+    job = jobs.get(shown['session_id']) if shown else None
+    if changed and job and job.get('status') not in TERMINAL:
+        # The chat goes on: look at its job again now rather than at the next poll.
+        await run_blocking(
+            db_executor, work_db.update, job_key(uid, shown['job_id']), {'due_at': datetime.now(timezone.utc)}
+        )
+    return {
+        'ok': changed,
+        'changed': changed,
+        'already_answered': not changed,
+        'message': str(body.get('message') or ''),
+        'approval': shown,
+    }

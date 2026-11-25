@@ -3,7 +3,9 @@
 
 The app shows ``POST /v1/agent-jobs/preview`` (exactly what would leave) before the user taps
 Send; ``POST /v1/agent-jobs`` then sends that text. Studio reports results on the signed
-webhook ``POST /v1/integrations/studio/events``.
+webhook ``POST /v1/integrations/studio/events``. Studio's Agent work approvals in Omi's chats
+are listed at ``GET /v1/agent-jobs/studio/approvals`` and answered at
+``POST /v1/agent-jobs/studio/approvals/{work_id}``.
 """
 
 from typing import NoReturn
@@ -19,7 +21,10 @@ from models.integrations_out import (
     AgentJobResponse,
     AgentJobsResponse,
     AnswerAgentApprovalRequest,
+    AnswerStudioApprovalRequest,
     CreateAgentJobRequest,
+    StudioApprovalAnswerResponse,
+    StudioApprovalsResponse,
     StudioEventResponse,
 )
 from utils import agent_jobs
@@ -58,6 +63,26 @@ async def create_agent_job(request: CreateAgentJobRequest, uid: str = Depends(au
 async def list_agent_jobs(limit: int = Query(50, ge=1, le=100), uid: str = Depends(auth.get_current_user_uid)):
     rows = await run_blocking(db_executor, jobs_db.list_recent, uid, limit)
     return AgentJobsResponse(jobs=[AgentJob.model_validate(r) for r in rows])
+
+
+@router.get('/v1/agent-jobs/studio/approvals', tags=['agent-jobs'], response_model=StudioApprovalsResponse)
+async def list_studio_approvals(uid: str = Depends(auth.get_current_user_uid)):
+    """Studio's Agent work waiting for approval in the chats Omi started (empty while Studio is off)."""
+    return await agent_jobs.studio_approvals(uid)
+
+
+@router.post(
+    '/v1/agent-jobs/studio/approvals/{work_id}', tags=['agent-jobs'], response_model=StudioApprovalAnswerResponse
+)
+async def answer_studio_approval(
+    work_id: str, request: AnswerStudioApprovalRequest, uid: str = Depends(auth.get_current_user_uid)
+):
+    """Approve or reject in Studio. If someone answered first, ``already_answered`` and Studio's
+    ``message`` say who."""
+    try:
+        return await agent_jobs.answer_studio_approval(uid, work_id, request.decision, request.by or '')
+    except agent_jobs.AgentJobError as error:
+        _raise(error)
 
 
 @router.get('/v1/agent-jobs/{job_id}', tags=['agent-jobs'], response_model=AgentJob)
