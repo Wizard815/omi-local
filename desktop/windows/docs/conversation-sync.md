@@ -18,7 +18,7 @@ behavior, not assumptions.
 ## The design
 
 1. **During a screen session** both lanes stream via
-   `wss://api.omi.me/v2/voice-message/transcribe-stream` (transcription-only,
+   `ws(s)://<your omi-local server>/v2/voice-message/transcribe-stream` (transcription-only,
    creates NO conversations) using listen mode `'transcribe'` — a distinct mode
    value so PTT's single-at-a-time supersede sweep never kills a screen lane
    (`src/main/ipc/omiListen.ts`). Zero conversations mid-session → the

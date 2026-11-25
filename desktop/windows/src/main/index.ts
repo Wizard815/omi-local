@@ -35,7 +35,8 @@ import { registerMemoryImportHandlers } from './ipc/memoryImport'
 import { registerMemoryExportHandlers } from './ipc/memoryExport'
 import { registerChatFilesHandlers } from './ipc/chatFiles'
 import { registerKgHandlers } from './ipc/kg'
-import { registerAuthHandlers } from './ipc/auth'
+import { installNetworkHooks, registerOmiLocalHandlers } from './omiLocal'
+import { autostartExecutable, isLinuxAutostartEnabled, setLinuxAutostart } from './linuxAutostart'
 import { registerIntegrationsHandlers } from './ipc/integrations'
 import { registerLocalGraphHandlers } from './ipc/localGraph'
 import { registerUsageHandlers } from './ipc/usage'
@@ -93,7 +94,6 @@ import { registerVoiceHubHandlers } from './ipc/voiceHub'
 import { registerVoiceToolHandlers } from './ipc/voiceTool'
 import { registerByokHandlers } from './ipc/byok'
 import { registerMcpExportsHandlers } from './ipc/mcpExports'
-import { registerAuthStoreHandlers } from './ipc/authStore'
 import { registerPiMonoHandlers } from './ipc/pimono'
 import { probeAgentStoreRuntimeAtStartup } from './agentKernel/startup'
 import { registerAgentControlIpc } from './ipc/agentControl'
@@ -143,7 +143,7 @@ import { scheduleStartupSteps } from './startupScheduler'
 // Dev-only benchmarking / sandbox machinery. Every call below is behind
 // `import.meta.env.DEV`, so this module is tree-shaken out of packaged main.
 import * as devBench from './dev/bench'
-import { initSentry, captureMessage } from './sentry'
+import { captureMessage } from './observability/localReport'
 import { initMainLog } from './mainLog'
 import { registerMicPermissionHandlers } from './ipc/micPermission'
 import { initCrashSentinel, crashDetectedOnBoot, markCleanExit } from './crashSentinel'
@@ -331,7 +331,7 @@ app.on('child-process-gone', (_e, details) => {
 // alive but wedged, so none of the handlers above see it. Electron surfaces this
 // as the webContents 'unresponsive' event (there is no app-level equivalent), so
 // attach it as each webContents is created — covering every window (main /bar
-// /capture /insight-toast /glow) uniformly. Log + report to Sentry at message
+// /capture /insight-toast /glow) uniformly. Log + write a local report at message
 // level, mirroring the crash handlers above. Purely OBSERVATIONAL: we do NOT kill
 // or force-reload the window — a hang often self-clears (recorded by 'responsive'),
 // and auto-killing a wedged-but-recoverable UI is a heavier behavior change out of
@@ -407,16 +407,10 @@ if (gotSingleInstanceLock) initMainLog(app.getPath('userData'))
 // whenReady/first-window, so it lands ahead of GPU-process init.
 if (import.meta.env.DEV && gotSingleInstanceLock) devBench.clearStaleGpuCaches()
 
-// Crash/error reporting. After the lock check so the throwaway second-launch
-// process doesn't pay SDK setup; no-op unless a DSN is configured, and only
-// enabled for packaged builds (see sentry.ts).
-if (gotSingleInstanceLock) initSentry()
-
 // Clean-shutdown sentinel: detect a crash on the PREVIOUS launch (a hard crash /
 // OS kill / main-process death that bypassed uncaughtException leaves no trace
-// otherwise) and report it to Sentry as a message — developer-facing telemetry
-// only, no user banner (macOS lastSessionCleanExit + detectAndReportCrash parity).
-// After Sentry init so a detected crash can report, and gated on the lock so a
+// otherwise) and write a report to the local main log (observability/localReport —
+// nothing leaves the machine), no user banner. Gated on the lock so a
 // losing duplicate process (same userData → same sentinel file) never reads or
 // rewrites the live instance's flag. The clean-exit write is in will-quit below.
 if (gotSingleInstanceLock) initCrashSentinel()
@@ -698,45 +692,13 @@ app.whenReady().then(async () => {
   // See appMenu.ts for why removing it breaks no edit/app shortcuts.
   disableApplicationMenu()
 
-  // Omi's API doesn't advertise the renderer's localhost origin as CORS-allowed.
-  // We used to work around this by disabling webSecurity on every window; that's
-  // now OFF (webSecurity is ON — see the window webPreferences), so instead we
-  // control the network stack: strip the Origin header on outgoing requests and
-  // inject permissive CORS response headers. Scoped to the specific upstreams —
-  // everything else flows normally.
-  const apiUrls = [
-    'https://api.omi.me/*',
-    'https://desktop-backend-hhibjajaja-uc.a.run.app/*',
-    // PostHog analytics ingestion. Added proactively for the webSecurity-on switch.
-    // Static analysis suggests it may not actually need CORS help (a same-shape
-    // JSON POST that PostHog answers with permissive CORS), but including it is
-    // harmless and avoids a surprise block if PostHog tightens its headers.
-    'https://us.i.posthog.com/*'
-  ]
-  session.defaultSession.webRequest.onBeforeSendHeaders({ urls: apiUrls }, (details, cb) => {
-    const headers = { ...details.requestHeaders }
-    delete headers.Origin
-    delete headers.origin
-    cb({ requestHeaders: headers })
-  })
-  session.defaultSession.webRequest.onHeadersReceived({ urls: apiUrls }, (details, cb) => {
-    const responseHeaders = {
-      ...details.responseHeaders,
-      'access-control-allow-origin': ['*'],
-      // `*` does NOT cover Authorization even for non-credentialed requests, so
-      // list it (and content-type) explicitly alongside the wildcard.
-      'access-control-allow-headers': ['authorization, content-type, *'],
-      'access-control-allow-methods': ['GET, POST, PUT, PATCH, DELETE, OPTIONS']
-    }
-    // Preflight gotcha (surfaces only with webSecurity ON): a CORS preflight
-    // OPTIONS must get a 2xx carrying the allow-* headers or the browser blocks
-    // the real request. The Omi API may not answer OPTIONS with a success + these
-    // headers, so force a 200 for preflights on the allowlisted hosts.
-    if (details.method === 'OPTIONS') {
-      cb({ responseHeaders, statusLine: 'HTTP/1.1 200 OK' })
-      return
-    }
-    cb({ responseHeaders })
+  // The user's omi-local server: CORS for its API (webSecurity stays on) and the
+  // renderer pages' CSP, which lets them reach that server and nothing else.
+  // See omiLocal/index.ts.
+  installNetworkHooks((url) => {
+    const dev = is.dev ? process.env['ELECTRON_RENDERER_URL'] : undefined
+    const base = rendererBaseUrl()
+    return (!!dev && url.startsWith(dev)) || (!!base && url.startsWith(base))
   })
 
   // System-audio (loopback) capture for the Screen recording mode (which mixes
@@ -870,21 +832,8 @@ app.whenReady().then(async () => {
   registerMemoryExportHandlers()
   registerChatFilesHandlers()
   registerKgHandlers()
-  // Google sign-in (system browser + loopback). On success, surface the main
-  // window OVER the browser: Windows blocks background apps from stealing
-  // foreground focus, so a plain show()/focus() only flashes the taskbar —
-  // briefly forcing always-on-top makes the surface actually happen (same
-  // trick as integrations/oauth.ts focusOmi).
-  registerAuthHandlers(() => {
-    withMainWindow((win) => {
-      if (win.isMinimized()) win.restore()
-      win.setAlwaysOnTop(true)
-      win.show()
-      win.focus()
-      win.setAlwaysOnTop(false)
-    })
-    app.focus({ steal: true })
-  })
+  // Sign-in to the user's omi-local server (username + password; main holds the session).
+  registerOmiLocalHandlers()
   registerIntegrationsHandlers()
   registerUsageHandlers()
   registerMemoryCleanupHandlers()
@@ -964,12 +913,8 @@ app.whenReady().then(async () => {
   registerByokHandlers()
   // "Use omi memory anywhere" MCP export connectors (hosted key + config writers).
   registerMcpExportsHandlers()
-  // Firebase auth token store IPC (encrypted-at-rest ID/refresh tokens). Backs the
-  // renderer's custom Firebase Persistence so the session never sits in plaintext
-  // localStorage. Cheap handler registration; the store is constructed lazily.
-  registerAuthStoreHandlers()
-  // pi-mono managed-cloud chat session relay (cheap handler registration). The
-  // renderer pushes the Firebase session (token lives renderer-side); the store
+  // pi-mono chat session relay (cheap handler registration). The renderer pushes
+  // the omi-local session token; main checks it against its own session; the store
   // is inert until then and nothing spawns pi-mono until PR-D registers it.
   registerPiMonoHandlers()
   // Track 3 (AI user profile): once-daily synthesized "about the user" doc that
@@ -1363,13 +1308,22 @@ app.whenReady().then(async () => {
   // Packaged builds only: in dev process.execPath is the bare electron.exe
   // WITHOUT the app path, so a dev-written Run entry would launch an empty
   // Electron shell at every login (found live during Phase 1 verification).
+  // Linux has no login-item API in Electron: an XDG autostart entry instead.
   ipcMain.handle('app:get-login-item', () => ({
-    openAtLogin: app.isPackaged ? app.getLoginItemSettings().openAtLogin : false,
+    openAtLogin: !app.isPackaged
+      ? false
+      : process.platform === 'linux'
+        ? isLinuxAutostartEnabled()
+        : app.getLoginItemSettings().openAtLogin,
     supported: app.isPackaged
   }))
   ipcMain.handle('app:set-login-item', (_e, enabled: boolean) => {
     if (!app.isPackaged) {
       console.log('[login-item] skipped in dev (execPath is bare electron.exe)')
+      return
+    }
+    if (process.platform === 'linux') {
+      setLinuxAutostart(!!enabled, autostartExecutable(process.env, process.execPath))
       return
     }
     app.setLoginItemSettings({ openAtLogin: !!enabled, path: process.execPath, args: ['--hidden'] })

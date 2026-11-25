@@ -1027,7 +1027,8 @@ export async function __registerOmiToolsForTest(pi: ExtensionAPI): Promise<void>
 // ---------------------------------------------------------------------------
 
 export default function omiProvider(pi: ExtensionAPI): void {
-  const baseUrl = process.env.OMI_API_BASE_URL || 'https://api.omi.me/v2'
+  // The app always sets OMI_API_BASE_URL to the user's omi-local server.
+  const baseUrl = process.env.OMI_API_BASE_URL || 'http://localhost:8000/v2'
   const apiKey = process.env.OMI_API_KEY || ''
 
   // BYOK: the app sets OMI_BYOK_* env vars for the selected LLM provider and

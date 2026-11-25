@@ -16,8 +16,7 @@
 // Kept separate from rewindEmbedHost / aiProfileHost rather than folded in: the
 // three consumers are owned by different tracks and neither should be able to
 // break another's session by changing its own relay.
-import { onIdTokenChanged, type User } from 'firebase/auth'
-import { auth } from './firebase'
+import { onIdTokenChanged, type SessionUser as User, auth, serverUrl } from './session'
 
 let started = false
 
@@ -37,7 +36,7 @@ async function pushSession(user: User, seq: number): Promise<void> {
       return
     }
     await window.omi.pimonoSetSession({
-      desktopApiBase: import.meta.env.VITE_OMI_DESKTOP_API_BASE as string,
+      desktopApiBase: serverUrl(),
       token
     })
   } catch (e) {

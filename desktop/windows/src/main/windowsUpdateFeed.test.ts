@@ -1,16 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
-  resolveWindowsUpdateFeedUrl,
+  selfHostedUpdateFeedUrl,
   WindowsUpdateFeedSelector,
   type WindowsUpdateChannel
 } from './windowsUpdateFeed'
-
-function jsonResponse(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json' }
-  })
-}
 
 function deferred<T>(): {
   promise: Promise<T>
@@ -23,69 +16,27 @@ function deferred<T>(): {
   return { promise, resolve }
 }
 
-describe('resolveWindowsUpdateFeedUrl', () => {
-  it('requests the selected channel and accepts only an immutable Windows release feed', async () => {
-    const fetchImpl = vi.fn(async (_input: string | URL | Request, _init?: RequestInit) =>
-      jsonResponse({
-        requested_channel: 'beta',
-        served_channel: 'stable',
-        version: '1.0.1',
-        feed_url: 'https://github.com/BasedHardware/omi/releases/download/v1.0.1-windows/'
-      })
-    )
-
-    await expect(
-      resolveWindowsUpdateFeedUrl('https://api.omi.me/', 'beta', fetchImpl as typeof fetch)
-    ).resolves.toBe('https://github.com/BasedHardware/omi/releases/download/v1.0.1-windows/')
-    expect(String(fetchImpl.mock.calls[0][0])).toBe(
-      'https://api.omi.me/v2/desktop/update-feed/windows?channel=beta'
-    )
-    expect(fetchImpl.mock.calls[0][1]).toMatchObject({
-      headers: { Accept: 'application/json' },
-      cache: 'no-store'
-    })
+describe('selfHostedUpdateFeedUrl', () => {
+  it('is off unless the user names a feed', () => {
+    expect(selfHostedUpdateFeedUrl(undefined)).toBeNull()
+    expect(selfHostedUpdateFeedUrl('  ')).toBeNull()
   })
 
-  it('rejects stable-to-beta, wrong-platform, and untrusted feeds', async () => {
-    const betaForStable = vi.fn(async () =>
-      jsonResponse({
-        requested_channel: 'stable',
-        served_channel: 'beta',
-        feed_url: 'https://github.com/BasedHardware/omi/releases/download/v1.0.19-windows/'
-      })
-    ) as typeof fetch
-    await expect(
-      resolveWindowsUpdateFeedUrl('https://api.omi.me', 'stable', betaForStable)
-    ).rejects.toThrow('Stable Windows updates cannot fall through to beta')
-
-    const macFeed = vi.fn(async () =>
-      jsonResponse({
-        requested_channel: 'stable',
-        served_channel: 'stable',
-        feed_url: 'https://github.com/BasedHardware/omi/releases/download/v0.12.123+12123-macos/'
-      })
-    ) as typeof fetch
-    await expect(
-      resolveWindowsUpdateFeedUrl('https://api.omi.me', 'stable', macFeed)
-    ).rejects.toThrow('untrusted feed_url')
-
-    const untrusted = vi.fn(async () =>
-      jsonResponse({
-        requested_channel: 'beta',
-        served_channel: 'beta',
-        feed_url: 'https://example.com/v1.0.19-windows/'
-      })
-    ) as typeof fetch
-    await expect(
-      resolveWindowsUpdateFeedUrl('https://api.omi.me', 'beta', untrusted)
-    ).rejects.toThrow('untrusted feed_url')
+  it('accepts a plain http(s) directory and normalizes the trailing slash', () => {
+    expect(selfHostedUpdateFeedUrl('http://nas.lan:8080/omi-desktop')).toBe(
+      'http://nas.lan:8080/omi-desktop/'
+    )
+    expect(selfHostedUpdateFeedUrl('https://updates.example.org/omi/')).toBe(
+      'https://updates.example.org/omi/'
+    )
   })
 
-  it('surfaces resolution failures without reading an error body', async () => {
-    const fetchImpl = vi.fn(async () => jsonResponse({ detail: 'internal' }, 503)) as typeof fetch
-    await expect(
-      resolveWindowsUpdateFeedUrl('https://api.omi.me', 'stable', fetchImpl)
-    ).rejects.toThrow('Windows update feed resolution failed (503)')
+  it('rejects other schemes, credentials, queries and fragments', () => {
+    expect(selfHostedUpdateFeedUrl('file:///tmp/feed')).toBeNull()
+    expect(selfHostedUpdateFeedUrl('https://u:p@example.org/feed')).toBeNull()
+    expect(selfHostedUpdateFeedUrl('https://example.org/feed?x=1')).toBeNull()
+    expect(selfHostedUpdateFeedUrl('https://example.org/feed#a')).toBeNull()
+    expect(selfHostedUpdateFeedUrl('not a url')).toBeNull()
   })
 })
 

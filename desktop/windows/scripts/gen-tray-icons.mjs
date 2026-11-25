@@ -15,7 +15,8 @@
 //                bottom-right, separated by a carved transparent moat
 //   paused     → the ring dimmed to ~55% grey
 //
-// Run: pnpm gen:tray-icons  (writes resources/tray/{idle,listening,paused}.ico)
+// Run: pnpm gen:tray-icons  (writes resources/tray/{idle,listening,paused}.ico,
+// plus .png and @2x.png for the Linux tray)
 import { writeFileSync, mkdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
@@ -105,4 +106,10 @@ for (const state of ['idle', 'listening', 'paused']) {
   const outPath = join(outDir, `${state}.ico`)
   writeFileSync(outPath, packIco(frames))
   console.log(`wrote ${outPath}`)
+  // Linux/macOS trays load PNG, not .ico: 32px plus a @2x frame for HiDPI.
+  for (const [size, suffix] of [[32, ''], [64, '@2x']]) {
+    const pngPath = join(outDir, `${state}${suffix}.png`)
+    writeFileSync(pngPath, PNG.sync.write(drawFrame(size, state)))
+    console.log(`wrote ${pngPath}`)
+  }
 }

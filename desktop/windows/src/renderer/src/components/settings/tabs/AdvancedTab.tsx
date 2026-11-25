@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Download, Upload, Wrench, FolderSearch, Network, RotateCcw } from 'lucide-react'
-import { auth } from '../../../lib/firebase'
+import { auth } from '../../../lib/session'
 import { toast } from '../../../lib/toast'
 import { type MemorySource } from '../../../lib/memoryExtract'
 import {

@@ -1,0 +1,11 @@
+{
+  "changes": [
+    "Sign in to your own omi-local server with its address, username and password; change it in Settings → Account. The app talks to that server only.",
+    "Removed all third-party analytics and crash reporting (Sentry, PostHog) and the Firebase sign-in; errors are kept in the local log.",
+    "New \"Waiting for your OK\" page: approve tasks, calendar events and day summaries (Approve all, with Undo), and read the day review before approving it. Tasks marks what still waits.",
+    "Conversations the server is still processing show \"Writing notes…\"; chat says \"Still working…\" and waits up to 20 minutes for a slow local model.",
+    "Microphone capture streams to your server's own speech service.",
+    "Updates are checked only against a feed you host (OMI_UPDATE_FEED_URL); none by default.",
+    "Linux: tray icon, launch at login (XDG autostart), and platform-neutral wording."
+  ]
+}

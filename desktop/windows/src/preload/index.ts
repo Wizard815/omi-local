@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import type { OmiLocalState } from '../shared/omiLocal'
 import type {
   OmiBridgeApi,
   OmiOverlayApi,
@@ -59,8 +60,7 @@ import type {
   XConnectorSession,
   XStatus,
   XSyncResult,
-  XRunState,
-  SignInProvider
+  XRunState
 } from '../shared/types'
 import type { ByokEnrollResult, ByokProvider } from '../shared/byok'
 import type {
@@ -185,7 +185,19 @@ const omi: OmiBridgeApi = {
   kgSearchFiles: (q, fileType?, limit?) => ipcRenderer.invoke('kg:searchFiles', q, fileType, limit),
   kgExecuteSql: (sql) => ipcRenderer.invoke('kg:executeSql', sql),
   readStickyNotes: () => ipcRenderer.invoke('integrations:stickyNotes:read'),
-  signInWithProvider: (provider: SignInProvider) => ipcRenderer.invoke('auth:signIn', provider),
+  // --- The user's omi-local server and session (main owns both; src/main/omiLocal) ---
+  omiLocalInitialState: ipcRenderer.sendSync('omiLocal:getStateSync') as OmiLocalState,
+  omiLocalLogin: (serverUrl: string, username: string, password: string) =>
+    ipcRenderer.invoke('omiLocal:login', serverUrl, username, password),
+  omiLocalCheckServer: (serverUrl: string) => ipcRenderer.invoke('omiLocal:checkServer', serverUrl),
+  omiLocalSetServerUrl: (serverUrl: string) =>
+    ipcRenderer.invoke('omiLocal:setServerUrl', serverUrl),
+  omiLocalSignOut: () => ipcRenderer.invoke('omiLocal:signOut'),
+  onOmiLocalChanged: (cb: (state: OmiLocalState) => void) => {
+    const listener = (_e: Electron.IpcRendererEvent, state: OmiLocalState): void => cb(state)
+    ipcRenderer.on('omiLocal:changed', listener)
+    return () => ipcRenderer.removeListener('omiLocal:changed', listener)
+  },
   // --- Gmail session connector (Option B): Omi-owned login window + own-session
   // cookie replay. connect opens the login window and resolves once signed in. ---
   gmailSessionConnect: (email?: string) =>
@@ -440,21 +452,6 @@ const omi: OmiBridgeApi = {
     provider: 'gemini' | 'chatgpt' | 'claude',
     memories: ExportMemory[]
   ): Promise<string> => ipcRenderer.invoke('mcp:memoryPack', provider, memories),
-  // Encrypted-at-rest Firebase auth persistence (main-process safeStorage/DPAPI).
-  // Backs lib/encryptedAuthPersistence — Firebase drives the read/write/migrate
-  // lifecycle over these channels; token values never touch plaintext localStorage.
-  authStore: {
-    isAvailable: () => ipcRenderer.invoke('authStore:isAvailable'),
-    get: (key: string) => ipcRenderer.invoke('authStore:get', key),
-    set: (key: string, value: string) => ipcRenderer.invoke('authStore:set', key, value),
-    remove: (key: string) => ipcRenderer.invoke('authStore:remove', key),
-    onChanged: (cb: (key: string) => void) => {
-      const listener = (_e: Electron.IpcRendererEvent, payload: { key: string }): void =>
-        cb(payload.key)
-      ipcRenderer.on('authStore:changed', listener)
-      return () => ipcRenderer.removeListener('authStore:changed', listener)
-    }
-  },
   screenSynthFramesSince: () => ipcRenderer.invoke('screenSynth:framesSince'),
   screenSynthGetState: () => ipcRenderer.invoke('screenSynth:getState'),
   screenSynthSetState: (patch) => ipcRenderer.invoke('screenSynth:setState', patch),

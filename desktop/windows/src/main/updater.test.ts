@@ -5,21 +5,8 @@ import { join } from 'path'
 
 const dir = mkdtempSync(join(tmpdir(), 'omi-updater-'))
 
-const feedFetch = vi.hoisted(() =>
-  vi.fn(async (input: string | URL | Request) => {
-    const channel = new URL(String(input)).searchParams.get('channel')
-    const version = channel === 'beta' ? '1.0.19' : '1.0.1'
-    return new Response(
-      JSON.stringify({
-        requested_channel: channel,
-        served_channel: channel,
-        version,
-        feed_url: `https://github.com/BasedHardware/omi/releases/download/v${version}-windows/`
-      }),
-      { headers: { 'Content-Type': 'application/json' } }
-    )
-  })
-)
+const FEED = 'http://nas.lan:8080/omi-desktop/'
+const feedEnv = { OMI_UPDATE_FEED_URL: 'http://nas.lan:8080/omi-desktop' }
 
 const autoUpdater = vi.hoisted(() => ({
   allowPrerelease: false,
@@ -44,8 +31,7 @@ vi.mock('electron', () => ({
     register: (): boolean => true,
     unregister: (): void => {},
     isRegistered: (): boolean => false
-  },
-  net: { fetch: feedFetch }
+  }
 }))
 vi.mock('./tray', () => ({ setTrayUpdateReady: vi.fn() }))
 
@@ -68,47 +54,41 @@ afterAll(() => {
 })
 
 describe('updater feed and beta channel wiring', () => {
-  it('stays Windows-only and switches immutable feeds on live beta changes', async () => {
-    vi.useFakeTimers()
-
-    initAutoUpdater(() => null, 'linux')
+  it('never starts without a self-hosted feed, and stays off on .deb Linux', async () => {
+    initAutoUpdater(() => null, 'win32', {})
+    initAutoUpdater(() => null, 'linux', feedEnv)
     expect(autoUpdater.on).not.toHaveBeenCalled()
     expect(autoUpdater.setFeedURL).not.toHaveBeenCalled()
+    await expect(checkForUpdatesNow()).resolves.toEqual({ status: 'unsupported', version: '1.0.0' })
+  })
+
+  it('checks only the user-hosted feed and re-checks on live beta changes', async () => {
+    vi.useFakeTimers()
 
     setAppSettings({ betaUpdatesEnabled: true })
-    initAutoUpdater(() => null, 'win32')
+    initAutoUpdater(() => null, 'win32', feedEnv)
     expect(autoUpdater.allowPrerelease).toBe(true)
 
     autoUpdater.checkForUpdates.mockClear()
     autoUpdater.setFeedURL.mockClear()
-    feedFetch.mockClear()
     setAppSettings({ betaUpdatesEnabled: false })
     await vi.waitFor(() => expect(autoUpdater.checkForUpdates).toHaveBeenCalledTimes(1))
     expect(autoUpdater.allowPrerelease).toBe(false)
-    expect(autoUpdater.setFeedURL).toHaveBeenCalledWith({
-      provider: 'generic',
-      url: 'https://github.com/BasedHardware/omi/releases/download/v1.0.1-windows/'
-    })
+    expect(autoUpdater.setFeedURL).toHaveBeenCalledWith({ provider: 'generic', url: FEED })
 
     autoUpdater.checkForUpdates.mockClear()
     autoUpdater.setFeedURL.mockClear()
-    feedFetch.mockClear()
     setAppSettings({ betaUpdatesEnabled: true })
     await vi.waitFor(() => expect(autoUpdater.checkForUpdates).toHaveBeenCalledTimes(1))
     expect(autoUpdater.allowPrerelease).toBe(true)
-    expect(autoUpdater.setFeedURL).toHaveBeenCalledWith({
-      provider: 'generic',
-      url: 'https://github.com/BasedHardware/omi/releases/download/v1.0.19-windows/'
-    })
+    expect(autoUpdater.setFeedURL).toHaveBeenCalledWith({ provider: 'generic', url: FEED })
 
     autoUpdater.checkForUpdates.mockClear()
     autoUpdater.setFeedURL.mockClear()
-    feedFetch.mockClear()
     setAppSettings({ closeToTrayNoticeShown: true })
     await Promise.resolve()
     expect(autoUpdater.checkForUpdates).not.toHaveBeenCalled()
     expect(autoUpdater.setFeedURL).not.toHaveBeenCalled()
-    expect(feedFetch).not.toHaveBeenCalled()
 
     vi.useRealTimers()
   })
@@ -141,21 +121,7 @@ describe('updater feed and beta channel wiring', () => {
     await vi.waitFor(() => expect(autoUpdater.checkForUpdates).toHaveBeenCalledTimes(2))
     expect(cancellationToken.cancel).toHaveBeenCalledOnce()
     expect(autoUpdater.downloadUpdate).not.toHaveBeenCalledWith(cancellationToken)
-    expect(autoUpdater.setFeedURL).toHaveBeenLastCalledWith({
-      provider: 'generic',
-      url: 'https://github.com/BasedHardware/omi/releases/download/v1.0.19-windows/'
-    })
-  })
-
-  it('fails a manual check closed when feed resolution is unavailable', async () => {
-    autoUpdater.checkForUpdates.mockClear()
-    feedFetch.mockRejectedValueOnce(new Error('resolver unavailable'))
-
-    await expect(checkForUpdatesNow()).resolves.toEqual({
-      status: 'error',
-      message: 'resolver unavailable'
-    })
-    expect(autoUpdater.checkForUpdates).not.toHaveBeenCalled()
+    expect(autoUpdater.setFeedURL).toHaveBeenLastCalledWith({ provider: 'generic', url: FEED })
   })
 })
 

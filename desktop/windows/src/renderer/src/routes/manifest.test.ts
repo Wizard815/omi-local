@@ -120,6 +120,7 @@ describe('route manifest', () => {
     expect(navRoutes().map((e) => e.id)).toEqual([
       'home',
       'conversations',
+      'approvals',
       'tasks',
       'rewind',
       'apps',
@@ -134,6 +135,7 @@ describe('route manifest', () => {
       'settings',
       'tasks',
       'goals',
+      'approvals',
       'apps',
       'rewind',
     ])

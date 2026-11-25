@@ -1,42 +1,16 @@
-// Mirrors the macOS desktop app's PostHogManager: best-effort analytics sent to
-// the same PostHog project via its HTTP ingestion API (no SDK needed). The project
-// key is a publishable client key — safe to embed, exactly as the desktop app
-// hardcodes it. Every call is fire-and-forget and never blocks or surfaces errors.
-import { auth } from './firebase'
-
-// Host is intentionally fixed to the CSP connect-src allowlist in renderer HTML.
-// A VITE_POSTHOG_HOST override would silently fail under Chromium if it diverged.
-const POSTHOG_HOST = 'https://us.i.posthog.com'
-const POSTHOG_KEY =
-  (import.meta.env.VITE_POSTHOG_KEY as string) || 'phc_z3qUFhGUgYIOMYnfxVSrLmYISQvbgph8iREQv3sez3Y'
-
-// Off by default — this build has no self-hosted PostHog instance, and the fallback
-// key/host point at Based Hardware's own cloud project. VITE_ANALYTICS_ENABLED=1 opts in.
-const ANALYTICS_ENABLED = import.meta.env.VITE_ANALYTICS_ENABLED === '1'
+// Product events and fallback telemetry, kept on this machine.
+//
+// omi-local sends no analytics anywhere: upstream posted these events to Based
+// Hardware's PostHog project; here each event is one structured console line
+// (`[event] <name> {...}`), the renderer twin of main's observability/fallback.ts.
+// The shared `fallback_triggered` shape (AGENTS.md "Fallback / resilience
+// telemetry") stays greppable in the devtools console and the main log, and
+// nothing is uploaded. Never put tokens or message text in properties.
 
 export function trackEvent(event: string, properties: Record<string, unknown> = {}): void {
-  if (!ANALYTICS_ENABLED) return
-  const distinctId = auth.currentUser?.uid ?? 'anonymous'
-  void fetch(`${POSTHOG_HOST}/i/v0/e/`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      api_key: POSTHOG_KEY,
-      event,
-      distinct_id: distinctId,
-      properties: {
-        ...properties,
-        $lib: 'omi-windows',
-        $os: 'Windows',
-        platform: 'windows'
-      }
-    })
-  }).catch(() => {
-    // Analytics is best-effort — swallow network/auth failures silently.
-  })
+  console.info('[event]', event, properties)
 }
 
-// Same event name + property shape the desktop app's AnalyticsManager sends.
 export function trackHowDidYouHear(source: string): void {
   trackEvent('Onboarding How Did You Hear', { source, is_referral: source === 'Friend' })
 }

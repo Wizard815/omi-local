@@ -173,7 +173,7 @@ describe('provider registration', () => {
     omiProvider(cap.pi)
     expect(cap.provider?.id).toBe('omi')
     expect(cap.provider?.cfg.api).toBe('openai-completions')
-    expect(cap.provider?.cfg.baseUrl).toBe('https://api.omi.me/v2')
+    expect(cap.provider?.cfg.baseUrl).toBe('http://localhost:8000/v2')
     expect(cap.provider?.cfg.apiKey).toBe('')
     expect(cap.provider?.cfg.headers).toBeUndefined()
   })

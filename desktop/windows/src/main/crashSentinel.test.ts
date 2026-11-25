@@ -9,11 +9,11 @@ import { join } from 'path'
 // garbage through the real parse, not asserted in reasoning (this program's
 // recurring SQL-test-drift lesson). getPath dereferences tmpDir lazily (only when
 // the tests call it), so referencing it in the hoisted mock is safe — same pattern
-// as appSettings.test.ts. Sentry is stubbed so importing the module doesn't pull
+// as appSettings.test.ts. The local report is stubbed so importing the module doesn't pull
 // the native SDK.
 const tmpDir = mkdtempSync(join(tmpdir(), 'omi-crashsentinel-'))
 vi.mock('electron', () => ({ app: { getPath: (): string => tmpDir } }))
-vi.mock('./sentry', () => ({ captureMessage: (): void => {} }))
+vi.mock('./observability/localReport', () => ({ captureMessage: (): void => {} }))
 
 import {
   previousSessionCrashed,

@@ -54,6 +54,8 @@ const h = vi.hoisted(() => {
 })
 
 vi.mock('ws', () => ({ default: h.FakeWebSocket }))
+// main's omi-local session (server URL) — no userData/safeStorage in this suite.
+vi.mock('../omiLocal', () => ({ serverUrl: () => 'http://omi.test:8000' }))
 vi.mock('electron', () => ({
   ipcMain: {
     handle: (channel: string, handler: (...args: unknown[]) => unknown) =>

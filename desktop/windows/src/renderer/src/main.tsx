@@ -30,25 +30,12 @@ import './components/home/hub/registerHomeWidgets'
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import * as Sentry from '@sentry/electron/renderer'
 import App from './App'
 import { SandboxBadge } from './components/SandboxBadge'
 import { ErrorBoundary } from './components/ui/ErrorBoundary'
 import { AppCrashScreen } from './components/ui/AppCrashScreen'
-import { scrubEventPii } from '../../shared/sentryScrub'
 import { isSecondaryWindow } from './lib/windowRole'
 import { initFontScale } from './lib/fontScale'
-
-// Renderer-side crash reporting. Only initializes when a DSN is configured, so
-// dev builds (and any build without the env var) stay entirely offline. Emails
-// are scrubbed from event text before send as a best-effort PII guard.
-const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN as string | undefined
-if (SENTRY_DSN) {
-  Sentry.init({
-    dsn: SENTRY_DSN,
-    beforeSend: (event) => scrubEventPii(event)
-  })
-}
 
 // Startup-phase marks are the MAIN window's cost. Secondary windows (overlay,
 // insight-toast, hidden capture) share this bundle and would otherwise fire the

@@ -212,9 +212,11 @@ export function Conversations(): React.JSX.Element {
         cloudIds = new Set(list.map((c) => c.id))
         for (const c of list) {
           const created = c.created_at ? new Date(c.created_at).getTime() : 0
+          const processing = c.status === 'processing'
           out.push({
             id: c.id,
-            title: c.structured?.title || 'Untitled conversation',
+            title:
+              c.structured?.title || (processing ? 'New conversation' : 'Untitled conversation'),
             emoji: c.structured?.emoji || undefined,
             subtitle: c.created_at ? new Date(c.created_at).toLocaleString() : '',
             preview:
@@ -222,6 +224,7 @@ export function Conversations(): React.JSX.Element {
               summarize(c.transcript_segments).slice(0, 200) ||
               '(no transcript)',
             source: 'cloud',
+            processing,
             starred: c.starred ?? undefined,
             folderId: c.folder_id ?? null,
             sortAt: created
@@ -306,6 +309,16 @@ export function Conversations(): React.JSX.Element {
       loadGenRef.current += 1
     }
   }, [panelIsActive])
+
+  // A conversation the server is still writing notes for (`status: processing`;
+  // minutes on a slow local model) re-polls the list every 20 s while the panel is
+  // visible, so "Writing notes…" turns into the finished row without a reload.
+  const anyProcessing = rows.some((r) => r.processing)
+  useEffect(() => {
+    if (!panelIsActive || !anyProcessing) return
+    const t = window.setInterval(() => refreshCloudConversations(), 20_000)
+    return () => window.clearInterval(t)
+  }, [panelIsActive, anyProcessing])
 
   // Load folders: cached first (instant paint), then reconcile from the backend.
   useEffect(() => {

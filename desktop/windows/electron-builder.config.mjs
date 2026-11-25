@@ -178,16 +178,14 @@ export default {
   // ESM-only and would break electron-builder's own CJS `require('chalk')`.
   afterPack: fixPimonoChalkUnpack,
   // --- AUTO-UPDATE ---
-  // electron-updater is wired in src/main/updater.ts (packaged builds only; silent
-  // download + install-on-next-quit; NSIS differential updates stay default-on).
-  // This GitHub config makes electron-builder emit latest.yml and app-update.yml.
-  // Before every production check, updater.ts replaces the repository-wide GitHub
-  // provider with the backend-selected immutable Windows release directory. Local
-  // testing keeps dev-app-update.yml + OMI_UPDATER_DEV=1 (forceDevUpdateConfig).
-  //
-  // NOTE: this block is the UPDATE FEED only — it must never be used as an upload
-  // target. electron-builder auto-publishes to it when CI + a git tag are detected,
-  // so every build command must pass `--publish never` (build:win does; the release
-  // workflow uploads explicitly via `gh release` instead).
-  publish: [{ provider: 'github', owner: 'BasedHardware', repo: 'omi', releaseType: 'release' }]
+  // omi-local has no update server. electron-updater (src/main/updater.ts) starts
+  // only when OMI_UPDATE_FEED_URL names a "generic" feed the user hosts (a
+  // directory with the latest.yml / latest-linux.yml and installers from dist/).
+  // This block only makes electron-builder write those yml files; it points at
+  // the same self-hosted feed when the variable is set at build time, else at a
+  // loopback placeholder that nothing contacts. Never an upload target: every
+  // build command passes `--publish never`.
+  publish: [
+    { provider: 'generic', url: process.env.OMI_UPDATE_FEED_URL || 'http://127.0.0.1:8099/' }
+  ]
 }

@@ -18,8 +18,9 @@ function authError(code: string): Error & { code: string } {
   return Object.assign(new Error(code), { code })
 }
 
-vi.mock('firebase/auth', () => ({ signOut: h.signOut }))
-vi.mock('./firebase', () => ({
+vi.mock('./session', () => ({
+  serverUrl: () => 'http://omi.test:8000',
+  signOut: h.signOut,
   auth: h.authObj,
   onAuthStateChanged: (_a: unknown, cb: (u: unknown) => void) => {
     h.authCb = cb

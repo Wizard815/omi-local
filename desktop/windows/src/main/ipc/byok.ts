@@ -8,6 +8,7 @@
 // expose these channels to untrusted web content, and never log key values.
 
 import { ipcMain, webContents } from 'electron'
+import { serverUrl } from '../omiLocal'
 import { ByokKeyStore } from '../agentKernel/byokStore'
 import { deactivateByok, enrollByok, type ByokEnrollResult } from '../agentKernel/byokEnroll'
 import { notifyPiMonoByokChanged } from '../codingAgent/piMonoSession'
@@ -23,7 +24,8 @@ function getStore(): ByokKeyStore {
 }
 
 function apiBase(): string {
-  return import.meta.env.VITE_OMI_API_BASE || 'https://api.omi.me'
+  // The user's omi-local server (runtime config; see omiLocal/serverSession.ts).
+  return serverUrl()
 }
 
 /**
