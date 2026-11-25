@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "images": [
+    {
+      "file": "001-mobile-android-phone-llm-settings.png",
+      "platform": "mobile-android",
+      "description": "Settings > AI on this phone: AI source set to Phone when the server can't be reached, address, API key, the model listed by the phone and Test Connection. Rendered by test/pages/settings/phone_llm_render_test.dart with the app's fonts.",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    },
+    {
+      "file": "002-mobile-android-phone-llm-chat.png",
+      "platform": "mobile-android",
+      "description": "Chat: a phone answer with its label and not-saved note, and a failed server reply offering Try Again and Ask This Phone Instead. Rendered by the same test.",
+      "captured_by": "agent",
+      "source": "visual-audit"
+    }
+  ]
+}
