@@ -41,7 +41,7 @@ void main() {
   testWidgets('a tap on Approve all approves everything at once, and Undo takes exactly that back', (tester) async {
     final api = _waiting();
     await _open(tester, api);
-    expect(find.text('Approve all (4)'), findsOneWidget);
+    expect(find.text('Approve All (4)'), findsOneWidget);
     expect(find.text('Hold to choose what to approve'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('approve_all')));
@@ -59,7 +59,7 @@ void main() {
     expect(undone.events.single.conversationId, 'c1');
     expect(undone.dayDates, ['2026-11-15']);
     expect(find.text('Call the plumber'), findsOneWidget, reason: 'it waits again');
-    expect(find.text('Approve all (4)'), findsOneWidget);
+    expect(find.text('Approve All (4)'), findsOneWidget);
   });
 
   testWidgets('holding Approve all opens a checklist; unticking the summary leaves it waiting', (tester) async {
@@ -69,12 +69,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(api.batches, isEmpty, reason: 'holding only opens the choice');
     expect(find.byKey(const Key('approval_checklist')), findsOneWidget);
-    expect(find.text('Approve selected (4)'), findsOneWidget, reason: 'everything starts ticked');
+    expect(find.text('Approve Selected (4)'), findsOneWidget, reason: 'everything starts ticked');
     expect(find.textContaining('Dentist · Thu, Nov 19'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('approval_pick_day_2026-11-15')));
     await tester.pump();
-    expect(find.text('Approve selected (3)'), findsOneWidget);
+    expect(find.text('Approve Selected (3)'), findsOneWidget);
     await tester.tap(find.byKey(const Key('approval_pick_approve')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
@@ -96,7 +96,7 @@ void main() {
     await tester.tap(find.byKey(const Key('approval_pick_cancel')));
     await tester.pumpAndSettle();
     expect(api.batches, isEmpty);
-    expect(find.text('Approve all (4)'), findsOneWidget);
+    expect(find.text('Approve All (4)'), findsOneWidget);
   });
 
   testWidgets('the long-press is offered to screen readers too', (tester) async {
@@ -110,7 +110,7 @@ void main() {
   testWidgets("the day review's variant approves only that day's items", (tester) async {
     final api = _waiting();
     await _open(tester, api, day: DateTime(2026, 11, 15));
-    expect(find.text('Approve all from this day (3)'), findsOneWidget);
+    expect(find.text('Approve All from This Day (3)'), findsOneWidget);
     await tester.tap(find.byKey(const Key('approve_all')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));

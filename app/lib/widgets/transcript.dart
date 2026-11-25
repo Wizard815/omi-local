@@ -1459,16 +1459,18 @@ class _TranscriptWidgetState extends State<TranscriptWidget> {
   }
 
   Widget _buildSegmentText(TranscriptSegment data, int segmentIdx, bool isUser, {TextStyle? style}) {
-    final richText = RichText(
+    return RichText(
       textAlign: TextAlign.left,
+      textScaler: MediaQuery.textScalerOf(context),
       text: TextSpan(
-        style: style ?? OmiType.subhead.copyWith(letterSpacing: 0.0, height: 1.4),
+        style: DefaultTextStyle.of(context)
+            .style
+            .merge(style ?? OmiType.subhead.copyWith(letterSpacing: 0.0, height: 1.4)),
         children: widget.searchQuery.isNotEmpty
             ? _highlightSearchMatchesWithKeys(_getDecodedText(data.text), widget.searchQuery, segmentIdx)
             : [TextSpan(text: _getDecodedText(data.text))],
       ),
     );
-    return richText;
   }
 
   Widget _buildSegmentFooter(TranscriptSegment data, bool isUser) {

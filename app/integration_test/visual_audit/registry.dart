@@ -28,6 +28,7 @@ import 'scenarios/settings.dart';
 import 'scenarios/settings_pages.dart';
 import 'scenarios/speaker_labels.dart';
 import 'scenarios/tasks.dart';
+import 'scenarios/ui_pass.dart';
 
 final auditSuite = AuditSuite(
   name: 'current',
@@ -59,5 +60,6 @@ final auditSuite = AuditSuite(
     ...chatAppsScenarios,
     ...onboardingScenarios,
     ...authScenarios,
+    ...uiPassScenarios,
   ],
 );

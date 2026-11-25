@@ -8,6 +8,7 @@ import 'package:omi/backend/schema/daily_summary.dart';
 import 'package:omi/pages/settings/daily_summary_detail_page.dart';
 import 'package:omi/ui/ui.dart';
 import 'package:omi/utils/l10n_extensions.dart';
+import 'package:omi/utils/other/temp.dart';
 
 /// Every daily recap, as its own pushed page (nav audit #5): a back button leads out, and
 /// pull-to-refresh reloads the recaps (hub audit #24). Home's "View All" opens it; the
@@ -49,9 +50,7 @@ class _DailyRecapsPageState extends State<DailyRecapsPage> {
             key: const Key('day_reviews_button'),
             tooltip: context.l10n.dayReviewsTitle,
             icon: const Icon(Icons.auto_stories_outlined),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const DayReviewsListPage()),
-            ),
+            onPressed: () => routeToPage(context, const DayReviewsListPage()),
           ),
           DailyRecapRecoveryAction(create: widget.createSummary, onCreated: _created),
         ],

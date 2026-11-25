@@ -61,11 +61,14 @@ final class ApiFailure<T> extends ApiResult<T> {
 }
 
 class ApiRequest {
-  const ApiRequest({required this.url, required this.method, this.headers = const {}, this.body = ''});
+  const ApiRequest({required this.url, required this.method, this.headers = const {}, this.body = '', this.timeout});
   final String url;
   final String method;
   final Map<String, String> headers;
   final String body;
+
+  /// How long to wait for the response; null keeps the shared read/write default.
+  final Duration? timeout;
 }
 
 typedef ApiSend = Future<http.Response> Function(ApiRequest request);
@@ -169,6 +172,7 @@ Future<ApiResult<T>> executeApi<T>({
       headers: request.headers,
       body: request.body,
       method: request.method,
+      timeout: request.timeout,
       execution: execution,
       canSend: canSend,
       onAuthRefresh: (result) => observedRefresh = result,

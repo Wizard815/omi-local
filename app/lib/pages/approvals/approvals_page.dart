@@ -37,7 +37,7 @@ String _summaryLabel(AppLocalizations l10n, String date, String today) {
   final day = DateTime.tryParse(date);
   final now = DateTime.tryParse(today);
   if (day != null && now != null && now.difference(day).inDays == 1) return l10n.approvalYesterdaysSummary;
-  return l10n.approvalDaySummary(day == null ? date : DateFormat.MMMEd().format(day));
+  return l10n.approvalDaySummary(day == null ? date : DateFormat.MMMEd(l10n.localeName).format(day));
 }
 
 class ApprovalsPage extends StatefulWidget {
@@ -91,7 +91,8 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
     final l10n = context.l10n;
     return Scaffold(
       backgroundColor: OmiColors.surface0,
-      appBar: AppBar(backgroundColor: OmiColors.surface0, title: Text(l10n.approvalPageTitle)),
+      appBar: AppBar(
+          backgroundColor: OmiColors.surface0, leading: const OmiBackButton(), title: Text(l10n.approvalPageTitle)),
       body: ListenableBuilder(
         listenable: _controller,
         builder: (context, _) {
@@ -123,7 +124,8 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
                     style: OmiType.subhead.copyWith(color: OmiColors.textSecondary),
                   ),
                 ),
-                WaitingTasksSection(controller: _controller, showEmpty: true, showHeader: false),
+                // "Nothing is waiting" would contradict an agent asking just above.
+                WaitingTasksSection(controller: _controller, showEmpty: _asking.isEmpty, showHeader: false),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: OmiSpacing.md),
                   child: OmiSettingsGroup(
@@ -132,7 +134,10 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
                         OmiSettingsRow(
                           key: ValueKey('approval_draft_$date'),
                           leading: const Icon(Icons.auto_stories_outlined),
-                          title: _summaryLabel(l10n, date, state.today),
+                          // A row title, so not the mid-sentence "yesterday's summary".
+                          title: l10n.approvalSummaryItem(DateTime.tryParse(date) == null
+                              ? date
+                              : OmiDateFormat.of(context).weekdayDate(DateTime.parse(date))),
                           subtitle: l10n.approvalDraftRowBody,
                           onTap: () async {
                             await routeToPage(context, DayReviewPage(date: date));

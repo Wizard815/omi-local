@@ -239,6 +239,51 @@ void main() {
     expect(chunks.length, 9);
   });
 
+  Stream<String> chatStream(Stream<List<int>> body) => makeStreamingApiCall(
+        url: messagesUrl,
+        seams: seams((request) async => http.StreamedResponse(body, 200)),
+        inactivityTimeout: ApiClient.chatStreamInactivityTimeout,
+        totalTimeout: ApiClient.chatStreamTotalTimeout,
+      );
+
+  test('chat deadlines sit past the self-hosted server\'s own (300 s first event, 1200 s in all)', () {
+    expect(ApiClient.chatStreamInactivityTimeout, greaterThan(const Duration(seconds: 300)));
+    expect(ApiClient.chatStreamTotalTimeout, greaterThan(const Duration(seconds: 1200)));
+  });
+
+  test('a chat turn waits out a self-hosted model that is silent for minutes before it answers', () async {
+    final chunks = <String>[];
+    Object? error;
+    fakeAsync((async) {
+      final controller = StreamController<List<int>>();
+      chatStream(controller.stream).listen(chunks.add, onError: (e) => error = e);
+      async.flushMicrotasks();
+      controller.add(utf8.encode('think: Searching conversations\n\n'));
+      // The server's first-event deadline on a local model is one model call (300 s by default).
+      async.elapse(const Duration(seconds: 290));
+      controller.add(utf8.encode('data: The plumber comes Friday.\n\n'));
+      // Then a keep-alive every 20 s while the rest is written, well past the cloud's 180 s.
+      for (var i = 0; i < 30; i++) {
+        controller.add(utf8.encode('think: Still working…\n\n'));
+        async.elapse(const Duration(seconds: 20));
+      }
+      async.flushMicrotasks();
+      expect(error, isNull, reason: 'no client timeout while the server is still working');
+      expect(chunks, contains('data: The plumber comes Friday.'));
+    });
+  });
+
+  test('a silent chat stream still ends on the client after the inactivity bound', () async {
+    Object? error;
+    fakeAsync((async) {
+      chatStream(StreamController<List<int>>().stream).listen((_) {}, onError: (e) => error = e);
+      async.elapse(ApiClient.chatStreamInactivityTimeout + const Duration(seconds: 10));
+    });
+    await pumpEventQueue();
+
+    expect(error, isA<ChatStreamException>().having((e) => e.kind, 'kind', ChatStreamFailureClass.timeout));
+  });
+
   test('the stream terminates cleanly when the body closes', () async {
     final controller = StreamController<List<int>>();
     final expectation = expectLater(

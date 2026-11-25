@@ -153,6 +153,7 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
       backgroundColor: OmiColors.surface0,
       appBar: AppBar(
         backgroundColor: OmiColors.surface0,
+        leading: const OmiBackButton(),
         title: Text(l10n.connectionsTitle),
         actions: [
           IconButton(
@@ -164,14 +165,7 @@ class _ConnectionsPageState extends State<ConnectionsPage> {
         ],
       ),
       body: state == null
-          ? Center(
-              child: _error == null
-                  ? const OmiSpinner()
-                  : Column(mainAxisSize: MainAxisSize.min, children: [
-                      Text(_error!, style: OmiType.body.copyWith(color: OmiColors.textSecondary)),
-                      TextButton(onPressed: _load, child: Text(l10n.retry)),
-                    ]),
-            )
+          ? (_error == null ? const OmiLoadingState() : OmiErrorState(message: _error!, onRetry: _load))
           : ListView(
               key: const Key('connections_list'),
               padding: const EdgeInsets.fromLTRB(OmiSpacing.md, OmiSpacing.xs, OmiSpacing.md, OmiSpacing.xl),

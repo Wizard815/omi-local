@@ -111,6 +111,18 @@ Duration get auditWalkShotHold =>
 /// 390x844 logical pixels, captured at 2x.
 const auditViewport = Size(390, 844);
 
+/// The capture size: [auditViewport], or `OMI_AUDIT_WIDTH` logical px wide (a small phone, 320).
+Size get auditViewportSize {
+  final width = double.tryParse(Platform.environment['OMI_AUDIT_WIDTH'] ?? '');
+  return width == null ? auditViewport : Size(width, auditViewport.height);
+}
+
+/// `OMI_AUDIT_REPORT_LAYOUT=1`: print layout errors (with the overflowing widget) and keep capturing.
+final bool _auditReportLayout = Platform.environment['OMI_AUDIT_REPORT_LAYOUT'] == '1';
+
+/// `OMI_AUDIT_TEXT_SCALE` (1.3, 2.0): the accessibility text size every page is captured at.
+final double? _auditTextScale = double.tryParse(Platform.environment['OMI_AUDIT_TEXT_SCALE'] ?? '');
+
 void walkLog(String message) {
   stdout.writeln(message);
   stdout.flush();
@@ -180,7 +192,7 @@ class AuditRun {
       await _walkPump(page, providers: providers, scaffold: scaffold);
       return;
     }
-    tester.view.physicalSize = auditViewport;
+    tester.view.physicalSize = auditViewportSize;
     tester.view.devicePixelRatio = 1;
     await tester.pumpWidget(
       MultiProvider(
@@ -194,6 +206,12 @@ class AuditRun {
             supportedLocales: const [Locale('en')],
             // The app's own theme at this revision; Android font metrics (Roboto).
             theme: _auditLight ? buildOmiTheme(brightness: Brightness.light) : _suite.theme(),
+            builder: _auditTextScale == null
+                ? null
+                : (context, child) => MediaQuery(
+                      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(_auditTextScale!)),
+                      child: child!,
+                    ),
             home: scaffold ? Scaffold(backgroundColor: _suite.hostBackground, body: page) : page,
           ),
         ),
@@ -295,6 +313,15 @@ class AuditRun {
   /// Captures the surface as `<id>.png`, or `<id>-<step>.png` when [step] is given.
   Future<void> shot(String action, {String? step}) async {
     await tester.pump();
+    if (_auditReportLayout) {
+      // Survey mode: report every layout error with the widget that caused it, and keep capturing,
+      // so one overflow does not hide the next screen. The PNG shows the overflow stripes.
+      for (Object? error = tester.takeException(); error != null; error = tester.takeException()) {
+        // ignore: avoid_print
+        print('AUDIT_LAYOUT_ERROR ${scenario.id}${step == null ? '' : '-$step'}: '
+            '${error is FlutterError ? error.toStringDeep() : error}');
+      }
+    }
     expect(tester.takeException(), isNull, reason: 'Capture must not hide layout or runtime errors');
     if (auditWalkMode) {
       if (!_walkReadyAnnounced) {
