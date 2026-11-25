@@ -203,14 +203,12 @@ def test_developer_detail_projects_before_transcript_omission(include_transcript
 
 
 @pytest.mark.parametrize('revision', [None, 1])
-def test_indexed_list_carries_clock_and_honors_transcript_receipt(monkeypatch, revision):
+def test_archive_list_carries_clock_and_honors_transcript_receipt(monkeypatch, revision):
     row = capture(record_projection_revision=revision, updated_at=NOW, memory_id='capture')
     db = Db([row])
     monkeypatch.setattr(conversations, 'db', db)
-    monkeypatch.setattr(conversations, 'indexed_list_reads_enabled', lambda: True)
     rows = conversations.get_conversations_without_photos('u', list_fields_only=True)
     assert len(rows) == 1
-    assert 'transcript_segments' not in rows[0]
     assert rows[0]['home_transcription_deadline_at'] == row['home_transcription_deadline_at']
     wire = transcribing_hold.project(rows[0])
     assert wire['status'] == ('completed' if revision else 'processing')
@@ -338,12 +336,10 @@ def test_encoded_empty_capture_has_visible_overdue_exit(monkeypatch, level):
     assert transcribing_hold.project(page[0])['structured']['title'] == "Couldn't transcribe"
 
 
-@pytest.mark.parametrize('indexed', [False, True])
-def test_stale_processing_list_projection_preserves_stored_state(monkeypatch, indexed):
+def test_stale_processing_list_projection_preserves_stored_state(monkeypatch):
     raw = capture(status='processing', finished_at=NOW - timedelta(hours=7), updated_at=NOW, memory_id='capture')
     db = Db([raw])
     monkeypatch.setattr(conversations, 'db', db)
-    monkeypatch.setattr(conversations, 'indexed_list_reads_enabled', lambda: indexed)
     rows = conversations.get_conversations_without_photos('u', list_fields_only=True)
     assert len(rows) == 1
     assert rows[0]['finished_at'] == raw['finished_at']

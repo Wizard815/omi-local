@@ -132,11 +132,6 @@ def default_off(name: str, *, environ: Mapping[str, str] | None = None) -> bool:
     return False
 
 
-def quiet_empty_exit_enabled() -> bool:
-    """Dark empty-row cleanup; uncertain server custody exits via orphan repair."""
-    return default_off('QUIET_EMPTY_EXIT_ENABLED')
-
-
 def batch_live_orphan_repair_enabled() -> bool:
     """Dark operator repair; retained audio exits via batch, empty rows via fenced cleanup."""
     return default_off('BATCH_LIVE_ORPHAN_REPAIR_ENABLED')

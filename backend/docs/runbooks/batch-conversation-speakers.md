@@ -290,8 +290,8 @@ removal deletes the document atomically with its authority-index update.
 Expiry and eviction leave only inert stored pointers until transcript deletion.
 
 Controls: `SPEAKER_RECURRING_VOICES_ENABLED=false` stops new learning, matching
-and recurring suggestions. `SPEAKER_RECURRING_PERCENT` defaults to 100 and uses
-the final-pass UID hash, nested under `BATCH_FINAL_PASS_ENABLED`. Deletion,
+and recurring suggestions. Admission is nested under `BATCH_FINAL_PASS_ENABLED`
+and its percent; the separate recurring percent was retired 2026-11-25. Deletion,
 retraction and opt-out cleanup remain active when killed. Rollback: set the kill
 switch false; existing manual assignments remain user authority.
 

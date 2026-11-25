@@ -202,11 +202,7 @@ def test_kill_switch_and_percent_are_nested_under_batch_admission(monkeypatch):
     monkeypatch.setenv('BATCH_FINAL_PASS_ENABLED', 'false')
     assert not flags.recurring_enabled_for('u', batch)
     monkeypatch.setenv('BATCH_FINAL_PASS_ENABLED', 'true')
-    monkeypatch.setenv('SPEAKER_RECURRING_PERCENT', '0')
-    assert not flags.recurring_enabled_for('u', batch)
-    monkeypatch.setenv('SPEAKER_RECURRING_PERCENT', 'nan')
-    assert not flags.recurring_enabled_for('u', batch)
-    monkeypatch.setenv('SPEAKER_RECURRING_PERCENT', '100')
+    assert flags.recurring_enabled_for('u', batch)
     monkeypatch.setenv('SPEAKER_RECURRING_VOICES_ENABLED', 'false')
     assert not flags.recurring_enabled_for('u', batch)
 
@@ -222,7 +218,6 @@ def test_resolved_batch_binding_keeps_admission_without_reopening_audio_units(mo
         ('BATCH_FINAL_PASS_PERCENT', '0'),
         ('BATCH_FINAL_PASS_PERCENT', 'nan'),
         ('SPEAKER_RECURRING_VOICES_ENABLED', 'false'),
-        ('SPEAKER_RECURRING_PERCENT', '0'),
         ('BATCH_CONVERSATION_SPEAKERS_ENABLED', 'false'),
     ]:
         with monkeypatch.context() as current:

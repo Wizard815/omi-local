@@ -575,8 +575,9 @@ def test_registry_and_classification_declare_the_mode():
     registry = yaml.load((REPO / 'config/feature-flags.yaml').read_text(), Loader=SAFE_YAML_LOADER)
     rows = [row for row in registry['flags'] if row.get('key') == MODE_KEY]
     assert len(rows) == 1
-    assert rows[0]['lifecycle'] == 'rollout' and rows[0]['fail'] == 'closed'
-    assert rows[0]['surfaces'] == ['backend'] and rows[0]['decision'] == 'pending'
+    # omi-local fixed the cloud rollout at its default-off mode.
+    assert rows[0]['lifecycle'] == 'config_switch' and rows[0]['fail'] == 'closed'
+    assert rows[0]['surfaces'] == ['backend'] and rows[0]['decision'] == 'keep'
     classification = json.loads((REPO / 'config/deployment-setting-classification.json').read_text())
     assert MODE_KEY in classification['kinds']['config']
 

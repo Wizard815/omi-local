@@ -70,20 +70,13 @@ LIST_READ_MIN_RPC_SECONDS = 0.05
 BudgetExhaustionReason = str  # 'deadline' | 'documents'
 
 
-def indexed_list_reads_enabled() -> bool:
-    """Dark rollout of index-gated memory and slim conversation list reads."""
-    return os.getenv('OMI_INDEXED_LIST_READS_ENABLED', '').strip().lower() in {'1', 'true', 'on', 'yes'}
-
-
 def canonical_demand_window_enabled() -> bool:
     """Size raw canonical reads to page demand without changing candidate policy."""
     return os.getenv('OMI_CANONICAL_DEMAND_WINDOW_ENABLED', '').strip().lower() != 'false'
 
 
-def canonical_scan_window_size(demand: int, raw_chunk: int, *, indexed: bool, filtered: bool = False) -> int:
-    """Keep indexed batching unchanged; remove only surplus raw candidates."""
-    if indexed:
-        return min(500, demand)
+def canonical_scan_window_size(demand: int, raw_chunk: int, *, filtered: bool = False) -> int:
+    """Size raw canonical scans to page demand; remove only surplus raw candidates."""
     return min(raw_chunk, demand) if canonical_demand_window_enabled() and not filtered else raw_chunk
 
 
