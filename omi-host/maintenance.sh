@@ -14,8 +14,13 @@
 #                          everything that cannot be re-downloaded, kept in
 #                          $STATE/backups (OMI_BACKUP_KEEP newest, default 7).
 #                          Runs every OMI_BACKUP_INTERVAL_S (default 86400; 0 = off).
-#   omi_maintenance_loop   runs both on their schedules; entrypoint.sh starts it
-#                          once the emulators are up.
+#   omi_snapshot_on_request
+#                          a fresh export and Redis snapshot when a backup tool
+#                          outside this container (backup/omi_backup.py in the
+#                          omi-backup sidecar) writes $STATE/.snapshot-request;
+#                          the answer lands in $STATE/.snapshot-done (BACKUP.md).
+#   omi_maintenance_loop   runs all three; entrypoint.sh starts it once the
+#                          emulators are up.
 #
 # Restore: stop the stack, unpack a tarball over the data volume's root
 # (`tar xzf omi-data-<stamp>.tar.gz -C /path/to/volume`), start the stack.
@@ -51,9 +56,9 @@ omi_export_firestore() {
 # Ask Redis for a point-in-time snapshot (dump.rdb next to the AOF) and wait for it.
 omi_snapshot_redis() {
   local i
-  "$REDIS_CLI" -p 6380 BGSAVE >/dev/null 2>&1 || return 0
+  "$REDIS_CLI" -p "${OMI_REDIS_PORT:-6380}" BGSAVE >/dev/null 2>&1 || return 0
   for i in $(seq 1 60); do
-    case "$("$REDIS_CLI" -p 6380 INFO persistence 2>/dev/null | tr -d '\r' | grep '^rdb_bgsave_in_progress:')" in
+    case "$("$REDIS_CLI" -p "${OMI_REDIS_PORT:-6380}" INFO persistence 2>/dev/null | tr -d '\r' | grep '^rdb_bgsave_in_progress:')" in
       *:0) return 0 ;;
     esac
     sleep 1
@@ -84,15 +89,34 @@ omi_backup() {
   done
 }
 
+# Answer a snapshot request from the backup sidecar: {"id","ok","detail","at"}.
+omi_snapshot_on_request() {
+  local req="$STATE/.snapshot-request" id ok=false detail="firestore export failed"
+  [ -f "$req" ] || return 1
+  id="$(head -c 64 "$req" | tr -cd 'a-zA-Z0-9')"
+  rm -f "$req"
+  if omi_export_firestore >/dev/null 2>&1; then
+    omi_snapshot_redis
+    ok=true
+    detail="firestore exported, redis snapshot taken"
+  fi
+  printf '{"id":"%s","ok":%s,"detail":"%s","at":%s}\n' "$id" "$ok" "$detail" "$(date +%s)" > "$STATE/.snapshot-done.tmp"
+  mv "$STATE/.snapshot-done.tmp" "$STATE/.snapshot-done"
+  omi_log "snapshot on request: $detail"
+}
+
 omi_maintenance_loop() {
   local next_export next_backup now
   now="$(date +%s)"
   next_export=$((now + OMI_FIRESTORE_EXPORT_INTERVAL_S))
   next_backup=$((now + OMI_BACKUP_INTERVAL_S))
   omi_log "timed export every ${OMI_FIRESTORE_EXPORT_INTERVAL_S}s, backup every ${OMI_BACKUP_INTERVAL_S}s (0 = off)"
-  while sleep 30; do
+  # Every few seconds, so a backup's snapshot request is answered quickly.
+  while sleep "${OMI_MAINTENANCE_POLL_S:-5}"; do
     now="$(date +%s)"
-    if [ "$OMI_BACKUP_INTERVAL_S" -gt 0 ] && [ "$now" -ge "$next_backup" ]; then
+    if omi_snapshot_on_request; then
+      next_export=$((now + OMI_FIRESTORE_EXPORT_INTERVAL_S))
+    elif [ "$OMI_BACKUP_INTERVAL_S" -gt 0 ] && [ "$now" -ge "$next_backup" ]; then
       omi_backup || true
       next_backup=$((now + OMI_BACKUP_INTERVAL_S))
       next_export=$((now + OMI_FIRESTORE_EXPORT_INTERVAL_S))

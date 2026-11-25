@@ -8,9 +8,11 @@ status=0
 for test in \
   test_audio_env.py \
   test_auth_env.py \
+  test_backup.py \
   test_caldav_env.py \
   test_caldav_demo_legacy_ref.py \
   test_egress_guard.py \
+  test_health_watchdog.py \
   test_maintenance.py \
   test_merge_proxy_stream.py; do
   echo "== omi-host/$test"

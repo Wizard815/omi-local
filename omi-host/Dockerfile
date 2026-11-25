@@ -6,7 +6,7 @@ FROM node:22-bookworm-slim
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl ca-certificates git ffmpeg libopus-dev build-essential procps redis-server \
+    curl ca-certificates git ffmpeg libopus-dev build-essential procps redis-server age tzdata \
  && rm -rf /var/lib/apt/lists/*
 
 # uv + pinned python 3.11.15 (backend/.python-version)
@@ -50,6 +50,10 @@ COPY omi-host/audio-env.sh /app/omi-host/audio-env.sh
 COPY omi-host/auth-env.sh /app/omi-host/auth-env.sh
 COPY omi-host/caldav-env.sh /app/omi-host/caldav-env.sh
 COPY omi-host/maintenance.sh /app/omi-host/maintenance.sh
+# Backups and the health watchdog (BACKUP.md, HEALTH.md): the omi-backup and
+# omi-health compose services run these from this same image.
+COPY omi-host/backup/omi_backup.py /app/omi-host/backup/omi_backup.py
+COPY omi-host/health/watchdog.py /app/omi-host/health/watchdog.py
 # Local-only egress guard, loaded by every Python process (entrypoint.sh sets PYTHONPATH).
 COPY omi-host/egress-guard/sitecustomize.py /app/omi-host/egress-guard/sitecustomize.py
 RUN chmod +x /entrypoint.sh
