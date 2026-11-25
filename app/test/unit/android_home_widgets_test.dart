@@ -115,8 +115,8 @@ void main() {
     test('counts everything waiting and lists tasks, then events, then drafts, at most three', () {
       final waiting = WaitingForApproval(
         tasks: [
-          ActionItemWithMetadata(id: 't1', description: ' Book the venue ', completed: false),
-          ActionItemWithMetadata(id: 't2', description: '', completed: false),
+          const ActionItemWithMetadata(id: 't1', description: ' Book the venue ', completed: false),
+          const ActionItemWithMetadata(id: 't2', description: '', completed: false),
         ],
         eventCount: 1,
         events: [
