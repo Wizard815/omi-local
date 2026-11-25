@@ -67,6 +67,8 @@ What was checked:
 | No network rule existed; every container had a route to the internet. | `egress-firewall.sh`. |
 | `Dockerfile.dockerignore` left out `caldav-env.sh`, so a clean build failed. | Added. |
 | Library telemetry and model downloads: LangSmith tracing, Hugging Face, Chroma telemetry, and google-auth's metadata probe. | Switched off in `entrypoint.sh`. |
+| Server-side product analytics went to PostHog (integration syncs, chats, MCP calls, billing events) when a key was set, and the proactivity flag was read from PostHog. | The PostHog SDK is removed from the backend and pusher. Events go only to the local usage store (`backend/database/local_usage.py`, `OMI_LOCAL_USAGE`); the flag comes from the Omi flag store. LangSmith is ignored when self-hosted, even with a key. |
+| Cloud STT keys in `.env` put the vendor ahead of the local engine. | With omi-audio configured, `audio-env.sh` drops `MODULATE_API_KEY`, `SONIOX_API_KEY` and `DEEPGRAM_API_KEY`. |
 
 **Phone app (Android, dev flavor):**
 

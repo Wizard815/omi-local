@@ -24,6 +24,9 @@ export PYTHONPATH="/app/omi-host/egress-guard${PYTHONPATH:+:$PYTHONPATH}"
 export TIKTOKEN_CACHE_DIR="${TIKTOKEN_CACHE_DIR:-/app/tiktoken-cache}"   # baked into the image
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_HUB_DISABLE_TELEMETRY=1
 export LANGCHAIN_TRACING_V2=false LANGSMITH_TRACING=false
+# No third-party tracing or analytics, even if a key was copied into .env: the
+# backend has no PostHog any more and ignores LangSmith when self-hosted.
+unset LANGSMITH_API_KEY LANGCHAIN_API_KEY LANGSMITH_ENDPOINT LANGCHAIN_ENDPOINT
 export ANONYMIZED_TELEMETRY=False DO_NOT_TRACK=1
 export NO_UPDATE_NOTIFIER=1                                              # firebase-tools' npm update check
 # google-auth probes the GCE metadata server when it finds no credentials.

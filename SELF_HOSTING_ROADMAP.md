@@ -127,3 +127,18 @@ Google Cloud Tasks (defaults to local inline dispatch), Deepgram/Soniox/Modulate
 a key, raise cleanly if absent), Stripe (backend blocks any call with no key), OpenAI/OpenRouter/
 Anthropic/Gemini chat LLMs (all BYOK-gated; default path is the local llama-swap proxy), Google
 OAuth sign-in flow (button removed), no hardcoded `api.omi.me` fallback anywhere in the app.
+
+## Analytics removed, cloud features off (November 2026)
+
+- **Third-party analytics removed.** The backend and pusher no longer ship the PostHog SDK; the
+  server's product events go to a local usage store in this server's own Firestore
+  (`backend/database/local_usage.py`): per-day counts and each person's newest events, kept
+  `OMI_LOCAL_USAGE_RETENTION_DAYS` (90) days, off with `OMI_LOCAL_USAGE=off`. The admin reads it on
+  the dashboard ("Usage on this server", `/dashboard/usage`); each person reads only their own at
+  `/v1/users/me/local-usage`. LangSmith tracing is ignored when self-hosted. The web share pages
+  lost Google Analytics, the PostHog capture and the Elfsight widget; `web/app` lost posthog-js.
+- **Billing off.** Self-hosted, `/v1/users/me/subscription` answers an unlimited plan with the plan
+  UI hidden, the desktop chat quota is unlimited, and checkout/portal/plan changes answer 404.
+- **Cloud STT off while local STT is configured** (`omi-host/audio-env.sh`).
+- **Still open (app side, after the UI pass):** the Flutter app's own analytics calls, paywall
+  screens and cloud-only settings.

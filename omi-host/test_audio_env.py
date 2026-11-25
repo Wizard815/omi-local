@@ -12,8 +12,8 @@ What this pins down:
     live chain = the local engine only,
   * OMI_AUDIO_URL moves all three surfaces at once, and an explicit per-surface
     URL still wins,
-  * cloud STT keys go ahead of the local engine, in upstream's order, and a
-    provider without its key is never listed (the backend refuses to start then),
+  * with local STT configured, cloud STT is off: vendor keys are dropped and the
+    chain is the local engine only, unless the operator lists an explicit chain,
   * OMI_AUDIO_URL=off: no local surfaces, a chain of cloud engines only, sync
     uploads on Modulate when its key exists, and a refusal with no key at all.
 
@@ -81,16 +81,12 @@ def test_an_explicit_surface_url_still_wins():
     assert env["TTS_LOCAL_BASE_URL"] == "http://tts-box:8790"
 
 
-def test_cloud_keys_go_ahead_of_the_local_engine_in_upstream_order():
-    code, env, _ = run(DEEPGRAM_API_KEY="dg", MODULATE_API_KEY="mod", SONIOX_API_KEY="sx")
+def test_cloud_keys_are_dropped_when_local_stt_is_configured():
+    code, env, out = run(DEEPGRAM_API_KEY="dg", MODULATE_API_KEY="mod", SONIOX_API_KEY="sx")
     assert code == 0
-    assert env["STT_SERVICE_MODELS"] == "modulate-velma-2,soniox,dg-nova-3,parakeet", env["STT_SERVICE_MODELS"]
-
-
-def test_a_provider_without_its_key_is_never_listed():
-    code, env, _ = run(DEEPGRAM_API_KEY="dg")
-    assert code == 0
-    assert env["STT_SERVICE_MODELS"] == "dg-nova-3,parakeet", env["STT_SERVICE_MODELS"]
+    assert env["STT_SERVICE_MODELS"] == "parakeet", env["STT_SERVICE_MODELS"]
+    assert not any(env.get(k) for k in ("DEEPGRAM_API_KEY", "MODULATE_API_KEY", "SONIOX_API_KEY")), env
+    assert env["STT_PRERECORDED_MODEL"] == "", "sync uploads stay on the local service"
 
 
 def test_an_explicit_chain_is_kept():
@@ -127,8 +123,7 @@ def main() -> None:
         test_a_chain_with_parakeet_turns_on_upstreams_live_parakeet_slot,
         test_audio_url_moves_every_surface,
         test_an_explicit_surface_url_still_wins,
-        test_cloud_keys_go_ahead_of_the_local_engine_in_upstream_order,
-        test_a_provider_without_its_key_is_never_listed,
+        test_cloud_keys_are_dropped_when_local_stt_is_configured,
         test_an_explicit_chain_is_kept,
         test_off_with_deepgram_serves_live_audio_from_the_cloud_only,
         test_off_with_modulate_also_transcribes_sync_uploads_there,

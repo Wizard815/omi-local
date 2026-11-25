@@ -9,7 +9,9 @@
 #                   Point it at another machine running the same image, or set it to
 #                   "off" for a cloud-only setup (needs a cloud STT key below).
 #   *_API_KEY       cloud STT providers the backend speaks natively (Modulate,
-#                   Soniox, Deepgram). Each key set goes ahead of the local engine.
+#                   Soniox, Deepgram). Used only without a local audio service
+#                   (OMI_AUDIO_URL=off) or in an explicit STT_SERVICE_MODELS: with
+#                   local STT configured, cloud STT is off and the keys are dropped.
 #
 # Which engine omi-audio itself transcribes with (its own whisper.cpp, or any
 # OpenAI-compatible server or frontier API) is set on the omi-audio container
@@ -21,6 +23,18 @@ if [ "$OMI_AUDIO_URL" != "off" ]; then
   export HOSTED_PARAKEET_API_URL="${HOSTED_PARAKEET_API_URL:-$OMI_AUDIO_URL}"
   export HOSTED_SPEAKER_EMBEDDING_API_URL="${HOSTED_SPEAKER_EMBEDDING_API_URL:-$OMI_AUDIO_URL}"
   export TTS_LOCAL_BASE_URL="${TTS_LOCAL_BASE_URL:-$OMI_AUDIO_URL}"
+fi
+
+# Cloud STT is a cloud-only feature: with a local audio service configured and no
+# explicit chain, vendor keys are dropped so audio never leaves this server.
+if [ -n "${HOSTED_PARAKEET_API_URL:-}" ] && [ -z "${STT_SERVICE_MODELS:-}" ]; then
+  for _cloud_stt_key in MODULATE_API_KEY SONIOX_API_KEY DEEPGRAM_API_KEY; do
+    if [ -n "${!_cloud_stt_key:-}" ]; then
+      echo "audio: local STT configured, ignoring $_cloud_stt_key (cloud STT is off)"
+      unset "$_cloud_stt_key"
+    fi
+  done
+  unset _cloud_stt_key
 fi
 
 # Live-STT serving chain. Upstream's default is modulate-velma-2,soniox,dg-nova-3,parakeet,
