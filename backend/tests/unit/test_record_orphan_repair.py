@@ -375,10 +375,8 @@ def test_report_uses_retained_sample_spans_and_separates_stt_padding(source, mon
     assert report['sealed_received_stt_seconds'] == 13.0
 
 
-@pytest.mark.parametrize('enabled', [False, True])
 @pytest.mark.parametrize('received', [None, True])
-def test_lane_owned_markerless_custody_stays_protected(quiet_store, monkeypatch, enabled, received):
-    monkeypatch.setenv('QUIET_EMPTY_EXIT_ENABLED', str(enabled))
+def test_lane_owned_markerless_custody_stays_protected(quiet_store, monkeypatch, received):
     monkeypatch.setenv('LIFECYCLE_V2_MODE', 'off')
     row = quiet_store.rows[quiet_tests.ROW]
     row.update(

@@ -19,7 +19,6 @@ from grpc import StatusCode
 from collections import deque
 from typing import Any, Awaitable, Callable, Deque, Dict, List, Optional, Tuple, cast
 from utils.pusher_audio_window import append_window_run, v2_overlap_conflict, AUDIO_TIMELINE_CONTINUITY_TOLERANCE
-from config.audio_custody import framed_pack
 from config.audio_outbox import enabled as audio_outbox_enabled
 from utils.pusher_audio_projection import PusherAudioProjection
 from utils.batch_pipeline.record_projection_rebuild import projection_owner_gone
@@ -317,7 +316,6 @@ async def _commit_durable_audio_window(
     budget: ByteBudget,
     queue_wait_timeout: float | None,
     on_committed: Optional[Callable[[], None]] = None,
-    framed: bool = False,
     tail: bool = False,
 ) -> Optional[AudioReceipt]:
     """Commit one immutable media+manifest pair for a buffered audio window.
@@ -380,7 +378,6 @@ async def _commit_durable_audio_window(
                 frames,
                 data_protection_level=protection_level,
                 clock_source='server_projected' if timeline_v2 else 'arrival_estimate',
-                framed=framed,
             )
             if reserved:
                 # Shield this await independently of the socket tracker: byte
@@ -415,9 +412,7 @@ async def _commit_durable_audio_window(
         else:
             settled()
     if receipt.conversation_id and receipt.samples:
-        durable_queue.stage_committed(
-            AudioProjection(receipt, start, 0, receipt.samples, tuple(frames) if framed else ())
-        )
+        durable_queue.stage_committed(AudioProjection(receipt, start, 0, receipt.samples, ()))
     payload_size = len(payload)
     del payload  # Queue-capacity wait owns a receipt only, never a second PCM copy.
     budget.release(payload_size)
@@ -576,7 +571,6 @@ async def _run_websocket_util_trigger(
     durable_audio = audio_outbox_enabled()
     log_closed_record_drain_cap()
     record_futures = ExecutorFutureTracker(storage_executor, record_barrier_executor)
-    framed_audio = durable_audio and audio_timeline_v2 and sample_rate == 16000 and framed_pack(uid)
     # The bounded lane holds generation-pinned references, never the only PCM.
     # A crash after commit but before queue.put is recoverable via raw-live's
     # existing per-conversation playback index, independent of this process.
@@ -868,8 +862,7 @@ async def _run_websocket_util_trigger(
                         end = refs[-1].start + refs[-1].samples / refs[-1].sample_rate
                         total_bytes = (sum(r.samples for r in refs) + ref.samples) * 2
                         if (
-                            framed_audio
-                            or (audio_timeline_v2 and abs(ref.start - end) > AUDIO_TIMELINE_CONTINUITY_TOLERANCE)
+                            (audio_timeline_v2 and abs(ref.start - end) > AUDIO_TIMELINE_CONTINUITY_TOLERANCE)
                             or len(refs) >= 60
                             or total_bytes > BUFFERED_AUDIO_MAX_BYTES
                         ):
@@ -1391,7 +1384,6 @@ async def _run_websocket_util_trigger(
         # buffered in private_cloud_sync_buffer, pinned verbatim into one
         # manifest when the window commits at a flush boundary.
         durable_window_frames: List[Dict[str, Any]] = []
-        private_cloud_window_opened_at: Optional[float] = None
         durable_tail_has_receipt = False
         durable_commit_unresolved = False
         pcm_admission_cancelled = False
@@ -1436,7 +1428,6 @@ async def _run_websocket_util_trigger(
                     budget=audio_budget,
                     queue_wait_timeout=queue_wait_timeout,
                     on_committed=committed,
-                    framed=framed_audio,
                     tail=tail,
                 )
             except BaseException:
@@ -1559,10 +1550,8 @@ async def _run_websocket_util_trigger(
         def _reset_private_cloud_buffer() -> None:
             nonlocal private_cloud_sync_buffer
             nonlocal private_cloud_chunk_start_time
-            nonlocal private_cloud_window_opened_at
             private_cloud_sync_buffer = bytearray()
             private_cloud_chunk_start_time = None
-            private_cloud_window_opened_at = None
 
         async def finish_receive() -> None:
             nonlocal inline_finish_conversation, websocket_active, websocket_close_code
@@ -1672,7 +1661,7 @@ async def _run_websocket_util_trigger(
 
         async def process_frame(data: bytes) -> None:
             nonlocal conversation_generation, custody_sequence
-            nonlocal audiobuffer, trigger_audiobuffer, private_cloud_chunk_start_time, private_cloud_window_opened_at
+            nonlocal audiobuffer, trigger_audiobuffer, private_cloud_chunk_start_time
             nonlocal current_conversation_id, audio_timeline_last_end
             try:
                 header_type = frame_header(data)
@@ -1878,9 +1867,8 @@ async def _run_websocket_util_trigger(
                             # flush stores (or drops) — the only flush
                             # where a skipped all-zero run is provably
                             # interior, never the recording's last.
-                            if not framed_audio:
-                                await _queue_private_cloud_chunk(skip_if_silent=True)
-                                _reset_private_cloud_buffer()
+                            await _queue_private_cloud_chunk(skip_if_silent=True)
+                            _reset_private_cloud_buffer()
                         elif delta < -AUDIO_TIMELINE_CONTINUITY_TOLERANCE:
                             # Any overlap of already-accepted audio is
                             # replay evidence for this conversation: the
@@ -1915,7 +1903,6 @@ async def _run_websocket_util_trigger(
                                 private_cloud_chunk_start_time=private_cloud_chunk_start_time,
                                 private_cloud_sync_buffer=private_cloud_sync_buffer,
                                 v2_flushed_runs=v2_flushed_runs,
-                                frames=durable_window_frames if framed_audio else None,
                             ):
                                 OMI_AUDIO_TIMELINE_REPLAY_CONFLICTS_TOTAL.inc()
                                 logger.warning(
@@ -1945,18 +1932,6 @@ async def _run_websocket_util_trigger(
                     if storage_pcm_budget.limit and len(durable_window_frames) >= MAX_PCM_WINDOW_FRAMES:
                         await _queue_private_cloud_chunk()
                         _reset_private_cloud_buffer()
-                    if (
-                        framed_audio
-                        and private_cloud_sync_buffer
-                        and (
-                            len(private_cloud_sync_buffer) + len(audio_data)
-                            > min(16 * 1024 * 1024, sample_rate * 2 * 60)
-                            or len(durable_window_frames) >= 4096
-                            or time.monotonic() - (private_cloud_window_opened_at or time.monotonic()) >= 60
-                        )
-                    ):
-                        await _queue_private_cloud_chunk()
-                        _reset_private_cloud_buffer()
                     if current_conversation_id:
                         with observe_work('record_begin'):
                             await record_barrier.begin_recording(current_conversation_id)
@@ -1964,7 +1939,6 @@ async def _run_websocket_util_trigger(
                     if private_cloud_chunk_start_time is None:
                         # Use timestamp from first buffer of this 5-second chunk
                         private_cloud_chunk_start_time = buffer_start_timestamp
-                        private_cloud_window_opened_at = time.monotonic()
 
                     frame_checkpoint, stored_capture = append_window_run(
                         durable=durable_audio,

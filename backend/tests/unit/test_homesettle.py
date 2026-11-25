@@ -201,7 +201,6 @@ def test_list_titles_use_only_loaded_fields_and_never_refetch_transcripts(monkey
     transcript_refetch = Mock(return_value=[])
     monkeypatch.setattr(store, 'get_all', transcript_refetch, raising=False)
     monkeypatch.setattr(conversations, 'db', store)
-    monkeypatch.setattr(conversations, 'indexed_list_reads_enabled', lambda: True)
     rows = conversations.get_conversations_without_photos('u', list_fields_only=True)
     assert rows[0]['structured']['title'] == 'Thank you.'  # Unknown provenance needs absent speech: leave it alone.
     assert 'transcript_segments' not in rows[0]
@@ -280,12 +279,11 @@ def test_explicit_model_title_provenance_is_respected():
     assert conversations.prepare_conversation_for_read(raw, 'u')['structured']['title'] == 'Thank you.'
 
 
-def test_indexed_home_list_loads_floor_reason_before_filtering(monkeypatch):
+def test_archive_home_list_loads_floor_reason_before_filtering(monkeypatch):
     from tests.unit.test_indexed_list_read_path import Db
 
     row = floor(created_at=NOW, updated_at=NOW, memory_id='a', discarded=False)
     monkeypatch.setattr(conversations, 'db', Db([row]))
-    monkeypatch.setattr(conversations, 'indexed_list_reads_enabled', lambda: True)
     assert conversations.get_conversations_without_photos('u', list_fields_only=True) == []
 
 

@@ -1,8 +1,8 @@
 # Dark batch-live orphan repair
 
 Operation: `batch-live-inprogress-orphan-repair-v1`. Owner: dazheng.
-P0 freeze exemption: lead2 bus 8c0822. Both `QUIET_EMPTY_EXIT_ENABLED` and
-`BATCH_LIVE_ORPHAN_REPAIR_ENABLED` default **off** in `config/refactor_modes.py`.
+P0 freeze exemption: lead2 bus 8c0822. `BATCH_LIVE_ORPHAN_REPAIR_ENABLED` defaults
+**off** in `config/refactor_modes.py`; the quiet empty exit was retired off (2026-11-25).
 This fileset changes no serving config, IAM, timer, dispatcher or live.py.
 No production execution is authorized by this implementation handoff.
 
@@ -123,10 +123,9 @@ Storage proof is immutable-generation evidence, not permission to delete objects
 
 Set `BATCH_LIVE_ORPHAN_REPAIR_ENABLED=false` or stop the exact owned operator
 process; already-committed rows/jobs follow the normal pipeline. No apply can be
-undone by deleting audio. Keep `QUIET_EMPTY_EXIT_ENABLED=false` until the lead has
-accepted staging repair and drained the backlog. Then the lead may separately
-approve that flip and watch `listen_quiet_check_empty_exit_total`, orphan counts,
-and pipeline age. Unbounded quiet refusals retire their obligation and leave the
+undone by deleting audio. The quiet empty exit stays retired off; watch
+`listen_quiet_check_empty_exit_total` (dark observations), orphan counts and
+pipeline age. Unbounded quiet refusals retire their obligation and leave the
 row for this repair; #24893's state machine should absorb that standing exit. #24953's pending-job drain
 is disjoint: this repair requires job absence. #24866's due/dispatch is untouched.
 

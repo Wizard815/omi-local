@@ -150,8 +150,7 @@ def test_pending_review_intake_enrolls_bridge_even_without_audio(monkeypatch, pe
     finish.assert_called_once()
 
 
-@pytest.mark.parametrize('indexed', [False, True])
-def test_default_home_http_list_hides_pending_row(monkeypatch, pending, indexed):
+def test_default_home_http_list_hides_pending_row(monkeypatch, pending):
     from routers import conversations as routes
     from utils.other import endpoints as auth
     from tests.unit.test_sync_donor_tombstone_visibility import _ListingCollection, _ListingDoc, _ListingQuery
@@ -165,7 +164,6 @@ def test_default_home_http_list_hides_pending_row(monkeypatch, pending, indexed)
         )
 
     monkeypatch.setattr(_ListingCollection, 'select', select, raising=False)
-    monkeypatch.setattr(db, 'indexed_list_reads_enabled', lambda: indexed)
     store, _, _, _ = pending
     _install_listing(monkeypatch, _rows_from_store(store))
     monkeypatch.setattr(routes, '_heal_locked_conversations_if_eligible', lambda *a: None)

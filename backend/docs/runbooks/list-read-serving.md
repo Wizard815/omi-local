@@ -8,9 +8,10 @@ separately maintained list collection. The released row policy, identity checks,
 device/archive scope, lineage resolution, historical suppression, and response
 serialization remain authoritative (INV-MEM-1, INV-MEM-3, INV-MEM-5).
 
-The default-off `OMI_INDEXED_LIST_READS_ENABLED` switch enables the candidate gate,
-adaptive canonical batch sizing, and the main conversation list's slim field mask.
-An unset/false switch restores the previous query builders and batch sizes.
+The default-off indexed list-read switch (`OMI_INDEXED_LIST_READS_ENABLED`, the
+candidate gate, indexed canonical batch sizing and the conversation list's slim
+field mask) was retired on 2026-11-25 at its default: lists use the raw query
+builders and demand-sized raw batches.
 Deadline enforcement and sibling-route budget coverage are correctness fixes and
 remain enabled independently of this optimization switch.
 

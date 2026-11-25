@@ -255,7 +255,7 @@ async def test_mass_tail_uses_reserved_quarter_while_live_is_full(monkeypatch):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('boundary', ['size', 'conversation', 'process', 'gap', 'framed'])
+@pytest.mark.parametrize('boundary', ['size', 'conversation', 'process', 'gap'])
 async def test_real_router_retains_refused_window_across_flush_boundaries(inline_session, monkeypatch, boundary):
     client, path, barrier, projected = inline_session
     configure(monkeypatch, 0)
@@ -282,13 +282,11 @@ async def test_real_router_retains_refused_window_across_flush_boundaries(inline
 
         frames.append(struct.pack('<I', 104) + json.dumps({'conversation_id': 'conversation'}).encode())
         monkeypatch.setattr(pusher, 'process_conversation_task', AsyncMock())
-    if boundary == 'framed':
-        monkeypatch.setattr(pusher, 'framed_pack', lambda uid: True)
     frames.append(struct.pack('<Id', 101, 1010.0 if boundary == 'gap' else 1000.01) + second)
     sock = Socket(frames)
     await asyncio.wait_for(
         pusher._websocket_util_trigger(
-            sock, 'owner', 16000, audio_custody=1, audio_timeline=2 if boundary in ('gap', 'framed') else None
+            sock, 'owner', 16000, audio_custody=1, audio_timeline=2 if boundary == 'gap' else None
         ),
         5,
     )
