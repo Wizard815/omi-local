@@ -322,6 +322,8 @@ void main() {
       SettingsDestination.helpGroup,
       // Hidden for now (PhoneCallsFeature.visible); the destination stays wired for when it returns.
       if (!PhoneCallsFeature.visible) SettingsDestination.phoneCalls,
+      // New: AI on this phone, an Android-only row (not drawn on the test host); search finds it.
+      SettingsDestination.phoneAi,
     };
     expect(covered, SettingsDestination.values.toSet(), reason: 'a destination is missing from this walk');
 

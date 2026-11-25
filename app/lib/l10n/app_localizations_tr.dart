@@ -16976,4 +16976,81 @@ class AppLocalizationsTr extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'Bu telefondaki yapay zeka';
+
+  @override
+  String get phoneLlmHint => 'Sohbeti bu telefonda çalışan bir modelle yanıtlayın, örneğin Termux\'taki llama-server.';
+
+  @override
+  String get phoneLlmSource => 'Yapay zeka kaynağı';
+
+  @override
+  String get phoneLlmModeServer => 'Sunucu';
+
+  @override
+  String get phoneLlmModePhone => 'Bu telefon';
+
+  @override
+  String get phoneLlmModeAuto => 'Sunucuya ulaşılamadığında telefon';
+
+  @override
+  String get phoneLlmAddress => 'Telefon modelinin adresi';
+
+  @override
+  String get phoneLlmNoModels => 'Model bulunamadı. Telefon modeli çalışıyor mu?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return '$ms ms içinde yanıt verdi';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Telefon modeli yanıt vermedi.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Telefon modeli API anahtarını reddetti.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Son konuşmalarımı bağlam olarak ekle';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Bu telefonda yanıtlandı ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Sunucunuza kaydedilmez. Omi kapanana kadar tutulur.';
+
+  @override
+  String get phoneLlmAskPhone => 'Bunun Yerine Bu Telefona Sor';
+
+  @override
+  String get phoneLlmReplyFailed => 'Telefon modeli yanıt vermedi. Çalıştığından emin olun.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Telefon modeli çalışıyor';
+
+  @override
+  String get phoneLlmStatusLoading => 'Telefon modeli yükleniyor';
+
+  @override
+  String get phoneLlmStatusOff => 'Telefon modeli kapalı';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return '$time itibarıyla kontrol edildi';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'Yapay zeka kaynağı: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Değiştir';
+
+  @override
+  String get sendToHermesTitle => 'Hermes\'e Gönder';
 }

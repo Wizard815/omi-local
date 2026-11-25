@@ -17041,4 +17041,82 @@ class AppLocalizationsCa extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'IA en aquest telèfon';
+
+  @override
+  String get phoneLlmHint =>
+      'Respon al xat amb un model que s\'executa en aquest telèfon, com ara llama-server a Termux.';
+
+  @override
+  String get phoneLlmSource => 'Font de la IA';
+
+  @override
+  String get phoneLlmModeServer => 'Servidor';
+
+  @override
+  String get phoneLlmModePhone => 'Aquest telèfon';
+
+  @override
+  String get phoneLlmModeAuto => 'El telèfon quan no es pot accedir al servidor';
+
+  @override
+  String get phoneLlmAddress => 'Adreça del model del telèfon';
+
+  @override
+  String get phoneLlmNoModels => 'No s\'ha trobat cap model. S\'està executant el model del telèfon?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Ha respost en $ms ms';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'El model del telèfon no ha respost.';
+
+  @override
+  String get phoneLlmUnauthorized => 'El model del telèfon ha rebutjat la clau d\'API.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Inclou les meves converses recents com a context';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Respost en aquest telèfon ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'No es desa al vostre servidor. Es conserva fins que es tanca Omi.';
+
+  @override
+  String get phoneLlmAskPhone => 'Pregunta a aquest telèfon';
+
+  @override
+  String get phoneLlmReplyFailed => 'El model del telèfon no ha respost. Comproveu que s\'estigui executant.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Model del telèfon en marxa';
+
+  @override
+  String get phoneLlmStatusLoading => 'Carregant el model del telèfon';
+
+  @override
+  String get phoneLlmStatusOff => 'Model del telèfon aturat';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Comprovat a les $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'Font de la IA: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Canvia';
+
+  @override
+  String get sendToHermesTitle => 'Envia a Hermes';
 }

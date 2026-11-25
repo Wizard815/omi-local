@@ -17032,4 +17032,82 @@ class AppLocalizationsRo extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'AI pe acest telefon';
+
+  @override
+  String get phoneLlmHint =>
+      'Răspunde în chat cu un model care rulează pe acest telefon, de exemplu llama-server în Termux.';
+
+  @override
+  String get phoneLlmSource => 'Sursa AI';
+
+  @override
+  String get phoneLlmModeServer => 'Server';
+
+  @override
+  String get phoneLlmModePhone => 'Acest telefon';
+
+  @override
+  String get phoneLlmModeAuto => 'Telefonul când serverul nu poate fi accesat';
+
+  @override
+  String get phoneLlmAddress => 'Adresa modelului de pe telefon';
+
+  @override
+  String get phoneLlmNoModels => 'Nu s-au găsit modele. Rulează modelul de pe telefon?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'A răspuns în $ms ms';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Modelul de pe telefon nu a răspuns.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Modelul de pe telefon a refuzat cheia API.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Include conversațiile mele recente drept context';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Răspuns pe acest telefon ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Nu se salvează pe serverul tău. Se păstrează până se închide Omi.';
+
+  @override
+  String get phoneLlmAskPhone => 'Întreabă acest telefon';
+
+  @override
+  String get phoneLlmReplyFailed => 'Modelul de pe telefon nu a răspuns. Verifică dacă rulează.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Modelul de pe telefon rulează';
+
+  @override
+  String get phoneLlmStatusLoading => 'Modelul de pe telefon se încarcă';
+
+  @override
+  String get phoneLlmStatusOff => 'Modelul de pe telefon este oprit';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Verificat la $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'Sursa AI: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Comută';
+
+  @override
+  String get sendToHermesTitle => 'Trimite la Hermes';
 }

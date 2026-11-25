@@ -17016,4 +17016,82 @@ class AppLocalizationsBg extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'ИИ на този телефон';
+
+  @override
+  String get phoneLlmHint =>
+      'Отговаряйте в чата с модел, който работи на този телефон, например llama-server в Termux.';
+
+  @override
+  String get phoneLlmSource => 'Източник на ИИ';
+
+  @override
+  String get phoneLlmModeServer => 'Сървър';
+
+  @override
+  String get phoneLlmModePhone => 'Този телефон';
+
+  @override
+  String get phoneLlmModeAuto => 'Телефонът, когато сървърът е недостъпен';
+
+  @override
+  String get phoneLlmAddress => 'Адрес на модела на телефона';
+
+  @override
+  String get phoneLlmNoModels => 'Не са намерени модели. Работи ли моделът на телефона?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Отговор за $ms ms';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Моделът на телефона не отговори.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Моделът на телефона отказа API ключа.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Включване на последните ми разговори като контекст';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Отговорено на този телефон ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Не се запазва на сървъра ви. Пази се, докато Omi се затвори.';
+
+  @override
+  String get phoneLlmAskPhone => 'Попитай този телефон';
+
+  @override
+  String get phoneLlmReplyFailed => 'Моделът на телефона не отговори. Проверете дали работи.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Моделът на телефона работи';
+
+  @override
+  String get phoneLlmStatusLoading => 'Моделът на телефона се зарежда';
+
+  @override
+  String get phoneLlmStatusOff => 'Моделът на телефона е изключен';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Проверено $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'Източник на ИИ: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Смяна';
+
+  @override
+  String get sendToHermesTitle => 'Изпращане към Hermes';
 }

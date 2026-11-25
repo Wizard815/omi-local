@@ -17070,4 +17070,81 @@ class AppLocalizationsTa extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'இந்த ஃபோனில் AI';
+
+  @override
+  String get phoneLlmHint => 'இந்த ஃபோனில் இயங்கும் மாடலால் அரட்டைக்குப் பதிலளிக்கவும், எ.கா. Termux-இல் llama-server.';
+
+  @override
+  String get phoneLlmSource => 'AI மூலம்';
+
+  @override
+  String get phoneLlmModeServer => 'சர்வர்';
+
+  @override
+  String get phoneLlmModePhone => 'இந்த ஃபோன்';
+
+  @override
+  String get phoneLlmModeAuto => 'சர்வரை அணுக முடியாதபோது ஃபோன்';
+
+  @override
+  String get phoneLlmAddress => 'ஃபோன் மாடல் முகவரி';
+
+  @override
+  String get phoneLlmNoModels => 'மாடல்கள் எதுவும் இல்லை. ஃபோன் மாடல் இயங்குகிறதா?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return '$ms ms இல் பதிலளித்தது';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'ஃபோன் மாடல் பதிலளிக்கவில்லை.';
+
+  @override
+  String get phoneLlmUnauthorized => 'ஃபோன் மாடல் API விசையை நிராகரித்தது.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'எனது சமீபத்திய உரையாடல்களைச் சூழலாகச் சேர்க்கவும்';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'இந்த ஃபோனில் பதிலளிக்கப்பட்டது ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'உங்கள் சர்வரில் சேமிக்கப்படவில்லை. Omi மூடப்படும் வரை இருக்கும்.';
+
+  @override
+  String get phoneLlmAskPhone => 'இதற்குப் பதிலாக இந்த ஃபோனிடம் கேளுங்கள்';
+
+  @override
+  String get phoneLlmReplyFailed => 'ஃபோன் மாடல் பதிலளிக்கவில்லை. அது இயங்குகிறதா எனச் சரிபார்க்கவும்.';
+
+  @override
+  String get phoneLlmStatusRunning => 'ஃபோன் மாடல் இயங்குகிறது';
+
+  @override
+  String get phoneLlmStatusLoading => 'ஃபோன் மாடல் ஏற்றப்படுகிறது';
+
+  @override
+  String get phoneLlmStatusOff => 'ஃபோன் மாடல் அணைக்கப்பட்டுள்ளது';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return '$time இல் சரிபார்க்கப்பட்டது';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'AI மூலம்: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'மாற்று';
+
+  @override
+  String get sendToHermesTitle => 'Hermes-க்கு அனுப்பு';
 }

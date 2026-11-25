@@ -16997,4 +16997,81 @@ class AppLocalizationsSl extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'UI na tem telefonu';
+
+  @override
+  String get phoneLlmHint => 'Odgovarjajte v klepetu z modelom, ki teče na tem telefonu, npr. llama-server v Termuxu.';
+
+  @override
+  String get phoneLlmSource => 'Vir UI';
+
+  @override
+  String get phoneLlmModeServer => 'Strežnik';
+
+  @override
+  String get phoneLlmModePhone => 'Ta telefon';
+
+  @override
+  String get phoneLlmModeAuto => 'Telefon, ko strežnik ni dosegljiv';
+
+  @override
+  String get phoneLlmAddress => 'Naslov modela na telefonu';
+
+  @override
+  String get phoneLlmNoModels => 'Ni najdenih modelov. Ali model na telefonu teče?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Odgovor v $ms ms';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Model na telefonu ni odgovoril.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Model na telefonu je zavrnil ključ API.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Vključi moje nedavne pogovore kot kontekst';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Odgovorjeno na tem telefonu ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Ni shranjeno na vašem strežniku. Ostane, dokler se Omi ne zapre.';
+
+  @override
+  String get phoneLlmAskPhone => 'Vprašaj ta telefon';
+
+  @override
+  String get phoneLlmReplyFailed => 'Model na telefonu ni odgovoril. Preverite, ali teče.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Model na telefonu teče';
+
+  @override
+  String get phoneLlmStatusLoading => 'Model na telefonu se nalaga';
+
+  @override
+  String get phoneLlmStatusOff => 'Model na telefonu je izklopljen';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Preverjeno ob $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'Vir UI: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Preklopi';
+
+  @override
+  String get sendToHermesTitle => 'Pošlji v Hermes';
 }

@@ -17002,4 +17002,82 @@ class AppLocalizationsLv extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'MI šajā tālrunī';
+
+  @override
+  String get phoneLlmHint =>
+      'Atbildēt tērzēšanā ar modeli, kas darbojas šajā tālrunī, piemēram, llama-server Termux vidē.';
+
+  @override
+  String get phoneLlmSource => 'MI avots';
+
+  @override
+  String get phoneLlmModeServer => 'Serveris';
+
+  @override
+  String get phoneLlmModePhone => 'Šis tālrunis';
+
+  @override
+  String get phoneLlmModeAuto => 'Tālrunis, ja serveris nav sasniedzams';
+
+  @override
+  String get phoneLlmAddress => 'Tālruņa modeļa adrese';
+
+  @override
+  String get phoneLlmNoModels => 'Modeļi nav atrasti. Vai tālruņa modelis darbojas?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Atbildēja $ms ms laikā';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Tālruņa modelis neatbildēja.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Tālruņa modelis noraidīja API atslēgu.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Iekļaut manas nesenās sarunas kā kontekstu';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Atbildēts šajā tālrunī ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Netiek saglabāts jūsu serverī. Tiek glabāts, līdz Omi tiek aizvērts.';
+
+  @override
+  String get phoneLlmAskPhone => 'Jautāt šim tālrunim';
+
+  @override
+  String get phoneLlmReplyFailed => 'Tālruņa modelis neatbildēja. Pārbaudiet, vai tas darbojas.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Tālruņa modelis darbojas';
+
+  @override
+  String get phoneLlmStatusLoading => 'Tālruņa modelis tiek ielādēts';
+
+  @override
+  String get phoneLlmStatusOff => 'Tālruņa modelis ir izslēgts';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Pārbaudīts $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'MI avots: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Pārslēgt';
+
+  @override
+  String get sendToHermesTitle => 'Sūtīt uz Hermes';
 }

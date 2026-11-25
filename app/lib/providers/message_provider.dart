@@ -30,6 +30,8 @@ import 'package:omi/backend/http/api_result.dart';
 import 'package:omi/backend/http/streaming_error.dart';
 import 'package:omi/backend/preferences.dart';
 import 'package:omi/services/chat_video_sampler.dart';
+import 'package:omi/services/phone_llm/phone_llm_context.dart';
+import 'package:omi/services/phone_llm/phone_llm_router.dart';
 import 'package:omi/services/voice_playback/chat_reply_read_aloud.dart';
 import 'package:omi/services/voice_playback/omi_voice_playback_service.dart';
 import 'package:omi/utils/analytics/registry/events.g.dart';
@@ -82,6 +84,8 @@ class _FailedReply {
     this.fileIds = const [],
     this.failure = ChatStreamFailureClass.unknown,
     this.modelShortcut,
+    this.viaPhone = false,
+    this.phoneError,
   });
 
   /// The user's message as it was sent (with any quoted context). Null when the reply cannot be
@@ -94,6 +98,11 @@ class _FailedReply {
 
   /// The self-hosted chat model shortcut the message was sent with, so Try Again uses the same model.
   final String? modelShortcut;
+
+  /// The reply was asked of this phone's model (Try Again asks it again); [phoneError] is its
+  /// error code (`PhoneLlmError`).
+  final bool viaPhone;
+  final String? phoneError;
 
   bool get canRetry => text != null;
 }
@@ -194,6 +203,84 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
   bool canRetryReply(ServerMessage message) => _failedReplies[message]?.canRetry ?? false;
 
   ChatStreamFailureClass? replyFailure(ServerMessage message) => _failedReplies[message]?.failure;
+
+  /// Decides per typed message whether this phone's model answers (lib/services/phone_llm).
+  /// Android only; null keeps every reply on the server.
+  PhoneLlmRouter? phoneLlm = Platform.isAndroid ? PhoneLlmRouter() : null;
+
+  // Phone answers are never sent to the server: the label each shows (its model), and every phone
+  // exchange per chat so a history reload from the server does not drop them while Omi runs.
+  final Map<ServerMessage, String> _phoneAnswers = Map.identity();
+  final Map<String, List<ServerMessage>> _phoneTurns = {};
+
+  String get _phoneTurnKey => '${chatSessionId ?? ''}|${appProvider?.selectedChatAppId ?? ''}';
+
+  /// The phone model that wrote [message], or null for a server answer.
+  String? phoneAnswerModel(ServerMessage message) => _phoneAnswers[message];
+
+  /// The error code of a failed phone reply, or null when [message] did not fail on the phone.
+  String? phoneReplyError(ServerMessage message) {
+    final failed = _failedReplies[message];
+    return failed != null && failed.viaPhone ? (failed.phoneError ?? '') : null;
+  }
+
+  /// Whether a failed server reply can be asked of this phone's model instead.
+  bool canAskPhone(ServerMessage message) {
+    final failed = _failedReplies[message];
+    return failed != null && failed.canRetry && !failed.viaPhone && (phoneLlm?.canAskPhone ?? false);
+  }
+
+  /// "Ask this phone instead" on a failed server reply.
+  Future<void> askPhoneInstead(ServerMessage message) async {
+    if (!canAskPhone(message) || chatMutationInProgress || isClearingChat) return;
+    setSendingMessage(true);
+    await retryFailedReply(message, askPhone: true);
+  }
+
+  @override
+  List<ServerMessage> withLocalTurns(List<ServerMessage> loaded) {
+    final kept = _phoneTurns[_phoneTurnKey];
+    if (kept == null || kept.isEmpty) return loaded;
+    final merged = [...loaded];
+    for (final m in kept) {
+      if (!merged.any((x) => identical(x, m))) merged.add(m);
+    }
+    return merged..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+  }
+
+  void _keepPhoneTurn(ServerMessage reply, String model, int aiIndex) {
+    _phoneAnswers[reply] = model;
+    final turn = _phoneTurns.putIfAbsent(_phoneTurnKey, () => []);
+    final asked = aiIndex > 0 && aiIndex <= messages.length ? messages[aiIndex - 1] : null;
+    if (asked != null && asked.sender == MessageSender.human && !turn.any((m) => identical(m, asked))) turn.add(asked);
+    turn.add(reply);
+  }
+
+  Future<bool> _routeToPhone(bool askPhone) async {
+    final router = phoneLlm;
+    if (router == null) return false;
+    try {
+      await router.settings.ensureLoaded();
+      return askPhone ? router.canAskPhone : await router.usePhone();
+    } catch (e) {
+      Logger.debug('Phone model routing failed: ${e.runtimeType}');
+      return false;
+    }
+  }
+
+  /// The phone model's answer to [text], with the chat so far (and, if allowed, recent
+  /// conversations) as context.
+  Stream<ServerMessageChunk> _phoneReplies(String text, ServerMessage placeholder, Future<void> cancel) {
+    final router = phoneLlm!;
+    final history = messages.takeWhile((m) => !identical(m, placeholder)).where((m) => !isReplyFailed(m)).toList();
+    if (history.isNotEmpty && history.last.sender == MessageSender.human) history.removeLast();
+    final prompt = const PhoneLlmContext().build(
+      question: text,
+      history: history,
+      conversations: router.settings.includeConversations ? SharedPreferencesUtil().cachedConversations : const [],
+    );
+    return router.client().streamChat(prompt, model: router.settings.model, cancel: cancel);
+  }
 
   void _markReplyFailed(ServerMessage message, _FailedReply reply) {
     message.text = '';
@@ -964,6 +1051,7 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
     ChatPageContext? context,
     List<String>? retryFileIds,
     String? modelShortcut,
+    bool askPhone = false,
   }) async {
     _chatQuotaExceeded = false; // Clear stale quota state from previous sends
     aiStreamProgress = 0.0;
@@ -1021,6 +1109,18 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
     }
     String textBuffer = '';
     Timer? timer;
+    var viaPhone = false;
+    var phoneModel = '';
+    _FailedReply failedReply({ChatStreamFailureClass failure = ChatStreamFailureClass.server, String? phoneError}) =>
+        _FailedReply(
+          text: text,
+          context: context,
+          fileIds: fileIds,
+          failure: failure,
+          modelShortcut: modelShortcut,
+          viaPhone: viaPhone,
+          phoneError: phoneError,
+        );
 
     void flushBuffer() {
       if (textBuffer.isNotEmpty) {
@@ -1033,19 +1133,24 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
     }
 
     try {
-      await prepareChatSession();
+      viaPhone = await _routeToPhone(askPhone);
+      phoneModel = phoneLlm?.settings.model ?? '';
+      // A phone answer is never sent to the server, so it needs no server chat session either.
+      if (!viaPhone) await prepareChatSession();
       final override = replyStreamOverride;
-      final replies = override != null
-          ? override(text, appId: currentAppId, filesId: fileIds, context: context, chatSessionId: chatSessionId)
-          : sendMessageStreamServer(
-              text,
-              appId: currentAppId,
-              filesId: fileIds,
-              context: context,
-              chatSessionId: chatSessionId,
-              cancelSignal: cancel.future,
-              modelShortcut: modelShortcut,
-            );
+      final replies = viaPhone
+          ? _phoneReplies(text, message, cancel.future)
+          : override != null
+              ? override(text, appId: currentAppId, filesId: fileIds, context: context, chatSessionId: chatSessionId)
+              : sendMessageStreamServer(
+                  text,
+                  appId: currentAppId,
+                  filesId: fileIds,
+                  context: context,
+                  chatSessionId: chatSessionId,
+                  cancelSignal: cancel.future,
+                  modelShortcut: modelShortcut,
+                );
       final iterator = StreamIterator(replies);
       final stopped = cancel.future.then((_) => false);
       try {
@@ -1092,7 +1197,12 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
             messages[aiIndex] = message;
             _transferChatTelemetryAttempt(responseMessageId, message.id);
             _finishChatTelemetryAttempt(message.id, ProductOutcome.success);
-            nameChatSession();
+            // Server-only follow-ups (naming the chat) are skipped for a phone answer.
+            if (viaPhone) {
+              _keepPhoneTurn(message, phoneModel, aiIndex);
+            } else {
+              nameChatSession();
+            }
             chatAttemptCompleted = true;
             if (!readAloudDelivered) {
               readAloudDelivered = true;
@@ -1116,11 +1226,7 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
             }
             final failure = _chunkFailureClass(chunk);
             _logChatFailure(failure, stage: 'stream');
-            _markReplyFailed(
-              message,
-              _FailedReply(
-                  text: text, context: context, fileIds: fileIds, failure: failure, modelShortcut: modelShortcut),
-            );
+            _markReplyFailed(message, failedReply(failure: failure, phoneError: viaPhone ? chunk.errorCode : null));
             completeChat(ProductOutcome.failure, failure: _productFailureFor(failure));
             notifyListeners();
             return;
@@ -1134,11 +1240,7 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
       if (!cancel.isCompleted) {
         final failure = classifyChatStreamFailure(e);
         _logChatFailure(failure.kind, stage: 'transport', status: failure.statusCode);
-        _markReplyFailed(
-          message,
-          _FailedReply(
-              text: text, context: context, fileIds: fileIds, failure: failure.kind, modelShortcut: modelShortcut),
-        );
+        _markReplyFailed(message, failedReply(failure: failure.kind));
         completeChat(ProductOutcome.failure, failure: _productFailureFor(failure.kind));
         notifyListeners();
       }
@@ -1147,7 +1249,11 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
       flushBuffer();
       if (cancel.isCompleted && !chatAttemptCompleted) {
         // Stopped: keep what was already shown, drop an empty placeholder.
-        if (message.text.trim().isEmpty) messages.remove(message);
+        if (message.text.trim().isEmpty) {
+          messages.remove(message);
+        } else if (viaPhone) {
+          _keepPhoneTurn(message, phoneModel, aiIndex);
+        }
         message.thinkings.clear();
         agentThinkingAfterText = false;
         completeChat(_replyStopOutcome);
@@ -1164,16 +1270,7 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
     if (!chatAttemptCompleted) {
       _logChatFailure(ChatStreamFailureClass.server, stage: 'eof');
       if (message.text.isEmpty) {
-        _markReplyFailed(
-          message,
-          _FailedReply(
-            text: text,
-            context: context,
-            fileIds: fileIds,
-            failure: ChatStreamFailureClass.server,
-            modelShortcut: modelShortcut,
-          ),
-        );
+        _markReplyFailed(message, failedReply());
         notifyListeners();
       }
       completeChat(ProductOutcome.failure, failure: ProductFailure.incomplete);
@@ -1205,7 +1302,8 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
   /// Sends the user message behind the failed reply [message] again: the failed reply is removed
   /// and a new one streams in its place. No-op unless [canRetryReply]. The caller owns
   /// [sendingMessage] the same way it does for a normal send.
-  Future<void> retryFailedReply(ServerMessage message) async {
+  /// [askPhone] asks this phone's model instead of the server ("Ask this phone instead").
+  Future<void> retryFailedReply(ServerMessage message, {bool askPhone = false}) async {
     final failed = _failedReplies.remove(message);
     if (failed == null || !failed.canRetry) {
       // The failure was cleared (a refresh) between build and tap: nothing to resend, so release the
@@ -1220,6 +1318,7 @@ class MessageProvider extends ChangeNotifier with ChatHistoryState {
       context: failed.context,
       retryFileIds: failed.fileIds,
       modelShortcut: failed.modelShortcut,
+      askPhone: askPhone || failed.viaPhone,
     );
   }
 

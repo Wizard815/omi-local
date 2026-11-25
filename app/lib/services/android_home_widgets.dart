@@ -1,6 +1,8 @@
 import 'package:omi/backend/http/api/approvals.dart';
 import 'package:omi/backend/schema/schema.dart';
 import 'package:omi/l10n/app_localizations.dart';
+import 'package:omi/services/phone_llm/phone_llm_router.dart';
+import 'package:omi/services/phone_llm/phone_llm_settings.dart';
 import 'package:omi/ui/format/omi_date_format.dart';
 import 'package:omi/utils/enums.dart';
 
@@ -14,9 +16,10 @@ abstract final class AndroidWidgetDocuments {
   static const listeningKey = 'widget_listening';
   static const translationKey = 'widget_translation';
   static const approvalsKey = 'widget_approvals';
+  static const aiSourceKey = 'widget_ai_source';
 
   /// The Android-only documents (the task list shares the iOS Up next document).
-  static const keys = [todayKey, summaryKey, captureKey, listeningKey, translationKey, approvalsKey];
+  static const keys = [todayKey, summaryKey, captureKey, listeningKey, translationKey, approvalsKey, aiSourceKey];
 
   /// Rows a widget lists at most.
   static const maxRows = 3;
@@ -112,6 +115,38 @@ abstract final class AndroidWidgetDocuments {
             },
           },
       ],
+    };
+  }
+
+  /// The AI source's short name: Server, This phone or Auto.
+  static String sourceLabel(PhoneLlmMode mode, AppLocalizations l10n) => switch (mode) {
+        PhoneLlmMode.server => l10n.phoneLlmModeServer,
+        PhoneLlmMode.phone => l10n.phoneLlmModePhone,
+        PhoneLlmMode.auto => l10n.auto,
+      };
+
+  /// AI source: where chat is answered, and the phone model's last known state with the time the
+  /// app checked it (the widget never checks by itself). [checkedAt] null means not checked yet.
+  static Map<String, Object?> aiSource({
+    required PhoneLlmMode mode,
+    required PhoneHealth? health,
+    required DateTime? checkedAt,
+    required AppLocalizations l10n,
+    required OmiDateFormat dates,
+  }) {
+    return {
+      'title': l10n.phoneLlmSource,
+      'mode': mode.wire,
+      'mode_label': sourceLabel(mode, l10n),
+      'status': health?.name ?? 'unknown',
+      'status_label': switch (health) {
+        PhoneHealth.running => l10n.phoneLlmStatusRunning,
+        PhoneHealth.loading => l10n.phoneLlmStatusLoading,
+        PhoneHealth.off || null => l10n.phoneLlmStatusOff,
+      },
+      'checked_at': checkedAt?.millisecondsSinceEpoch,
+      'checked_label': checkedAt == null ? '' : l10n.phoneLlmCheckedAt(dates.time(checkedAt.toLocal())),
+      'action': l10n.phoneLlmSwitch,
     };
   }
 

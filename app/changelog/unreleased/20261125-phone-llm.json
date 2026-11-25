@@ -1,0 +1,4 @@
+{
+  "change": "Chat can be answered by a model running on your phone, always or when your server can't be reached, with an AI source home screen widget and a Send to Hermes action on conversations",
+  "platforms": ["android"]
+}

@@ -82,6 +82,7 @@ class _AppShellState extends State<AppShell> {
     'new-memory',
     'approvals',
     'listening',
+    'ai-source',
   };
 
   void openAppLink(Uri uri) async {
@@ -125,6 +126,12 @@ class _AppShellState extends State<AppShell> {
     // To do, a conversation, the Conversations tab, device settings.
     if (uri.host == 'app' && _appLinkRoutes.contains(uri.pathSegments.firstOrNull)) {
       await HomeNavigation.openRoute(uri.hasQuery ? '${uri.path}?${uri.query}' : uri.path);
+      return;
+    }
+    // Studio Own's links (omi://approvals, omi://tasks, omi://capture); other hosts just open Omi.
+    final studioRoute = HomeDeepLink.studioRoute(uri);
+    if (studioRoute != null) {
+      await HomeNavigation.openRoute(studioRoute);
       return;
     }
     // h.omi.me item links (chat edit receipts, messaging channels) open the item in Home.

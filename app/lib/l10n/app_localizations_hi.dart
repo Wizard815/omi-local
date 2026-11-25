@@ -16947,4 +16947,81 @@ class AppLocalizationsHi extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'इस फ़ोन पर AI';
+
+  @override
+  String get phoneLlmHint => 'इस फ़ोन पर चलने वाले मॉडल से चैट का जवाब दें, जैसे Termux में llama-server।';
+
+  @override
+  String get phoneLlmSource => 'AI स्रोत';
+
+  @override
+  String get phoneLlmModeServer => 'सर्वर';
+
+  @override
+  String get phoneLlmModePhone => 'यह फ़ोन';
+
+  @override
+  String get phoneLlmModeAuto => 'सर्वर तक न पहुँच पाने पर फ़ोन';
+
+  @override
+  String get phoneLlmAddress => 'फ़ोन मॉडल का पता';
+
+  @override
+  String get phoneLlmNoModels => 'कोई मॉडल नहीं मिला। क्या फ़ोन मॉडल चल रहा है?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return '$ms ms में जवाब दिया';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'फ़ोन मॉडल ने जवाब नहीं दिया।';
+
+  @override
+  String get phoneLlmUnauthorized => 'फ़ोन मॉडल ने API कुंजी अस्वीकार कर दी।';
+
+  @override
+  String get phoneLlmIncludeConversations => 'मेरी हाल की बातचीत को संदर्भ के रूप में शामिल करें';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'इस फ़ोन पर जवाब दिया गया ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'आपके सर्वर पर सहेजा नहीं गया। Omi बंद होने तक रहेगा।';
+
+  @override
+  String get phoneLlmAskPhone => 'इसके बजाय इस फ़ोन से पूछें';
+
+  @override
+  String get phoneLlmReplyFailed => 'फ़ोन मॉडल ने जवाब नहीं दिया। जाँचें कि यह चल रहा है।';
+
+  @override
+  String get phoneLlmStatusRunning => 'फ़ोन मॉडल चल रहा है';
+
+  @override
+  String get phoneLlmStatusLoading => 'फ़ोन मॉडल लोड हो रहा है';
+
+  @override
+  String get phoneLlmStatusOff => 'फ़ोन मॉडल बंद है';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return '$time पर जाँचा गया';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'AI स्रोत: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'बदलें';
+
+  @override
+  String get sendToHermesTitle => 'Hermes को भेजें';
 }

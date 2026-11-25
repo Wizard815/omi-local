@@ -17020,4 +17020,81 @@ class AppLocalizationsPl extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'AI na tym telefonie';
+
+  @override
+  String get phoneLlmHint => 'Odpowiadaj na czacie modelem działającym na tym telefonie, np. llama-server w Termux.';
+
+  @override
+  String get phoneLlmSource => 'Źródło AI';
+
+  @override
+  String get phoneLlmModeServer => 'Serwer';
+
+  @override
+  String get phoneLlmModePhone => 'Ten telefon';
+
+  @override
+  String get phoneLlmModeAuto => 'Telefon, gdy serwer jest nieosiągalny';
+
+  @override
+  String get phoneLlmAddress => 'Adres modelu w telefonie';
+
+  @override
+  String get phoneLlmNoModels => 'Nie znaleziono modeli. Czy model w telefonie działa?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Odpowiedź w $ms ms';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Model w telefonie nie odpowiedział.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Model w telefonie odrzucił klucz API.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Dołącz moje ostatnie rozmowy jako kontekst';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Odpowiedź z tego telefonu ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Nie zapisano na Twoim serwerze. Zostaje do zamknięcia Omi.';
+
+  @override
+  String get phoneLlmAskPhone => 'Zapytaj ten telefon';
+
+  @override
+  String get phoneLlmReplyFailed => 'Model w telefonie nie odpowiedział. Sprawdź, czy działa.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Model w telefonie działa';
+
+  @override
+  String get phoneLlmStatusLoading => 'Model w telefonie się wczytuje';
+
+  @override
+  String get phoneLlmStatusOff => 'Model w telefonie wyłączony';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Sprawdzono $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'Źródło AI: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Przełącz';
+
+  @override
+  String get sendToHermesTitle => 'Wyślij do Hermes';
 }

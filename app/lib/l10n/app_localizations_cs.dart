@@ -16970,4 +16970,82 @@ class AppLocalizationsCs extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'AI v tomto telefonu';
+
+  @override
+  String get phoneLlmHint =>
+      'Odpovídat v chatu modelem, který běží v tomto telefonu, například llama-server v Termuxu.';
+
+  @override
+  String get phoneLlmSource => 'Zdroj AI';
+
+  @override
+  String get phoneLlmModeServer => 'Server';
+
+  @override
+  String get phoneLlmModePhone => 'Tento telefon';
+
+  @override
+  String get phoneLlmModeAuto => 'Telefon, když server není dostupný';
+
+  @override
+  String get phoneLlmAddress => 'Adresa modelu v telefonu';
+
+  @override
+  String get phoneLlmNoModels => 'Nenalezeny žádné modely. Běží model v telefonu?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return 'Odpověď za $ms ms';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'Model v telefonu neodpověděl.';
+
+  @override
+  String get phoneLlmUnauthorized => 'Model v telefonu odmítl klíč API.';
+
+  @override
+  String get phoneLlmIncludeConversations => 'Zahrnout mé nedávné konverzace jako kontext';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'Odpovězeno v tomto telefonu ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'Neukládá se na váš server. Zůstane, dokud se Omi nezavře.';
+
+  @override
+  String get phoneLlmAskPhone => 'Zeptat se tohoto telefonu';
+
+  @override
+  String get phoneLlmReplyFailed => 'Model v telefonu neodpověděl. Zkontrolujte, že běží.';
+
+  @override
+  String get phoneLlmStatusRunning => 'Model v telefonu běží';
+
+  @override
+  String get phoneLlmStatusLoading => 'Model v telefonu se načítá';
+
+  @override
+  String get phoneLlmStatusOff => 'Model v telefonu je vypnutý';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return 'Zkontrolováno $time';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'Zdroj AI: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'Přepnout';
+
+  @override
+  String get sendToHermesTitle => 'Odeslat do Hermes';
 }

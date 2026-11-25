@@ -16960,4 +16960,81 @@ class AppLocalizationsBn extends AppLocalizations {
   String widgetTranslationInto(String language) {
     return 'Into $language';
   }
+
+  @override
+  String get phoneLlmTitle => 'এই ফোনে AI';
+
+  @override
+  String get phoneLlmHint => 'এই ফোনে চলা একটি মডেল দিয়ে চ্যাটের উত্তর দিন, যেমন Termux-এ llama-server।';
+
+  @override
+  String get phoneLlmSource => 'AI উৎস';
+
+  @override
+  String get phoneLlmModeServer => 'সার্ভার';
+
+  @override
+  String get phoneLlmModePhone => 'এই ফোন';
+
+  @override
+  String get phoneLlmModeAuto => 'সার্ভারে পৌঁছানো না গেলে ফোন';
+
+  @override
+  String get phoneLlmAddress => 'ফোন মডেলের ঠিকানা';
+
+  @override
+  String get phoneLlmNoModels => 'কোনো মডেল পাওয়া যায়নি। ফোন মডেলটি কি চলছে?';
+
+  @override
+  String phoneLlmTestResult(String ms) {
+    return '$ms ms-এ উত্তর দিয়েছে';
+  }
+
+  @override
+  String get phoneLlmTestFailed => 'ফোন মডেল উত্তর দেয়নি।';
+
+  @override
+  String get phoneLlmUnauthorized => 'ফোন মডেল API কী প্রত্যাখ্যান করেছে।';
+
+  @override
+  String get phoneLlmIncludeConversations => 'আমার সাম্প্রতিক কথোপকথন প্রসঙ্গ হিসেবে যুক্ত করুন';
+
+  @override
+  String phoneLlmAnsweredOn(String model) {
+    return 'এই ফোনে উত্তর দেওয়া হয়েছে ($model)';
+  }
+
+  @override
+  String get phoneLlmNotSaved => 'আপনার সার্ভারে সংরক্ষিত নয়। Omi বন্ধ না হওয়া পর্যন্ত থাকবে।';
+
+  @override
+  String get phoneLlmAskPhone => 'পরিবর্তে এই ফোনকে জিজ্ঞাসা করুন';
+
+  @override
+  String get phoneLlmReplyFailed => 'ফোন মডেল উত্তর দেয়নি। এটি চলছে কিনা দেখুন।';
+
+  @override
+  String get phoneLlmStatusRunning => 'ফোন মডেল চলছে';
+
+  @override
+  String get phoneLlmStatusLoading => 'ফোন মডেল লোড হচ্ছে';
+
+  @override
+  String get phoneLlmStatusOff => 'ফোন মডেল বন্ধ';
+
+  @override
+  String phoneLlmCheckedAt(String time) {
+    return '$time-এ যাচাই করা হয়েছে';
+  }
+
+  @override
+  String phoneLlmSourceChanged(String source) {
+    return 'AI উৎস: $source';
+  }
+
+  @override
+  String get phoneLlmSwitch => 'পরিবর্তন';
+
+  @override
+  String get sendToHermesTitle => 'Hermes-এ পাঠান';
 }
