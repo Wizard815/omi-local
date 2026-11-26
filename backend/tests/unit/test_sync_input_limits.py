@@ -185,8 +185,11 @@ def test_opus_io_error_at_close_fails_closed_and_keeps_raw_upload(tmp_path, monk
     raised = {'n': 0}
 
     def eio_close(self):
+        # Only this test's writer fails: a writer left over from an earlier test can be
+        # finalized (and closed) by the garbage collector while this one runs.
+        is_ours = getattr(getattr(self, '_file', None), 'name', None) == str(wav_path)
         real_close(self)
-        if not raised['n']:
+        if is_ours and not raised['n']:
             raised['n'] += 1
             raise OSError(errno.EIO, 'synthetic io error at flush')
 

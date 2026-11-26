@@ -854,7 +854,7 @@ def test_missing_submission_secret_is_negative_cached(monkeypatch):
     assert reads.call_count == 1
 
 
-def test_submission_endpoint_is_ip_rate_limited_and_policy_is_declared(monkeypatch):
+def test_submission_endpoint_is_ip_rate_limited(monkeypatch):
     monkeypatch.setattr(endpoint_utils, "cached", {})
     monkeypatch.setattr(router, "load_submission_token", lambda: "expected-token")
     monkeypatch.setattr(
@@ -881,7 +881,13 @@ def test_submission_endpoint_is_ip_rate_limited_and_policy_is_declared(monkeypat
 
     assert statuses[:10] == [200] * 10
     assert statuses[10] == 429
-    policies = yaml.safe_load((BACKEND_ROOT / "route_policy_manifest.yaml").read_text())["routes"]
+
+
+def test_submission_endpoint_rate_limit_policy_is_declared():
+    # The route-policy manifest is ~200 KB: parse it with the C loader when available so the
+    # check stays well inside the per-test CPU guard.
+    loader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+    policies = yaml.load((BACKEND_ROOT / "route_policy_manifest.yaml").read_text(), Loader=loader)["routes"]
     route = next(row for row in policies if row.get("path") == "/v2/internal/app-review-config/submissions")
     assert route["policy"]["rate_limit"] == {
         "policy_name": "app_review_config_submission",

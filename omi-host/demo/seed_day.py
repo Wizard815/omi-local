@@ -22,6 +22,8 @@ object back. What it does, by "op":
                 build the state an existing install has -> the old code's report
   auto_approve  what the hourly scheduler runs for one user: their auto-approve, if it is
                 on and due (utils/auto_approve.run_for_user) -> the outcome
+  conversation_finished  run the post-processing hook (developer webhook, Home Assistant events)
+                for one seeded conversation, as the pipeline does once it is processed
   day_draft     a day summary draft as the overnight job writes it (utils/day_review_service
                 .prepare_draft), with the text the model would have written, so approving it
                 needs no model call -> {"date"}
@@ -95,6 +97,7 @@ def conversations(spec):
                 'emoji': item.get('emoji', '👪'),
                 'category': 'family',
                 'events': item.get('events', []),
+                'action_items': item.get('action_items', []),
             },
             transcript_segments=[
                 {'text': line, 'speaker': f'SPEAKER_0{i % 2}', 'speaker_id': i % 2, 'is_user': i % 2 == 0,
@@ -183,6 +186,20 @@ def day_draft(spec):
     return {'date': spec['date']}
 
 
+def conversation_finished(spec):
+    """What the pipeline runs once a conversation is processed (utils/webhooks.conversation_created_webhook):
+    the developer webhook, and Home Assistant's omi_conversation_finished / omi_task_created."""
+    import asyncio
+
+    import database.conversations as conversations_db
+    from models.conversation import Conversation
+    from utils.webhooks import conversation_created_webhook
+
+    row = conversations_db.get_conversation(spec['uid'], spec['conversation_id'])
+    asyncio.run(conversation_created_webhook(spec['uid'], Conversation(**row)))
+    return {'conversation_id': spec['conversation_id']}
+
+
 def main():
     spec = json.loads(os.environ['OMI_DEMO_SEED'])
     ops = {
@@ -193,6 +210,7 @@ def main():
         'auto_approve': auto_approve,
         'legacy_sync': legacy_sync,
         'day_draft': day_draft,
+        'conversation_finished': conversation_finished,
     }
     result = ops[spec['op']](spec)
     # Last line of stdout is the answer (the backend's imports may log above it).

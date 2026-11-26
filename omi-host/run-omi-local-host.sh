@@ -152,6 +152,16 @@ if [ "${OMI_HEALTH_ENABLED:-0}" = "1" ]; then
   echo "=== Starting the health page (http://${BIND_IP}:${OMI_HEALTH_PORT:-8099}/) ==="
   docker compose "${COMPOSE_FILES[@]}" --profile health up -d omi-health
 fi
+# Remote access (REMOTE-ACCESS.md): tunnel = nginx + Cloudflare Tunnel, tailscale = nginx +
+# Tailscale, proxy = nginx alone (your own tunnel in front). Several: comma separated.
+for profile in $(printf '%s' "${OMI_REMOTE_ACCESS:-}" | tr ',' ' '); do
+  case "$profile" in
+    tunnel|tailscale|proxy)
+      echo "=== Starting remote access: $profile ==="
+      docker compose "${COMPOSE_FILES[@]}" --profile "$profile" up -d ;;
+    *) echo "WARNING: OMI_REMOTE_ACCESS=$profile is not one of tunnel, tailscale, proxy" >&2 ;;
+  esac
+done
 
 # 4. Wait for health
 echo "=== Waiting for merge proxy ==="
@@ -222,6 +232,9 @@ if [ "${OMI_HEALTH_ENABLED:-0}" = "1" ]; then
 fi
 if [ "${OMI_BACKUP_ENABLED:-0}" = "1" ]; then
   echo "Backups:       ${OMI_BACKUP_DIR:-unset}  (BACKUP.md; one now: bash $HERE/backup.sh)"
+fi
+if [ -n "${OMI_REMOTE_ACCESS:-}" ]; then
+  echo "Remote access: ${OMI_REMOTE_ACCESS} (REMOTE-ACCESS.md; check it from outside: bash $HERE/proxy/check_remote.sh https://<your-hostname>)"
 fi
 echo "Stop:          cd $HERE && docker compose down"
 echo

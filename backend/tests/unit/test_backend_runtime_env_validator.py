@@ -3833,12 +3833,14 @@ def test_read_lever_partial_code_default_cannot_hide_behind_chart_inheritance(mo
 @pytest.mark.parametrize(
     ('prefix', 'has_partials'),
     [
-        ('base/', True),
-        ('overlay/prod/', True),
-        ('runtime/dev/', True),
-        ('runtime/prod/', True),
-        ('chart/dev/', True),
-        ('chart/prod/', True),
+        # omi-local 2026-11-25: the last partial cohort (lifecycle_record_pending_head:5)
+        # was resolved to 0 when its approval lapsed, so no source surface is partial.
+        ('base/', False),
+        ('overlay/prod/', False),
+        ('runtime/dev/', False),
+        ('runtime/prod/', False),
+        ('chart/dev/', False),
+        ('chart/prod/', False),
     ],
 )
 def test_read_lever_expiry_covers_every_partial_source_surface(read_lever_sources, prefix, has_partials):

@@ -246,6 +246,7 @@
       "owner_paths": [
         "backend/utils/conversations/process_conversation.py",
         "backend/utils/conversations/merge_conversations.py",
+        "backend/utils/conversations/task_merge.py",
         "backend/utils/task_intelligence/conversation_capture.py",
         "backend/utils/task_intelligence/reminder_policy.py",
         "backend/routers/conversations.py",
@@ -256,6 +257,11 @@
         {
           "path": "backend/utils/conversations/merge_conversations.py",
           "symbol": "action_items_db.delete_action_items_for_conversation",
+          "discover": true
+        },
+        {
+          "path": "backend/utils/conversations/task_merge.py",
+          "symbol": "action_items_db.update_action_item",
           "discover": true
         },
         {

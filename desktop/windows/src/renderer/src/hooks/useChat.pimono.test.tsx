@@ -18,6 +18,25 @@ vi.mock('../lib/session', () => ({
   serverUrl: () => 'http://omi.test:8000',
   auth: { currentUser: { getIdToken: async () => 'test-token' } }
 }))
+// send() runs the pre-send quota gate whenever auth.currentUser is set (it is,
+// above). Its cold-start check fetches /v1/users/me/usage-quota; unmocked, that
+// was a real jsdom XHR to serverUrl() (omi.test), so the first send in this file
+// waited on a DNS failure whose latency is the runner's, not the test's. On a
+// loaded CI runner it outlasted waitForSend's flush budget, and while it stayed
+// in flight every later check() shared it, so the fake-timer tests (whose 5 s
+// cold-start bound never elapses) never reached mainChatSend. Answer the probe
+// in-process: an allowed, unlimited snapshot, so the gate is never the blocker.
+vi.mock('../lib/billing', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../lib/billing')>()),
+  fetchChatQuota: async () => ({
+    allowed: true,
+    limit: null,
+    plan: 'omi-local',
+    plan_type: 'unlimited',
+    unit: 'questions' as const,
+    used: 0
+  })
+}))
 vi.mock('../lib/pageCache', () => ({ invalidateConversationsCache: vi.fn() }))
 vi.mock('../lib/localAgent', () => ({ gatherLocalContext: async () => '' }))
 // Non-empty screen context so `prompt` (context-prepended) differs from the raw

@@ -4,7 +4,6 @@ the user's OK in the Calendar check before it reaches CalDAV (utils/agent_calend
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
-from utils import agent_calendar
 from utils.memory.product_authorization import ProductAuthorizationContext
 from utils.mcp_dates import local_date_window
 from utils.mcp_memories import parse_mcp_bool, parse_mcp_int
@@ -12,6 +11,15 @@ from utils.mcp_server.errors import ToolExecutionError
 
 DEFAULT_DAYS = 7
 MAX_WINDOW = timedelta(days=62)
+
+
+def _agent_calendar():
+    # Imported on call, like the other handlers keep their module imports to database/* and pure
+    # utils: agent_calendar pulls the conversation lifecycle and storage stack, and the MCP tool
+    # registry imports every handler module whenever any MCP surface is imported.
+    from utils import agent_calendar
+
+    return agent_calendar
 
 
 def get_calendar_events(
@@ -31,7 +39,7 @@ def get_calendar_events(
         include_waiting = parse_mcp_bool(arguments.get('include_waiting'), 'include_waiting', default=False)
     except ValueError as error:
         raise ToolExecutionError(str(error), code=-32602)
-    events = agent_calendar.list_events(uid, start, end)
+    events = _agent_calendar().list_events(uid, start, end)
     waiting = sum(1 for e in events if e.get('status') == 'waiting_for_approval')
     if not include_waiting:
         events = [e for e in events if e.get('status') == 'on_calendar']
@@ -50,7 +58,7 @@ def create_calendar_event(
 ) -> Dict[str, Any]:
     try:
         duration = parse_mcp_int(arguments.get('duration'), 'duration', default=30, minimum=5, maximum=24 * 60)
-        event = agent_calendar.propose_event(
+        event = _agent_calendar().propose_event(
             uid,
             title=arguments.get('title'),
             start=arguments.get('start'),

@@ -1,0 +1,22 @@
+# Hermes Studio (or any other LAN web app) by its own hostname. Copy to studio.conf in
+# this directory, set the address, add the hostname to the tunnel (REMOTE-ACCESS.md) and
+# restart omi-nginx. Put Cloudflare Access in front of it: unlike the Omi API, Studio is
+# only ever used from a browser, so the browser login works.
+server {
+    listen 8080;
+    server_name studio.example.com;
+
+    client_max_body_size 50m;
+    proxy_http_version 1.1;
+    proxy_buffering off;
+    proxy_read_timeout 600s;
+    proxy_set_header Host $host;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $omi_connection;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Forwarded-Proto $omi_forwarded_proto;
+
+    location / {
+        proxy_pass http://192.0.2.40:8648;
+    }
+}

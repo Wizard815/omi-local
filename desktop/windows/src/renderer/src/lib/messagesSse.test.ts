@@ -11,6 +11,12 @@ describe('parseMessagesSse', () => {
     const raw = 'data: think: Searching memories\ndata: Hi\ndone: 1'
     expect(parseMessagesSse(raw)).toBe('Hi')
   })
+  it('drops the bare think: keep-alives the server sends before the first answer chunk', () => {
+    // The wire form (no data: prefix), every 20 s while a slow model thinks (omi-host/REMOTE-ACCESS.md).
+    const raw =
+      'think: Preparing response…\nthink: Still working…\nthink: Still working…\ndata: Hi\ndone: 1'
+    expect(parseMessagesSse(raw)).toBe('Hi')
+  })
   it('drops message: side-frames without leaking their base64 into the text', () => {
     const raw = `data: Hi\nmessage: ${b64('{"id":"m","text":"side"}')}`
     expect(parseMessagesSse(raw)).toBe('Hi')

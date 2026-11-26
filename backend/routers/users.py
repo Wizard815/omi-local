@@ -2498,27 +2498,27 @@ def get_llm_usage(
     }
 
 
-class LocalUsageDay(BaseModel):
+class LocalUsageDayResponse(BaseModel):
     day: str
     counts: Dict[str, int] = Field(default_factory=dict)
     total: int = 0
 
 
-class LocalUsageEvent(BaseModel):
-    event: str = ''
-    at: str = ''
+class LocalUsageRecentEventResponse(BaseModel):
+    # Stored rows are read back as written (database/local_usage.apply_user_event); stay lenient so
+    # one odd row cannot fail the page, as the app's reader skips malformed rows itself.
+    event: Optional[str] = None
+    at: Optional[str] = None
     properties: Dict[str, Any] = Field(default_factory=dict)
 
 
 class LocalUsageResponse(BaseModel):
-    """Your own usage on this server (omi-local): counts per event and day, and recent events."""
-
     enabled: bool
     retention_days: int
     window_days: int
     totals: Dict[str, int] = Field(default_factory=dict)
-    days: List[LocalUsageDay] = Field(default_factory=list)
-    recent: List[LocalUsageEvent] = Field(default_factory=list)
+    days: List[LocalUsageDayResponse] = Field(default_factory=list)
+    recent: List[LocalUsageRecentEventResponse] = Field(default_factory=list)
 
 
 @router.get('/v1/users/me/local-usage', tags=['users'], response_model=LocalUsageResponse)

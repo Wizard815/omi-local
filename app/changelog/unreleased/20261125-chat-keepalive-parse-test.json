@@ -1,0 +1,4 @@
+{
+  "kind": "none",
+  "reason": "Test only: pins that the server's chat keep-alive before the first answer stays a status line. No app code changes."
+}
