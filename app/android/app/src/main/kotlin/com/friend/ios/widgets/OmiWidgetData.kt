@@ -20,6 +20,7 @@ object OmiWidgetKeys {
     const val NEXT_EVENT = "widget_next_event"
     const val MEMORY = "widget_memory"
     const val AI_SOURCE = "widget_ai_source"
+    const val OVERVIEW = "widget_overview"
 }
 
 data class TodayData(
@@ -81,6 +82,27 @@ data class FamilyDayData(
 data class NextEventLabels(val title: String, val none: String, val familyLabel: String)
 
 data class MemoryItem(val id: String?, val text: String)
+
+/** An agenda line on the Today overview: [startMs] 0 for an all-day entry. */
+data class OverviewEvent(val title: String, val startMs: Long, val detail: String)
+
+data class Headline(val title: String, val source: String)
+
+/** Today overview: the day's agenda, tasks due, summary line and headlines (the large widget). */
+data class OverviewData(
+    val title: String,
+    /** The day the rows belong to, `yyyy-MM-dd`; rows from another day are dropped. */
+    val day: String,
+    val eventsLabel: String,
+    val tasksLabel: String,
+    val newsLabel: String,
+    val empty: String,
+    val allDayLabel: String,
+    val events: List<OverviewEvent>,
+    val tasks: List<WidgetRow>,
+    val summary: String,
+    val headlines: List<Headline>,
+)
 
 data class MemoryData(val title: String, val empty: String, val memories: List<MemoryItem>)
 
@@ -223,6 +245,57 @@ object OmiWidgetData {
         if (data.memories.isEmpty()) return null
         return data.memories[Math.floorMod(epochDay, data.memories.size.toLong()).toInt()]
     }
+    fun overview(json: String?): OverviewData? = parse(json) { o ->
+        val events = mutableListOf<OverviewEvent>()
+        o.optJSONArray("events")?.let { array ->
+            for (i in 0 until array.length()) {
+                val item = array.optJSONObject(i) ?: continue
+                val title = item.text("title") ?: continue
+                events.add(OverviewEvent(title, item.optLong("start_ms", 0L).coerceAtLeast(0L), item.text("detail") ?: ""))
+            }
+        }
+        val headlines = mutableListOf<Headline>()
+        o.optJSONArray("headlines")?.let { array ->
+            for (i in 0 until array.length()) {
+                val item = array.optJSONObject(i) ?: continue
+                headlines.add(Headline(item.text("title") ?: continue, item.text("source") ?: ""))
+            }
+        }
+        OverviewData(
+            title = o.text("title") ?: return@parse null,
+            day = o.text("day") ?: return@parse null,
+            eventsLabel = o.text("events_label") ?: "",
+            tasksLabel = o.text("tasks_label") ?: "",
+            newsLabel = o.text("news_label") ?: "",
+            empty = o.text("empty") ?: "",
+            allDayLabel = o.text("all_day_label") ?: "",
+            events = events,
+            tasks = rows(o.optJSONArray("tasks")) { item -> WidgetRow(item.text("id"), item.text("title") ?: return@rows null, item.text("detail")) },
+            summary = o.text("summary") ?: "",
+            headlines = headlines.take(2),
+        )
+    }
+
+    /**
+     * The agenda the overview shows at [nowMs]: the phone's events and the document's, without
+     * the timed ones already started more than an hour ago, a family block that matches a phone
+     * event (same title and start) once, all-day entries first, then by start; at most [max].
+     */
+    fun overviewAgenda(phone: List<OverviewEvent>, document: List<OverviewEvent>, nowMs: Long, max: Int = MAX_ROWS): List<OverviewEvent> {
+        val merged = phone.toMutableList()
+        for (event in document) {
+            if (merged.none { it.title == event.title && it.startMs == event.startMs }) merged.add(event)
+        }
+        return merged
+            .filter { it.startMs == 0L || it.startMs >= nowMs - 60L * 60 * 1000 }
+            .sortedWith(compareBy<OverviewEvent> { it.startMs != 0L }.thenBy { it.startMs })
+            .take(max)
+    }
+
+    /** One line per row: "09:30  Standup". */
+    fun lines(rows: List<Pair<String, String>>): String =
+        rows.joinToString("\n") { (lead, title) -> if (lead.isBlank()) title else "$lead  $title" }
+
     fun aiSource(json: String?): AiSourceData? = parse(json) { o ->
         val mode = o.text("mode")?.takeIf { it in AI_MODES } ?: return@parse null
         AiSourceData(

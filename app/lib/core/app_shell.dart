@@ -84,6 +84,8 @@ class _AppShellState extends State<AppShell> {
     'memory',
     'listening',
     'ai-source',
+    // Omi Today and its home-screen widget.
+    'today',
   };
 
   void openAppLink(Uri uri) async {

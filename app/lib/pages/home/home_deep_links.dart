@@ -30,6 +30,7 @@ import 'package:omi/pages/settings/device_settings.dart';
 import 'package:omi/pages/settings/language_settings_page.dart';
 import 'package:omi/pages/settings/phone_llm_settings_page.dart';
 import 'package:omi/pages/settings/wrapped_2025_page.dart';
+import 'package:omi/pages/today/today_page.dart';
 import 'package:omi/providers/app_provider.dart';
 import 'package:omi/providers/memories_provider.dart';
 import 'package:omi/services/android_home_widgets.dart';
@@ -207,6 +208,10 @@ Future<bool> openHomeDeepLink(
       unawaited(showMemoryDialog(context, context.read<MemoriesProvider>()));
     case 'approvals':
       unawaited(routeToPage(context, const ApprovalsPage()));
+    // Omi Today (`omi://app/today`): the Today overview widget and the Home card open it over Home.
+    case 'today':
+      context.read<HomeProvider>().setIndex(HomeProvider.homeTab);
+      unawaited(routeToPage(context, const OmiTodayPage()));
     // The AI source widget: Switch moves on from the source it showed (`from`; a stale or repeated
     // tap changes nothing), a tap elsewhere opens the setting.
     case 'ai-source':

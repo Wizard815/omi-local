@@ -17210,4 +17210,195 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => 'Η μέρα σας σε μία σελίδα';
+
+  @override
+  String get omiTodayCustomize => 'Προσαρμογή Omi Today';
+
+  @override
+  String get setPhoneAlarm => 'Ορισμός ξυπνητηριού';
+
+  @override
+  String get phoneAlarmUnavailable => 'Δεν ήταν δυνατό να ανοίξει η εφαρμογή Ρολόι';
+
+  @override
+  String get taskReminders => 'Υπενθυμίσεις εργασιών';
+
+  @override
+  String get taskRemindersSubtitle => 'Υπενθύμιση σε αυτό το τηλέφωνο όταν λήγει μια εργασία';
+
+  @override
+  String get taskReminderLead => 'Νωρίτερη υπενθύμιση';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return '$duration πριν';
+  }
+
+  @override
+  String get taskReminderAtDueTime => 'Μόνο στη λήξη';
+
+  @override
+  String get taskReminderDueTitle => 'Λήξη εργασίας';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return 'Λήγει σε $duration';
+  }
+
+  @override
+  String get taskReminderExactAlarms => 'Ακριβή ξυπνητήρια';
+
+  @override
+  String get taskReminderExactAlarmsOff =>
+      'Ανενεργό: οι υπενθυμίσεις μπορεί να καθυστερούν λίγα λεπτά. Πατήστε για να επιτρέψετε.';
+
+  @override
+  String get taskReminderNotificationsOff =>
+      'Οι ειδοποιήσεις του Omi είναι απενεργοποιημένες, οπότε οι υπενθυμίσεις δεν μπορούν να εμφανιστούν. Επιτρέψτε τις στις ρυθμίσεις συστήματος.';
+
+  @override
+  String get todayAgendaTitle => 'Το πρόγραμμα της ημέρας';
+
+  @override
+  String get todayAgendaEmpty => 'Τίποτα προγραμματισμένο σήμερα';
+
+  @override
+  String get todayAgendaEmptyMessage => 'Δεν υπάρχουν συμβάντα ή εργασίες σήμερα.';
+
+  @override
+  String get todayEvents => 'Συμβάντα';
+
+  @override
+  String get todayTasksDue => 'Εργασίες για σήμερα';
+
+  @override
+  String get todayAllDay => 'Ολοήμερο';
+
+  @override
+  String get todayFamilyUnreachable => 'Το οικογενειακό ημερολόγιο δεν είναι προσβάσιμο αυτή τη στιγμή.';
+
+  @override
+  String get todaySummaryTitle => 'Η μέρα σας';
+
+  @override
+  String get todayNewsTitle => 'Ειδήσεις';
+
+  @override
+  String get todayNewsEmpty => 'Δεν υπάρχουν ροές ειδήσεων';
+
+  @override
+  String get todayNewsEmptyMessage => 'Προσθέστε ροές RSS ή Atom για να βλέπετε εδώ τους τίτλους τους.';
+
+  @override
+  String get todayNewsAddFeeds => 'Προσθήκη ροών';
+
+  @override
+  String get todayNewsError => 'Δεν ήταν δυνατή η φόρτωση των ροών.';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return 'Ροές που δεν διαβάστηκαν: $count';
+  }
+
+  @override
+  String get todayNothingYet => 'Τίποτα για εμφάνιση ακόμη';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => 'Δεν έχει ρυθμιστεί';
+
+  @override
+  String get todayCompanionSetUpMessage => 'Προσθέστε τη διεύθυνση και το token στις ρυθμίσεις του Omi Today.';
+
+  @override
+  String get todaySetUp => 'Ρύθμιση';
+
+  @override
+  String get todayCompanionUnauthorized => 'Το token απορρίφθηκε. Ελέγξτε το στις ρυθμίσεις του Omi Today.';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return 'Δεν ήταν δυνατή η σύνδεση με $name.';
+  }
+
+  @override
+  String get todayNetWorth => 'Καθαρή περιουσία';
+
+  @override
+  String get todayBills30d => 'Λογαριασμοί τις επόμενες 30 ημέρες';
+
+  @override
+  String get todaySavingsFree => 'Ελεύθερες αποταμιεύσεις';
+
+  @override
+  String get todaySpentThisMonth => 'Δαπάνες αυτόν τον μήνα';
+
+  @override
+  String todayNextBill(String name) {
+    return 'Επόμενος λογαριασμός: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'Ειδοποιήσεις: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => 'Δεν υπάρχει ακόμη σύνοψη σήμερα';
+
+  @override
+  String get todayCards => 'Κάρτες';
+
+  @override
+  String todayReorderCard(String name) {
+    return 'Μετακίνηση $name';
+  }
+
+  @override
+  String get todayNewsFeeds => 'Ροές ειδήσεων';
+
+  @override
+  String get todayAddFeed => 'Προσθήκη ροής';
+
+  @override
+  String get todayFeedUrl => 'Διεύθυνση ροής';
+
+  @override
+  String get todayAddressInvalid => 'Εισαγάγετε μια διεύθυνση που ξεκινά με http:// ή https://';
+
+  @override
+  String get todayFeedRemoved => 'Η ροή αφαιρέθηκε';
+
+  @override
+  String get todayRemoveFeed => 'Αφαίρεση ροής';
+
+  @override
+  String get todayCompanionAddress => 'Διεύθυνση';
+
+  @override
+  String get todayCompanionToken => 'Token';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'Το Omi Today θα σταματήσει να διαβάζει το $name μέχρι να προσθέσετε ξανά token.';
+  }
+
+  @override
+  String get todayCoinpileHint =>
+      'Διαβάζει από το Coinpile με token με εμβέλεια summary (Coinpile: Ρυθμίσεις, Home Assistant & API).';
+
+  @override
+  String get todayPonderingHint =>
+      'Δείχνει την πρωινή σύνοψη του Orb. Χρησιμοποιήστε ένα από τα API tokens του (ORB_API_TOKENS).';
 }

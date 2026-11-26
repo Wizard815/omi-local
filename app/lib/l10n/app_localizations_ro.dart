@@ -17173,4 +17173,195 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => 'Ziua ta pe o singură pagină';
+
+  @override
+  String get omiTodayCustomize => 'Personalizează Omi Today';
+
+  @override
+  String get setPhoneAlarm => 'Setează alarma';
+
+  @override
+  String get phoneAlarmUnavailable => 'Aplicația Ceas nu a putut fi deschisă';
+
+  @override
+  String get taskReminders => 'Mementouri pentru sarcini';
+
+  @override
+  String get taskRemindersSubtitle => 'Amintește-mi pe acest telefon când o sarcină ajunge la termen';
+
+  @override
+  String get taskReminderLead => 'Amintește mai devreme';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return 'Cu $duration înainte';
+  }
+
+  @override
+  String get taskReminderAtDueTime => 'Doar la termen';
+
+  @override
+  String get taskReminderDueTitle => 'Sarcină la termen';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return 'Termen peste $duration';
+  }
+
+  @override
+  String get taskReminderExactAlarms => 'Alarme exacte';
+
+  @override
+  String get taskReminderExactAlarmsOff =>
+      'Dezactivat: mementourile pot întârzia câteva minute. Atinge pentru a permite.';
+
+  @override
+  String get taskReminderNotificationsOff =>
+      'Notificările Omi sunt dezactivate, așa că mementourile nu pot apărea. Permite-le din setările sistemului.';
+
+  @override
+  String get todayAgendaTitle => 'Agenda de azi';
+
+  @override
+  String get todayAgendaEmpty => 'Nimic programat azi';
+
+  @override
+  String get todayAgendaEmptyMessage => 'Niciun eveniment sau sarcină azi.';
+
+  @override
+  String get todayEvents => 'Evenimente';
+
+  @override
+  String get todayTasksDue => 'Sarcini de azi';
+
+  @override
+  String get todayAllDay => 'Toată ziua';
+
+  @override
+  String get todayFamilyUnreachable => 'Calendarul familiei nu poate fi accesat acum.';
+
+  @override
+  String get todaySummaryTitle => 'Ziua ta';
+
+  @override
+  String get todayNewsTitle => 'Știri';
+
+  @override
+  String get todayNewsEmpty => 'Niciun flux de știri';
+
+  @override
+  String get todayNewsEmptyMessage => 'Adaugă fluxuri RSS sau Atom pentru a vedea titlurile aici.';
+
+  @override
+  String get todayNewsAddFeeds => 'Adaugă fluxuri';
+
+  @override
+  String get todayNewsError => 'Fluxurile nu au putut fi încărcate.';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return 'Fluxuri care nu au putut fi citite: $count';
+  }
+
+  @override
+  String get todayNothingYet => 'Nimic de afișat încă';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => 'Neconfigurat';
+
+  @override
+  String get todayCompanionSetUpMessage => 'Adaugă adresa și tokenul în setările Omi Today.';
+
+  @override
+  String get todaySetUp => 'Configurează';
+
+  @override
+  String get todayCompanionUnauthorized => 'Tokenul a fost refuzat. Verifică-l în setările Omi Today.';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return '$name nu poate fi accesat.';
+  }
+
+  @override
+  String get todayNetWorth => 'Avere netă';
+
+  @override
+  String get todayBills30d => 'Facturi în următoarele 30 de zile';
+
+  @override
+  String get todaySavingsFree => 'Economii libere';
+
+  @override
+  String get todaySpentThisMonth => 'Cheltuit luna aceasta';
+
+  @override
+  String todayNextBill(String name) {
+    return 'Următoarea factură: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'Alerte: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => 'Încă niciun rezumat azi';
+
+  @override
+  String get todayCards => 'Carduri';
+
+  @override
+  String todayReorderCard(String name) {
+    return 'Mută $name';
+  }
+
+  @override
+  String get todayNewsFeeds => 'Fluxuri de știri';
+
+  @override
+  String get todayAddFeed => 'Adaugă flux';
+
+  @override
+  String get todayFeedUrl => 'Adresa fluxului';
+
+  @override
+  String get todayAddressInvalid => 'Introdu o adresă care începe cu http:// sau https://';
+
+  @override
+  String get todayFeedRemoved => 'Flux eliminat';
+
+  @override
+  String get todayRemoveFeed => 'Elimină fluxul';
+
+  @override
+  String get todayCompanionAddress => 'Adresă';
+
+  @override
+  String get todayCompanionToken => 'Token';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'Omi Today nu va mai citi $name până nu adaugi din nou un token.';
+  }
+
+  @override
+  String get todayCoinpileHint =>
+      'Citește din Coinpile cu un token cu domeniul summary (Coinpile: Setări, Home Assistant și API).';
+
+  @override
+  String get todayPonderingHint =>
+      'Afișează rezumatul de dimineață al Orb. Folosește unul dintre tokenurile sale API (ORB_API_TOKENS).';
 }

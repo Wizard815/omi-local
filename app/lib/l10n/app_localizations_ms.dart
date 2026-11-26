@@ -17142,4 +17142,193 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => 'Hari anda dalam satu halaman';
+
+  @override
+  String get omiTodayCustomize => 'Sesuaikan Omi Today';
+
+  @override
+  String get setPhoneAlarm => 'Tetapkan Penggera Telefon';
+
+  @override
+  String get phoneAlarmUnavailable => 'Tidak dapat membuka apl Jam';
+
+  @override
+  String get taskReminders => 'Peringatan tugas';
+
+  @override
+  String get taskRemindersSubtitle => 'Ingatkan saya pada telefon ini apabila tugas tiba tarikh akhir';
+
+  @override
+  String get taskReminderLead => 'Ingatkan lebih awal';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return '$duration sebelum';
+  }
+
+  @override
+  String get taskReminderAtDueTime => 'Hanya pada tarikh akhir';
+
+  @override
+  String get taskReminderDueTitle => 'Tugas tiba masanya';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return 'Tamat dalam $duration';
+  }
+
+  @override
+  String get taskReminderExactAlarms => 'Penggera tepat';
+
+  @override
+  String get taskReminderExactAlarmsOff => 'Mati: peringatan mungkin lewat beberapa minit. Ketik untuk membenarkan.';
+
+  @override
+  String get taskReminderNotificationsOff =>
+      'Pemberitahuan Omi dimatikan, jadi peringatan tugas tidak dapat dipaparkan. Benarkan dalam tetapan sistem.';
+
+  @override
+  String get todayAgendaTitle => 'Agenda hari ini';
+
+  @override
+  String get todayAgendaEmpty => 'Tiada apa-apa dijadualkan hari ini';
+
+  @override
+  String get todayAgendaEmptyMessage => 'Tiada acara atau tugas hari ini.';
+
+  @override
+  String get todayEvents => 'Acara';
+
+  @override
+  String get todayTasksDue => 'Tugas hari ini';
+
+  @override
+  String get todayAllDay => 'Sepanjang hari';
+
+  @override
+  String get todayFamilyUnreachable => 'Kalendar keluarga tidak dapat dicapai sekarang.';
+
+  @override
+  String get todaySummaryTitle => 'Hari anda';
+
+  @override
+  String get todayNewsTitle => 'Berita';
+
+  @override
+  String get todayNewsEmpty => 'Tiada suapan berita';
+
+  @override
+  String get todayNewsEmptyMessage => 'Tambah suapan RSS atau Atom untuk melihat tajuknya di sini.';
+
+  @override
+  String get todayNewsAddFeeds => 'Tambah suapan';
+
+  @override
+  String get todayNewsError => 'Tidak dapat memuatkan suapan anda.';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return 'Suapan yang tidak dapat dibaca: $count';
+  }
+
+  @override
+  String get todayNothingYet => 'Belum ada apa-apa untuk dipaparkan';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => 'Belum disediakan';
+
+  @override
+  String get todayCompanionSetUpMessage => 'Tambah alamat dan tokennya dalam tetapan Omi Today.';
+
+  @override
+  String get todaySetUp => 'Sediakan';
+
+  @override
+  String get todayCompanionUnauthorized => 'Token ditolak. Semak dalam tetapan Omi Today.';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return 'Tidak dapat mencapai $name.';
+  }
+
+  @override
+  String get todayNetWorth => 'Nilai bersih';
+
+  @override
+  String get todayBills30d => 'Bil dalam 30 hari akan datang';
+
+  @override
+  String get todaySavingsFree => 'Simpanan bebas';
+
+  @override
+  String get todaySpentThisMonth => 'Dibelanjakan bulan ini';
+
+  @override
+  String todayNextBill(String name) {
+    return 'Bil seterusnya: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'Amaran: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => 'Belum ada ringkasan hari ini';
+
+  @override
+  String get todayCards => 'Kad';
+
+  @override
+  String todayReorderCard(String name) {
+    return 'Alihkan $name';
+  }
+
+  @override
+  String get todayNewsFeeds => 'Suapan berita';
+
+  @override
+  String get todayAddFeed => 'Tambah suapan';
+
+  @override
+  String get todayFeedUrl => 'Alamat suapan';
+
+  @override
+  String get todayAddressInvalid => 'Masukkan alamat yang bermula dengan http:// atau https://';
+
+  @override
+  String get todayFeedRemoved => 'Suapan dialih keluar';
+
+  @override
+  String get todayRemoveFeed => 'Alih keluar suapan';
+
+  @override
+  String get todayCompanionAddress => 'Alamat';
+
+  @override
+  String get todayCompanionToken => 'Token';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'Omi Today akan berhenti membaca $name sehingga anda menambah token semula.';
+  }
+
+  @override
+  String get todayCoinpileHint =>
+      'Membaca daripada Coinpile dengan token yang mempunyai skop summary (Coinpile: Tetapan, Home Assistant & API).';
+
+  @override
+  String get todayPonderingHint => 'Memaparkan ringkasan pagi Orb. Gunakan salah satu token API-nya (ORB_API_TOKENS).';
 }

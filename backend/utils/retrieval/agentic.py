@@ -1740,6 +1740,9 @@ These tools run on the user's own device, not on the server: {device_tool_list}
 propose_message opens the system compose sheet — it does NOT send. Only report a
 message as sent when the tool result says status=sent. If it says cancelled, the
 user chose not to send; acknowledge that rather than retrying.
+
+set_alarm and set_timer open the phone's clock app with the values filled in — the
+user saves them there. Say you opened the clock app, not that the alarm is set.
 </device_tools>"""
 
     tool_schemas, tool_registry = _convert_tools(core_tools + device_tools, app_tools)

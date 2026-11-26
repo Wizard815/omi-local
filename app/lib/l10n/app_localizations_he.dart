@@ -16988,4 +16988,193 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => 'היום שלך בעמוד אחד';
+
+  @override
+  String get omiTodayCustomize => 'התאמת Omi Today';
+
+  @override
+  String get setPhoneAlarm => 'הגדרת שעון מעורר';
+
+  @override
+  String get phoneAlarmUnavailable => 'לא ניתן לפתוח את אפליקציית השעון';
+
+  @override
+  String get taskReminders => 'תזכורות משימות';
+
+  @override
+  String get taskRemindersSubtitle => 'להזכיר לי בטלפון הזה כשמגיע מועד משימה';
+
+  @override
+  String get taskReminderLead => 'תזכורת מוקדמת';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return '$duration לפני';
+  }
+
+  @override
+  String get taskReminderAtDueTime => 'רק במועד';
+
+  @override
+  String get taskReminderDueTitle => 'מועד משימה';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return 'המועד בעוד $duration';
+  }
+
+  @override
+  String get taskReminderExactAlarms => 'התראות מדויקות';
+
+  @override
+  String get taskReminderExactAlarmsOff => 'כבוי: תזכורות עשויות להגיע באיחור של כמה דקות. הקש כדי לאשר.';
+
+  @override
+  String get taskReminderNotificationsOff =>
+      'ההתראות של Omi כבויות, ולכן לא ניתן להציג תזכורות. אפשר אותן בהגדרות המערכת.';
+
+  @override
+  String get todayAgendaTitle => 'סדר היום';
+
+  @override
+  String get todayAgendaEmpty => 'אין שום דבר מתוכנן להיום';
+
+  @override
+  String get todayAgendaEmptyMessage => 'אין אירועים או משימות להיום.';
+
+  @override
+  String get todayEvents => 'אירועים';
+
+  @override
+  String get todayTasksDue => 'משימות להיום';
+
+  @override
+  String get todayAllDay => 'כל היום';
+
+  @override
+  String get todayFamilyUnreachable => 'אין כרגע גישה ללוח השנה המשפחתי.';
+
+  @override
+  String get todaySummaryTitle => 'היום שלך';
+
+  @override
+  String get todayNewsTitle => 'חדשות';
+
+  @override
+  String get todayNewsEmpty => 'אין פידים של חדשות';
+
+  @override
+  String get todayNewsEmptyMessage => 'הוסף פידים של RSS או Atom כדי לראות כאן את הכותרות.';
+
+  @override
+  String get todayNewsAddFeeds => 'הוספת פידים';
+
+  @override
+  String get todayNewsError => 'לא ניתן לטעון את הפידים.';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return 'פידים שלא ניתן היה לקרוא: $count';
+  }
+
+  @override
+  String get todayNothingYet => 'אין עדיין מה להציג';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => 'לא מוגדר';
+
+  @override
+  String get todayCompanionSetUpMessage => 'הוסף את הכתובת והאסימון בהגדרות של Omi Today.';
+
+  @override
+  String get todaySetUp => 'הגדרה';
+
+  @override
+  String get todayCompanionUnauthorized => 'האסימון נדחה. בדוק אותו בהגדרות של Omi Today.';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return 'לא ניתן להגיע אל $name.';
+  }
+
+  @override
+  String get todayNetWorth => 'שווי נקי';
+
+  @override
+  String get todayBills30d => 'חשבונות ב-30 הימים הקרובים';
+
+  @override
+  String get todaySavingsFree => 'חיסכון פנוי';
+
+  @override
+  String get todaySpentThisMonth => 'הוצאות החודש';
+
+  @override
+  String todayNextBill(String name) {
+    return 'החשבון הבא: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'התראות: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => 'אין עדיין תקציר היום';
+
+  @override
+  String get todayCards => 'כרטיסים';
+
+  @override
+  String todayReorderCard(String name) {
+    return 'שינוי סדר של $name';
+  }
+
+  @override
+  String get todayNewsFeeds => 'פידים של חדשות';
+
+  @override
+  String get todayAddFeed => 'הוספת פיד';
+
+  @override
+  String get todayFeedUrl => 'כתובת הפיד';
+
+  @override
+  String get todayAddressInvalid => 'הזן כתובת שמתחילה ב-http:// או https://';
+
+  @override
+  String get todayFeedRemoved => 'הפיד הוסר';
+
+  @override
+  String get todayRemoveFeed => 'הסרת פיד';
+
+  @override
+  String get todayCompanionAddress => 'כתובת';
+
+  @override
+  String get todayCompanionToken => 'אסימון';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'Omi Today יפסיק לקרוא את $name עד שתוסיף אסימון שוב.';
+  }
+
+  @override
+  String get todayCoinpileHint =>
+      'קורא מ-Coinpile עם אסימון בעל היקף summary (Coinpile: הגדרות, Home Assistant ו-API).';
+
+  @override
+  String get todayPonderingHint => 'מציג את תקציר הבוקר של ה-Orb. השתמש באחד מאסימוני ה-API שלו (ORB_API_TOKENS).';
 }

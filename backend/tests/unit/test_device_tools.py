@@ -115,6 +115,31 @@ def test_propose_message_description_states_it_does_not_send():
     assert 'cancelled' in description
 
 
+def test_clock_tools_state_the_clock_app_is_the_confirmation():
+    tools = build_device_tools('uid-1', {'set_alarm', 'set_timer'}, FakeCallback(), timeout_seconds=TEST_TIMEOUT)
+
+    by_name = {t.name: t for t in tools}
+    assert set(by_name) == {'set_alarm', 'set_timer'}
+    assert 'does NOT set the alarm' in by_name['set_alarm'].description
+    assert 'status=opened' in by_name['set_timer'].description
+
+
+def test_clock_tool_arguments_are_bounded():
+    from pydantic import ValidationError
+
+    from utils.device_tools import SetAlarmInput, SetTimerInput
+
+    assert SetAlarmInput(hour=7, minute=30).hour == 7
+    with pytest.raises(ValidationError):
+        SetAlarmInput(hour=24, minute=0)
+    with pytest.raises(ValidationError):
+        SetAlarmInput(hour=7, minute=60)
+    with pytest.raises(ValidationError):
+        SetTimerInput(seconds=0)
+    with pytest.raises(ValidationError):
+        SetTimerInput(seconds=86401)
+
+
 @pytest.mark.asyncio
 async def test_call_announces_a_request_and_returns_the_client_result(fake_redis):
     callback = FakeCallback()

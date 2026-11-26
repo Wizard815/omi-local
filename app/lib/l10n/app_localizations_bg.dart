@@ -17157,4 +17157,195 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => 'Вашият ден на една страница';
+
+  @override
+  String get omiTodayCustomize => 'Персонализиране на Omi Today';
+
+  @override
+  String get setPhoneAlarm => 'Задаване на аларма';
+
+  @override
+  String get phoneAlarmUnavailable => 'Приложението Часовник не можа да се отвори';
+
+  @override
+  String get taskReminders => 'Напомняния за задачи';
+
+  @override
+  String get taskRemindersSubtitle => 'Напомняй ми на този телефон, когато задача наближи срока си';
+
+  @override
+  String get taskReminderLead => 'Напомняне по-рано';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return '$duration преди';
+  }
+
+  @override
+  String get taskReminderAtDueTime => 'Само в срока';
+
+  @override
+  String get taskReminderDueTitle => 'Срок на задача';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return 'Срок след $duration';
+  }
+
+  @override
+  String get taskReminderExactAlarms => 'Точни аларми';
+
+  @override
+  String get taskReminderExactAlarmsOff =>
+      'Изкл.: напомнянията може да закъсняват с няколко минути. Докоснете, за да разрешите.';
+
+  @override
+  String get taskReminderNotificationsOff =>
+      'Известията за Omi са изключени, затова напомнянията не могат да се показват. Разрешете ги в системните настройки.';
+
+  @override
+  String get todayAgendaTitle => 'Програма за днес';
+
+  @override
+  String get todayAgendaEmpty => 'Нищо планирано за днес';
+
+  @override
+  String get todayAgendaEmptyMessage => 'Няма събития или задачи за днес.';
+
+  @override
+  String get todayEvents => 'Събития';
+
+  @override
+  String get todayTasksDue => 'Задачи за днес';
+
+  @override
+  String get todayAllDay => 'Цял ден';
+
+  @override
+  String get todayFamilyUnreachable => 'Семейният календар не е достъпен в момента.';
+
+  @override
+  String get todaySummaryTitle => 'Вашият ден';
+
+  @override
+  String get todayNewsTitle => 'Новини';
+
+  @override
+  String get todayNewsEmpty => 'Няма новинарски емисии';
+
+  @override
+  String get todayNewsEmptyMessage => 'Добавете RSS или Atom емисии, за да виждате заглавията им тук.';
+
+  @override
+  String get todayNewsAddFeeds => 'Добавяне на емисии';
+
+  @override
+  String get todayNewsError => 'Емисиите не можаха да се заредят.';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return 'Емисии, които не можаха да се прочетат: $count';
+  }
+
+  @override
+  String get todayNothingYet => 'Все още няма какво да се покаже';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => 'Не е настроено';
+
+  @override
+  String get todayCompanionSetUpMessage => 'Добавете адреса и токена в настройките на Omi Today.';
+
+  @override
+  String get todaySetUp => 'Настройване';
+
+  @override
+  String get todayCompanionUnauthorized => 'Токенът беше отхвърлен. Проверете го в настройките на Omi Today.';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return 'Няма връзка с $name.';
+  }
+
+  @override
+  String get todayNetWorth => 'Нетна стойност';
+
+  @override
+  String get todayBills30d => 'Сметки през следващите 30 дни';
+
+  @override
+  String get todaySavingsFree => 'Свободни спестявания';
+
+  @override
+  String get todaySpentThisMonth => 'Похарчено този месец';
+
+  @override
+  String todayNextBill(String name) {
+    return 'Следваща сметка: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'Сигнали: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => 'Днес още няма обзор';
+
+  @override
+  String get todayCards => 'Карти';
+
+  @override
+  String todayReorderCard(String name) {
+    return 'Преместване на $name';
+  }
+
+  @override
+  String get todayNewsFeeds => 'Новинарски емисии';
+
+  @override
+  String get todayAddFeed => 'Добавяне на емисия';
+
+  @override
+  String get todayFeedUrl => 'Адрес на емисията';
+
+  @override
+  String get todayAddressInvalid => 'Въведете адрес, който започва с http:// или https://';
+
+  @override
+  String get todayFeedRemoved => 'Емисията е премахната';
+
+  @override
+  String get todayRemoveFeed => 'Премахване на емисията';
+
+  @override
+  String get todayCompanionAddress => 'Адрес';
+
+  @override
+  String get todayCompanionToken => 'Токен';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'Omi Today ще спре да чете $name, докато не добавите токен отново.';
+  }
+
+  @override
+  String get todayCoinpileHint =>
+      'Чете от Coinpile с токен с обхват summary (Coinpile: Настройки, Home Assistant и API).';
+
+  @override
+  String get todayPonderingHint =>
+      'Показва сутрешния обзор на Orb. Използвайте един от неговите API токени (ORB_API_TOKENS).';
 }

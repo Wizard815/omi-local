@@ -56,6 +56,9 @@ class MainActivity: FlutterActivity() {
         // Register Phone Calls Plugin
         PhoneCallsPlugin.registerWith(flutterEngine, this)
 
+        // Clock app alarms and timers; the clock app is where the user confirms them
+        com.friend.ios.alarms.PhoneAlarmPlugin.register(flutterEngine, this)
+
         // Register Device Calendar Plugin (Android CalendarContract)
         DeviceCalendarPlugin.registerWith(flutterEngine, this)
 

@@ -92,6 +92,17 @@ class PermissionRequestInput(BaseModel):
     type: str = Field(description="Which permission to ask for. iOS supports only 'contacts'.")
 
 
+class SetAlarmInput(BaseModel):
+    hour: int = Field(ge=0, le=23, description="Hour of the alarm, 0-23, in the user's local time.")
+    minute: int = Field(ge=0, le=59, description="Minute of the alarm, 0-59.")
+    label: Optional[str] = Field(default=None, max_length=120, description="Optional alarm label.")
+
+
+class SetTimerInput(BaseModel):
+    seconds: int = Field(ge=1, le=86400, description="Timer length in seconds (1 to 86400).")
+    label: Optional[str] = Field(default=None, max_length=120, description="Optional timer label.")
+
+
 # Descriptions are written for the model and must state the consent model, so it
 # does not promise the user a message was sent when it only opened a sheet.
 DEVICE_TOOL_SPECS: dict[str, dict[str, Any]] = {
@@ -119,6 +130,25 @@ DEVICE_TOOL_SPECS: dict[str, dict[str, Any]] = {
             "Prompt the user for a device permission this turn needs. Call only when a tool "
             "result says next_tool=request_permission, and pass the type it named. On iOS the "
             "only supported type is 'contacts'; the system prompt is the approval."
+        ),
+    },
+    # Android only: the clock app opens with the values filled in and the user saves it there.
+    'set_alarm': {
+        'args_schema': SetAlarmInput,
+        'description': (
+            "Open the clock app on the user's Android phone on a new alarm at hour:minute (24-hour, "
+            "the user's local time; the clock app has no date, so only for the next 24 hours). This "
+            "does NOT set the alarm on its own: the user saves it in the clock app. status=opened "
+            "means the clock app was shown; never say the alarm is set. For a reminder on a later "
+            "day, create a task with a due time instead (the phone reminds at that time)."
+        ),
+    },
+    'set_timer': {
+        'args_schema': SetTimerInput,
+        'description': (
+            "Open the clock app on the user's Android phone on a new timer of the given length in "
+            "seconds. The user starts it in the clock app; status=opened means it was shown, not "
+            "that the timer is running."
         ),
     },
 }

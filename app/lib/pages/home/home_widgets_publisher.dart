@@ -19,6 +19,9 @@ import 'package:omi/services/android_home_widgets.dart';
 import 'package:omi/services/home_widgets_service.dart';
 import 'package:omi/services/phone_llm/phone_llm_settings.dart';
 import 'package:omi/services/phone_llm/phone_llm_status.dart';
+import 'package:omi/services/today/feed_parser.dart';
+import 'package:omi/services/today/news_feed_service.dart';
+import 'package:omi/services/today/today_models.dart';
 import 'package:omi/ui/format/omi_date_format.dart';
 import 'package:omi/utils/enums.dart';
 
@@ -43,6 +46,7 @@ class HomeWidgetsPublisher with WidgetsBindingObserver {
     this.phoneLlm,
     this.phoneStatus,
     this.phoneCheckEvery = const Duration(minutes: 1),
+    Future<List<FeedItem>> Function()? loadHeadlines,
     HomeWidgetsService? service,
     this.delay = const Duration(milliseconds: 800),
     bool? android,
@@ -50,6 +54,7 @@ class HomeWidgetsPublisher with WidgetsBindingObserver {
   })  : service = service ?? HomeWidgetsService.instance,
         android = android ?? Platform.isAndroid,
         loadFamilyDay = loadFamilyDay ?? _fetchFamilyDay,
+        loadHeadlines = loadHeadlines ?? _cachedHeadlines,
         _now = now ?? DateTime.now;
 
   final DeviceProvider devices;
@@ -68,6 +73,11 @@ class HomeWidgetsPublisher with WidgetsBindingObserver {
 
   /// Android only: today on the family calendar (Family day, Next event). Null = no answer.
   final Future<FamilyDay?> Function() loadFamilyDay;
+
+  /// Android only: the newest headlines Omi Today cached (never fetched here).
+  final Future<List<FeedItem>> Function() loadHeadlines;
+  List<FeedItem> _headlines = const [];
+  FamilyDay? _familyDay;
 
   /// How often the family calendar is asked again while the app is open.
   final Duration familyDayEvery;
@@ -111,6 +121,7 @@ class HomeWidgetsPublisher with WidgetsBindingObserver {
       capture?.addListener(_onCapture);
       if (memories case final memories? when !memories.hasLoaded) unawaited(memories.loadMemories());
       unawaited(refreshFamilyDay());
+      unawaited(refreshHeadlines());
       _familyTimer = Timer.periodic(familyDayEvery, (_) => unawaited(refreshFamilyDay()));
     }
     WidgetsBinding.instance.addObserver(this);
@@ -148,6 +159,7 @@ class HomeWidgetsPublisher with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed && android) {
       unawaited(tasks.waiting?.load());
       unawaited(refreshFamilyDay());
+      unawaited(refreshHeadlines());
       _checkPhone();
       _schedule();
     }
@@ -241,7 +253,34 @@ class HomeWidgetsPublisher with WidgetsBindingObserver {
     if (memories case final memories? when memories.hasLoaded) {
       _put(AndroidWidgetDocuments.memoryKey, AndroidWidgetDocuments.memory(memories.memories, words));
     }
+    if (tasks.hasLoaded) {
+      final now = _now();
+      _put(
+        AndroidWidgetDocuments.overviewKey,
+        AndroidWidgetDocuments.overview(
+          agenda: TodayAgenda.build(deviceEvents: const [], family: _familyDay, tasks: tasks.reminderTasks, now: now),
+          summary: TodayDaySummary.from(list, now: now),
+          headlines: _headlines,
+          l10n: words,
+          dates: dates(),
+          now: now,
+        ),
+      );
+    }
   }
+
+  /// Reads the headlines Omi Today last fetched, for the Today overview widget.
+  @visibleForTesting
+  Future<void> refreshHeadlines() async {
+    if (!android) return;
+    try {
+      _headlines = await loadHeadlines();
+      _schedule();
+    } catch (_) {}
+  }
+
+  static Future<List<FeedItem>> _cachedHeadlines() async =>
+      (await NewsFeedService.instance.cached())?.items ?? const [];
 
   /// Asks the server for today on the family calendar and writes Family day. An answer without the
   /// gateway (down, refused) keeps what the widget already shows; the first one is still written so
@@ -253,6 +292,7 @@ class HomeWidgetsPublisher with WidgetsBindingObserver {
     try {
       final day = await loadFamilyDay();
       if (day == null) return;
+      if (day.reachable || !day.configured) _familyDay = day;
       if (day.configured && !day.reachable && _familyPublished) return;
       _put(AndroidWidgetDocuments.familyDayKey, AndroidWidgetDocuments.familyDay(day, l10n(), now: _now()));
       _familyPublished = true;

@@ -5,6 +5,10 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Task reminders at the exact minute (Android 12+; falls back to inexact when off). -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- Opening the clock app on a new alarm or timer (AlarmClock.ACTION_SET_ALARM / ACTION_SET_TIMER). -->
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
     <!-- Tell Google Play Store that your app uses Bluetooth LE
      Set android:required="true" if bluetooth is necessary -->
     <uses-feature
@@ -271,6 +275,17 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/omi_widget_approvals_info" />
+        </receiver>
+        <receiver
+            android:name="com.friend.ios.widgets.OmiTodayOverviewWidget"
+            android:exported="false"
+            android:label="@string/omi_widget_overview_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/omi_widget_overview_info" />
         </receiver>
         <receiver
             android:name="com.friend.ios.widgets.OmiFamilyDayWidget"

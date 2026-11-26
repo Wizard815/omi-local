@@ -17182,4 +17182,195 @@ class AppLocalizationsCa extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => 'El teu dia en una pàgina';
+
+  @override
+  String get omiTodayCustomize => 'Personalitza Omi Today';
+
+  @override
+  String get setPhoneAlarm => 'Posa una alarma';
+
+  @override
+  String get phoneAlarmUnavailable => 'No s\'ha pogut obrir l\'app Rellotge';
+
+  @override
+  String get taskReminders => 'Recordatoris de tasques';
+
+  @override
+  String get taskRemindersSubtitle => 'Avisa\'m en aquest telèfon quan venci una tasca';
+
+  @override
+  String get taskReminderLead => 'Recorda abans';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return '$duration abans';
+  }
+
+  @override
+  String get taskReminderAtDueTime => 'Només a l\'hora de venciment';
+
+  @override
+  String get taskReminderDueTitle => 'Tasca que venç';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return 'Venç d\'aquí a $duration';
+  }
+
+  @override
+  String get taskReminderExactAlarms => 'Alarmes exactes';
+
+  @override
+  String get taskReminderExactAlarmsOff =>
+      'Desactivat: els recordatoris poden arribar uns minuts tard. Toca per permetre-ho.';
+
+  @override
+  String get taskReminderNotificationsOff =>
+      'Les notificacions d\'Omi estan desactivades, així que no es poden mostrar recordatoris. Permet-les a la configuració del sistema.';
+
+  @override
+  String get todayAgendaTitle => 'Agenda d\'avui';
+
+  @override
+  String get todayAgendaEmpty => 'Res programat avui';
+
+  @override
+  String get todayAgendaEmptyMessage => 'No hi ha esdeveniments ni tasques avui.';
+
+  @override
+  String get todayEvents => 'Esdeveniments';
+
+  @override
+  String get todayTasksDue => 'Tasques d\'avui';
+
+  @override
+  String get todayAllDay => 'Tot el dia';
+
+  @override
+  String get todayFamilyUnreachable => 'No es pot accedir al calendari familiar ara mateix.';
+
+  @override
+  String get todaySummaryTitle => 'El teu dia';
+
+  @override
+  String get todayNewsTitle => 'Notícies';
+
+  @override
+  String get todayNewsEmpty => 'Cap font de notícies';
+
+  @override
+  String get todayNewsEmptyMessage => 'Afegeix fonts RSS o Atom per veure\'n aquí els titulars.';
+
+  @override
+  String get todayNewsAddFeeds => 'Afegeix fonts';
+
+  @override
+  String get todayNewsError => 'No s\'han pogut carregar les fonts.';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return 'Fonts que no s\'han pogut llegir: $count';
+  }
+
+  @override
+  String get todayNothingYet => 'Encara no hi ha res a mostrar';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => 'Sense configurar';
+
+  @override
+  String get todayCompanionSetUpMessage => 'Afegeix l\'adreça i el testimoni a la configuració d\'Omi Today.';
+
+  @override
+  String get todaySetUp => 'Configura';
+
+  @override
+  String get todayCompanionUnauthorized => 'S\'ha rebutjat el testimoni. Revisa\'l a la configuració d\'Omi Today.';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return 'No s\'ha pogut connectar amb $name.';
+  }
+
+  @override
+  String get todayNetWorth => 'Patrimoni net';
+
+  @override
+  String get todayBills30d => 'Factures dels pròxims 30 dies';
+
+  @override
+  String get todaySavingsFree => 'Estalvi lliure';
+
+  @override
+  String get todaySpentThisMonth => 'Gastat aquest mes';
+
+  @override
+  String todayNextBill(String name) {
+    return 'Pròxima factura: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'Alertes: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => 'Encara no hi ha resum avui';
+
+  @override
+  String get todayCards => 'Targetes';
+
+  @override
+  String todayReorderCard(String name) {
+    return 'Reordena $name';
+  }
+
+  @override
+  String get todayNewsFeeds => 'Fonts de notícies';
+
+  @override
+  String get todayAddFeed => 'Afegeix una font';
+
+  @override
+  String get todayFeedUrl => 'Adreça de la font';
+
+  @override
+  String get todayAddressInvalid => 'Introdueix una adreça que comenci per http:// o https://';
+
+  @override
+  String get todayFeedRemoved => 'Font eliminada';
+
+  @override
+  String get todayRemoveFeed => 'Elimina la font';
+
+  @override
+  String get todayCompanionAddress => 'Adreça';
+
+  @override
+  String get todayCompanionToken => 'Testimoni';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'Omi Today deixarà de llegir $name fins que tornis a afegir un testimoni.';
+  }
+
+  @override
+  String get todayCoinpileHint =>
+      'Llegeix de Coinpile amb un testimoni amb l\'abast summary (Coinpile: Configuració, Home Assistant i API).';
+
+  @override
+  String get todayPonderingHint =>
+      'Mostra el resum del matí de l\'Orb. Fes servir un dels seus testimonis d\'API (ORB_API_TOKENS).';
 }

@@ -29708,6 +29708,348 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No memories yet'**
   String get widgetMemoryEmpty;
+
+  /// Name of the Omi Today page (the day on one page)
+  ///
+  /// In en, this message translates to:
+  /// **'Omi Today'**
+  String get omiTodayTitle;
+
+  /// Home row under the Omi Today title
+  ///
+  /// In en, this message translates to:
+  /// **'Your day on one page'**
+  String get omiTodaySubtitle;
+
+  /// Omi Today settings button and page title
+  ///
+  /// In en, this message translates to:
+  /// **'Customize Omi Today'**
+  String get omiTodayCustomize;
+
+  /// Task menu: open the clock app on an alarm at the task's due time
+  ///
+  /// In en, this message translates to:
+  /// **'Set Phone Alarm'**
+  String get setPhoneAlarm;
+
+  /// Error when no clock app could set the alarm
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the clock app'**
+  String get phoneAlarmUnavailable;
+
+  /// Settings toggle: phone reminders for tasks with a due time
+  ///
+  /// In en, this message translates to:
+  /// **'Task Reminders'**
+  String get taskReminders;
+
+  /// Subtitle of the Task Reminders toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Remind me on this phone when a task is due'**
+  String get taskRemindersSubtitle;
+
+  /// Settings row: how long before the due time an extra reminder fires
+  ///
+  /// In en, this message translates to:
+  /// **'Remind Me Early'**
+  String get taskReminderLead;
+
+  /// Lead time choice, e.g. '15 mins before'
+  ///
+  /// In en, this message translates to:
+  /// **'{duration} before'**
+  String taskReminderLeadBefore(String duration);
+
+  /// Lead time choice: no early reminder
+  ///
+  /// In en, this message translates to:
+  /// **'At due time only'**
+  String get taskReminderAtDueTime;
+
+  /// Notification title at a task's due time
+  ///
+  /// In en, this message translates to:
+  /// **'Task due'**
+  String get taskReminderDueTitle;
+
+  /// Notification title of the early reminder, e.g. 'Due in 15 mins'
+  ///
+  /// In en, this message translates to:
+  /// **'Due in {duration}'**
+  String taskReminderDueIn(String duration);
+
+  /// Settings row: Android 'Alarms & reminders' permission
+  ///
+  /// In en, this message translates to:
+  /// **'Exact Alarms'**
+  String get taskReminderExactAlarms;
+
+  /// Subtitle when exact alarms are not allowed
+  ///
+  /// In en, this message translates to:
+  /// **'Off: reminders may arrive a few minutes late. Tap to allow.'**
+  String get taskReminderExactAlarmsOff;
+
+  /// Footer when notifications are blocked
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are off for Omi, so task reminders can\'t show. Allow them in system settings.'**
+  String get taskReminderNotificationsOff;
+
+  /// Omi Today card: events and tasks due today
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Agenda'**
+  String get todayAgendaTitle;
+
+  /// Agenda card empty title
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing scheduled today'**
+  String get todayAgendaEmpty;
+
+  /// Agenda card empty message
+  ///
+  /// In en, this message translates to:
+  /// **'No events or tasks due today.'**
+  String get todayAgendaEmptyMessage;
+
+  /// Caption over today's calendar events
+  ///
+  /// In en, this message translates to:
+  /// **'Events'**
+  String get todayEvents;
+
+  /// Caption over the tasks due today
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks due'**
+  String get todayTasksDue;
+
+  /// Time label of an all-day event
+  ///
+  /// In en, this message translates to:
+  /// **'All day'**
+  String get todayAllDay;
+
+  /// Soft note when the family calendar gateway did not answer
+  ///
+  /// In en, this message translates to:
+  /// **'The family calendar can\'t be reached right now.'**
+  String get todayFamilyUnreachable;
+
+  /// Omi Today card: today's conversations and summary
+  ///
+  /// In en, this message translates to:
+  /// **'Your Day'**
+  String get todaySummaryTitle;
+
+  /// Omi Today card: headlines from the user's feeds
+  ///
+  /// In en, this message translates to:
+  /// **'News'**
+  String get todayNewsTitle;
+
+  /// News card empty title
+  ///
+  /// In en, this message translates to:
+  /// **'No News Feeds'**
+  String get todayNewsEmpty;
+
+  /// News card empty message and feeds section subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Add RSS or Atom feeds to see their headlines here.'**
+  String get todayNewsEmptyMessage;
+
+  /// Button that opens the feed settings
+  ///
+  /// In en, this message translates to:
+  /// **'Add Feeds'**
+  String get todayNewsAddFeeds;
+
+  /// News card error
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your feeds.'**
+  String get todayNewsError;
+
+  /// Note under the headlines when some feeds failed
+  ///
+  /// In en, this message translates to:
+  /// **'Feeds that couldn\'t be read: {count}'**
+  String todayNewsSomeFailed(int count);
+
+  /// Empty title of a card whose service answered with nothing
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to show yet'**
+  String get todayNothingYet;
+
+  /// Name of the Coinpile money app (a proper name, keep as is)
+  ///
+  /// In en, this message translates to:
+  /// **'Coinpile'**
+  String get todayCoinpileTitle;
+
+  /// Name of the Pondering Orb home dashboard (a proper name, keep as is)
+  ///
+  /// In en, this message translates to:
+  /// **'Pondering Orb'**
+  String get todayPonderingTitle;
+
+  /// Companion card empty title before an address is saved
+  ///
+  /// In en, this message translates to:
+  /// **'Not Set Up'**
+  String get todayCompanionNotSetUp;
+
+  /// Companion card empty message
+  ///
+  /// In en, this message translates to:
+  /// **'Add its address and token in the Omi Today settings.'**
+  String get todayCompanionSetUpMessage;
+
+  /// Button that opens the Omi Today settings
+  ///
+  /// In en, this message translates to:
+  /// **'Set Up'**
+  String get todaySetUp;
+
+  /// Companion card error on 401/403
+  ///
+  /// In en, this message translates to:
+  /// **'The token was refused. Check it in the Omi Today settings.'**
+  String get todayCompanionUnauthorized;
+
+  /// Companion card error when the service did not answer
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach {name}.'**
+  String todayCompanionUnreachable(String name);
+
+  /// Coinpile row label
+  ///
+  /// In en, this message translates to:
+  /// **'Net worth'**
+  String get todayNetWorth;
+
+  /// Coinpile row label
+  ///
+  /// In en, this message translates to:
+  /// **'Bills in the next 30 days'**
+  String get todayBills30d;
+
+  /// Coinpile row label: savings not set aside for a goal
+  ///
+  /// In en, this message translates to:
+  /// **'Free savings'**
+  String get todaySavingsFree;
+
+  /// Coinpile row label
+  ///
+  /// In en, this message translates to:
+  /// **'Spent this month'**
+  String get todaySpentThisMonth;
+
+  /// Coinpile row: the next bill's name
+  ///
+  /// In en, this message translates to:
+  /// **'Next bill: {name}'**
+  String todayNextBill(String name);
+
+  /// Coinpile: how many alerts are active
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts: {count}'**
+  String todayAlerts(int count);
+
+  /// Pondering Orb card when today's morning brief is not written yet
+  ///
+  /// In en, this message translates to:
+  /// **'No brief yet today'**
+  String get todayNoBriefYet;
+
+  /// Omi Today settings section: which cards show, in which order
+  ///
+  /// In en, this message translates to:
+  /// **'Cards'**
+  String get todayCards;
+
+  /// Screen reader label of a card's drag handle
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder {name}'**
+  String todayReorderCard(String name);
+
+  /// Omi Today settings section
+  ///
+  /// In en, this message translates to:
+  /// **'News Feeds'**
+  String get todayNewsFeeds;
+
+  /// Row and sheet title: add an RSS/Atom feed
+  ///
+  /// In en, this message translates to:
+  /// **'Add Feed'**
+  String get todayAddFeed;
+
+  /// Field label for an RSS/Atom feed URL
+  ///
+  /// In en, this message translates to:
+  /// **'Feed address'**
+  String get todayFeedUrl;
+
+  /// Validation error for a URL field
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an address that starts with http:// or https://'**
+  String get todayAddressInvalid;
+
+  /// Undo toast after removing a feed
+  ///
+  /// In en, this message translates to:
+  /// **'Feed removed'**
+  String get todayFeedRemoved;
+
+  /// Icon button label: remove this feed
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Feed'**
+  String get todayRemoveFeed;
+
+  /// Settings row: the service's web address
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get todayCompanionAddress;
+
+  /// Settings row and field: the service's API token
+  ///
+  /// In en, this message translates to:
+  /// **'Token'**
+  String get todayCompanionToken;
+
+  /// Confirm message before removing a saved token
+  ///
+  /// In en, this message translates to:
+  /// **'Omi Today will stop reading {name} until you add a token again.'**
+  String todayClearTokenMessage(String name);
+
+  /// Coinpile settings group subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Read from Coinpile with a token that has the summary scope (Coinpile: Settings, Home Assistant & API).'**
+  String get todayCoinpileHint;
+
+  /// Pondering Orb settings group subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Shows the Orb\'s morning brief. Use one of the Orb\'s API tokens (ORB_API_TOKENS).'**
+  String get todayPonderingHint;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

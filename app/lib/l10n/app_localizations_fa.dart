@@ -17098,4 +17098,194 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => 'روز شما در یک صفحه';
+
+  @override
+  String get omiTodayCustomize => 'سفارشی‌سازی Omi Today';
+
+  @override
+  String get setPhoneAlarm => 'تنظیم زنگ هشدار';
+
+  @override
+  String get phoneAlarmUnavailable => 'برنامه ساعت باز نشد';
+
+  @override
+  String get taskReminders => 'یادآوری کارها';
+
+  @override
+  String get taskRemindersSubtitle => 'وقتی موعد کاری رسید روی این تلفن یادآوری کن';
+
+  @override
+  String get taskReminderLead => 'یادآوری زودتر';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return '$duration قبل';
+  }
+
+  @override
+  String get taskReminderAtDueTime => 'فقط در موعد';
+
+  @override
+  String get taskReminderDueTitle => 'موعد کار';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return 'موعد تا $duration دیگر';
+  }
+
+  @override
+  String get taskReminderExactAlarms => 'هشدارهای دقیق';
+
+  @override
+  String get taskReminderExactAlarmsOff => 'خاموش: یادآوری‌ها ممکن است چند دقیقه دیر برسند. برای اجازه ضربه بزنید.';
+
+  @override
+  String get taskReminderNotificationsOff =>
+      'اعلان‌های Omi خاموش است، پس یادآوری کارها نمایش داده نمی‌شود. آن‌ها را در تنظیمات سیستم مجاز کنید.';
+
+  @override
+  String get todayAgendaTitle => 'برنامه امروز';
+
+  @override
+  String get todayAgendaEmpty => 'امروز برنامه‌ای نیست';
+
+  @override
+  String get todayAgendaEmptyMessage => 'امروز رویداد یا کاری نیست.';
+
+  @override
+  String get todayEvents => 'رویدادها';
+
+  @override
+  String get todayTasksDue => 'کارهای امروز';
+
+  @override
+  String get todayAllDay => 'تمام روز';
+
+  @override
+  String get todayFamilyUnreachable => 'تقویم خانواده اکنون در دسترس نیست.';
+
+  @override
+  String get todaySummaryTitle => 'روز شما';
+
+  @override
+  String get todayNewsTitle => 'اخبار';
+
+  @override
+  String get todayNewsEmpty => 'خوراک خبری وجود ندارد';
+
+  @override
+  String get todayNewsEmptyMessage => 'خوراک RSS یا Atom اضافه کنید تا تیترها را اینجا ببینید.';
+
+  @override
+  String get todayNewsAddFeeds => 'افزودن خوراک';
+
+  @override
+  String get todayNewsError => 'خوراک‌ها بارگیری نشدند.';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return 'خوراک‌های خوانده‌نشده: $count';
+  }
+
+  @override
+  String get todayNothingYet => 'هنوز چیزی برای نمایش نیست';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => 'تنظیم نشده';
+
+  @override
+  String get todayCompanionSetUpMessage => 'نشانی و توکن آن را در تنظیمات Omi Today اضافه کنید.';
+
+  @override
+  String get todaySetUp => 'تنظیم';
+
+  @override
+  String get todayCompanionUnauthorized => 'توکن رد شد. آن را در تنظیمات Omi Today بررسی کنید.';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return 'دسترسی به $name ممکن نشد.';
+  }
+
+  @override
+  String get todayNetWorth => 'دارایی خالص';
+
+  @override
+  String get todayBills30d => 'قبض‌های ۳۰ روز آینده';
+
+  @override
+  String get todaySavingsFree => 'پس‌انداز آزاد';
+
+  @override
+  String get todaySpentThisMonth => 'هزینه این ماه';
+
+  @override
+  String todayNextBill(String name) {
+    return 'قبض بعدی: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'هشدارها: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => 'امروز هنوز خلاصه‌ای نیست';
+
+  @override
+  String get todayCards => 'کارت‌ها';
+
+  @override
+  String todayReorderCard(String name) {
+    return 'جابه‌جایی $name';
+  }
+
+  @override
+  String get todayNewsFeeds => 'خوراک‌های خبری';
+
+  @override
+  String get todayAddFeed => 'افزودن خوراک';
+
+  @override
+  String get todayFeedUrl => 'نشانی خوراک';
+
+  @override
+  String get todayAddressInvalid => 'نشانی‌ای وارد کنید که با http:// یا https:// شروع شود';
+
+  @override
+  String get todayFeedRemoved => 'خوراک حذف شد';
+
+  @override
+  String get todayRemoveFeed => 'حذف خوراک';
+
+  @override
+  String get todayCompanionAddress => 'نشانی';
+
+  @override
+  String get todayCompanionToken => 'توکن';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'Omi Today تا وقتی دوباره توکن اضافه کنید، $name را نمی‌خواند.';
+  }
+
+  @override
+  String get todayCoinpileHint =>
+      'با توکنی با دامنه summary از Coinpile می‌خواند (Coinpile: تنظیمات، Home Assistant و API).';
+
+  @override
+  String get todayPonderingHint =>
+      'خلاصه صبحگاهی Orb را نشان می‌دهد. از یکی از توکن‌های API آن استفاده کنید (ORB_API_TOKENS).';
 }

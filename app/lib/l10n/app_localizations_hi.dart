@@ -17087,4 +17087,194 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => 'आपका दिन एक पेज पर';
+
+  @override
+  String get omiTodayCustomize => 'Omi Today कस्टमाइज़ करें';
+
+  @override
+  String get setPhoneAlarm => 'फ़ोन अलार्म सेट करें';
+
+  @override
+  String get phoneAlarmUnavailable => 'घड़ी ऐप नहीं खुल सका';
+
+  @override
+  String get taskReminders => 'टास्क रिमाइंडर';
+
+  @override
+  String get taskRemindersSubtitle => 'टास्क का समय होने पर इस फ़ोन पर याद दिलाएँ';
+
+  @override
+  String get taskReminderLead => 'पहले याद दिलाएँ';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return '$duration पहले';
+  }
+
+  @override
+  String get taskReminderAtDueTime => 'सिर्फ़ तय समय पर';
+
+  @override
+  String get taskReminderDueTitle => 'टास्क का समय';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return '$duration में तय समय';
+  }
+
+  @override
+  String get taskReminderExactAlarms => 'सटीक अलार्म';
+
+  @override
+  String get taskReminderExactAlarmsOff => 'बंद: रिमाइंडर कुछ मिनट देर से आ सकते हैं। अनुमति देने के लिए टैप करें।';
+
+  @override
+  String get taskReminderNotificationsOff =>
+      'Omi की सूचनाएँ बंद हैं, इसलिए टास्क रिमाइंडर नहीं दिख सकते। सिस्टम सेटिंग में अनुमति दें।';
+
+  @override
+  String get todayAgendaTitle => 'आज का कार्यक्रम';
+
+  @override
+  String get todayAgendaEmpty => 'आज कुछ भी तय नहीं है';
+
+  @override
+  String get todayAgendaEmptyMessage => 'आज कोई इवेंट या टास्क नहीं है।';
+
+  @override
+  String get todayEvents => 'इवेंट';
+
+  @override
+  String get todayTasksDue => 'आज के टास्क';
+
+  @override
+  String get todayAllDay => 'पूरा दिन';
+
+  @override
+  String get todayFamilyUnreachable => 'फ़ैमिली कैलेंडर अभी उपलब्ध नहीं है।';
+
+  @override
+  String get todaySummaryTitle => 'आपका दिन';
+
+  @override
+  String get todayNewsTitle => 'समाचार';
+
+  @override
+  String get todayNewsEmpty => 'कोई न्यूज़ फ़ीड नहीं';
+
+  @override
+  String get todayNewsEmptyMessage => 'यहाँ हेडलाइन देखने के लिए RSS या Atom फ़ीड जोड़ें।';
+
+  @override
+  String get todayNewsAddFeeds => 'फ़ीड जोड़ें';
+
+  @override
+  String get todayNewsError => 'आपकी फ़ीड लोड नहीं हो सकीं।';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return 'फ़ीड जो पढ़ी नहीं जा सकीं: $count';
+  }
+
+  @override
+  String get todayNothingYet => 'अभी दिखाने को कुछ नहीं';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => 'सेट अप नहीं है';
+
+  @override
+  String get todayCompanionSetUpMessage => 'Omi Today सेटिंग में इसका पता और टोकन जोड़ें।';
+
+  @override
+  String get todaySetUp => 'सेट अप करें';
+
+  @override
+  String get todayCompanionUnauthorized => 'टोकन अस्वीकार हुआ। Omi Today सेटिंग में जाँचें।';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return '$name तक नहीं पहुँच सके।';
+  }
+
+  @override
+  String get todayNetWorth => 'कुल संपत्ति';
+
+  @override
+  String get todayBills30d => 'अगले 30 दिनों के बिल';
+
+  @override
+  String get todaySavingsFree => 'खाली बचत';
+
+  @override
+  String get todaySpentThisMonth => 'इस महीने खर्च';
+
+  @override
+  String todayNextBill(String name) {
+    return 'अगला बिल: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'अलर्ट: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => 'आज अभी कोई ब्रीफ़ नहीं';
+
+  @override
+  String get todayCards => 'कार्ड';
+
+  @override
+  String todayReorderCard(String name) {
+    return '$name का क्रम बदलें';
+  }
+
+  @override
+  String get todayNewsFeeds => 'न्यूज़ फ़ीड';
+
+  @override
+  String get todayAddFeed => 'फ़ीड जोड़ें';
+
+  @override
+  String get todayFeedUrl => 'फ़ीड का पता';
+
+  @override
+  String get todayAddressInvalid => 'http:// या https:// से शुरू होने वाला पता डालें';
+
+  @override
+  String get todayFeedRemoved => 'फ़ीड हटाई गई';
+
+  @override
+  String get todayRemoveFeed => 'फ़ीड हटाएँ';
+
+  @override
+  String get todayCompanionAddress => 'पता';
+
+  @override
+  String get todayCompanionToken => 'टोकन';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'जब तक आप फिर से टोकन नहीं जोड़ते, Omi Today $name को पढ़ना बंद कर देगा।';
+  }
+
+  @override
+  String get todayCoinpileHint =>
+      'summary स्कोप वाले टोकन से Coinpile से पढ़ता है (Coinpile: सेटिंग, Home Assistant और API)।';
+
+  @override
+  String get todayPonderingHint =>
+      'Orb का सुबह का ब्रीफ़ दिखाता है। उसके किसी API टोकन (ORB_API_TOKENS) का उपयोग करें।';
 }

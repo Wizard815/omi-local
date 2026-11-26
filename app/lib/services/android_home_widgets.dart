@@ -4,6 +4,8 @@ import 'package:omi/backend/schema/schema.dart';
 import 'package:omi/l10n/app_localizations.dart';
 import 'package:omi/services/phone_llm/phone_llm_router.dart';
 import 'package:omi/services/phone_llm/phone_llm_settings.dart';
+import 'package:omi/services/today/feed_parser.dart';
+import 'package:omi/services/today/today_models.dart';
 import 'package:omi/ui/format/omi_date_format.dart';
 import 'package:omi/utils/enums.dart';
 import 'package:omi/widgets/extensions/string.dart';
@@ -22,6 +24,7 @@ abstract final class AndroidWidgetDocuments {
   static const nextEventKey = 'widget_next_event';
   static const memoryKey = 'widget_memory';
   static const aiSourceKey = 'widget_ai_source';
+  static const overviewKey = 'widget_overview';
 
   /// The Android-only documents (the task list shares the iOS Up next document).
   static const keys = [
@@ -35,6 +38,7 @@ abstract final class AndroidWidgetDocuments {
     nextEventKey,
     memoryKey,
     aiSourceKey,
+    overviewKey,
   ];
 
   /// Memories the Memory widget rotates through, one a day, without the app running.
@@ -264,6 +268,53 @@ abstract final class AndroidWidgetDocuments {
               final text => text,
             },
           },
+      ],
+    };
+  }
+
+  /// Rows each section of the Today overview widget lists at most.
+  static const overviewRows = 3;
+
+  /// Today overview (the large widget, `omi://app/today` on tap): the family calendar's next
+  /// blocks (the widget adds the phone's own events itself), the tasks due today, the day's
+  /// summary line and the newest headlines. Rows from another day are dropped by the widget.
+  static Map<String, Object?> overview({
+    required TodayAgenda agenda,
+    required TodayDaySummary summary,
+    required List<FeedItem> headlines,
+    required AppLocalizations l10n,
+    required OmiDateFormat dates,
+    required DateTime now,
+  }) {
+    return {
+      'title': l10n.omiTodayTitle,
+      'day': dayKey(now),
+      'events_label': l10n.todayEvents,
+      'tasks_label': l10n.todayTasksDue,
+      'news_label': l10n.todayNewsTitle,
+      'empty': l10n.todayAgendaEmpty,
+      'all_day_label': l10n.todayAllDay,
+      'events': [
+        for (final event in agenda.events.take(overviewRows))
+          {
+            'title': event.title,
+            if (event.start != null) 'start_ms': event.start!.millisecondsSinceEpoch,
+            'detail': event.start != null
+                ? dates.time(event.start!)
+                : (event.timeLabel.isNotEmpty ? event.timeLabel : l10n.todayAllDay),
+          },
+      ],
+      'tasks': [
+        for (final task in agenda.tasks.take(overviewRows))
+          {
+            'id': task.id,
+            'title': task.description.trim(),
+            'detail': task.dueAt!.toLocal().isBefore(now) ? l10n.overdue : dates.time(task.dueAt!.toLocal()),
+          },
+      ],
+      'summary': summary.line ?? '',
+      'headlines': [
+        for (final item in headlines.take(2)) {'title': item.title, 'source': item.source},
       ],
     };
   }

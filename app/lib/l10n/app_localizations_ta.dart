@@ -17210,4 +17210,194 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => 'உங்கள் நாள் ஒரே பக்கத்தில்';
+
+  @override
+  String get omiTodayCustomize => 'Omi Today-ஐத் தனிப்பயனாக்கு';
+
+  @override
+  String get setPhoneAlarm => 'தொலைபேசி அலாரம் அமை';
+
+  @override
+  String get phoneAlarmUnavailable => 'கடிகார ஆப்பைத் திறக்க முடியவில்லை';
+
+  @override
+  String get taskReminders => 'பணி நினைவூட்டல்கள்';
+
+  @override
+  String get taskRemindersSubtitle => 'பணிக்கான நேரம் வந்ததும் இந்தத் தொலைபேசியில் நினைவூட்டு';
+
+  @override
+  String get taskReminderLead => 'முன்னதாக நினைவூட்டு';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return '$duration முன்';
+  }
+
+  @override
+  String get taskReminderAtDueTime => 'காலக்கெடுவில் மட்டும்';
+
+  @override
+  String get taskReminderDueTitle => 'பணிக்கான நேரம்';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return '$duration-இல் காலக்கெடு';
+  }
+
+  @override
+  String get taskReminderExactAlarms => 'துல்லிய அலாரங்கள்';
+
+  @override
+  String get taskReminderExactAlarmsOff => 'முடக்கம்: நினைவூட்டல்கள் சில நிமிடங்கள் தாமதமாகலாம். அனுமதிக்கத் தட்டவும்.';
+
+  @override
+  String get taskReminderNotificationsOff =>
+      'Omi அறிவிப்புகள் முடக்கப்பட்டுள்ளதால் நினைவூட்டல்களைக் காட்ட முடியாது. சிஸ்டம் அமைப்புகளில் அனுமதிக்கவும்.';
+
+  @override
+  String get todayAgendaTitle => 'இன்றைய நிகழ்ச்சி நிரல்';
+
+  @override
+  String get todayAgendaEmpty => 'இன்று எதுவும் திட்டமிடப்படவில்லை';
+
+  @override
+  String get todayAgendaEmptyMessage => 'இன்று நிகழ்வுகளோ பணிகளோ இல்லை.';
+
+  @override
+  String get todayEvents => 'நிகழ்வுகள்';
+
+  @override
+  String get todayTasksDue => 'இன்றைய பணிகள்';
+
+  @override
+  String get todayAllDay => 'நாள் முழுவதும்';
+
+  @override
+  String get todayFamilyUnreachable => 'குடும்ப நாட்காட்டியை இப்போது அணுக முடியவில்லை.';
+
+  @override
+  String get todaySummaryTitle => 'உங்கள் நாள்';
+
+  @override
+  String get todayNewsTitle => 'செய்திகள்';
+
+  @override
+  String get todayNewsEmpty => 'செய்தி ஊட்டங்கள் இல்லை';
+
+  @override
+  String get todayNewsEmptyMessage => 'தலைப்புகளை இங்கே காண RSS அல்லது Atom ஊட்டங்களைச் சேர்க்கவும்.';
+
+  @override
+  String get todayNewsAddFeeds => 'ஊட்டங்களைச் சேர்';
+
+  @override
+  String get todayNewsError => 'ஊட்டங்களை ஏற்ற முடியவில்லை.';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return 'படிக்க முடியாத ஊட்டங்கள்: $count';
+  }
+
+  @override
+  String get todayNothingYet => 'இன்னும் காட்ட எதுவும் இல்லை';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => 'அமைக்கப்படவில்லை';
+
+  @override
+  String get todayCompanionSetUpMessage => 'Omi Today அமைப்புகளில் அதன் முகவரியும் டோக்கனும் சேர்க்கவும்.';
+
+  @override
+  String get todaySetUp => 'அமை';
+
+  @override
+  String get todayCompanionUnauthorized => 'டோக்கன் நிராகரிக்கப்பட்டது. Omi Today அமைப்புகளில் சரிபார்க்கவும்.';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return '$name-ஐ அணுக முடியவில்லை.';
+  }
+
+  @override
+  String get todayNetWorth => 'நிகர மதிப்பு';
+
+  @override
+  String get todayBills30d => 'அடுத்த 30 நாள் பில்கள்';
+
+  @override
+  String get todaySavingsFree => 'கட்டற்ற சேமிப்பு';
+
+  @override
+  String get todaySpentThisMonth => 'இந்த மாதச் செலவு';
+
+  @override
+  String todayNextBill(String name) {
+    return 'அடுத்த பில்: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'எச்சரிக்கைகள்: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => 'இன்று இன்னும் சுருக்கம் இல்லை';
+
+  @override
+  String get todayCards => 'அட்டைகள்';
+
+  @override
+  String todayReorderCard(String name) {
+    return '$name-ஐ மறுவரிசைப்படுத்து';
+  }
+
+  @override
+  String get todayNewsFeeds => 'செய்தி ஊட்டங்கள்';
+
+  @override
+  String get todayAddFeed => 'ஊட்டம் சேர்';
+
+  @override
+  String get todayFeedUrl => 'ஊட்ட முகவரி';
+
+  @override
+  String get todayAddressInvalid => 'http:// அல்லது https:// என்று தொடங்கும் முகவரியை உள்ளிடவும்';
+
+  @override
+  String get todayFeedRemoved => 'ஊட்டம் அகற்றப்பட்டது';
+
+  @override
+  String get todayRemoveFeed => 'ஊட்டத்தை அகற்று';
+
+  @override
+  String get todayCompanionAddress => 'முகவரி';
+
+  @override
+  String get todayCompanionToken => 'டோக்கன்';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'மீண்டும் டோக்கன் சேர்க்கும் வரை Omi Today $name-ஐப் படிப்பதை நிறுத்தும்.';
+  }
+
+  @override
+  String get todayCoinpileHint =>
+      'summary வரம்புள்ள டோக்கனுடன் Coinpile-இலிருந்து படிக்கிறது (Coinpile: அமைப்புகள், Home Assistant & API).';
+
+  @override
+  String get todayPonderingHint =>
+      'Orb-இன் காலைச் சுருக்கத்தைக் காட்டுகிறது. அதன் API டோக்கன்களில் ஒன்றைப் பயன்படுத்தவும் (ORB_API_TOKENS).';
 }

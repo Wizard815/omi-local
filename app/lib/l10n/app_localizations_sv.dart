@@ -17115,4 +17115,193 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => 'Din dag på en sida';
+
+  @override
+  String get omiTodayCustomize => 'Anpassa Omi Today';
+
+  @override
+  String get setPhoneAlarm => 'Ställ in alarm';
+
+  @override
+  String get phoneAlarmUnavailable => 'Det gick inte att öppna klockappen';
+
+  @override
+  String get taskReminders => 'Uppgiftspåminnelser';
+
+  @override
+  String get taskRemindersSubtitle => 'Påminn mig på den här telefonen när en uppgift förfaller';
+
+  @override
+  String get taskReminderLead => 'Påminn tidigare';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return '$duration innan';
+  }
+
+  @override
+  String get taskReminderAtDueTime => 'Bara vid förfallotiden';
+
+  @override
+  String get taskReminderDueTitle => 'Uppgift förfaller';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return 'Förfaller om $duration';
+  }
+
+  @override
+  String get taskReminderExactAlarms => 'Exakta alarm';
+
+  @override
+  String get taskReminderExactAlarmsOff => 'Av: påminnelser kan komma några minuter sent. Tryck för att tillåta.';
+
+  @override
+  String get taskReminderNotificationsOff =>
+      'Aviseringar är avstängda för Omi, så uppgiftspåminnelser kan inte visas. Tillåt dem i systeminställningarna.';
+
+  @override
+  String get todayAgendaTitle => 'Dagens schema';
+
+  @override
+  String get todayAgendaEmpty => 'Inget planerat i dag';
+
+  @override
+  String get todayAgendaEmptyMessage => 'Inga händelser eller uppgifter i dag.';
+
+  @override
+  String get todayEvents => 'Händelser';
+
+  @override
+  String get todayTasksDue => 'Uppgifter i dag';
+
+  @override
+  String get todayAllDay => 'Heldag';
+
+  @override
+  String get todayFamilyUnreachable => 'Familjekalendern går inte att nå just nu.';
+
+  @override
+  String get todaySummaryTitle => 'Din dag';
+
+  @override
+  String get todayNewsTitle => 'Nyheter';
+
+  @override
+  String get todayNewsEmpty => 'Inga nyhetsflöden';
+
+  @override
+  String get todayNewsEmptyMessage => 'Lägg till RSS- eller Atom-flöden för att se deras rubriker här.';
+
+  @override
+  String get todayNewsAddFeeds => 'Lägg till flöden';
+
+  @override
+  String get todayNewsError => 'Det gick inte att läsa in dina flöden.';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return 'Flöden som inte kunde läsas: $count';
+  }
+
+  @override
+  String get todayNothingYet => 'Inget att visa än';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => 'Inte konfigurerad';
+
+  @override
+  String get todayCompanionSetUpMessage => 'Lägg till adress och token i inställningarna för Omi Today.';
+
+  @override
+  String get todaySetUp => 'Konfigurera';
+
+  @override
+  String get todayCompanionUnauthorized => 'Token nekades. Kontrollera den i inställningarna för Omi Today.';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return 'Det gick inte att nå $name.';
+  }
+
+  @override
+  String get todayNetWorth => 'Nettoförmögenhet';
+
+  @override
+  String get todayBills30d => 'Räkningar de kommande 30 dagarna';
+
+  @override
+  String get todaySavingsFree => 'Fritt sparande';
+
+  @override
+  String get todaySpentThisMonth => 'Spenderat den här månaden';
+
+  @override
+  String todayNextBill(String name) {
+    return 'Nästa räkning: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'Varningar: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => 'Ingen sammanfattning än i dag';
+
+  @override
+  String get todayCards => 'Kort';
+
+  @override
+  String todayReorderCard(String name) {
+    return 'Flytta $name';
+  }
+
+  @override
+  String get todayNewsFeeds => 'Nyhetsflöden';
+
+  @override
+  String get todayAddFeed => 'Lägg till flöde';
+
+  @override
+  String get todayFeedUrl => 'Flödesadress';
+
+  @override
+  String get todayAddressInvalid => 'Ange en adress som börjar med http:// eller https://';
+
+  @override
+  String get todayFeedRemoved => 'Flödet togs bort';
+
+  @override
+  String get todayRemoveFeed => 'Ta bort flöde';
+
+  @override
+  String get todayCompanionAddress => 'Adress';
+
+  @override
+  String get todayCompanionToken => 'Token';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'Omi Today slutar läsa $name tills du lägger till en token igen.';
+  }
+
+  @override
+  String get todayCoinpileHint =>
+      'Läser från Coinpile med en token med omfattningen summary (Coinpile: Inställningar, Home Assistant och API).';
+
+  @override
+  String get todayPonderingHint => 'Visar Orbens morgonsammanfattning. Använd en av dess API-token (ORB_API_TOKENS).';
 }

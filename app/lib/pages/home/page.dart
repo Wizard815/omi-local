@@ -5,6 +5,8 @@
 // state rather than the stored flag (the OS may have revoked a granted
 // permission), and the static FGS call here stays an App UI handoff -- capture
 // ownership belongs to CaptureSessionOwner (app/lib/services/capture/OWNERSHIP.md).
+import 'package:omi/services/reminders/task_reminder_coordinator.dart';
+import 'package:omi/services/reminders/task_reminder_scheduler.dart';
 import 'package:omi/providers/usage_provider.dart';
 import 'package:omi/services/phone_llm/phone_llm_settings.dart';
 import 'package:omi/services/phone_llm/phone_llm_status.dart';
@@ -538,8 +540,25 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, Ticker
         l10n: () => context.l10n,
         dates: () => OmiDateFormat.of(context),
       )..start();
+      // Android first: task reminders and the Today overview are verified there only.
+      if (!Platform.isAndroid) return;
+      final messages = context.read<MessageProvider>();
+      _taskReminders = TaskReminderCoordinator(
+        tasks: tasks,
+        scheduler: TaskReminderScheduler(platform: AwesomeTaskReminderPlatform(), ledger: PrefsTaskReminderLedger()),
+        messages: messages,
+        messageList: () => messages.messages,
+        words: () => TaskReminderWords(
+          dueTitle: context.l10n.taskReminderDueTitle,
+          leadTitle: (minutes) => context.l10n.taskReminderDueIn(OmiDuration.long(minutes * 60, context.l10n)),
+          untitled: context.l10n.tasks,
+        ),
+      )..start();
     });
   }
+
+  /// Phone reminders for open tasks with a due time (Settings, Notifications, Task reminders).
+  TaskReminderCoordinator? _taskReminders;
 
   void _scheduleHomeWidgetFreshness(ActionItemsProvider tasks) {
     _homeWidgetFreshnessTimer?.cancel();
@@ -956,6 +975,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, Ticker
     _captureProviderForQuickActions = null;
     QuickActionsService.instance.reset();
     _homeWidgets?.dispose();
+    _taskReminders?.dispose();
     if (_overflowEntitlementListener != null) _overflowUsage?.removeListener(_overflowEntitlementListener!);
     _onDeviceRunner?.dispose();
     // Remove foreground task callback to prevent memory leak

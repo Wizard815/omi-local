@@ -8,6 +8,7 @@ import 'package:omi/utils/local_day_rollover.dart';
 // scroll position and pagination survive background sync mutations; load-more
 // state is keyed by the active filter and resets deliberately on filter change.
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -18,6 +19,7 @@ import 'package:visibility_detector/visibility_detector.dart';
 
 import 'package:omi/backend/schema/conversation.dart';
 import 'package:omi/backend/preferences.dart';
+import 'package:omi/pages/today/today_entry_card.dart';
 import 'package:omi/pages/capture/widgets/widgets.dart';
 import 'package:omi/pages/day_review/day_review_banner.dart';
 import 'package:omi/pages/family_calendar/family_calendar_banner.dart';
@@ -1056,6 +1058,9 @@ class _ConversationsPageState extends State<ConversationsPage>
               const SliverToBoxAdapter(child: UpdateFirmwareCardWidget()),
               // Review absorbs the voice prompts; the old card shows only while Review is off.
               const SliverToBoxAdapter(child: ReviewEntryCard()),
+              // Omi Today: the day on one page (also `omi://app/today` and the Today overview widget).
+              if (Platform.isAndroid && convoProvider.previousQuery.isEmpty)
+                const SliverToBoxAdapter(child: OmiTodayEntryCard()),
               // Opt-in from Developer Settings. Hidden, the row is not mounted, so nothing is fetched.
               SliverToBoxAdapter(
                 child: ValueListenableBuilder<bool>(

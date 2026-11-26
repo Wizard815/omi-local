@@ -17029,4 +17029,193 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => 'วันของคุณในหน้าเดียว';
+
+  @override
+  String get omiTodayCustomize => 'ปรับแต่ง Omi Today';
+
+  @override
+  String get setPhoneAlarm => 'ตั้งนาฬิกาปลุก';
+
+  @override
+  String get phoneAlarmUnavailable => 'เปิดแอปนาฬิกาไม่ได้';
+
+  @override
+  String get taskReminders => 'การเตือนงาน';
+
+  @override
+  String get taskRemindersSubtitle => 'เตือนฉันในโทรศัพท์นี้เมื่องานถึงกำหนด';
+
+  @override
+  String get taskReminderLead => 'เตือนล่วงหน้า';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return 'ก่อน $duration';
+  }
+
+  @override
+  String get taskReminderAtDueTime => 'เฉพาะเวลาที่ถึงกำหนด';
+
+  @override
+  String get taskReminderDueTitle => 'งานถึงกำหนด';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return 'ถึงกำหนดในอีก $duration';
+  }
+
+  @override
+  String get taskReminderExactAlarms => 'การปลุกแบบตรงเวลา';
+
+  @override
+  String get taskReminderExactAlarmsOff => 'ปิด: การเตือนอาจช้าไปสองสามนาที แตะเพื่ออนุญาต';
+
+  @override
+  String get taskReminderNotificationsOff =>
+      'การแจ้งเตือนของ Omi ปิดอยู่ จึงแสดงการเตือนงานไม่ได้ อนุญาตได้ในการตั้งค่าระบบ';
+
+  @override
+  String get todayAgendaTitle => 'กำหนดการวันนี้';
+
+  @override
+  String get todayAgendaEmpty => 'วันนี้ไม่มีกำหนดการ';
+
+  @override
+  String get todayAgendaEmptyMessage => 'วันนี้ไม่มีกิจกรรมหรืองานที่ถึงกำหนด';
+
+  @override
+  String get todayEvents => 'กิจกรรม';
+
+  @override
+  String get todayTasksDue => 'งานวันนี้';
+
+  @override
+  String get todayAllDay => 'ทั้งวัน';
+
+  @override
+  String get todayFamilyUnreachable => 'ไม่สามารถเชื่อมต่อปฏิทินครอบครัวได้ในขณะนี้';
+
+  @override
+  String get todaySummaryTitle => 'วันของคุณ';
+
+  @override
+  String get todayNewsTitle => 'ข่าว';
+
+  @override
+  String get todayNewsEmpty => 'ไม่มีฟีดข่าว';
+
+  @override
+  String get todayNewsEmptyMessage => 'เพิ่มฟีด RSS หรือ Atom เพื่อดูพาดหัวที่นี่';
+
+  @override
+  String get todayNewsAddFeeds => 'เพิ่มฟีด';
+
+  @override
+  String get todayNewsError => 'โหลดฟีดของคุณไม่ได้';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return 'ฟีดที่อ่านไม่ได้: $count';
+  }
+
+  @override
+  String get todayNothingYet => 'ยังไม่มีอะไรจะแสดง';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => 'ยังไม่ได้ตั้งค่า';
+
+  @override
+  String get todayCompanionSetUpMessage => 'เพิ่มที่อยู่และโทเค็นในการตั้งค่า Omi Today';
+
+  @override
+  String get todaySetUp => 'ตั้งค่า';
+
+  @override
+  String get todayCompanionUnauthorized => 'โทเค็นถูกปฏิเสธ ตรวจสอบในการตั้งค่า Omi Today';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return 'เชื่อมต่อ $name ไม่ได้';
+  }
+
+  @override
+  String get todayNetWorth => 'มูลค่าสุทธิ';
+
+  @override
+  String get todayBills30d => 'บิลใน 30 วันข้างหน้า';
+
+  @override
+  String get todaySavingsFree => 'เงินออมที่ใช้ได้';
+
+  @override
+  String get todaySpentThisMonth => 'ใช้จ่ายเดือนนี้';
+
+  @override
+  String todayNextBill(String name) {
+    return 'บิลถัดไป: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'การแจ้งเตือน: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => 'วันนี้ยังไม่มีสรุป';
+
+  @override
+  String get todayCards => 'การ์ด';
+
+  @override
+  String todayReorderCard(String name) {
+    return 'จัดลำดับ $name';
+  }
+
+  @override
+  String get todayNewsFeeds => 'ฟีดข่าว';
+
+  @override
+  String get todayAddFeed => 'เพิ่มฟีด';
+
+  @override
+  String get todayFeedUrl => 'ที่อยู่ฟีด';
+
+  @override
+  String get todayAddressInvalid => 'ป้อนที่อยู่ที่ขึ้นต้นด้วย http:// หรือ https://';
+
+  @override
+  String get todayFeedRemoved => 'ลบฟีดแล้ว';
+
+  @override
+  String get todayRemoveFeed => 'ลบฟีด';
+
+  @override
+  String get todayCompanionAddress => 'ที่อยู่';
+
+  @override
+  String get todayCompanionToken => 'โทเค็น';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'Omi Today จะหยุดอ่าน $name จนกว่าคุณจะเพิ่มโทเค็นอีกครั้ง';
+  }
+
+  @override
+  String get todayCoinpileHint =>
+      'อ่านจาก Coinpile ด้วยโทเค็นที่มีขอบเขต summary (Coinpile: การตั้งค่า, Home Assistant และ API)';
+
+  @override
+  String get todayPonderingHint => 'แสดงสรุปยามเช้าของ Orb ใช้โทเค็น API ตัวใดตัวหนึ่งของมัน (ORB_API_TOKENS)';
 }

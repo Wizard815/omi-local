@@ -138,4 +138,37 @@ class OmiWidgetDataTest {
         val labels = OmiWidgetData.nextEventLabels("""{"title":"Next event","none":"Nothing","family_label":"Family calendar"}""")!!
         assertEquals("Family calendar", labels.familyLabel)
     }
+
+    @Test
+    fun overviewParsesEverySectionAndCapsRows() {
+        val data = OmiWidgetData.overview(
+            """{"title":"Omi Today","day":"2026-11-26","events_label":"Events","tasks_label":"Tasks due",""" +
+                """"news_label":"News","empty":"Nothing scheduled today","all_day_label":"All day",""" +
+                """"events":[{"title":"School run","start_ms":1764140400000,"detail":"08:00"},{"title":"Birthday","detail":"All day"},{"title":" "}],""" +
+                """"tasks":[{"id":"t1","title":"Pay rent","detail":"Overdue"},{"id":"t2","title":"Call dentist","detail":"14:00"},""" +
+                """{"id":"t3","title":"Three"},{"id":"t4","title":"Four"}],""" +
+                """"summary":"Planned the week.","headlines":[{"title":"A","source":"Feed"},{"title":"B"},{"title":"C"}]}""",
+        )!!
+        assertEquals("2026-11-26", data.day)
+        assertEquals(listOf("School run", "Birthday"), data.events.map { it.title })
+        assertEquals(0L, data.events[1].startMs)
+        assertEquals(listOf("Pay rent", "Call dentist", "Three"), data.tasks.map { it.title })
+        assertEquals("Overdue", data.tasks[0].detail)
+        assertEquals("Planned the week.", data.summary)
+        assertEquals(2, data.headlines.size)
+        assertEquals("All day", data.allDayLabel)
+        assertNull(OmiWidgetData.overview("""{"title":"Omi Today"}"""))
+    }
+
+    @Test
+    fun overviewAgendaMergesPhoneAndFamilyOnceAndDropsPast() {
+        val now = 1_000_000_000L
+        val hour = 60L * 60 * 1000
+        val phone = listOf(OverviewEvent("Standup", now + hour, "10:00"), OverviewEvent("Old", now - 2 * hour, "07:00"))
+        val family = listOf(OverviewEvent("Standup", now + hour, "10:00"), OverviewEvent("Holiday", 0L, "All day"),
+            OverviewEvent("Pickup", now + 3 * hour, "12:00"), OverviewEvent("Late", now + 5 * hour, "14:00"))
+        val agenda = OmiWidgetData.overviewAgenda(phone, family, now)
+        assertEquals(listOf("Holiday", "Standup", "Pickup"), agenda.map { it.title })
+        assertEquals("10:00  Standup\nPickup", OmiWidgetData.lines(listOf("10:00" to "Standup", "" to "Pickup")))
+    }
 }

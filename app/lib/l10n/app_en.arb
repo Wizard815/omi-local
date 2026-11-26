@@ -20770,5 +20770,273 @@
     "widgetMemoryEmpty": "No memories yet",
     "@widgetMemoryEmpty": {
         "description": "Android Memory widget before Omi has saved any memory"
+    },
+    "omiTodayTitle": "Omi Today",
+    "@omiTodayTitle": {
+        "description": "Name of the Omi Today page (the day on one page)"
+    },
+    "omiTodaySubtitle": "Your day on one page",
+    "@omiTodaySubtitle": {
+        "description": "Home row under the Omi Today title"
+    },
+    "omiTodayCustomize": "Customize Omi Today",
+    "@omiTodayCustomize": {
+        "description": "Omi Today settings button and page title"
+    },
+    "setPhoneAlarm": "Set Phone Alarm",
+    "@setPhoneAlarm": {
+        "description": "Task menu: open the clock app on an alarm at the task's due time"
+    },
+    "phoneAlarmUnavailable": "Couldn't open the clock app",
+    "@phoneAlarmUnavailable": {
+        "description": "Error when no clock app could set the alarm"
+    },
+    "taskReminders": "Task Reminders",
+    "@taskReminders": {
+        "description": "Settings toggle: phone reminders for tasks with a due time"
+    },
+    "taskRemindersSubtitle": "Remind me on this phone when a task is due",
+    "@taskRemindersSubtitle": {
+        "description": "Subtitle of the Task Reminders toggle"
+    },
+    "taskReminderLead": "Remind Me Early",
+    "@taskReminderLead": {
+        "description": "Settings row: how long before the due time an extra reminder fires"
+    },
+    "taskReminderLeadBefore": "{duration} before",
+    "@taskReminderLeadBefore": {
+        "description": "Lead time choice, e.g. '15 mins before'",
+        "placeholders": {
+            "duration": {
+                "type": "String"
+            }
+        }
+    },
+    "taskReminderAtDueTime": "At due time only",
+    "@taskReminderAtDueTime": {
+        "description": "Lead time choice: no early reminder"
+    },
+    "taskReminderDueTitle": "Task due",
+    "@taskReminderDueTitle": {
+        "description": "Notification title at a task's due time"
+    },
+    "taskReminderDueIn": "Due in {duration}",
+    "@taskReminderDueIn": {
+        "description": "Notification title of the early reminder, e.g. 'Due in 15 mins'",
+        "placeholders": {
+            "duration": {
+                "type": "String"
+            }
+        }
+    },
+    "taskReminderExactAlarms": "Exact Alarms",
+    "@taskReminderExactAlarms": {
+        "description": "Settings row: Android 'Alarms & reminders' permission"
+    },
+    "taskReminderExactAlarmsOff": "Off: reminders may arrive a few minutes late. Tap to allow.",
+    "@taskReminderExactAlarmsOff": {
+        "description": "Subtitle when exact alarms are not allowed"
+    },
+    "taskReminderNotificationsOff": "Notifications are off for Omi, so task reminders can't show. Allow them in system settings.",
+    "@taskReminderNotificationsOff": {
+        "description": "Footer when notifications are blocked"
+    },
+    "todayAgendaTitle": "Today's Agenda",
+    "@todayAgendaTitle": {
+        "description": "Omi Today card: events and tasks due today"
+    },
+    "todayAgendaEmpty": "Nothing scheduled today",
+    "@todayAgendaEmpty": {
+        "description": "Agenda card empty title"
+    },
+    "todayAgendaEmptyMessage": "No events or tasks due today.",
+    "@todayAgendaEmptyMessage": {
+        "description": "Agenda card empty message"
+    },
+    "todayEvents": "Events",
+    "@todayEvents": {
+        "description": "Caption over today's calendar events"
+    },
+    "todayTasksDue": "Tasks due",
+    "@todayTasksDue": {
+        "description": "Caption over the tasks due today"
+    },
+    "todayAllDay": "All day",
+    "@todayAllDay": {
+        "description": "Time label of an all-day event"
+    },
+    "todayFamilyUnreachable": "The family calendar can't be reached right now.",
+    "@todayFamilyUnreachable": {
+        "description": "Soft note when the family calendar gateway did not answer"
+    },
+    "todaySummaryTitle": "Your Day",
+    "@todaySummaryTitle": {
+        "description": "Omi Today card: today's conversations and summary"
+    },
+    "todayNewsTitle": "News",
+    "@todayNewsTitle": {
+        "description": "Omi Today card: headlines from the user's feeds"
+    },
+    "todayNewsEmpty": "No News Feeds",
+    "@todayNewsEmpty": {
+        "description": "News card empty title"
+    },
+    "todayNewsEmptyMessage": "Add RSS or Atom feeds to see their headlines here.",
+    "@todayNewsEmptyMessage": {
+        "description": "News card empty message and feeds section subtitle"
+    },
+    "todayNewsAddFeeds": "Add Feeds",
+    "@todayNewsAddFeeds": {
+        "description": "Button that opens the feed settings"
+    },
+    "todayNewsError": "Couldn't load your feeds.",
+    "@todayNewsError": {
+        "description": "News card error"
+    },
+    "todayNewsSomeFailed": "Feeds that couldn't be read: {count}",
+    "@todayNewsSomeFailed": {
+        "description": "Note under the headlines when some feeds failed",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "todayNothingYet": "Nothing to show yet",
+    "@todayNothingYet": {
+        "description": "Empty title of a card whose service answered with nothing"
+    },
+    "todayCoinpileTitle": "Coinpile",
+    "@todayCoinpileTitle": {
+        "description": "Name of the Coinpile money app (a proper name, keep as is)"
+    },
+    "todayPonderingTitle": "Pondering Orb",
+    "@todayPonderingTitle": {
+        "description": "Name of the Pondering Orb home dashboard (a proper name, keep as is)"
+    },
+    "todayCompanionNotSetUp": "Not Set Up",
+    "@todayCompanionNotSetUp": {
+        "description": "Companion card empty title before an address is saved"
+    },
+    "todayCompanionSetUpMessage": "Add its address and token in the Omi Today settings.",
+    "@todayCompanionSetUpMessage": {
+        "description": "Companion card empty message"
+    },
+    "todaySetUp": "Set Up",
+    "@todaySetUp": {
+        "description": "Button that opens the Omi Today settings"
+    },
+    "todayCompanionUnauthorized": "The token was refused. Check it in the Omi Today settings.",
+    "@todayCompanionUnauthorized": {
+        "description": "Companion card error on 401/403"
+    },
+    "todayCompanionUnreachable": "Couldn't reach {name}.",
+    "@todayCompanionUnreachable": {
+        "description": "Companion card error when the service did not answer",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "todayNetWorth": "Net worth",
+    "@todayNetWorth": {
+        "description": "Coinpile row label"
+    },
+    "todayBills30d": "Bills in the next 30 days",
+    "@todayBills30d": {
+        "description": "Coinpile row label"
+    },
+    "todaySavingsFree": "Free savings",
+    "@todaySavingsFree": {
+        "description": "Coinpile row label: savings not set aside for a goal"
+    },
+    "todaySpentThisMonth": "Spent this month",
+    "@todaySpentThisMonth": {
+        "description": "Coinpile row label"
+    },
+    "todayNextBill": "Next bill: {name}",
+    "@todayNextBill": {
+        "description": "Coinpile row: the next bill's name",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "todayAlerts": "Alerts: {count}",
+    "@todayAlerts": {
+        "description": "Coinpile: how many alerts are active",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "todayNoBriefYet": "No brief yet today",
+    "@todayNoBriefYet": {
+        "description": "Pondering Orb card when today's morning brief is not written yet"
+    },
+    "todayCards": "Cards",
+    "@todayCards": {
+        "description": "Omi Today settings section: which cards show, in which order"
+    },
+    "todayReorderCard": "Reorder {name}",
+    "@todayReorderCard": {
+        "description": "Screen reader label of a card's drag handle",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "todayNewsFeeds": "News Feeds",
+    "@todayNewsFeeds": {
+        "description": "Omi Today settings section"
+    },
+    "todayAddFeed": "Add Feed",
+    "@todayAddFeed": {
+        "description": "Row and sheet title: add an RSS/Atom feed"
+    },
+    "todayFeedUrl": "Feed address",
+    "@todayFeedUrl": {
+        "description": "Field label for an RSS/Atom feed URL"
+    },
+    "todayAddressInvalid": "Enter an address that starts with http:// or https://",
+    "@todayAddressInvalid": {
+        "description": "Validation error for a URL field"
+    },
+    "todayFeedRemoved": "Feed removed",
+    "@todayFeedRemoved": {
+        "description": "Undo toast after removing a feed"
+    },
+    "todayRemoveFeed": "Remove Feed",
+    "@todayRemoveFeed": {
+        "description": "Icon button label: remove this feed"
+    },
+    "todayCompanionAddress": "Address",
+    "@todayCompanionAddress": {
+        "description": "Settings row: the service's web address"
+    },
+    "todayCompanionToken": "Token",
+    "@todayCompanionToken": {
+        "description": "Settings row and field: the service's API token"
+    },
+    "todayClearTokenMessage": "Omi Today will stop reading {name} until you add a token again.",
+    "@todayClearTokenMessage": {
+        "description": "Confirm message before removing a saved token",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "todayCoinpileHint": "Read from Coinpile with a token that has the summary scope (Coinpile: Settings, Home Assistant & API).",
+    "@todayCoinpileHint": {
+        "description": "Coinpile settings group subtitle"
+    },
+    "todayPonderingHint": "Shows the Orb's morning brief. Use one of the Orb's API tokens (ORB_API_TOKENS).",
+    "@todayPonderingHint": {
+        "description": "Pondering Orb settings group subtitle"
     }
 }

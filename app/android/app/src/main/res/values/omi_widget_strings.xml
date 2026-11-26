@@ -29,4 +29,6 @@
     <string name="omi_widget_ai_source_description">Whether chat is answered by your server or this phone, and the phone model\'s state</string>
     <string name="omi_widget_preview_value">3 conversations today</string>
     <string name="omi_widget_preview_row">Send the slides to Maya</string>
+    <string name="omi_widget_overview_name">Today overview</string>
+    <string name="omi_widget_overview_description">Your next events, tasks due, the day so far and a headline or two</string>
 </resources>

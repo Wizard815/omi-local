@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 
+import 'package:omi/services/reminders/phone_alarm.dart';
+
 /// The mobile on-device tool surface.
 ///
 /// Tool names and result shapes deliberately mirror the macOS desktop surface
@@ -71,25 +73,62 @@ class DeviceToolDescriptor {
 }
 
 class DeviceToolSurface {
-  DeviceToolSurface({MethodChannel? channel, bool? supported})
+  DeviceToolSurface({MethodChannel? channel, bool? supported, PhoneAlarm? clock})
       : _channel = channel ?? const MethodChannel('com.omi.device_tools'),
         // Injectable so the iOS behaviour is exercised by tests running on a
         // desktop host, where `Platform.isIOS` would otherwise skip it.
-        isSupported = supported ?? Platform.isIOS;
+        isSupported = supported ?? Platform.isIOS,
+        _clock = clock ?? PhoneAlarm.instance;
 
   final MethodChannel _channel;
+
+  /// Android's clock app: `set_alarm` and `set_timer` open it with the values filled in, and the
+  /// user saves them there (the clock app is the confirmation, like the iOS compose sheet).
+  final PhoneAlarm _clock;
+
+  static const String setAlarmTool = 'set_alarm';
+  static const String setTimerTool = 'set_timer';
+
+  bool get _clockSupported => !isSupported && _clock.isSupported;
+
+  static const List<DeviceToolDescriptor> clockTools = [
+    DeviceToolDescriptor(
+      name: setAlarmTool,
+      description:
+          'Open the phone\'s clock app on a new alarm at hour:minute (24-hour, the user\'s local time) with an optional label. The user saves it in the clock app; status=opened means the clock app was shown, not that the alarm is set.',
+      parameters: {
+        'hour': {'type': 'integer', 'description': 'Hour, 0-23.'},
+        'minute': {'type': 'integer', 'description': 'Minute, 0-59.'},
+        'label': {'type': 'string', 'description': 'Optional alarm label.'},
+      },
+      required: ['hour', 'minute'],
+      requiresUserConfirmation: true,
+    ),
+    DeviceToolDescriptor(
+      name: setTimerTool,
+      description:
+          'Open the phone\'s clock app on a new timer of the given length in seconds (1 to 86400) with an optional label. The user starts it in the clock app.',
+      parameters: {
+        'seconds': {'type': 'integer', 'description': 'Timer length in seconds, 1-86400.'},
+        'label': {'type': 'string', 'description': 'Optional timer label.'},
+      },
+      required: ['seconds'],
+      requiresUserConfirmation: true,
+    ),
+  ];
 
   static const String searchContactsTool = 'search_contacts';
   static const String proposeMessageTool = 'propose_message';
   static const String requestPermissionTool = 'request_permission';
 
   /// iOS is the only mobile platform with a compose-sheet API and a Contacts
-  /// store this surface can reach. Android would need its own implementations,
-  /// so the surface reports empty there rather than advertising tools that
-  /// would fail at call time.
+  /// store this surface can reach. Android declares only the clock tools
+  /// ([clockTools]) rather than advertising messaging tools that would fail at
+  /// call time.
   final bool isSupported;
 
   List<DeviceToolDescriptor> get tools {
+    if (_clockSupported) return clockTools;
     if (!isSupported) return const [];
     return const [
       DeviceToolDescriptor(
@@ -142,6 +181,7 @@ class DeviceToolSurface {
   /// the client declares what it can run, so the check belongs here rather than
   /// in the model's error handling.
   Future<List<DeviceToolDescriptor>> availableTools() async {
+    if (_clockSupported) return clockTools;
     if (!isSupported) return const [];
     final capabilities = await this.capabilities();
     final canSendText = capabilities['can_send_text'] == true;
@@ -165,6 +205,9 @@ class DeviceToolSurface {
   /// silently doing nothing, so a model hallucinating a desktop-only tool such
   /// as `run_applescript` gets a result it can reason about.
   Future<DeviceToolResult> execute(String toolName, Map<String, dynamic> arguments) async {
+    if (_clockSupported && (toolName == setAlarmTool || toolName == setTimerTool)) {
+      return _executeClock(toolName, arguments);
+    }
     if (!isSupported) {
       return DeviceToolResult.failure(
         'unsupported_platform',
@@ -214,6 +257,24 @@ class DeviceToolSurface {
           '$toolName is not available on this device.',
         );
     }
+  }
+
+  Future<DeviceToolResult> _executeClock(String toolName, Map<String, dynamic> arguments) async {
+    int? whole(Object? value) => value is num && value == value.roundToDouble() ? value.toInt() : null;
+    final label = arguments['label'] is String ? arguments['label'] as String : null;
+    final Map<String, Object?> result;
+    if (toolName == setAlarmTool) {
+      final hour = whole(arguments['hour']), minute = whole(arguments['minute']);
+      if (hour == null || minute == null) {
+        return DeviceToolResult.failure('invalid_time', 'Give hour (0-23) and minute (0-59) as whole numbers.');
+      }
+      result = await _clock.setAlarm(hour: hour, minute: minute, label: label);
+    } else {
+      final seconds = whole(arguments['seconds']);
+      if (seconds == null) return DeviceToolResult.failure('invalid_length', 'Give seconds as a whole number.');
+      result = await _clock.setTimer(seconds: seconds, label: label);
+    }
+    return DeviceToolResult(Map<String, dynamic>.from(result));
   }
 
   Future<DeviceToolResult> contactsPermissionStatus() => _invoke('contactsPermissionStatus', null);
