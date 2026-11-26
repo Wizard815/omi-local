@@ -124,6 +124,15 @@ def test_clock_tools_state_the_clock_app_is_the_confirmation():
     assert 'status=opened' in by_name['set_timer'].description
 
 
+def test_device_tools_prompt_names_the_tools_and_the_consent_model():
+    from utils.device_tools import device_tools_prompt
+
+    prompt = device_tools_prompt('propose_message, set_alarm')
+    assert 'propose_message, set_alarm' in prompt
+    assert 'does NOT send' in prompt
+    assert 'not that the alarm is set' in prompt
+
+
 def test_clock_tool_arguments_are_bounded():
     from pydantic import ValidationError
 

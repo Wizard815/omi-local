@@ -156,6 +156,22 @@ DEVICE_TOOL_SPECS: dict[str, dict[str, Any]] = {
 DEVICE_TOOL_NAMES = frozenset(DEVICE_TOOL_SPECS)
 
 
+def device_tools_prompt(device_tool_list: str) -> str:
+    """The system-prompt block that tells the model which tools run on the device and what their results mean."""
+    return f"""
+
+<device_tools>
+These tools run on the user's own device, not on the server: {device_tool_list}
+
+propose_message opens the system compose sheet — it does NOT send. Only report a
+message as sent when the tool result says status=sent. If it says cancelled, the
+user chose not to send; acknowledge that rather than retrying.
+
+set_alarm and set_timer open the phone's clock app with the values filled in — the
+user saves them there. Say you opened the clock app, not that the alarm is set.
+</device_tools>"""
+
+
 def device_tool_result_key(uid: str, call_id: str) -> str:
     return f'device_tool_result:{uid}:{call_id}'
 
