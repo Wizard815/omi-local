@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Status widgets (Today, Summary, Mute, Live translation): a title, one large line, a detail
+<!-- Status widgets (Today, Summary, Mute, Live translation, Next event, Memory): a title, one large line, a detail
      line and an optional pill action. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/omi_widget_root"

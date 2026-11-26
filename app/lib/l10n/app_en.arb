@@ -20702,5 +20702,73 @@
     "sendToHermesTitle": "Send to Hermes",
     "@sendToHermesTitle": {
         "description": "Conversation menu action: open the conversation's title and overview in the Studio Own app's Hermes chat"
+    },
+    "widgetFamilyDayTitle": "Family day",
+    "@widgetFamilyDayTitle": {
+        "description": "Android home-screen Family day widget title (the family calendar's day)"
+    },
+    "widgetFamilyDayFor": "Day for {name}",
+    "@widgetFamilyDayFor": {
+        "description": "Android Family day widget title when it shows one family member's day",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "widgetFamilyBlocksLeft": "{count, plural, =0{Nothing left} =1{1 left} other{{count} left}}",
+    "@widgetFamilyBlocksLeft": {
+        "description": "Android Family day widget: how many calendar blocks are still ahead today",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "widgetFamilyNothingLeft": "Nothing else on the calendar today",
+    "@widgetFamilyNothingLeft": {
+        "description": "Android Family day widget when no block is left today"
+    },
+    "widgetFamilyTasksDue": "{count, plural, =1{1 task due today} other{{count} tasks due today}}",
+    "@widgetFamilyTasksDue": {
+        "description": "Android Family day widget: open tasks due today",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "widgetFamilyChoresOverdue": "{count, plural, =1{1 chore overdue} other{{count} chores overdue}}",
+    "@widgetFamilyChoresOverdue": {
+        "description": "Android Family day widget: overdue chores",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "widgetFamilyNotSetUp": "No family calendar is set up on your Omi server",
+    "@widgetFamilyNotSetUp": {
+        "description": "Android Family day widget when the server has no family calendar"
+    },
+    "widgetNextEventTitle": "Next event",
+    "@widgetNextEventTitle": {
+        "description": "Android home-screen Next event widget title"
+    },
+    "widgetNextEventNone": "Nothing in the next 24 hours",
+    "@widgetNextEventNone": {
+        "description": "Android Next event widget when no event is coming up"
+    },
+    "widgetFamilyCalendarLabel": "Family calendar",
+    "@widgetFamilyCalendarLabel": {
+        "description": "Android Next event widget: the event comes from the family calendar"
+    },
+    "widgetMemoryTitle": "Memory",
+    "@widgetMemoryTitle": {
+        "description": "Android home-screen Memory widget title (one of the user's memories, a new one each day)"
+    },
+    "widgetMemoryEmpty": "No memories yet",
+    "@widgetMemoryEmpty": {
+        "description": "Android Memory widget before Omi has saved any memory"
     }
 }

@@ -3,13 +3,17 @@ import 'dart:io';
 
 import 'package:flutter/widgets.dart';
 
+import 'package:omi/backend/http/api/family_calendar.dart' as family_calendar_api;
+import 'package:omi/backend/http/api_result.dart';
 import 'package:omi/backend/preferences.dart';
+import 'package:omi/backend/schema/family_calendar.dart';
 import 'package:omi/l10n/app_localizations.dart';
 import 'package:omi/providers/action_items_provider.dart';
 import 'package:omi/providers/capture_provider.dart';
 import 'package:omi/providers/conversation_provider.dart';
 import 'package:omi/providers/device_provider.dart';
 import 'package:omi/providers/home_provider.dart';
+import 'package:omi/providers/memories_provider.dart';
 import 'package:omi/providers/user_provider.dart';
 import 'package:omi/services/android_home_widgets.dart';
 import 'package:omi/services/home_widgets_service.dart';
@@ -20,7 +24,8 @@ import 'package:omi/utils/enums.dart';
 
 /// Keeps the Home Screen widgets in step with the app. iOS: the wearables (Devices), the next open
 /// tasks (Up next) and the latest conversation (Latest). Android adds Today, Summary, Quick capture,
-/// Mute, Live translation, Waiting for your OK and AI source. Changes are gathered for a moment and written
+/// Mute, Live translation, Waiting for your OK, Family day, Next event, Memory and AI source. Changes are
+/// gathered for a moment and written
 /// only when a document changed; leaving the app writes at once.
 class HomeWidgetsPublisher with WidgetsBindingObserver {
   HomeWidgetsPublisher({
@@ -32,6 +37,9 @@ class HomeWidgetsPublisher with WidgetsBindingObserver {
     this.capture,
     this.user,
     this.home,
+    this.memories,
+    Future<FamilyDay?> Function()? loadFamilyDay,
+    this.familyDayEvery = const Duration(minutes: 15),
     this.phoneLlm,
     this.phoneStatus,
     this.phoneCheckEvery = const Duration(minutes: 1),
@@ -41,6 +49,7 @@ class HomeWidgetsPublisher with WidgetsBindingObserver {
     DateTime Function()? now,
   })  : service = service ?? HomeWidgetsService.instance,
         android = android ?? Platform.isAndroid,
+        loadFamilyDay = loadFamilyDay ?? _fetchFamilyDay,
         _now = now ?? DateTime.now;
 
   final DeviceProvider devices;
@@ -54,6 +63,15 @@ class HomeWidgetsPublisher with WidgetsBindingObserver {
   final UserProvider? user;
   final HomeProvider? home;
 
+  /// Android only: the Memory widget's memories.
+  final MemoriesProvider? memories;
+
+  /// Android only: today on the family calendar (Family day, Next event). Null = no answer.
+  final Future<FamilyDay?> Function() loadFamilyDay;
+
+  /// How often the family calendar is asked again while the app is open.
+  final Duration familyDayEvery;
+
   /// Android only: the AI source and the phone model's state, checked every [phoneCheckEvery]
   /// while the app is in front (never in the background).
   final PhoneLlmSettings? phoneLlm;
@@ -65,7 +83,10 @@ class HomeWidgetsPublisher with WidgetsBindingObserver {
   final bool android;
   final DateTime Function() _now;
   Timer? _timer;
+  Timer? _familyTimer;
   RecordingState? _lastRecordingState;
+  bool _familyPublished = false;
+  bool _familyLoading = false;
 
   List<Listenable> get _sources => [
         devices,
@@ -75,6 +96,7 @@ class HomeWidgetsPublisher with WidgetsBindingObserver {
           if (tasks.waiting case final waiting?) waiting,
           if (user case final user?) user,
           if (home case final home?) home,
+          if (memories case final memories?) memories,
           if (phoneLlm case final phoneLlm?) phoneLlm,
           if (phoneStatus case final phoneStatus?) phoneStatus,
         ],
@@ -85,7 +107,12 @@ class HomeWidgetsPublisher with WidgetsBindingObserver {
       source.addListener(_schedule);
     }
     // Capture notifies many times a second while recording; only a state change matters here.
-    if (android) capture?.addListener(_onCapture);
+    if (android) {
+      capture?.addListener(_onCapture);
+      if (memories case final memories? when !memories.hasLoaded) unawaited(memories.loadMemories());
+      unawaited(refreshFamilyDay());
+      _familyTimer = Timer.periodic(familyDayEvery, (_) => unawaited(refreshFamilyDay()));
+    }
     WidgetsBinding.instance.addObserver(this);
     if (android) {
       unawaited(phoneLlm?.ensureLoaded());
@@ -104,6 +131,7 @@ class HomeWidgetsPublisher with WidgetsBindingObserver {
 
   void dispose() {
     _timer?.cancel();
+    _familyTimer?.cancel();
     _phoneTimer?.cancel();
     for (final source in _sources) {
       source.removeListener(_schedule);
@@ -119,6 +147,7 @@ class HomeWidgetsPublisher with WidgetsBindingObserver {
     // Coming back may be a new day for Today, and approvals may have changed on the server.
     if (state == AppLifecycleState.resumed && android) {
       unawaited(tasks.waiting?.load());
+      unawaited(refreshFamilyDay());
       _checkPhone();
       _schedule();
     }
@@ -208,7 +237,36 @@ class HomeWidgetsPublisher with WidgetsBindingObserver {
     if (waiting != null && waiting.loaded) {
       _put(AndroidWidgetDocuments.approvalsKey, AndroidWidgetDocuments.approvals(waiting.state, words, dates()));
     }
+    _put(AndroidWidgetDocuments.nextEventKey, AndroidWidgetDocuments.nextEvent(words));
+    if (memories case final memories? when memories.hasLoaded) {
+      _put(AndroidWidgetDocuments.memoryKey, AndroidWidgetDocuments.memory(memories.memories, words));
+    }
   }
+
+  /// Asks the server for today on the family calendar and writes Family day. An answer without the
+  /// gateway (down, refused) keeps what the widget already shows; the first one is still written so
+  /// the widget can say why it is empty.
+  @visibleForTesting
+  Future<void> refreshFamilyDay() async {
+    if (!android || _familyLoading) return;
+    _familyLoading = true;
+    try {
+      final day = await loadFamilyDay();
+      if (day == null) return;
+      if (day.configured && !day.reachable && _familyPublished) return;
+      _put(AndroidWidgetDocuments.familyDayKey, AndroidWidgetDocuments.familyDay(day, l10n(), now: _now()));
+      _familyPublished = true;
+    } catch (_) {
+      // A widget keeps its last data; the next refresh tries again.
+    } finally {
+      _familyLoading = false;
+    }
+  }
+
+  static Future<FamilyDay?> _fetchFamilyDay() async => switch (await family_calendar_api.getFamilyDay()) {
+        ApiSuccess<FamilyDay>(:final data) => data,
+        _ => null,
+      };
 
   void _put(String key, Map<String, Object?> document) => unawaited(service.publish(key, document));
 }

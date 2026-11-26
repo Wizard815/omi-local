@@ -65,6 +65,9 @@ SCHEMA_GROUPS = {
             'ApproveFamilyCalendarEventRequest',
             'DeclineFamilyCalendarEventRequest',
             'FamilyCalendarEventResponse',
+            # Today on the family calendar, for the Android Family day and Next event widgets.
+            'FamilyDayBlock',
+            'FamilyDayResponse',
             # Per-clip keep in the day review.
             'KeepDayReviewConversationRequest',
             # Connections (outbound integrations) and their sends.

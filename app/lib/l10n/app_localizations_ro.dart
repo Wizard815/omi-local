@@ -17110,4 +17110,67 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get sendToHermesTitle => 'Trimite la Hermes';
+
+  @override
+  String get widgetFamilyDayTitle => 'Family day';
+
+  @override
+  String widgetFamilyDayFor(String name) {
+    return 'Day for $name';
+  }
+
+  @override
+  String widgetFamilyBlocksLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count left',
+      one: '1 left',
+      zero: 'Nothing left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get widgetFamilyNothingLeft => 'Nothing else on the calendar today';
+
+  @override
+  String widgetFamilyTasksDue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks due today',
+      one: '1 task due today',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String widgetFamilyChoresOverdue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count chores overdue',
+      one: '1 chore overdue',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get widgetFamilyNotSetUp => 'No family calendar is set up on your Omi server';
+
+  @override
+  String get widgetNextEventTitle => 'Next event';
+
+  @override
+  String get widgetNextEventNone => 'Nothing in the next 24 hours';
+
+  @override
+  String get widgetFamilyCalendarLabel => 'Family calendar';
+
+  @override
+  String get widgetMemoryTitle => 'Memory';
+
+  @override
+  String get widgetMemoryEmpty => 'No memories yet';
 }

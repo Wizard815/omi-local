@@ -16,6 +16,9 @@ object OmiWidgetKeys {
     const val TRANSLATION = "widget_translation"
     const val TASKS = "widget_up_next"
     const val APPROVALS = "widget_approvals"
+    const val FAMILY_DAY = "widget_family_day"
+    const val NEXT_EVENT = "widget_next_event"
+    const val MEMORY = "widget_memory"
     const val AI_SOURCE = "widget_ai_source"
 }
 
@@ -60,6 +63,26 @@ data class AiSourceData(
 data class WidgetRow(val id: String?, val title: String, val detail: String?)
 
 data class ListData(val title: String, val count: Int, val countLabel: String, val empty: String, val rows: List<WidgetRow>)
+
+/** A timed block on the family calendar, for the Next event widget. */
+data class TimedEvent(val title: String, val startMs: Long)
+
+data class FamilyDayData(
+    val title: String,
+    /** The day the rows belong to, `yyyy-MM-dd`; rows from another day are stale. */
+    val day: String,
+    val configured: Boolean,
+    val list: ListData,
+    /** Tasks due and overdue chores, one line; empty when none. */
+    val footer: String,
+    val events: List<TimedEvent>,
+)
+
+data class NextEventLabels(val title: String, val none: String, val familyLabel: String)
+
+data class MemoryItem(val id: String?, val text: String)
+
+data class MemoryData(val title: String, val empty: String, val memories: List<MemoryItem>)
 
 object OmiWidgetData {
     /** How many rows a widget lists at most (the medium size). */
@@ -133,6 +156,73 @@ object OmiWidgetData {
         )
     }
 
+    fun familyDay(json: String?): FamilyDayData? = parse(json) { o ->
+        val title = o.text("title") ?: return@parse null
+        val rows = rows(o.optJSONArray("rows")) { item ->
+            WidgetRow(null, item.text("title") ?: return@rows null, item.text("detail"))
+        }
+        val events = mutableListOf<TimedEvent>()
+        o.optJSONArray("events")?.let { array ->
+            for (i in 0 until array.length()) {
+                val item = array.optJSONObject(i) ?: continue
+                val start = item.optLong("start_ms", 0L)
+                val name = item.text("title") ?: continue
+                if (start > 0) events.add(TimedEvent(name, start))
+            }
+        }
+        FamilyDayData(
+            title = title,
+            day = o.text("day") ?: return@parse null,
+            configured = o.optBoolean("configured", false),
+            list = ListData(
+                title = title,
+                count = o.optInt("count", rows.size).coerceAtLeast(0),
+                countLabel = o.text("count_label") ?: "",
+                empty = o.text("empty") ?: "",
+                rows = rows,
+            ),
+            footer = o.text("footer") ?: "",
+            events = events.sortedBy { it.startMs },
+        )
+    }
+
+    fun nextEventLabels(json: String?): NextEventLabels? = parse(json) { o ->
+        NextEventLabels(o.text("title") ?: return@parse null, o.text("none") ?: "", o.text("family_label") ?: "")
+    }
+
+    fun memory(json: String?): MemoryData? = parse(json) { o ->
+        val items = mutableListOf<MemoryItem>()
+        o.optJSONArray("memories")?.let { array ->
+            for (i in 0 until array.length()) {
+                val item = array.optJSONObject(i) ?: continue
+                val text = item.text("text") ?: continue
+                items.add(MemoryItem(item.text("id"), text))
+            }
+        }
+        MemoryData(o.text("title") ?: return@parse null, o.text("empty") ?: "", items)
+    }
+
+    /** The family calendar's next timed block from [nowMs] on, only from today's document. */
+    fun nextFamilyEvent(data: FamilyDayData?, today: String, nowMs: Long): TimedEvent? =
+        data?.takeIf { it.day == today }?.events?.firstOrNull { it.startMs >= nowMs }
+
+    /**
+     * The sooner of the phone's next event and the family calendar's; the phone's wins a tie (a
+     * family calendar synced to the phone shows up in both).
+     */
+    fun soonest(phone: TimedEvent?, family: TimedEvent?): Pair<TimedEvent, Boolean>? = when {
+        phone == null && family == null -> null
+        family == null -> phone!! to false
+        phone == null -> family to true
+        family.startMs < phone.startMs -> family to true
+        else -> phone to false
+    }
+
+    /** Today's memory: a different one each local day, in a fixed order, so it turns without the app. */
+    fun memoryOfDay(data: MemoryData, epochDay: Long): MemoryItem? {
+        if (data.memories.isEmpty()) return null
+        return data.memories[Math.floorMod(epochDay, data.memories.size.toLong()).toInt()]
+    }
     fun aiSource(json: String?): AiSourceData? = parse(json) { o ->
         val mode = o.text("mode")?.takeIf { it in AI_MODES } ?: return@parse null
         AiSourceData(

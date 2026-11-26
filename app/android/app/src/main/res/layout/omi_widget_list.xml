@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- List widgets (Tasks, Waiting for your OK): a title with a count, then up to three rows. -->
+<!-- List widgets (Tasks, Waiting for your OK, Family day): a title with a count, up to three rows,
+     and an optional footer line. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/omi_widget_root"
     android:layout_width="match_parent"
@@ -144,4 +145,15 @@
             android:textSize="12sp"
             android:visibility="gone" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/omi_widget_footer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="@color/omi_widget_text_secondary"
+        android:textSize="12sp"
+        android:visibility="gone" />
 </LinearLayout>

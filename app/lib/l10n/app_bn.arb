@@ -12766,5 +12766,17 @@
     "phoneLlmCheckedAt": "{time}-এ যাচাই করা হয়েছে",
     "phoneLlmSourceChanged": "AI উৎস: {source}",
     "phoneLlmSwitch": "পরিবর্তন",
-    "sendToHermesTitle": "Hermes-এ পাঠান"
+    "sendToHermesTitle": "Hermes-এ পাঠান",
+    "widgetFamilyDayTitle": "Family day",
+    "widgetFamilyDayFor": "Day for {name}",
+    "widgetFamilyBlocksLeft": "{count, plural, =0{Nothing left} =1{1 left} other{{count} left}}",
+    "widgetFamilyNothingLeft": "Nothing else on the calendar today",
+    "widgetFamilyTasksDue": "{count, plural, =1{1 task due today} other{{count} tasks due today}}",
+    "widgetFamilyChoresOverdue": "{count, plural, =1{1 chore overdue} other{{count} chores overdue}}",
+    "widgetFamilyNotSetUp": "No family calendar is set up on your Omi server",
+    "widgetNextEventTitle": "Next event",
+    "widgetNextEventNone": "Nothing in the next 24 hours",
+    "widgetFamilyCalendarLabel": "Family calendar",
+    "widgetMemoryTitle": "Memory",
+    "widgetMemoryEmpty": "No memories yet"
 }

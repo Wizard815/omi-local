@@ -81,6 +81,7 @@ class _AppShellState extends State<AppShell> {
     'new-task',
     'new-memory',
     'approvals',
+    'memory',
     'listening',
     'ai-source',
   };

@@ -53,6 +53,7 @@ import 'package:omi/providers/device_provider.dart';
 import 'package:omi/providers/local_recordings_provider.dart';
 import 'package:omi/providers/announcement_provider.dart';
 import 'package:omi/providers/home_provider.dart';
+import 'package:omi/providers/memories_provider.dart';
 import 'package:omi/providers/user_provider.dart';
 import 'package:omi/providers/message_provider.dart';
 import 'package:omi/providers/sync_provider.dart';
@@ -515,7 +516,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, Ticker
   }
 
   /// The Home Screen widgets (iOS: Devices, Up next, Latest; Android: those plus Today, Summary,
-  /// Quick capture, Mute, Live translation, Waiting for your OK) follow what this Home shows.
+  /// Quick capture, Mute, Live translation, Waiting for your OK, Family day, Next event, Memory)
+  /// follow what this Home shows.
   HomeWidgetsPublisher? _homeWidgets;
 
   void _startHomeWidgets() {
@@ -530,6 +532,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, Ticker
         capture: context.read<CaptureProvider>(),
         user: context.read<UserProvider>(),
         home: context.read<HomeProvider>(),
+        memories: context.read<MemoriesProvider>(),
         phoneLlm: PhoneLlmSettings.instance,
         phoneStatus: PhoneLlmStatus(),
         l10n: () => context.l10n,

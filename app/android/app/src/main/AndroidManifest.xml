@@ -273,6 +273,39 @@
                 android:resource="@xml/omi_widget_approvals_info" />
         </receiver>
         <receiver
+            android:name="com.friend.ios.widgets.OmiFamilyDayWidget"
+            android:exported="false"
+            android:label="@string/omi_widget_family_day_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/omi_widget_family_day_info" />
+        </receiver>
+        <receiver
+            android:name="com.friend.ios.widgets.OmiNextEventWidget"
+            android:exported="false"
+            android:label="@string/omi_widget_next_event_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/omi_widget_next_event_info" />
+        </receiver>
+        <receiver
+            android:name="com.friend.ios.widgets.OmiMemoryWidget"
+            android:exported="false"
+            android:label="@string/omi_widget_memory_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/omi_widget_memory_info" />
+        </receiver>
+        <receiver
             android:name="com.friend.ios.widgets.OmiAiSourceWidget"
             android:exported="false"
             android:label="@string/omi_widget_ai_source_name">

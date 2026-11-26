@@ -29636,6 +29636,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send to Hermes'**
   String get sendToHermesTitle;
+
+  /// Android home-screen Family day widget title (the family calendar's day)
+  ///
+  /// In en, this message translates to:
+  /// **'Family day'**
+  String get widgetFamilyDayTitle;
+
+  /// Android Family day widget title when it shows one family member's day
+  ///
+  /// In en, this message translates to:
+  /// **'Day for {name}'**
+  String widgetFamilyDayFor(String name);
+
+  /// Android Family day widget: how many calendar blocks are still ahead today
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Nothing left} =1{1 left} other{{count} left}}'**
+  String widgetFamilyBlocksLeft(int count);
+
+  /// Android Family day widget when no block is left today
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing else on the calendar today'**
+  String get widgetFamilyNothingLeft;
+
+  /// Android Family day widget: open tasks due today
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 task due today} other{{count} tasks due today}}'**
+  String widgetFamilyTasksDue(int count);
+
+  /// Android Family day widget: overdue chores
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 chore overdue} other{{count} chores overdue}}'**
+  String widgetFamilyChoresOverdue(int count);
+
+  /// Android Family day widget when the server has no family calendar
+  ///
+  /// In en, this message translates to:
+  /// **'No family calendar is set up on your Omi server'**
+  String get widgetFamilyNotSetUp;
+
+  /// Android home-screen Next event widget title
+  ///
+  /// In en, this message translates to:
+  /// **'Next event'**
+  String get widgetNextEventTitle;
+
+  /// Android Next event widget when no event is coming up
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing in the next 24 hours'**
+  String get widgetNextEventNone;
+
+  /// Android Next event widget: the event comes from the family calendar
+  ///
+  /// In en, this message translates to:
+  /// **'Family calendar'**
+  String get widgetFamilyCalendarLabel;
+
+  /// Android home-screen Memory widget title (one of the user's memories, a new one each day)
+  ///
+  /// In en, this message translates to:
+  /// **'Memory'**
+  String get widgetMemoryTitle;
+
+  /// Android Memory widget before Omi has saved any memory
+  ///
+  /// In en, this message translates to:
+  /// **'No memories yet'**
+  String get widgetMemoryEmpty;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
