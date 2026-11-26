@@ -53,6 +53,10 @@ INTEGRATION_PUBLIC_PATHS = (
     '/v2/integrations/{app_id}/tasks',
 )
 APP_CLIENT_PREFIXES = (
+    # omi-local: the self-hosted username/password sign-in every first-party
+    # client calls (Flutter, Windows/Linux desktop). Exact path, not a prefix:
+    # the rest of /v1/auth is the OAuth redirect flow, which is not app-client API.
+    '/v1/auth/local-login',
     '/v1/caldav',  # omi-local: tasks + calendar sync settings
     '/v1/family-calendar',  # omi-local: review heard events before they go to the family calendar
     '/v1/approvals',  # omi-local: tasks waiting for the user's OK, auto-approve
@@ -394,6 +398,8 @@ UNDOCUMENTED_PUBLIC_ROUTES: dict[tuple[str, str], str] = {
 APP_CLIENT_PUBLIC_PATHS = frozenset(
     {
         '/v1/action-items/shared/{token}',
+        # Sign-in: the caller has no session yet; it exchanges a password for one.
+        '/v1/auth/local-login',
         '/v1/conversations/{conversation_id}/shared',
         '/v2/messages/shared/{token}',
     }

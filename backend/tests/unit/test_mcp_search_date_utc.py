@@ -60,6 +60,8 @@ _MCP_STUB_NAMES = [
     'google.cloud.firestore_v1.FieldFilter',
     'google',
     'google.cloud',
+    'google.cloud.exceptions',
+    'google.cloud.storage',
     'pinecone',
     'typesense',
     'opuslib',

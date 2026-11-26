@@ -8,6 +8,7 @@ import pytest
 from google.api_core.datetime_helpers import DatetimeWithNanoseconds
 
 from database import action_items as items
+import utils.caldav.sync  # noqa: F401 -- warm the CalDAV hook's lazy import at collection, not inside the first timed test
 
 NOW = datetime(2026, 1, 1, tzinfo=timezone.utc)
 

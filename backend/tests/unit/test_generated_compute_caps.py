@@ -204,6 +204,8 @@ def test_new_feature_get_llm_cannot_bypass_uid_or_budget(gate, monkeypatch):
     monkeypatch.setenv('STT_CAP_DISPATCH_ENFORCEMENT', 'true')
     namespace = dict(
         feature_request_timeout=lambda _: 30,
+        # Cloud path: no self-hosted model deadline (config.local_llm returns None off omi-local).
+        local_llm_timeout_seconds=lambda: None,
         _get_model_config=lambda _: ('model', 'openai'),
         is_anthropic_only_feature=lambda _: False,
         is_perplexity_only_feature=lambda _: False,

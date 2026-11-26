@@ -73,6 +73,7 @@ from utils.retrieval.tools import (
 from utils.retrieval.tools.app_tools import load_app_tools, get_tool_status_message
 from utils.device_tools import DEVICE_TOOL_NAMES, build_device_tools, device_tool_timeout_for_stream_budget
 from utils.retrieval.tools.device_calendar_tools import device_calendar_tools_for
+from utils.retrieval.tools.home_assistant_tools import HOME_ASSISTANT_TOOL_NAMES, home_assistant_tools_for
 from utils.retrieval.tool_result_boundaries import preserve_chat_memory_tool_result_boundary
 from utils.retrieval.turn_refs import initialize_turn_refs
 from utils.retrieval.safety import (
@@ -319,7 +320,7 @@ CORE_TOOLS = [
 # Standard tool names (used to detect app tools by exclusion). Device tools are
 # included because they are named like core tools (propose_message), and
 # _extract_app_id would otherwise read "propose" as an app id.
-STANDARD_TOOL_NAMES = {t.name for t in CORE_TOOLS} | set(DEVICE_TOOL_NAMES)
+STANDARD_TOOL_NAMES = {t.name for t in CORE_TOOLS} | set(DEVICE_TOOL_NAMES) | HOME_ASSISTANT_TOOL_NAMES
 
 
 def get_tool_display_name(tool_name: str, tool_obj: Optional[Any] = None) -> str:
@@ -1617,6 +1618,7 @@ async def execute_agentic_chat_stream(
 
             # Self-hosting: Android device-calendar tool (local-LLM mode, calendar synced).
             core_tools.extend(await device_calendar_tools_for(uid))
+            core_tools.extend(await home_assistant_tools_for(uid))  # omi-local: Home Assistant, when connected
 
             # Dynamic app tools — exposed directly on the OpenAI/Luna chat-agent lane
             app_tools = []

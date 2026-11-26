@@ -142,8 +142,13 @@ The existing backend unit selector runs these checks when any source changes.
 
 `firestore_read_lever_policy.lever_expiry` in `_base.yaml` is a surface-keyed
 map: each partial `(surface, lever)` entry binds the exact `value` to an ISO UTC
-`expires` date. Dates must be today through seven days out. Current approvals
-end on 2026-11-17; this is an expiry deadline, not permission to expand the rollout.
+`expires` date. Dates must be today through seven days out. The last approvals
+(`lifecycle_record_pending_head` at 5% on every non-prod-train surface) ended on
+2026-11-17. omi-local resolved that cohort to 0 on 2026-11-25 instead of renewing it
+weekly: this self-hosted fork deploys none of these GKE/Cloud Run surfaces, and its
+own backend runs with `FIRESTORE_READ_LEVERS` unset, so the lever was already 0 where
+it runs. No partial lever remains, so `lever_expiry` is empty; a new partial cohort
+needs a fresh entry. An expiry is a deadline, not permission to expand the rollout.
 Renewal requires an explicit reviewed source change. `base/` and `overlay/`
 identify raw input paths; `runtime/<env>/` identifies both the generated and
 in-memory composed surface; `chart/<env>/` includes Helm default inheritance;
@@ -153,8 +158,8 @@ No broad exception grants expiry coverage to another surface or percentage.
 RESOLVED (SCA-2173, 2026-11-14): the prod worker and the prod Cloud Run
 services pin `batch_timeliness_leader:100` and `lifecycle_record_pending_head:100`,
 and set `privacy_checks_shadow:0`; `backend-sync-backfill` keeps its ec191a row 3
-pins (`batch_timeliness_leader:0`, `privacy_checks_shadow:100`,
-`lifecycle_record_pending_head:5`). `privacy_ttl60` remains 0. Integration, sync
+pins (`batch_timeliness_leader:0`, `privacy_checks_shadow:100`; its
+`lifecycle_record_pending_head` 5% cohort was resolved to 0 on 2026-11-25, see above). `privacy_ttl60` remains 0. Integration, sync
 and backend pin both `usage_month_cache` and `usage_month_total` to 100 (SCA-2222
 Train 1); backfill and the worker keep both at 0. Every other lever and epoch is
 unchanged.

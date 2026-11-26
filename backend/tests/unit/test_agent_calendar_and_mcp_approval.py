@@ -186,7 +186,7 @@ def test_calendar_tool_hides_waiting_events_unless_asked(monkeypatch):
         {'title': 'On it', 'status': 'on_calendar', 'start': '2026-11-25T10:00:00+00:00'},
         {'title': 'Proposed', 'status': 'waiting_for_approval', 'start': '2026-11-25T11:00:00+00:00'},
     ]
-    monkeypatch.setattr(calendar_handlers.agent_calendar, 'list_events', lambda uid, a, b: list(events))
+    monkeypatch.setattr(agent_calendar, 'list_events', lambda uid, a, b: list(events))
     monkeypatch.setattr(calendar_handlers, 'local_date_window', lambda *a: (None, None, timezone.utc))
     out = calendar_handlers.get_calendar_events('u1', {})
     assert [e['title'] for e in out['events']] == ['On it'] and out['waiting_for_approval'] == 1

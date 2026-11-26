@@ -800,6 +800,8 @@ def install_mcp_search_memories_stubs(backend_dir: str) -> list[str]:
         "google.cloud.firestore_v1.FieldFilter",
         "google",
         "google.cloud",
+        "google.cloud.exceptions",
+        "google.cloud.storage",
         "pinecone",
         "typesense",
         "opuslib",
