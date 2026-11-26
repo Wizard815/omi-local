@@ -222,3 +222,20 @@ OMI_RADICALE_BIN=/tmp/radicale/bin/radicale omi-host/demo/backup_demo.sh --keep 
 ```
 
 See [BACKUP.md](../BACKUP.md) and [HEALTH.md](../HEALTH.md).
+
+## Proxy demo: the stack behind NGINX, as through a tunnel
+
+`proxy_demo.sh` runs the CalDAV demo's stack behind two real nginx running
+`omi-host/proxy/nginx/omi.conf`: one as shipped, one with a 30 s idle limit standing in for
+Cloudflare's ~100 s cut. The model is `slow_llm_stub.py`, silent for 75 s before it answers.
+`proxy_demo.py` checks login, unbuffered chat streaming, the slow answer surviving the idle limit
+on keep-alives (and the same silent model being cut without them), the `/v4/listen` upgrade,
+CalDAV methods at `/caldav/` and on a `caldav.` hostname, and a 150 MB upload. Needs nginx
+(`apt-get install nginx-light`; 1.27.3+ also checks the shipped files with `nginx -t`).
+
+```
+OMI_RADICALE_BIN=/tmp/radicale/bin/radicale omi-host/demo/proxy_demo.sh
+OMI_DEMO_IDLE_SECONDS=100 OMI_DEMO_LLM_DELAY=130 OMI_RADICALE_BIN=... omi-host/demo/proxy_demo.sh   # Cloudflare's numbers
+```
+
+See [REMOTE-ACCESS.md](../REMOTE-ACCESS.md); `omi-host/proxy/check_remote.sh` checks the real hostname.

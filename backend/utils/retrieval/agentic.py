@@ -1486,6 +1486,20 @@ async def next_stream_chunk(callback: AsyncStreamingCallback, task: asyncio.Task
                 pass
 
 
+def stream_wait(heartbeat_seconds: float, hard_deadline_seconds: float) -> tuple[float, bool]:
+    """How long to wait for the next chunk, and whether that wait ending means "send a heartbeat".
+
+    The heartbeat runs from the start of the stream, before the first model event too: a slow
+    self-hosted model can think for minutes first, and a proxy in front (a Cloudflare Tunnel
+    drops an HTTP response that stays idle about 100 s) would cut a silent stream.
+    ``hard_deadline_seconds`` is what is left of the first-event or whole-turn deadline.
+    """
+    hard_deadline_seconds = max(0.0, hard_deadline_seconds)
+    if heartbeat_seconds < hard_deadline_seconds:
+        return heartbeat_seconds, True
+    return hard_deadline_seconds, False
+
+
 async def cancel_stream_task(task: asyncio.Task) -> None:
     """Request cancellation without letting a non-cooperative dependency hold the SSE open."""
     if task.done():
@@ -1875,21 +1889,15 @@ user chose not to send; acknowledge that rather than retrying.
             if remaining_seconds <= 0:
                 raise asyncio.TimeoutError
 
-            wait_timeout = min(
-                (
-                    max(0, first_event_deadline - asyncio.get_running_loop().time())
-                    if not received_first_event
-                    else AGENT_STREAM_PROGRESS_HEARTBEAT_SECONDS
-                ),
-                remaining_seconds,
-            )
+            if not received_first_event:
+                remaining_seconds = min(remaining_seconds, first_event_deadline - asyncio.get_running_loop().time())
+            wait_timeout, heartbeat_due = stream_wait(AGENT_STREAM_PROGRESS_HEARTBEAT_SECONDS, remaining_seconds)
             try:
                 chunk = await next_stream_chunk(callback, task, wait_timeout)
             except asyncio.TimeoutError:
-                # A successful first status/token means the agent can be in a
-                # deliberately long tool call (some app tools allow 120s).
-                # Keep the proxy/client stream alive until the hard task cap.
-                if received_first_event and remaining_seconds > wait_timeout:
+                # A slow model's first token or a long tool call (some app tools
+                # allow 120s): keep the proxy/client stream alive until a deadline.
+                if heartbeat_due:
                     yield f'think: {AGENT_STREAM_PROGRESS_HEARTBEAT}'
                     continue
                 raise

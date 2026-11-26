@@ -39,6 +39,14 @@ Rerun `bash omi-host/egress-firewall.sh` after a reboot or after recreating cont
 search engines is its job. The `omi-apps` profile's plugins (Wikipedia, Open-Meteo and others)
 are blocked by both layers; enable them only if you want those calls.
 
+## Remote access
+
+Reaching Omi from outside ([REMOTE-ACCESS.md](REMOTE-ACCESS.md): NGINX plus a Cloudflare Tunnel
+or Tailscale) is incoming traffic and changes none of the above. `omi-cloudflared` and
+`omi-tailscale` are the only containers that talk to the internet, and only to Cloudflare or
+Tailscale, so they are left off the firewall's list; `omi-nginx` is on it, since it only needs
+the LAN.
+
 ## What it can't stop
 
 - **DNS lookups.** Docker answers containers from the host's resolver, so the *name* of a blocked

@@ -14,7 +14,8 @@ for test in \
   test_egress_guard.py \
   test_health_watchdog.py \
   test_maintenance.py \
-  test_merge_proxy_stream.py; do
+  test_merge_proxy_stream.py \
+  test_remote_access.py; do
   echo "== omi-host/$test"
   if ! python3 "$test"; then
     echo "FAILED: omi-host/$test" >&2
