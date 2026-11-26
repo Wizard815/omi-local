@@ -775,6 +775,18 @@ class Watchdog:
         self._save()
         return events
 
+    def run_once(self) -> None:
+        """One round for `--once`: report what this round found, with no side effects.
+
+        A lone round cannot meet OMI_HEALTH_FAIL_AFTER (the streak lives only in the daemon's
+        memory), so it is judged on its own; and it neither alerts nor rewrites the state file,
+        which the running daemon owns.
+        """
+        for tracker in self.trackers.values():
+            tracker.fail_after = 1
+        self.notifiers, self.state_file = [], ""
+        self.run_round()
+
     def dispatch(self, kind: str, title: str, message: str, payload: dict) -> None:
         log(f"alert {kind}: {title}: {message}")
         for n in self.notifiers:
@@ -961,7 +973,7 @@ def main(argv=None) -> int:
         watchdog.dispatch("test", title, "If you can read this, alerts reach you.", {"source": "omi-health", "event": "test", "title": title})
         return 0 if all(d["ok"] for d in watchdog.deliveries) else 1
     if args.once:
-        watchdog.run_round()
+        watchdog.run_once()
         print(json.dumps(watchdog.status(), indent=2))
         return 1 if watchdog.overall() == DOWN else 0
     bind = env("OMI_HEALTH_BIND", "0.0.0.0")

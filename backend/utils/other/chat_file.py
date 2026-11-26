@@ -57,6 +57,10 @@ class UnsupportedChatFileError(Exception):
     """
 
 
+class UnreadableChatImageError(Exception):
+    """Pillow knows the image format but cannot decode the bytes (damaged or truncated file)."""
+
+
 class StaleChatFileError(Exception):
     """Provider file_id is gone or no longer readable (deleted / 404)."""
 
@@ -215,6 +219,13 @@ class File:
             assert img.format is not None  # PIL.Image opened from a path always has a format
             file_format = img.format.lower()
 
+            try:
+                img.load()  # decode the pixels now: a damaged or cut-short file fails here
+            except UnidentifiedImageError:
+                raise
+            except OSError as error:
+                raise UnreadableChatImageError(str(error)) from error
+
             img.thumbnail(size)
             self.thumbnail_name = self._to_snake_case(f"{file_name}_thumbnail.{file_format}")
 
@@ -273,6 +284,11 @@ class FileChatTool:
             except UnidentifiedImageError as error:
                 # An image mime type Pillow has no decoder for (.heic from an iPhone camera roll).
                 raise _unsupported_chat_file_error(file_path) from error
+            except UnreadableChatImageError as error:
+                # A known format whose bytes do not decode (damaged, or a partial upload).
+                raise UnsupportedChatFileError(
+                    "This image could not be read: it may be damaged or incomplete."
+                ) from error
             file.purpose = "vision"
         elif file.is_document():
             file.purpose = "user_data"

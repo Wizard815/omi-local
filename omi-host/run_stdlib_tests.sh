@@ -11,6 +11,7 @@ for test in \
   test_backup.py \
   test_caldav_env.py \
   test_caldav_demo_legacy_ref.py \
+  test_compose_storage.py \
   test_egress_guard.py \
   test_health_watchdog.py \
   test_maintenance.py \

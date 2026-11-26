@@ -99,6 +99,11 @@ services:
       # wants both on, so name them rather than leave them unset.
       BUCKET_SPEECH_PROFILES: ${BUCKET_SPEECH_PROFILES:-omi-speech-profiles}
       BUCKET_MEMORIES_RECORDINGS: ${BUCKET_MEMORIES_RECORDINGS:-omi-memories-recordings}
+      # App logos and thumbnails (creating an app in the app store) and chat
+      # attachments: unset, those uploads end in a 500.
+      BUCKET_PLUGINS_LOGOS: ${BUCKET_PLUGINS_LOGOS:-omi-app-logos}
+      BUCKET_APP_THUMBNAILS: ${BUCKET_APP_THUMBNAILS:-omi-app-thumbnails}
+      BUCKET_CHAT_FILES: ${BUCKET_CHAT_FILES:-omi-chat-files}
       CHROMA_DATA_PATH: ${CHROMA_DATA_PATH:-/data/chroma/vector_db}
       # A slow local model (SLOW-HARDWARE.md): the longest one model call may
       # take; every LLM deadline and the HTTP limit (3x) derive from it.

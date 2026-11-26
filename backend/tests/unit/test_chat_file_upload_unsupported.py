@@ -105,6 +105,27 @@ def test_heic_photo_is_rejected_as_bad_request(chat_client, route, monkeypatch):
     module.chat_db.add_multi_files.assert_not_called()
 
 
+# A PNG signature and header whose image data is cut off: Pillow identifies it, then fails to
+# decode it with OSError("broken data stream ..."), which used to escape as a 500.
+DAMAGED_PNG_BYTES = bytes.fromhex(
+    '89504e470d0a1a0a0000000d4948445200000001000000010806000000'
+    '1f15c4890000000d49444154789c6360000002000154a24f5d0000000049454e44ae426082'
+)
+
+
+@pytest.mark.parametrize('route', ['/v2/files', '/v1/files'])
+def test_damaged_image_is_rejected_as_bad_request(chat_client, route, monkeypatch):
+    client, module = chat_client
+    chat_file = sys.modules['utils.other.chat_file']
+    monkeypatch.setattr(chat_file.openai, 'files', SimpleNamespace(create=_unreachable))
+
+    response = client.post(route, files={'files': ('photo.png', DAMAGED_PNG_BYTES, 'image/png')})
+
+    assert response.status_code == 400
+    assert 'could not be read' in response.json()['detail']
+    module.chat_db.add_multi_files.assert_not_called()
+
+
 @pytest.mark.parametrize('route', ['/v2/files', '/v1/files'])
 def test_provider_rejected_extension_is_bad_request(chat_client, route, monkeypatch):
     client, module = chat_client
