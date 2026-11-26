@@ -3872,6 +3872,36 @@ export interface LlmUsageResponse {
   top_features?: Array<LlmUsageFeatureResponse>;
 }
 
+export interface LocalLoginRequest {
+  password: string;
+  username: string;
+}
+
+export interface LocalLoginResponse {
+  session_token: string;
+}
+
+export interface LocalUsageDayResponse {
+  counts?: Record<string, number>;
+  day: string;
+  total?: number;
+}
+
+export interface LocalUsageRecentEventResponse {
+  at?: string | null;
+  event?: string | null;
+  properties?: Record<string, unknown>;
+}
+
+export interface LocalUsageResponse {
+  days?: Array<LocalUsageDayResponse>;
+  enabled: boolean;
+  recent?: Array<LocalUsageRecentEventResponse>;
+  retention_days: number;
+  totals?: Record<string, number>;
+  window_days: number;
+}
+
 export interface LocationContextConsentResponse {
   disclosed_providers?: Array<unknown>;
   enabled: boolean;
@@ -7951,6 +7981,11 @@ export interface OmiApiSchemas {
   "LlmUsageFeatureResponse": LlmUsageFeatureResponse;
   "LlmUsageRecordResponse": LlmUsageRecordResponse;
   "LlmUsageResponse": LlmUsageResponse;
+  "LocalLoginRequest": LocalLoginRequest;
+  "LocalLoginResponse": LocalLoginResponse;
+  "LocalUsageDayResponse": LocalUsageDayResponse;
+  "LocalUsageRecentEventResponse": LocalUsageRecentEventResponse;
+  "LocalUsageResponse": LocalUsageResponse;
   "LocationContextConsentResponse": LocationContextConsentResponse;
   "LocationContextConsentUpdate": LocationContextConsentUpdate;
   "MaterializableProactiveIntent": MaterializableProactiveIntent;
@@ -9332,6 +9367,15 @@ export interface OmiApiPaths {
       responses: {
         "200": AttentionRetryResponse;
         "401": void;
+        "422": HTTPValidationError;
+      };
+    };
+  };
+  "/v1/auth/local-login": {
+    post: {
+      operationId: "local_login_v1_auth_local_login_post";
+      responses: {
+        "200": LocalLoginResponse;
         "422": HTTPValidationError;
       };
     };
@@ -13255,7 +13299,7 @@ export interface OmiApiPaths {
     get: {
       operationId: "get_my_local_usage_v1_users_me_local_usage_get";
       responses: {
-        "200": unknown;
+        "200": LocalUsageResponse;
         "401": void;
         "422": HTTPValidationError;
       };
@@ -16279,6 +16323,23 @@ export async function retry_v1_attention_items__item_id__retry_post(path: { item
       ...(header.X_Device_Id_Hash !== undefined ? { "X-Device-Id-Hash": String(header.X_Device_Id_Hash) } : {}),
       ...(header.X_App_Version !== undefined ? { "X-App-Version": String(header.X_App_Version) } : {}),
     },
+  });
+  if (!_res.ok) throw new OmiApiError(_res.status, _res);
+  return _res.status === 204 ? (undefined as any) : await _res.json();
+}
+
+export async function local_login_v1_auth_local_login_post(body: LocalLoginRequest, init?: OmiApiClientInit): Promise<LocalLoginResponse> {
+  const _base = init?.baseURL ?? "";
+  const _path = `/v1/auth/local-login`;
+  const _search = "";
+  const _res = await fetch(`${_base}${_path}${_search}`, {
+    method: "POST",
+    headers: {
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+      ...init?.headers,
+    },
+    body: body ? JSON.stringify(body) : undefined,
   });
   if (!_res.ok) throw new OmiApiError(_res.status, _res);
   return _res.status === 204 ? (undefined as any) : await _res.json();
@@ -23959,7 +24020,7 @@ export async function get_total_llm_cost_v1_users_me_llm_usage_total_get(header:
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
-export async function get_my_local_usage_v1_users_me_local_usage_get(query: { days?: number }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<unknown> {
+export async function get_my_local_usage_v1_users_me_local_usage_get(query: { days?: number }, header: { authorization?: string, X_App_Platform?: string, X_Device_Id_Hash?: string, X_App_Version?: string }, init?: OmiApiClientInit): Promise<LocalUsageResponse> {
   const _base = init?.baseURL ?? "";
   const _path = `/v1/users/me/local-usage`;
   const _params = query ? Object.entries(query)
@@ -26471,4 +26532,4 @@ export async function get_speech_profile_v4_speech_profile_get(header: { authori
   return _res.status === 204 ? (undefined as any) : await _res.json();
 }
 
-// Total: 601 client methods generated.
+// Total: 602 client methods generated.

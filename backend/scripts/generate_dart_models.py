@@ -100,6 +100,10 @@ SCHEMA_GROUPS = {
             'AgentJobsResponse',
             'AgentJobResponse',
             'AnswerAgentApprovalRequest',
+            # Your own usage on this server (Settings > Server usage).
+            'LocalUsageDayResponse',
+            'LocalUsageRecentEventResponse',
+            'LocalUsageResponse',
         ),
     },
     **additional_schema_groups(DEFAULT_OUTPUT_DIR),

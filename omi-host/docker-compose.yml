@@ -184,6 +184,15 @@ services:
       ORB_URL: ${ORB_URL:-}
       # An approved day summary waits this long before it leaves (Approve all's Undo is 10 minutes).
       OMI_OUTBOUND_DAY_DELAY_SECONDS: ${OMI_OUTBOUND_DAY_DELAY_SECONDS:-600}
+      # Home Assistant (HOME-ASSISTANT.md): events out, read context and actions that wait for
+      # the user's OK. Its LAN address must also be in OMI_WEBHOOK_ALLOWED_PRIVATE_NETWORKS.
+      OMI_HA_URL: ${OMI_HA_URL:-}
+      OMI_HA_TOKEN: ${OMI_HA_TOKEN:-}
+      OMI_HA_READ_ALLOW: ${OMI_HA_READ_ALLOW:-}
+      OMI_HA_ACTION_DOMAINS: ${OMI_HA_ACTION_DOMAINS:-}
+      OMI_HA_AUTO_APPROVE: ${OMI_HA_AUTO_APPROVE:-}
+      OMI_HA_EVENTS: ${OMI_HA_EVENTS:-}
+      OMI_HA_TIMEOUT_SECONDS: ${OMI_HA_TIMEOUT_SECONDS:-}
       # Hourly daily-recap job, run in-process (no Cloud Scheduler here). The
       # recap is generated at each user's chosen local hour (default 22:00) —
       # set 0 to disable.

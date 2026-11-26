@@ -102,6 +102,7 @@ _SYS_MODULE_NAMES = [
     "database.vector_db",
     "database.action_items",
     "database.notifications",
+    "database.day_reviews",
     "utils",
     "utils.notifications",
     "utils.conversations",
@@ -111,6 +112,7 @@ _SYS_MODULE_NAMES = [
     "utils.conversations.mcp_transcript_search",
     "utils.conversations.transcript_chunks",
     "utils.conversations.transcript_for_llm",
+    "utils.conversations.day_rollup",
     "utils.retrieval",
     "utils.retrieval.tools",
     "utils.retrieval.tools.calendar_tools",
@@ -199,6 +201,11 @@ action_items_db.update_action_item = MagicMock(return_value=True)
 notifications_db = _stub_module("database.notifications")
 notifications_db.get_user_time_zone = MagicMock(return_value="UTC")
 importlib.import_module("database").notifications = notifications_db
+
+# Stub database.day_reviews: no approved day, so the real day_rollup (loaded
+# below) keeps every discarded conversation hidden, as before day roll-up.
+day_reviews_db = _stub_module("database.day_reviews")
+day_reviews_db.get_day_review = MagicMock(return_value=None)
 
 # Stub notifications
 notif_mod = _stub_module("utils.notifications")
@@ -452,6 +459,10 @@ _load_module_from_file("utils.user_clock", BACKEND_DIR / "utils" / "user_clock.p
 retrieval_safety = _load_module_from_file(
     "utils.retrieval.safety",
     BACKEND_DIR / "utils" / "retrieval" / "safety.py",
+)
+_load_module_from_file(
+    "utils.conversations.day_rollup",
+    BACKEND_DIR / "utils" / "conversations" / "day_rollup.py",
 )
 conversations_svc = _load_module_from_file(
     "utils.retrieval.tool_services.conversations",

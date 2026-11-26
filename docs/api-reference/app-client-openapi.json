@@ -24016,6 +24016,144 @@
         "title": "LlmUsageResponse",
         "type": "object"
       },
+      "LocalLoginRequest": {
+        "description": "Self-hosted username/password login — see utils/local_auth.py for the\nfull design rationale. This is the one endpoint on this backend meant to\nbe reachable directly from the open internet with no prior\nauthentication, so responses stay generic by design: never reveal\nwhether a username exists, never surface internal error detail.",
+        "properties": {
+          "password": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          },
+          "username": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "LocalLoginRequest",
+        "type": "object"
+      },
+      "LocalLoginResponse": {
+        "properties": {
+          "session_token": {
+            "title": "Session Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_token"
+        ],
+        "title": "LocalLoginResponse",
+        "type": "object"
+      },
+      "LocalUsageDayResponse": {
+        "properties": {
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "day": {
+            "title": "Day",
+            "type": "string"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "day"
+        ],
+        "title": "LocalUsageDayResponse",
+        "type": "object"
+      },
+      "LocalUsageRecentEventResponse": {
+        "properties": {
+          "at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          },
+          "event": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event"
+          },
+          "properties": {
+            "additionalProperties": true,
+            "title": "Properties",
+            "type": "object"
+          }
+        },
+        "title": "LocalUsageRecentEventResponse",
+        "type": "object"
+      },
+      "LocalUsageResponse": {
+        "properties": {
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/LocalUsageDayResponse"
+            },
+            "title": "Days",
+            "type": "array"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "recent": {
+            "items": {
+              "$ref": "#/components/schemas/LocalUsageRecentEventResponse"
+            },
+            "title": "Recent",
+            "type": "array"
+          },
+          "retention_days": {
+            "title": "Retention Days",
+            "type": "integer"
+          },
+          "totals": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Totals",
+            "type": "object"
+          },
+          "window_days": {
+            "title": "Window Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "enabled",
+          "retention_days",
+          "window_days"
+        ],
+        "title": "LocalUsageResponse",
+        "type": "object"
+      },
       "LocationContextConsentResponse": {
         "properties": {
           "disclosed_providers": {
@@ -53828,6 +53966,48 @@
         "summary": "Retry",
         "tags": [
           "processing"
+        ]
+      }
+    },
+    "/v1/auth/local-login": {
+      "post": {
+        "operationId": "local_login_v1_auth_local_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocalLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocalLoginResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [],
+        "summary": "Local Login",
+        "tags": [
+          "authentication"
         ]
       }
     },
@@ -88482,7 +88662,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/LocalUsageResponse"
+                }
               }
             },
             "description": "Successful Response"
