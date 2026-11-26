@@ -258,6 +258,31 @@ def test_watchdog_round_delivers_retries_and_reports_failures():
     assert "FAILED" in page
 
 
+def test_once_reports_this_rounds_problem_without_alerting_or_saving():
+    # `watchdog.py --once` must exit 1 when something is down now (HEALTH.md), though a lone
+    # round cannot meet OMI_HEALTH_FAIL_AFTER, and must leave the daemon's alerts and state alone.
+    root = tempfile.mkdtemp()
+    ROOTS.append(root)
+    state_file = os.path.join(root, "state.json")
+    os.environ["OMI_HEALTH_STATE_FILE"] = state_file
+    try:
+        daemon = wd.Watchdog(checks=FakeChecks(), notifiers=[])
+        daemon.run_round(1000)
+        saved = open(state_file).read()
+        with capture_server() as base:
+            checks = FakeChecks()
+            checks.states["redis"] = DOWN
+            once = wd.Watchdog(checks=checks, notifiers=[wd.Webhook(base + "/hook")])
+            once.run_once()
+            assert Capture.requests == [], Capture.requests
+    finally:
+        os.environ.pop("OMI_HEALTH_STATE_FILE")
+    st = once.status()
+    assert st["overall"] == DOWN, st
+    assert {c["name"]: c["state"] for c in st["checks"]}["redis"] == DOWN
+    assert open(state_file).read() == saved
+
+
 def test_digest_is_off_by_default_and_once_a_day():
     dog = wd.Watchdog(checks=FakeChecks(), notifiers=[])
     sent = []
@@ -471,6 +496,7 @@ def main() -> None:
         test_ntfy_gotify_webhook_requests,
         test_notifiers_from_env_only_configured_ones,
         test_watchdog_round_delivers_retries_and_reports_failures,
+        test_once_reports_this_rounds_problem_without_alerting_or_saving,
         test_digest_is_off_by_default_and_once_a_day,
         test_checks_speak_each_protocol,
         test_disk_thresholds,
