@@ -71,7 +71,12 @@ from utils.retrieval.tools import (
     process_recent_conversations,
 )
 from utils.retrieval.tools.app_tools import load_app_tools, get_tool_status_message
-from utils.device_tools import DEVICE_TOOL_NAMES, build_device_tools, device_tool_timeout_for_stream_budget
+from utils.device_tools import (
+    DEVICE_TOOL_NAMES,
+    build_device_tools,
+    device_tool_timeout_for_stream_budget,
+    device_tools_prompt,
+)
 from utils.retrieval.tools.device_calendar_tools import device_calendar_tools_for
 from utils.retrieval.tools.home_assistant_tools import HOME_ASSISTANT_TOOL_NAMES, home_assistant_tools_for
 from utils.retrieval.tool_result_boundaries import preserve_chat_memory_tool_result_boundary
@@ -1732,15 +1737,7 @@ You have fetch_url_tool available. When the user shares any URL (starting with h
     if device_tools:
         device_tool_list = ', '.join(sorted(t.name for t in device_tools))
         logger.info('Device tools available uid=%s tools=%s', uid, device_tool_list)
-        system_prompt += f"""
-
-<device_tools>
-These tools run on the user's own device, not on the server: {device_tool_list}
-
-propose_message opens the system compose sheet — it does NOT send. Only report a
-message as sent when the tool result says status=sent. If it says cancelled, the
-user chose not to send; acknowledge that rather than retrying.
-</device_tools>"""
+        system_prompt += device_tools_prompt(device_tool_list)
 
     tool_schemas, tool_registry = _convert_tools(core_tools + device_tools, app_tools)
     tool_registry = dict(tool_registry)

@@ -17167,4 +17167,194 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => 'A napod egy oldalon';
+
+  @override
+  String get omiTodayCustomize => 'Omi Today testreszabása';
+
+  @override
+  String get setPhoneAlarm => 'Ébresztő beállítása';
+
+  @override
+  String get phoneAlarmUnavailable => 'Nem sikerült megnyitni az Óra alkalmazást';
+
+  @override
+  String get taskReminders => 'Feladat-emlékeztetők';
+
+  @override
+  String get taskRemindersSubtitle => 'Emlékeztessen ezen a telefonon, amikor egy feladat esedékes';
+
+  @override
+  String get taskReminderLead => 'Korábbi emlékeztető';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return '$duration előtte';
+  }
+
+  @override
+  String get taskReminderAtDueTime => 'Csak a határidőkor';
+
+  @override
+  String get taskReminderDueTitle => 'Esedékes feladat';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return 'Esedékes $duration múlva';
+  }
+
+  @override
+  String get taskReminderExactAlarms => 'Pontos ébresztők';
+
+  @override
+  String get taskReminderExactAlarmsOff => 'Ki: az emlékeztetők néhány percet késhetnek. Koppints az engedélyezéshez.';
+
+  @override
+  String get taskReminderNotificationsOff =>
+      'Az Omi értesítései ki vannak kapcsolva, így az emlékeztetők nem jelenhetnek meg. Engedélyezd őket a rendszerbeállításokban.';
+
+  @override
+  String get todayAgendaTitle => 'Mai napirend';
+
+  @override
+  String get todayAgendaEmpty => 'Ma nincs semmi betervezve';
+
+  @override
+  String get todayAgendaEmptyMessage => 'Ma nincs esemény vagy esedékes feladat.';
+
+  @override
+  String get todayEvents => 'Események';
+
+  @override
+  String get todayTasksDue => 'Mai feladatok';
+
+  @override
+  String get todayAllDay => 'Egész nap';
+
+  @override
+  String get todayFamilyUnreachable => 'A családi naptár most nem érhető el.';
+
+  @override
+  String get todaySummaryTitle => 'A napod';
+
+  @override
+  String get todayNewsTitle => 'Hírek';
+
+  @override
+  String get todayNewsEmpty => 'Nincsenek hírcsatornák';
+
+  @override
+  String get todayNewsEmptyMessage => 'Adj hozzá RSS- vagy Atom-csatornákat, hogy itt lásd a címeiket.';
+
+  @override
+  String get todayNewsAddFeeds => 'Csatornák hozzáadása';
+
+  @override
+  String get todayNewsError => 'Nem sikerült betölteni a csatornákat.';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return 'Nem olvasható csatornák: $count';
+  }
+
+  @override
+  String get todayNothingYet => 'Még nincs mit mutatni';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => 'Nincs beállítva';
+
+  @override
+  String get todayCompanionSetUpMessage => 'Add meg a címét és a tokent az Omi Today beállításaiban.';
+
+  @override
+  String get todaySetUp => 'Beállítás';
+
+  @override
+  String get todayCompanionUnauthorized => 'A tokent elutasították. Ellenőrizd az Omi Today beállításaiban.';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return 'Nem érhető el: $name.';
+  }
+
+  @override
+  String get todayNetWorth => 'Nettó vagyon';
+
+  @override
+  String get todayBills30d => 'Számlák a következő 30 napban';
+
+  @override
+  String get todaySavingsFree => 'Szabad megtakarítás';
+
+  @override
+  String get todaySpentThisMonth => 'E havi költés';
+
+  @override
+  String todayNextBill(String name) {
+    return 'Következő számla: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'Riasztások: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => 'Ma még nincs összefoglaló';
+
+  @override
+  String get todayCards => 'Kártyák';
+
+  @override
+  String todayReorderCard(String name) {
+    return '$name áthelyezése';
+  }
+
+  @override
+  String get todayNewsFeeds => 'Hírcsatornák';
+
+  @override
+  String get todayAddFeed => 'Csatorna hozzáadása';
+
+  @override
+  String get todayFeedUrl => 'Csatorna címe';
+
+  @override
+  String get todayAddressInvalid => 'Adj meg egy http:// vagy https:// kezdetű címet';
+
+  @override
+  String get todayFeedRemoved => 'Csatorna eltávolítva';
+
+  @override
+  String get todayRemoveFeed => 'Csatorna eltávolítása';
+
+  @override
+  String get todayCompanionAddress => 'Cím';
+
+  @override
+  String get todayCompanionToken => 'Token';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'Az Omi Today nem olvassa tovább: $name, amíg újra meg nem adsz egy tokent.';
+  }
+
+  @override
+  String get todayCoinpileHint =>
+      'A Coinpile-ból olvas summary hatókörű tokennel (Coinpile: Beállítások, Home Assistant és API).';
+
+  @override
+  String get todayPonderingHint =>
+      'Az Orb reggeli összefoglalóját mutatja. Használd valamelyik API-tokenjét (ORB_API_TOKENS).';
 }

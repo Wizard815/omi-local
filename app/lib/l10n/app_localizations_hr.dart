@@ -17143,4 +17143,195 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => 'Vaš dan na jednoj stranici';
+
+  @override
+  String get omiTodayCustomize => 'Prilagodi Omi Today';
+
+  @override
+  String get setPhoneAlarm => 'Postavi alarm';
+
+  @override
+  String get phoneAlarmUnavailable => 'Aplikacija Sat nije se mogla otvoriti';
+
+  @override
+  String get taskReminders => 'Podsjetnici za zadatke';
+
+  @override
+  String get taskRemindersSubtitle => 'Podsjeti me na ovom telefonu kad zadatak dospije';
+
+  @override
+  String get taskReminderLead => 'Podsjeti ranije';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return '$duration prije';
+  }
+
+  @override
+  String get taskReminderAtDueTime => 'Samo u roku';
+
+  @override
+  String get taskReminderDueTitle => 'Zadatak dospijeva';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return 'Dospijeva za $duration';
+  }
+
+  @override
+  String get taskReminderExactAlarms => 'Točni alarmi';
+
+  @override
+  String get taskReminderExactAlarmsOff =>
+      'Isključeno: podsjetnici mogu kasniti nekoliko minuta. Dodirnite za dopuštenje.';
+
+  @override
+  String get taskReminderNotificationsOff =>
+      'Obavijesti za Omi su isključene pa se podsjetnici ne mogu prikazati. Dopustite ih u postavkama sustava.';
+
+  @override
+  String get todayAgendaTitle => 'Današnji raspored';
+
+  @override
+  String get todayAgendaEmpty => 'Danas ništa nije zakazano';
+
+  @override
+  String get todayAgendaEmptyMessage => 'Danas nema događaja ni zadataka.';
+
+  @override
+  String get todayEvents => 'Događaji';
+
+  @override
+  String get todayTasksDue => 'Zadaci za danas';
+
+  @override
+  String get todayAllDay => 'Cijeli dan';
+
+  @override
+  String get todayFamilyUnreachable => 'Obiteljski kalendar trenutno nije dostupan.';
+
+  @override
+  String get todaySummaryTitle => 'Vaš dan';
+
+  @override
+  String get todayNewsTitle => 'Vijesti';
+
+  @override
+  String get todayNewsEmpty => 'Nema izvora vijesti';
+
+  @override
+  String get todayNewsEmptyMessage => 'Dodajte RSS ili Atom izvore da biste ovdje vidjeli naslove.';
+
+  @override
+  String get todayNewsAddFeeds => 'Dodaj izvore';
+
+  @override
+  String get todayNewsError => 'Izvori se nisu mogli učitati.';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return 'Izvori koji se nisu mogli pročitati: $count';
+  }
+
+  @override
+  String get todayNothingYet => 'Još nema ničega za prikaz';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => 'Nije postavljeno';
+
+  @override
+  String get todayCompanionSetUpMessage => 'Dodajte adresu i token u postavkama Omi Today.';
+
+  @override
+  String get todaySetUp => 'Postavi';
+
+  @override
+  String get todayCompanionUnauthorized => 'Token je odbijen. Provjerite ga u postavkama Omi Today.';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return 'Nije moguće doći do $name.';
+  }
+
+  @override
+  String get todayNetWorth => 'Neto imovina';
+
+  @override
+  String get todayBills30d => 'Računi u sljedećih 30 dana';
+
+  @override
+  String get todaySavingsFree => 'Slobodna ušteđevina';
+
+  @override
+  String get todaySpentThisMonth => 'Potrošeno ovaj mjesec';
+
+  @override
+  String todayNextBill(String name) {
+    return 'Sljedeći račun: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'Upozorenja: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => 'Danas još nema pregleda';
+
+  @override
+  String get todayCards => 'Kartice';
+
+  @override
+  String todayReorderCard(String name) {
+    return 'Premjesti $name';
+  }
+
+  @override
+  String get todayNewsFeeds => 'Izvori vijesti';
+
+  @override
+  String get todayAddFeed => 'Dodaj izvor';
+
+  @override
+  String get todayFeedUrl => 'Adresa izvora';
+
+  @override
+  String get todayAddressInvalid => 'Unesite adresu koja počinje s http:// ili https://';
+
+  @override
+  String get todayFeedRemoved => 'Izvor uklonjen';
+
+  @override
+  String get todayRemoveFeed => 'Ukloni izvor';
+
+  @override
+  String get todayCompanionAddress => 'Adresa';
+
+  @override
+  String get todayCompanionToken => 'Token';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'Omi Today prestat će čitati $name dok ponovno ne dodate token.';
+  }
+
+  @override
+  String get todayCoinpileHint =>
+      'Čita iz Coinpilea tokenom s opsegom summary (Coinpile: Postavke, Home Assistant i API).';
+
+  @override
+  String get todayPonderingHint =>
+      'Prikazuje Orbov jutarnji pregled. Koristite jedan od njegovih API tokena (ORB_API_TOKENS).';
 }

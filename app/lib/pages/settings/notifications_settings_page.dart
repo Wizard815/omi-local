@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:omi/utils/platform/platform_manager.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +10,7 @@ import 'package:omi/utils/l10n_extensions.dart';
 import 'package:omi/widgets/shimmer_with_timeout.dart';
 import 'package:omi/ui/ui.dart';
 import 'package:omi/pages/settings/widgets/live_activity_settings.dart';
+import 'package:omi/pages/settings/widgets/task_reminders_settings.dart';
 import 'package:omi/pages/conversations/widgets/daily_recap_recovery_action.dart';
 
 class NotificationsSettingsPage extends StatefulWidget {
@@ -242,6 +245,10 @@ class _NotificationsSettingsPageState extends State<NotificationsSettingsPage> {
                       _buildFrequencyCard(),
                       const SizedBox(height: OmiSpacing.xxl),
                       _buildDailySummaryGroup(),
+                      if (Platform.isAndroid) ...[
+                        const SizedBox(height: OmiSpacing.xxl),
+                        const TaskRemindersSettingsGroup(),
+                      ],
                     ],
                   ),
           ),

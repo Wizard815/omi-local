@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:omi/services/device_tools/device_tool_surface.dart';
+import 'package:omi/services/reminders/phone_alarm.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -222,6 +223,59 @@ void main() {
 
       expect(result.requiredPermission, isNull);
       expect(result.payload.containsKey('next_tool'), isFalse);
+    });
+  });
+
+  group('Android clock tools', () {
+    const clockChannel = MethodChannel('com.omi/phone_alarm');
+    late List<MethodCall> clockCalls;
+
+    setUp(() {
+      clockCalls = [];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(clockChannel,
+          (call) async {
+        clockCalls.add(call);
+        return {'ok': true, 'status': 'opened'};
+      });
+    });
+
+    tearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(clockChannel, null);
+    });
+
+    DeviceToolSurface android() => DeviceToolSurface(
+        channel: channel, supported: false, clock: PhoneAlarm(channel: clockChannel, supported: true));
+
+    test('declares only set_alarm and set_timer, both behind the clock app', () async {
+      final tools = await android().availableTools();
+      expect(tools.map((t) => t.name), [DeviceToolSurface.setAlarmTool, DeviceToolSurface.setTimerTool]);
+      expect(tools.every((t) => t.requiresUserConfirmation), isTrue);
+    });
+
+    test('set_alarm opens the clock app with the values and a label', () async {
+      final result = await android().execute('set_alarm', {'hour': 7, 'minute': 30, 'label': 'Gym'});
+      expect(result.ok, isTrue);
+      expect(result.payload['status'], 'opened');
+      expect(clockCalls.single.method, 'setAlarm');
+      expect(clockCalls.single.arguments, {'hour': 7, 'minute': 30, 'message': 'Gym'});
+    });
+
+    test('set_timer takes whole seconds; bad arguments fail without opening anything', () async {
+      expect((await android().execute('set_timer', {'seconds': 600})).ok, isTrue);
+      expect((await android().execute('set_timer', {'seconds': 1.5})).reason, 'invalid_length');
+      expect((await android().execute('set_alarm', {'hour': '7'})).reason, 'invalid_time');
+      expect((await android().execute('set_alarm', {'hour': 25, 'minute': 0})).reason, 'invalid_time');
+      expect(clockCalls.map((c) => c.method), ['setTimer']);
+    });
+
+    test('messaging tools stay unavailable on Android', () async {
+      expect(
+          (await android().execute('propose_message', {
+            'to': ['x'],
+            'text': 'y'
+          }))
+              .reason,
+          'unsupported_platform');
     });
   });
 }

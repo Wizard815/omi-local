@@ -16847,4 +16847,191 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => '一页看完你的一天';
+
+  @override
+  String get omiTodayCustomize => '自定义 Omi Today';
+
+  @override
+  String get setPhoneAlarm => '设置手机闹钟';
+
+  @override
+  String get phoneAlarmUnavailable => '无法打开时钟应用';
+
+  @override
+  String get taskReminders => '任务提醒';
+
+  @override
+  String get taskRemindersSubtitle => '任务到期时在此手机上提醒我';
+
+  @override
+  String get taskReminderLead => '提前提醒';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return '提前 $duration';
+  }
+
+  @override
+  String get taskReminderAtDueTime => '仅在到期时';
+
+  @override
+  String get taskReminderDueTitle => '任务到期';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return '$duration后到期';
+  }
+
+  @override
+  String get taskReminderExactAlarms => '精确闹钟';
+
+  @override
+  String get taskReminderExactAlarmsOff => '已关闭：提醒可能会晚几分钟。轻触以允许。';
+
+  @override
+  String get taskReminderNotificationsOff => 'Omi 的通知已关闭，无法显示任务提醒。请在系统设置中允许。';
+
+  @override
+  String get todayAgendaTitle => '今日日程';
+
+  @override
+  String get todayAgendaEmpty => '今天没有安排';
+
+  @override
+  String get todayAgendaEmptyMessage => '今天没有活动或到期任务。';
+
+  @override
+  String get todayEvents => '活动';
+
+  @override
+  String get todayTasksDue => '今日任务';
+
+  @override
+  String get todayAllDay => '全天';
+
+  @override
+  String get todayFamilyUnreachable => '暂时无法连接家庭日历。';
+
+  @override
+  String get todaySummaryTitle => '你的一天';
+
+  @override
+  String get todayNewsTitle => '新闻';
+
+  @override
+  String get todayNewsEmpty => '没有新闻源';
+
+  @override
+  String get todayNewsEmptyMessage => '添加 RSS 或 Atom 订阅源后，标题会显示在这里。';
+
+  @override
+  String get todayNewsAddFeeds => '添加订阅源';
+
+  @override
+  String get todayNewsError => '无法加载订阅源。';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return '无法读取的订阅源：$count';
+  }
+
+  @override
+  String get todayNothingYet => '暂无内容';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => '未设置';
+
+  @override
+  String get todayCompanionSetUpMessage => '请在 Omi Today 设置中添加地址和令牌。';
+
+  @override
+  String get todaySetUp => '设置';
+
+  @override
+  String get todayCompanionUnauthorized => '令牌被拒绝。请在 Omi Today 设置中检查。';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return '无法连接 $name。';
+  }
+
+  @override
+  String get todayNetWorth => '净资产';
+
+  @override
+  String get todayBills30d => '未来 30 天的账单';
+
+  @override
+  String get todaySavingsFree => '可用储蓄';
+
+  @override
+  String get todaySpentThisMonth => '本月支出';
+
+  @override
+  String todayNextBill(String name) {
+    return '下一笔账单：$name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return '提醒：$count';
+  }
+
+  @override
+  String get todayNoBriefYet => '今天还没有简报';
+
+  @override
+  String get todayCards => '卡片';
+
+  @override
+  String todayReorderCard(String name) {
+    return '调整 $name 的顺序';
+  }
+
+  @override
+  String get todayNewsFeeds => '新闻源';
+
+  @override
+  String get todayAddFeed => '添加订阅源';
+
+  @override
+  String get todayFeedUrl => '订阅源地址';
+
+  @override
+  String get todayAddressInvalid => '请输入以 http:// 或 https:// 开头的地址';
+
+  @override
+  String get todayFeedRemoved => '已移除订阅源';
+
+  @override
+  String get todayRemoveFeed => '移除订阅源';
+
+  @override
+  String get todayCompanionAddress => '地址';
+
+  @override
+  String get todayCompanionToken => '令牌';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return '在你重新添加令牌之前，Omi Today 将停止读取 $name。';
+  }
+
+  @override
+  String get todayCoinpileHint => '使用具有 summary 范围的令牌从 Coinpile 读取（Coinpile：设置、Home Assistant 和 API）。';
+
+  @override
+  String get todayPonderingHint => '显示 Orb 的晨间简报。请使用它的一个 API 令牌（ORB_API_TOKENS）。';
 }

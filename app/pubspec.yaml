@@ -47,6 +47,7 @@ dependencies:
   pool: ^1.5.1
   collection: ^1.19.1
   http: ^1.4.0
+  xml: ^6.6.1
   intl: ^0.20.2
   permission_handler: ^12.0.0+1
   # Must stay >=2.0.0 — 1.x's iOS registration force-unwraps

@@ -59,6 +59,7 @@ abstract class OmiWidgetProvider : AppWidgetProvider() {
             OmiWidgetKeys.NEXT_EVENT to listOf(OmiNextEventWidget::class.java),
             OmiWidgetKeys.MEMORY to listOf(OmiMemoryWidget::class.java),
             OmiWidgetKeys.AI_SOURCE to listOf(OmiAiSourceWidget::class.java),
+            OmiWidgetKeys.OVERVIEW to listOf(OmiTodayOverviewWidget::class.java),
         )
 
         /** Redraws the widgets that read [key], or every widget when [key] is null. */
@@ -354,6 +355,68 @@ class OmiMemoryWidget : OmiWidgetProvider() {
     }
 }
 
+/**
+ * Today overview (large): the day's agenda (the phone's calendars when Omi may read them, plus the
+ * family calendar from the document), tasks due, the summary line and a headline or two. A tap
+ * on the tasks opens Tasks; anywhere else opens Omi Today.
+ */
+class OmiTodayOverviewWidget : OmiWidgetProvider() {
+    override fun render(context: Context, medium: Boolean): RemoteViews {
+        val data = OmiWidgetData.overview(OmiWidgetStore.read(context, OmiWidgetKeys.OVERVIEW))
+        val now = System.currentTimeMillis()
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(now))
+        val views = RemoteViews(context.packageName, R.layout.omi_widget_overview)
+        val pattern = DateFormat.getBestDateTimePattern(Locale.getDefault(), "EEEEMMMMd")
+        views.setTextViewText(R.id.omi_widget_date, SimpleDateFormat(pattern, Locale.getDefault()).format(Date(now)))
+        views.setOnClickPendingIntent(R.id.omi_widget_root, OmiWidgetLinks.open(context, "/today", 60))
+        if (data == null) {
+            views.setTextViewText(R.id.omi_widget_title, context.getString(R.string.omi_widget_overview_name))
+            show(views, R.id.omi_widget_empty, context.getString(R.string.omi_widget_open))
+            for (id in SECTIONS) views.setViewVisibility(id, View.GONE)
+            return views
+        }
+        views.setTextViewText(R.id.omi_widget_title, data.title)
+        val fresh = data.day == today
+        val time = DateFormat.getTimeFormat(context)
+        val phone = OmiNextEvent.readToday(context, now).map {
+            OverviewEvent(it.title, it.startMs, if (it.startMs == 0L) data.allDayLabel else time.format(Date(it.startMs)))
+        }
+        val agenda = OmiWidgetData.overviewAgenda(phone, if (fresh) data.events else emptyList(), now)
+        val tasks = if (fresh) data.tasks else emptyList()
+        section(views, R.id.omi_widget_events_label, R.id.omi_widget_events, data.eventsLabel,
+            OmiWidgetData.lines(agenda.map { it.detail to it.title }))
+        section(views, R.id.omi_widget_tasks_label, R.id.omi_widget_tasks, data.tasksLabel,
+            OmiWidgetData.lines(tasks.map { (it.detail ?: "") to it.title }))
+        show(views, R.id.omi_widget_summary, if (fresh) data.summary else "")
+        section(views, R.id.omi_widget_news_label, R.id.omi_widget_news, data.newsLabel,
+            data.headlines.joinToString("\n") { if (it.source.isBlank()) it.title else "${it.title} · ${it.source}" })
+        val nothing = agenda.isEmpty() && tasks.isEmpty() && (!fresh || data.summary.isBlank()) && data.headlines.isEmpty()
+        show(views, R.id.omi_widget_empty, if (nothing) data.empty else "")
+        if (tasks.isNotEmpty()) views.setOnClickPendingIntent(R.id.omi_widget_tasks, OmiWidgetLinks.open(context, "/action-items", 61))
+        return views
+    }
+
+    private fun section(views: RemoteViews, labelId: Int, bodyId: Int, label: String, body: String) {
+        val visible = if (body.isBlank()) View.GONE else View.VISIBLE
+        views.setViewVisibility(labelId, visible)
+        views.setViewVisibility(bodyId, visible)
+        views.setTextViewText(labelId, label)
+        views.setTextViewText(bodyId, body)
+    }
+
+    private fun show(views: RemoteViews, id: Int, text: String) {
+        views.setViewVisibility(id, if (text.isBlank()) View.GONE else View.VISIBLE)
+        views.setTextViewText(id, text)
+    }
+
+    companion object {
+        private val SECTIONS = intArrayOf(
+            R.id.omi_widget_events_label, R.id.omi_widget_events, R.id.omi_widget_tasks_label, R.id.omi_widget_tasks,
+            R.id.omi_widget_summary, R.id.omi_widget_news_label, R.id.omi_widget_news,
+        )
+    }
+}
+
 /** The next event in the phone's calendars within a day, only when Omi already may read them. */
 internal object OmiNextEvent {
     data class Event(val title: String, val startMs: Long)
@@ -370,6 +433,33 @@ internal object OmiNextEvent {
             intent,
             android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE,
         )
+    }
+
+    /** The phone's timed and all-day events for the rest of today (all-day as start 0), at most [max]. */
+    fun readToday(context: Context, nowMs: Long, max: Int = OmiWidgetData.MAX_ROWS): List<Event> {
+        if (context.checkSelfPermission(Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) return emptyList()
+        val end = java.util.Calendar.getInstance().apply {
+            timeInMillis = nowMs
+            set(java.util.Calendar.HOUR_OF_DAY, 0); set(java.util.Calendar.MINUTE, 0)
+            set(java.util.Calendar.SECOND, 0); set(java.util.Calendar.MILLISECOND, 0)
+            add(java.util.Calendar.DAY_OF_MONTH, 1)
+        }.timeInMillis
+        val uri = CalendarContract.Instances.CONTENT_URI.buildUpon()
+            .appendPath(nowMs.toString()).appendPath(end.toString()).build()
+        val columns = arrayOf(CalendarContract.Instances.TITLE, CalendarContract.Instances.BEGIN, CalendarContract.Instances.ALL_DAY)
+        val out = mutableListOf<Event>()
+        return try {
+            context.contentResolver.query(uri, columns, null, null, "${CalendarContract.Instances.BEGIN} ASC")?.use { cursor ->
+                while (cursor.moveToNext() && out.size < max) {
+                    val title = cursor.getString(0)?.trim().orEmpty()
+                    if (title.isEmpty()) continue
+                    out.add(Event(title, if (cursor.getInt(2) == 1) 0L else cursor.getLong(1)))
+                }
+            }
+            out
+        } catch (_: Exception) {
+            emptyList()
+        }
     }
 
     fun read(context: Context, nowMs: Long): Event? {

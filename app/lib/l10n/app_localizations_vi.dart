@@ -17106,4 +17106,194 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => 'Một ngày của bạn trong một trang';
+
+  @override
+  String get omiTodayCustomize => 'Tùy chỉnh Omi Today';
+
+  @override
+  String get setPhoneAlarm => 'Đặt báo thức';
+
+  @override
+  String get phoneAlarmUnavailable => 'Không mở được ứng dụng Đồng hồ';
+
+  @override
+  String get taskReminders => 'Nhắc việc';
+
+  @override
+  String get taskRemindersSubtitle => 'Nhắc tôi trên điện thoại này khi việc đến hạn';
+
+  @override
+  String get taskReminderLead => 'Nhắc sớm';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return 'Trước $duration';
+  }
+
+  @override
+  String get taskReminderAtDueTime => 'Chỉ đúng giờ hạn';
+
+  @override
+  String get taskReminderDueTitle => 'Việc đến hạn';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return 'Đến hạn sau $duration';
+  }
+
+  @override
+  String get taskReminderExactAlarms => 'Báo thức chính xác';
+
+  @override
+  String get taskReminderExactAlarmsOff => 'Tắt: lời nhắc có thể đến muộn vài phút. Chạm để cho phép.';
+
+  @override
+  String get taskReminderNotificationsOff =>
+      'Thông báo của Omi đang tắt nên không thể hiện lời nhắc việc. Hãy cho phép trong cài đặt hệ thống.';
+
+  @override
+  String get todayAgendaTitle => 'Lịch hôm nay';
+
+  @override
+  String get todayAgendaEmpty => 'Hôm nay không có lịch';
+
+  @override
+  String get todayAgendaEmptyMessage => 'Hôm nay không có sự kiện hay việc đến hạn.';
+
+  @override
+  String get todayEvents => 'Sự kiện';
+
+  @override
+  String get todayTasksDue => 'Việc hôm nay';
+
+  @override
+  String get todayAllDay => 'Cả ngày';
+
+  @override
+  String get todayFamilyUnreachable => 'Hiện không kết nối được lịch gia đình.';
+
+  @override
+  String get todaySummaryTitle => 'Ngày của bạn';
+
+  @override
+  String get todayNewsTitle => 'Tin tức';
+
+  @override
+  String get todayNewsEmpty => 'Chưa có nguồn tin';
+
+  @override
+  String get todayNewsEmptyMessage => 'Thêm nguồn RSS hoặc Atom để xem tiêu đề ở đây.';
+
+  @override
+  String get todayNewsAddFeeds => 'Thêm nguồn';
+
+  @override
+  String get todayNewsError => 'Không tải được các nguồn tin.';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return 'Nguồn không đọc được: $count';
+  }
+
+  @override
+  String get todayNothingYet => 'Chưa có gì để hiển thị';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => 'Chưa thiết lập';
+
+  @override
+  String get todayCompanionSetUpMessage => 'Thêm địa chỉ và token trong cài đặt Omi Today.';
+
+  @override
+  String get todaySetUp => 'Thiết lập';
+
+  @override
+  String get todayCompanionUnauthorized => 'Token bị từ chối. Hãy kiểm tra trong cài đặt Omi Today.';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return 'Không kết nối được $name.';
+  }
+
+  @override
+  String get todayNetWorth => 'Giá trị tài sản ròng';
+
+  @override
+  String get todayBills30d => 'Hóa đơn trong 30 ngày tới';
+
+  @override
+  String get todaySavingsFree => 'Tiền tiết kiệm tự do';
+
+  @override
+  String get todaySpentThisMonth => 'Đã chi tháng này';
+
+  @override
+  String todayNextBill(String name) {
+    return 'Hóa đơn tiếp theo: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'Cảnh báo: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => 'Hôm nay chưa có bản tóm tắt';
+
+  @override
+  String get todayCards => 'Thẻ';
+
+  @override
+  String todayReorderCard(String name) {
+    return 'Sắp xếp lại $name';
+  }
+
+  @override
+  String get todayNewsFeeds => 'Nguồn tin';
+
+  @override
+  String get todayAddFeed => 'Thêm nguồn';
+
+  @override
+  String get todayFeedUrl => 'Địa chỉ nguồn';
+
+  @override
+  String get todayAddressInvalid => 'Nhập địa chỉ bắt đầu bằng http:// hoặc https://';
+
+  @override
+  String get todayFeedRemoved => 'Đã xóa nguồn';
+
+  @override
+  String get todayRemoveFeed => 'Xóa nguồn';
+
+  @override
+  String get todayCompanionAddress => 'Địa chỉ';
+
+  @override
+  String get todayCompanionToken => 'Token';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'Omi Today sẽ ngừng đọc $name cho đến khi bạn thêm lại token.';
+  }
+
+  @override
+  String get todayCoinpileHint =>
+      'Đọc từ Coinpile bằng token có phạm vi summary (Coinpile: Cài đặt, Home Assistant & API).';
+
+  @override
+  String get todayPonderingHint =>
+      'Hiển thị bản tóm tắt buổi sáng của Orb. Dùng một trong các token API của nó (ORB_API_TOKENS).';
 }

@@ -16878,4 +16878,191 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => '하루를 한 페이지에';
+
+  @override
+  String get omiTodayCustomize => 'Omi Today 맞춤 설정';
+
+  @override
+  String get setPhoneAlarm => '휴대폰 알람 설정';
+
+  @override
+  String get phoneAlarmUnavailable => '시계 앱을 열 수 없습니다';
+
+  @override
+  String get taskReminders => '할 일 알림';
+
+  @override
+  String get taskRemindersSubtitle => '할 일 기한이 되면 이 휴대폰에서 알림';
+
+  @override
+  String get taskReminderLead => '미리 알림';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return '$duration 전';
+  }
+
+  @override
+  String get taskReminderAtDueTime => '기한 시각에만';
+
+  @override
+  String get taskReminderDueTitle => '할 일 기한';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return '$duration 후 기한';
+  }
+
+  @override
+  String get taskReminderExactAlarms => '정확한 알람';
+
+  @override
+  String get taskReminderExactAlarmsOff => '꺼짐: 알림이 몇 분 늦을 수 있습니다. 탭하여 허용하세요.';
+
+  @override
+  String get taskReminderNotificationsOff => 'Omi 알림이 꺼져 있어 할 일 알림을 표시할 수 없습니다. 시스템 설정에서 허용하세요.';
+
+  @override
+  String get todayAgendaTitle => '오늘의 일정';
+
+  @override
+  String get todayAgendaEmpty => '오늘 예정된 일이 없습니다';
+
+  @override
+  String get todayAgendaEmptyMessage => '오늘은 일정이나 할 일이 없습니다.';
+
+  @override
+  String get todayEvents => '일정';
+
+  @override
+  String get todayTasksDue => '오늘 할 일';
+
+  @override
+  String get todayAllDay => '종일';
+
+  @override
+  String get todayFamilyUnreachable => '지금은 가족 캘린더에 연결할 수 없습니다.';
+
+  @override
+  String get todaySummaryTitle => '오늘 하루';
+
+  @override
+  String get todayNewsTitle => '뉴스';
+
+  @override
+  String get todayNewsEmpty => '뉴스 피드 없음';
+
+  @override
+  String get todayNewsEmptyMessage => 'RSS 또는 Atom 피드를 추가하면 여기에 헤드라인이 표시됩니다.';
+
+  @override
+  String get todayNewsAddFeeds => '피드 추가';
+
+  @override
+  String get todayNewsError => '피드를 불러올 수 없습니다.';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return '읽지 못한 피드: $count';
+  }
+
+  @override
+  String get todayNothingYet => '아직 표시할 내용이 없습니다';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => '설정 안 됨';
+
+  @override
+  String get todayCompanionSetUpMessage => 'Omi Today 설정에서 주소와 토큰을 추가하세요.';
+
+  @override
+  String get todaySetUp => '설정';
+
+  @override
+  String get todayCompanionUnauthorized => '토큰이 거부되었습니다. Omi Today 설정에서 확인하세요.';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return '$name에 연결할 수 없습니다.';
+  }
+
+  @override
+  String get todayNetWorth => '순자산';
+
+  @override
+  String get todayBills30d => '향후 30일 청구서';
+
+  @override
+  String get todaySavingsFree => '자유 저축';
+
+  @override
+  String get todaySpentThisMonth => '이번 달 지출';
+
+  @override
+  String todayNextBill(String name) {
+    return '다음 청구서: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return '알림: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => '오늘은 아직 브리핑이 없습니다';
+
+  @override
+  String get todayCards => '카드';
+
+  @override
+  String todayReorderCard(String name) {
+    return '$name 순서 변경';
+  }
+
+  @override
+  String get todayNewsFeeds => '뉴스 피드';
+
+  @override
+  String get todayAddFeed => '피드 추가';
+
+  @override
+  String get todayFeedUrl => '피드 주소';
+
+  @override
+  String get todayAddressInvalid => 'http:// 또는 https://로 시작하는 주소를 입력하세요';
+
+  @override
+  String get todayFeedRemoved => '피드를 삭제했습니다';
+
+  @override
+  String get todayRemoveFeed => '피드 삭제';
+
+  @override
+  String get todayCompanionAddress => '주소';
+
+  @override
+  String get todayCompanionToken => '토큰';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return '토큰을 다시 추가할 때까지 Omi Today가 $name을(를) 읽지 않습니다.';
+  }
+
+  @override
+  String get todayCoinpileHint => 'summary 범위가 있는 토큰으로 Coinpile에서 읽습니다(Coinpile: 설정, Home Assistant 및 API).';
+
+  @override
+  String get todayPonderingHint => 'Orb의 아침 브리핑을 보여줍니다. Orb의 API 토큰(ORB_API_TOKENS) 중 하나를 사용하세요.';
 }

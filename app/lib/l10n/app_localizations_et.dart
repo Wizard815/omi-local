@@ -17098,4 +17098,194 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => 'Sinu päev ühel lehel';
+
+  @override
+  String get omiTodayCustomize => 'Kohanda Omi Today vaadet';
+
+  @override
+  String get setPhoneAlarm => 'Määra äratus';
+
+  @override
+  String get phoneAlarmUnavailable => 'Kella rakendust ei õnnestunud avada';
+
+  @override
+  String get taskReminders => 'Ülesannete meeldetuletused';
+
+  @override
+  String get taskRemindersSubtitle => 'Tuleta mulle selles telefonis meelde, kui ülesande tähtaeg saabub';
+
+  @override
+  String get taskReminderLead => 'Tuleta varem meelde';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return '$duration enne';
+  }
+
+  @override
+  String get taskReminderAtDueTime => 'Ainult tähtajal';
+
+  @override
+  String get taskReminderDueTitle => 'Ülesande tähtaeg';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return 'Tähtaeg $duration pärast';
+  }
+
+  @override
+  String get taskReminderExactAlarms => 'Täpsed äratused';
+
+  @override
+  String get taskReminderExactAlarmsOff =>
+      'Väljas: meeldetuletused võivad tulla mõne minuti hiljem. Puuduta lubamiseks.';
+
+  @override
+  String get taskReminderNotificationsOff =>
+      'Omi märguanded on välja lülitatud, seega meeldetuletusi ei saa kuvada. Luba need süsteemi seadetes.';
+
+  @override
+  String get todayAgendaTitle => 'Tänane päevakava';
+
+  @override
+  String get todayAgendaEmpty => 'Täna pole midagi plaanitud';
+
+  @override
+  String get todayAgendaEmptyMessage => 'Täna pole sündmusi ega ülesandeid.';
+
+  @override
+  String get todayEvents => 'Sündmused';
+
+  @override
+  String get todayTasksDue => 'Tänased ülesanded';
+
+  @override
+  String get todayAllDay => 'Terve päev';
+
+  @override
+  String get todayFamilyUnreachable => 'Perekalendrit ei saa praegu kätte.';
+
+  @override
+  String get todaySummaryTitle => 'Sinu päev';
+
+  @override
+  String get todayNewsTitle => 'Uudised';
+
+  @override
+  String get todayNewsEmpty => 'Uudisvooge pole';
+
+  @override
+  String get todayNewsEmptyMessage => 'Lisa RSS- või Atom-vooge, et näha siin nende pealkirju.';
+
+  @override
+  String get todayNewsAddFeeds => 'Lisa vooge';
+
+  @override
+  String get todayNewsError => 'Vooge ei õnnestunud laadida.';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return 'Voogusid, mida ei saanud lugeda: $count';
+  }
+
+  @override
+  String get todayNothingYet => 'Veel pole midagi näidata';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => 'Seadistamata';
+
+  @override
+  String get todayCompanionSetUpMessage => 'Lisa aadress ja token Omi Today seadetes.';
+
+  @override
+  String get todaySetUp => 'Seadista';
+
+  @override
+  String get todayCompanionUnauthorized => 'Token lükati tagasi. Kontrolli seda Omi Today seadetes.';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return 'Teenusega $name ei saadud ühendust.';
+  }
+
+  @override
+  String get todayNetWorth => 'Netovara';
+
+  @override
+  String get todayBills30d => 'Arved järgmise 30 päeva jooksul';
+
+  @override
+  String get todaySavingsFree => 'Vabad säästud';
+
+  @override
+  String get todaySpentThisMonth => 'Sel kuul kulutatud';
+
+  @override
+  String todayNextBill(String name) {
+    return 'Järgmine arve: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'Hoiatused: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => 'Täna pole veel ülevaadet';
+
+  @override
+  String get todayCards => 'Kaardid';
+
+  @override
+  String todayReorderCard(String name) {
+    return 'Teisalda $name';
+  }
+
+  @override
+  String get todayNewsFeeds => 'Uudisvood';
+
+  @override
+  String get todayAddFeed => 'Lisa voog';
+
+  @override
+  String get todayFeedUrl => 'Voo aadress';
+
+  @override
+  String get todayAddressInvalid => 'Sisesta aadress, mis algab http:// või https://';
+
+  @override
+  String get todayFeedRemoved => 'Voog eemaldatud';
+
+  @override
+  String get todayRemoveFeed => 'Eemalda voog';
+
+  @override
+  String get todayCompanionAddress => 'Aadress';
+
+  @override
+  String get todayCompanionToken => 'Token';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'Omi Today lõpetab teenuse $name lugemise, kuni lisad uuesti tokeni.';
+  }
+
+  @override
+  String get todayCoinpileHint =>
+      'Loeb Coinpile\'ist tokeniga, millel on summary ulatus (Coinpile: Seaded, Home Assistant ja API).';
+
+  @override
+  String get todayPonderingHint => 'Näitab Orbi hommikust ülevaadet. Kasuta üht selle API-tokenitest (ORB_API_TOKENS).';
 }

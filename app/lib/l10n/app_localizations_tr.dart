@@ -17116,4 +17116,195 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => 'Gününüz tek sayfada';
+
+  @override
+  String get omiTodayCustomize => 'Omi Today\'i özelleştir';
+
+  @override
+  String get setPhoneAlarm => 'Telefon alarmı kur';
+
+  @override
+  String get phoneAlarmUnavailable => 'Saat uygulaması açılamadı';
+
+  @override
+  String get taskReminders => 'Görev hatırlatıcıları';
+
+  @override
+  String get taskRemindersSubtitle => 'Bir görevin zamanı geldiğinde bu telefonda hatırlat';
+
+  @override
+  String get taskReminderLead => 'Erken hatırlat';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return '$duration önce';
+  }
+
+  @override
+  String get taskReminderAtDueTime => 'Yalnızca bitiş zamanında';
+
+  @override
+  String get taskReminderDueTitle => 'Görevin zamanı geldi';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return '$duration sonra bitiyor';
+  }
+
+  @override
+  String get taskReminderExactAlarms => 'Tam zamanlı alarmlar';
+
+  @override
+  String get taskReminderExactAlarmsOff =>
+      'Kapalı: hatırlatıcılar birkaç dakika gecikebilir. İzin vermek için dokunun.';
+
+  @override
+  String get taskReminderNotificationsOff =>
+      'Omi bildirimleri kapalı, bu yüzden görev hatırlatıcıları gösterilemiyor. Sistem ayarlarından izin verin.';
+
+  @override
+  String get todayAgendaTitle => 'Bugünün ajandası';
+
+  @override
+  String get todayAgendaEmpty => 'Bugün planlanmış bir şey yok';
+
+  @override
+  String get todayAgendaEmptyMessage => 'Bugün etkinlik veya görev yok.';
+
+  @override
+  String get todayEvents => 'Etkinlikler';
+
+  @override
+  String get todayTasksDue => 'Bugünkü görevler';
+
+  @override
+  String get todayAllDay => 'Tüm gün';
+
+  @override
+  String get todayFamilyUnreachable => 'Aile takvimine şu anda ulaşılamıyor.';
+
+  @override
+  String get todaySummaryTitle => 'Gününüz';
+
+  @override
+  String get todayNewsTitle => 'Haberler';
+
+  @override
+  String get todayNewsEmpty => 'Haber akışı yok';
+
+  @override
+  String get todayNewsEmptyMessage => 'Başlıklarını burada görmek için RSS veya Atom akışları ekleyin.';
+
+  @override
+  String get todayNewsAddFeeds => 'Akış ekle';
+
+  @override
+  String get todayNewsError => 'Akışlarınız yüklenemedi.';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return 'Okunamayan akışlar: $count';
+  }
+
+  @override
+  String get todayNothingYet => 'Henüz gösterilecek bir şey yok';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => 'Ayarlanmadı';
+
+  @override
+  String get todayCompanionSetUpMessage => 'Adresini ve belirtecini Omi Today ayarlarına ekleyin.';
+
+  @override
+  String get todaySetUp => 'Ayarla';
+
+  @override
+  String get todayCompanionUnauthorized => 'Belirteç reddedildi. Omi Today ayarlarından kontrol edin.';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return '$name hizmetine ulaşılamadı.';
+  }
+
+  @override
+  String get todayNetWorth => 'Net değer';
+
+  @override
+  String get todayBills30d => 'Önümüzdeki 30 gündeki faturalar';
+
+  @override
+  String get todaySavingsFree => 'Serbest birikim';
+
+  @override
+  String get todaySpentThisMonth => 'Bu ay harcanan';
+
+  @override
+  String todayNextBill(String name) {
+    return 'Sonraki fatura: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'Uyarılar: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => 'Bugün henüz özet yok';
+
+  @override
+  String get todayCards => 'Kartlar';
+
+  @override
+  String todayReorderCard(String name) {
+    return '$name kartını taşı';
+  }
+
+  @override
+  String get todayNewsFeeds => 'Haber akışları';
+
+  @override
+  String get todayAddFeed => 'Akış ekle';
+
+  @override
+  String get todayFeedUrl => 'Akış adresi';
+
+  @override
+  String get todayAddressInvalid => 'http:// veya https:// ile başlayan bir adres girin';
+
+  @override
+  String get todayFeedRemoved => 'Akış kaldırıldı';
+
+  @override
+  String get todayRemoveFeed => 'Akışı kaldır';
+
+  @override
+  String get todayCompanionAddress => 'Adres';
+
+  @override
+  String get todayCompanionToken => 'Belirteç';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'Omi Today, yeniden belirteç ekleyene kadar $name okumayı bırakacak.';
+  }
+
+  @override
+  String get todayCoinpileHint =>
+      'Coinpile\'dan summary kapsamlı bir belirteçle okur (Coinpile: Ayarlar, Home Assistant ve API).';
+
+  @override
+  String get todayPonderingHint =>
+      'Orb\'un sabah özetini gösterir. API belirteçlerinden birini kullanın (ORB_API_TOKENS).';
 }

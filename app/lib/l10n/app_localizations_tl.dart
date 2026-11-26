@@ -17228,4 +17228,195 @@ class AppLocalizationsTl extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => 'Ang araw mo sa isang pahina';
+
+  @override
+  String get omiTodayCustomize => 'I-customize ang Omi Today';
+
+  @override
+  String get setPhoneAlarm => 'Magtakda ng Alarm';
+
+  @override
+  String get phoneAlarmUnavailable => 'Hindi mabuksan ang Clock app';
+
+  @override
+  String get taskReminders => 'Mga paalala sa gawain';
+
+  @override
+  String get taskRemindersSubtitle => 'Paalalahanan ako sa phone na ito kapag due na ang gawain';
+
+  @override
+  String get taskReminderLead => 'Paalalahanan nang maaga';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return '$duration bago';
+  }
+
+  @override
+  String get taskReminderAtDueTime => 'Sa oras lang ng due';
+
+  @override
+  String get taskReminderDueTitle => 'Due na ang gawain';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return 'Due sa loob ng $duration';
+  }
+
+  @override
+  String get taskReminderExactAlarms => 'Eksaktong alarm';
+
+  @override
+  String get taskReminderExactAlarmsOff =>
+      'Off: maaaring mahuli nang ilang minuto ang mga paalala. I-tap para payagan.';
+
+  @override
+  String get taskReminderNotificationsOff =>
+      'Naka-off ang notifications ng Omi kaya hindi lalabas ang mga paalala. Payagan ito sa system settings.';
+
+  @override
+  String get todayAgendaTitle => 'Agenda ngayon';
+
+  @override
+  String get todayAgendaEmpty => 'Walang nakaiskedyul ngayon';
+
+  @override
+  String get todayAgendaEmptyMessage => 'Walang event o gawain ngayong araw.';
+
+  @override
+  String get todayEvents => 'Mga event';
+
+  @override
+  String get todayTasksDue => 'Mga gawain ngayon';
+
+  @override
+  String get todayAllDay => 'Buong araw';
+
+  @override
+  String get todayFamilyUnreachable => 'Hindi maabot ang family calendar sa ngayon.';
+
+  @override
+  String get todaySummaryTitle => 'Ang araw mo';
+
+  @override
+  String get todayNewsTitle => 'Balita';
+
+  @override
+  String get todayNewsEmpty => 'Walang news feed';
+
+  @override
+  String get todayNewsEmptyMessage => 'Magdagdag ng RSS o Atom feed para makita rito ang mga headline.';
+
+  @override
+  String get todayNewsAddFeeds => 'Magdagdag ng feed';
+
+  @override
+  String get todayNewsError => 'Hindi ma-load ang mga feed mo.';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return 'Mga feed na hindi nabasa: $count';
+  }
+
+  @override
+  String get todayNothingYet => 'Wala pang maipapakita';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => 'Hindi naka-set up';
+
+  @override
+  String get todayCompanionSetUpMessage => 'Idagdag ang address at token nito sa settings ng Omi Today.';
+
+  @override
+  String get todaySetUp => 'I-set Up';
+
+  @override
+  String get todayCompanionUnauthorized => 'Tinanggihan ang token. Suriin ito sa settings ng Omi Today.';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return 'Hindi maabot ang $name.';
+  }
+
+  @override
+  String get todayNetWorth => 'Net worth';
+
+  @override
+  String get todayBills30d => 'Mga bill sa susunod na 30 araw';
+
+  @override
+  String get todaySavingsFree => 'Malayang ipon';
+
+  @override
+  String get todaySpentThisMonth => 'Nagastos ngayong buwan';
+
+  @override
+  String todayNextBill(String name) {
+    return 'Susunod na bill: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'Mga alerto: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => 'Wala pang brief ngayon';
+
+  @override
+  String get todayCards => 'Mga card';
+
+  @override
+  String todayReorderCard(String name) {
+    return 'Ilipat ang $name';
+  }
+
+  @override
+  String get todayNewsFeeds => 'Mga news feed';
+
+  @override
+  String get todayAddFeed => 'Magdagdag ng Feed';
+
+  @override
+  String get todayFeedUrl => 'Address ng feed';
+
+  @override
+  String get todayAddressInvalid => 'Maglagay ng address na nagsisimula sa http:// o https://';
+
+  @override
+  String get todayFeedRemoved => 'Inalis ang feed';
+
+  @override
+  String get todayRemoveFeed => 'Alisin ang Feed';
+
+  @override
+  String get todayCompanionAddress => 'Address';
+
+  @override
+  String get todayCompanionToken => 'Token';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'Titigil ang Omi Today sa pagbasa ng $name hanggang magdagdag ka ulit ng token.';
+  }
+
+  @override
+  String get todayCoinpileHint =>
+      'Bumabasa mula sa Coinpile gamit ang token na may summary scope (Coinpile: Settings, Home Assistant & API).';
+
+  @override
+  String get todayPonderingHint =>
+      'Ipinapakita ang morning brief ng Orb. Gumamit ng isa sa mga API token nito (ORB_API_TOKENS).';
 }

@@ -17107,4 +17107,193 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => 'Váš deň na jednej stránke';
+
+  @override
+  String get omiTodayCustomize => 'Prispôsobiť Omi Today';
+
+  @override
+  String get setPhoneAlarm => 'Nastaviť budík';
+
+  @override
+  String get phoneAlarmUnavailable => 'Aplikáciu Hodiny sa nepodarilo otvoriť';
+
+  @override
+  String get taskReminders => 'Pripomienky úloh';
+
+  @override
+  String get taskRemindersSubtitle => 'Pripomenúť na tomto telefóne, keď úloha vyprší';
+
+  @override
+  String get taskReminderLead => 'Pripomenúť skôr';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return '$duration vopred';
+  }
+
+  @override
+  String get taskReminderAtDueTime => 'Iba v termíne';
+
+  @override
+  String get taskReminderDueTitle => 'Termín úlohy';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return 'Termín o $duration';
+  }
+
+  @override
+  String get taskReminderExactAlarms => 'Presné budíky';
+
+  @override
+  String get taskReminderExactAlarmsOff => 'Vypnuté: pripomienky môžu prísť o pár minút neskôr. Klepnutím povolíte.';
+
+  @override
+  String get taskReminderNotificationsOff =>
+      'Upozornenia Omi sú vypnuté, takže sa pripomienky úloh nemôžu zobraziť. Povoľte ich v nastaveniach systému.';
+
+  @override
+  String get todayAgendaTitle => 'Dnešný program';
+
+  @override
+  String get todayAgendaEmpty => 'Na dnes nič naplánované';
+
+  @override
+  String get todayAgendaEmptyMessage => 'Dnes žiadne udalosti ani úlohy.';
+
+  @override
+  String get todayEvents => 'Udalosti';
+
+  @override
+  String get todayTasksDue => 'Úlohy na dnes';
+
+  @override
+  String get todayAllDay => 'Celý deň';
+
+  @override
+  String get todayFamilyUnreachable => 'Rodinný kalendár teraz nie je dostupný.';
+
+  @override
+  String get todaySummaryTitle => 'Váš deň';
+
+  @override
+  String get todayNewsTitle => 'Správy';
+
+  @override
+  String get todayNewsEmpty => 'Žiadne spravodajské kanály';
+
+  @override
+  String get todayNewsEmptyMessage => 'Pridajte kanály RSS alebo Atom a uvidíte tu ich titulky.';
+
+  @override
+  String get todayNewsAddFeeds => 'Pridať kanály';
+
+  @override
+  String get todayNewsError => 'Kanály sa nepodarilo načítať.';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return 'Kanály, ktoré sa nedali prečítať: $count';
+  }
+
+  @override
+  String get todayNothingYet => 'Zatiaľ nie je čo ukázať';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => 'Nenastavené';
+
+  @override
+  String get todayCompanionSetUpMessage => 'Pridajte adresu a token v nastaveniach Omi Today.';
+
+  @override
+  String get todaySetUp => 'Nastaviť';
+
+  @override
+  String get todayCompanionUnauthorized => 'Token bol odmietnutý. Skontrolujte ho v nastaveniach Omi Today.';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return 'Nepodarilo sa spojiť s $name.';
+  }
+
+  @override
+  String get todayNetWorth => 'Čisté imanie';
+
+  @override
+  String get todayBills30d => 'Účty v najbližších 30 dňoch';
+
+  @override
+  String get todaySavingsFree => 'Voľné úspory';
+
+  @override
+  String get todaySpentThisMonth => 'Minuté tento mesiac';
+
+  @override
+  String todayNextBill(String name) {
+    return 'Ďalší účet: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'Upozornenia: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => 'Dnes zatiaľ žiadny prehľad';
+
+  @override
+  String get todayCards => 'Karty';
+
+  @override
+  String todayReorderCard(String name) {
+    return 'Presunúť $name';
+  }
+
+  @override
+  String get todayNewsFeeds => 'Spravodajské kanály';
+
+  @override
+  String get todayAddFeed => 'Pridať kanál';
+
+  @override
+  String get todayFeedUrl => 'Adresa kanála';
+
+  @override
+  String get todayAddressInvalid => 'Zadajte adresu začínajúcu http:// alebo https://';
+
+  @override
+  String get todayFeedRemoved => 'Kanál odstránený';
+
+  @override
+  String get todayRemoveFeed => 'Odstrániť kanál';
+
+  @override
+  String get todayCompanionAddress => 'Adresa';
+
+  @override
+  String get todayCompanionToken => 'Token';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'Omi Today prestane čítať $name, kým znova nepridáte token.';
+  }
+
+  @override
+  String get todayCoinpileHint =>
+      'Číta z Coinpile tokenom s rozsahom summary (Coinpile: Nastavenia, Home Assistant a API).';
+
+  @override
+  String get todayPonderingHint => 'Zobrazuje ranný prehľad Orbu. Použite jeden z jeho API tokenov (ORB_API_TOKENS).';
 }

@@ -4,6 +4,7 @@
 // Dated sections render complete lists on load while No Deadline is the only
 // section allowed to page, and completion state is driven through the shared
 // action-items provider so list, widget and integration views stay consistent.
+import 'package:omi/services/reminders/phone_alarm.dart';
 import 'package:omi/utils/platform/platform_manager.dart';
 import 'package:flutter/material.dart';
 
@@ -1224,6 +1225,13 @@ class _ActionItemsPageState extends State<ActionItemsPage> with AutomaticKeepAli
     if (saved && !item.completed) _onActionItemCompleted();
   }
 
+  /// Opens the clock app on an alarm at the task's due time; the user saves it there.
+  Future<void> _setPhoneAlarm(ActionItemWithMetadata item, ({int hour, int minute}) time) async {
+    final result = await PhoneAlarm.instance.setAlarm(hour: time.hour, minute: time.minute, label: item.description);
+    if (!mounted || result['ok'] == true) return;
+    OmiFeedback.error(context, context.l10n.phoneAlarmUnavailable);
+  }
+
   /// Long-press menu: the same shape as memories and conversations, with Select for multi-select
   /// and the indent controls that used to hide behind a swipe.
   void _showTaskMenu(ActionItemWithMetadata item, List<ActionItemWithMetadata> categoryItems) {
@@ -1231,6 +1239,8 @@ class _ActionItemsPageState extends State<ActionItemsPage> with AutomaticKeepAli
     final provider = Provider.of<ActionItemsProvider>(context, listen: false);
     final index = categoryItems.indexWhere((i) => i.id == item.id);
     final maxIndent = index <= 0 ? 0 : (categoryItems[index - 1].indentLevel + 1).clamp(0, 3);
+    final due = item.completed ? null : item.dueAt;
+    final alarmTime = due == null ? null : PhoneAlarm.alarmTimeFor(due, now: DateTime.now());
     showOmiRowMenu(
       context,
       title: item.description,
@@ -1252,6 +1262,12 @@ class _ActionItemsPageState extends State<ActionItemsPage> with AutomaticKeepAli
             icon: Icons.format_indent_decrease_rounded,
             label: l10n.outdentTask,
             onSelected: () => _decrementIndent(item.id),
+          ),
+        if (PhoneAlarm.instance.isSupported && alarmTime != null)
+          OmiMenuAction(
+            icon: Icons.alarm_add_outlined,
+            label: l10n.setPhoneAlarm,
+            onSelected: () => _setPhoneAlarm(item, alarmTime),
           ),
         OmiMenuAction(
           icon: Icons.check_box_outlined,

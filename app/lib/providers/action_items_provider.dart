@@ -18,6 +18,7 @@ import 'package:omi/services/integrations/apple_reminders_service.dart';
 import 'package:omi/services/integrations/automatic_apple_reminders_export.dart';
 import 'package:omi/services/siri_integration.dart';
 import 'package:omi/services/notifications/action_item_notification_handler.dart';
+import 'package:omi/services/reminders/task_reminder_coordinator.dart';
 import 'package:omi/utils/l10n_extensions.dart';
 import 'package:omi/utils/logger.dart';
 import 'package:omi/utils/platform/platform_service.dart';
@@ -51,7 +52,7 @@ typedef UpdateDueDateRequest = Future<ActionItemWithMetadata?> Function(String i
 typedef UpdateActionItemRequest = Future<ActionItemWithMetadata?> Function(String id,
     {String? description, bool? completed, DateTime? dueAt});
 
-class ActionItemsProvider extends ChangeNotifier {
+class ActionItemsProvider extends ChangeNotifier implements TaskReminderSource {
   ActionItemsProvider({
     ActionItemsFetcher? getActionItems,
     DeleteActionItemRequest? deleteActionItemRequest,
@@ -174,6 +175,7 @@ class ActionItemsProvider extends ChangeNotifier {
   bool get isFetching => _isFetching;
 
   /// The task list has loaded at least once (an empty list then really means none are open).
+  @override
   bool get hasLoaded => _initialLoadCompleted;
   bool get hasMore => _hasMore;
   bool get includeCompleted => _includeCompleted;
@@ -228,6 +230,22 @@ class ActionItemsProvider extends ChangeNotifier {
   }
 
   // Group action items by completion status
+  /// Every task this provider holds, for the phone's task reminders.
+  @override
+  List<ActionItemWithMetadata> get reminderTasks {
+    final byId = <String, ActionItemWithMetadata>{for (final item in _actionItems) item.id: item};
+    if (_homeDayLoaded) {
+      for (final item in _homeDayItems) {
+        byId.putIfAbsent(item.id, () => item);
+      }
+    }
+    return byId.values.toList();
+  }
+
+  /// Whether [reminderTasks] is the whole list, so a task missing from it is gone.
+  @override
+  bool get reminderTasksComplete => _initialLoadCompleted && !_hasMore && !hasActiveFilter && !isSearching;
+
   List<ActionItemWithMetadata> get incompleteItems => _actionItems.where((item) => item.completed == false).toList();
 
   List<ActionItemWithMetadata> get completedItems => _actionItems.where((item) => item.completed == true).toList();
@@ -660,6 +678,7 @@ class ActionItemsProvider extends ChangeNotifier {
       // Cancel notification if the action item is marked as completed
       if (newState == true) {
         await ActionItemNotificationHandler.cancelNotification(item.id);
+        TaskReminders.forget(item.id);
       }
       if (generation != _sessionGeneration) {
         attempt.complete(ProductOutcome.cancelled);
@@ -905,6 +924,7 @@ class ActionItemsProvider extends ChangeNotifier {
       } else {
         _deletionAcknowledgedAtRead[item.id] = _listReadOrdinal;
         SiriIntegration.current.queueDelete('task', item.id);
+        TaskReminders.forget(item.id);
       }
       // On success, the tombstone is intentionally retained: a refresh that
       // started before the server processed the deletion may still return the
@@ -978,6 +998,7 @@ class ActionItemsProvider extends ChangeNotifier {
     } else {
       _deletionAcknowledgedAtRead[id] = _listReadOrdinal;
       SiriIntegration.current.queueDelete('task', id);
+      TaskReminders.forget(id);
     }
     return success;
   }
@@ -1051,6 +1072,7 @@ class ActionItemsProvider extends ChangeNotifier {
 
   /// Read the acknowledged identity, independently of the filtered/cached list.
   /// An old list response cannot overwrite this newer canonical write.
+  @override
   Future<bool> receiveSavedTask(String id) async {
     final generation = _sessionGeneration;
     final typedApi = _actionItemsApi;
@@ -1434,6 +1456,7 @@ class ActionItemsProvider extends ChangeNotifier {
     for (final id in deletedIDs) {
       _deletionAcknowledgedAtRead[id] = _listReadOrdinal;
       SiriIntegration.current.queueDelete('task', id);
+      TaskReminders.forget(id);
     }
     if (deletedIDs.length != ids.length) {
       _pendingDeletionIds.removeAll(ids.where((id) => !deletedIDs.contains(id)));

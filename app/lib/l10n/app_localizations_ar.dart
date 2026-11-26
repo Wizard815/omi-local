@@ -17014,4 +17014,193 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => 'يومك في صفحة واحدة';
+
+  @override
+  String get omiTodayCustomize => 'تخصيص Omi Today';
+
+  @override
+  String get setPhoneAlarm => 'ضبط منبه الهاتف';
+
+  @override
+  String get phoneAlarmUnavailable => 'تعذّر فتح تطبيق الساعة';
+
+  @override
+  String get taskReminders => 'تذكيرات المهام';
+
+  @override
+  String get taskRemindersSubtitle => 'ذكّرني على هذا الهاتف عند حلول موعد مهمة';
+
+  @override
+  String get taskReminderLead => 'التذكير مبكرًا';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return 'قبل $duration';
+  }
+
+  @override
+  String get taskReminderAtDueTime => 'في موعد الاستحقاق فقط';
+
+  @override
+  String get taskReminderDueTitle => 'حان موعد مهمة';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return 'يحين الموعد بعد $duration';
+  }
+
+  @override
+  String get taskReminderExactAlarms => 'منبهات دقيقة';
+
+  @override
+  String get taskReminderExactAlarmsOff => 'متوقف: قد تتأخر التذكيرات بضع دقائق. انقر للسماح.';
+
+  @override
+  String get taskReminderNotificationsOff =>
+      'إشعارات Omi متوقفة، لذا لا يمكن عرض تذكيرات المهام. اسمح بها من إعدادات النظام.';
+
+  @override
+  String get todayAgendaTitle => 'جدول اليوم';
+
+  @override
+  String get todayAgendaEmpty => 'لا شيء مجدول اليوم';
+
+  @override
+  String get todayAgendaEmptyMessage => 'لا توجد أحداث أو مهام مستحقة اليوم.';
+
+  @override
+  String get todayEvents => 'الأحداث';
+
+  @override
+  String get todayTasksDue => 'مهام اليوم';
+
+  @override
+  String get todayAllDay => 'طوال اليوم';
+
+  @override
+  String get todayFamilyUnreachable => 'يتعذر الوصول إلى تقويم العائلة الآن.';
+
+  @override
+  String get todaySummaryTitle => 'يومك';
+
+  @override
+  String get todayNewsTitle => 'الأخبار';
+
+  @override
+  String get todayNewsEmpty => 'لا توجد خلاصات أخبار';
+
+  @override
+  String get todayNewsEmptyMessage => 'أضف خلاصات RSS أو Atom لترى عناوينها هنا.';
+
+  @override
+  String get todayNewsAddFeeds => 'إضافة خلاصات';
+
+  @override
+  String get todayNewsError => 'تعذّر تحميل خلاصاتك.';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return 'خلاصات تعذّرت قراءتها: $count';
+  }
+
+  @override
+  String get todayNothingYet => 'لا شيء لعرضه بعد';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => 'غير مُعد';
+
+  @override
+  String get todayCompanionSetUpMessage => 'أضف عنوانه ورمزه في إعدادات Omi Today.';
+
+  @override
+  String get todaySetUp => 'إعداد';
+
+  @override
+  String get todayCompanionUnauthorized => 'تم رفض الرمز. تحقق منه في إعدادات Omi Today.';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return 'تعذّر الوصول إلى $name.';
+  }
+
+  @override
+  String get todayNetWorth => 'صافي الثروة';
+
+  @override
+  String get todayBills30d => 'الفواتير خلال 30 يومًا القادمة';
+
+  @override
+  String get todaySavingsFree => 'مدخرات حرة';
+
+  @override
+  String get todaySpentThisMonth => 'المُنفق هذا الشهر';
+
+  @override
+  String todayNextBill(String name) {
+    return 'الفاتورة التالية: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'التنبيهات: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => 'لا يوجد ملخص اليوم بعد';
+
+  @override
+  String get todayCards => 'البطاقات';
+
+  @override
+  String todayReorderCard(String name) {
+    return 'إعادة ترتيب $name';
+  }
+
+  @override
+  String get todayNewsFeeds => 'خلاصات الأخبار';
+
+  @override
+  String get todayAddFeed => 'إضافة خلاصة';
+
+  @override
+  String get todayFeedUrl => 'عنوان الخلاصة';
+
+  @override
+  String get todayAddressInvalid => 'أدخل عنوانًا يبدأ بـ http:// أو https://';
+
+  @override
+  String get todayFeedRemoved => 'تمت إزالة الخلاصة';
+
+  @override
+  String get todayRemoveFeed => 'إزالة الخلاصة';
+
+  @override
+  String get todayCompanionAddress => 'العنوان';
+
+  @override
+  String get todayCompanionToken => 'الرمز';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'سيتوقف Omi Today عن قراءة $name حتى تضيف رمزًا مرة أخرى.';
+  }
+
+  @override
+  String get todayCoinpileHint =>
+      'يقرأ من Coinpile برمز له نطاق summary (Coinpile: الإعدادات، Home Assistant وواجهة API).';
+
+  @override
+  String get todayPonderingHint => 'يعرض ملخص Orb الصباحي. استخدم أحد رموز API الخاصة به (ORB_API_TOKENS).';
 }

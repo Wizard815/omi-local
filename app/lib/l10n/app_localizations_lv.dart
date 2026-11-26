@@ -17143,4 +17143,194 @@ class AppLocalizationsLv extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => 'Tava diena vienā lapā';
+
+  @override
+  String get omiTodayCustomize => 'Pielāgot Omi Today';
+
+  @override
+  String get setPhoneAlarm => 'Iestatīt modinātāju';
+
+  @override
+  String get phoneAlarmUnavailable => 'Neizdevās atvērt pulksteņa lietotni';
+
+  @override
+  String get taskReminders => 'Uzdevumu atgādinājumi';
+
+  @override
+  String get taskRemindersSubtitle => 'Atgādināt šajā tālrunī, kad uzdevumam pienāk termiņš';
+
+  @override
+  String get taskReminderLead => 'Atgādināt agrāk';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return '$duration iepriekš';
+  }
+
+  @override
+  String get taskReminderAtDueTime => 'Tikai termiņā';
+
+  @override
+  String get taskReminderDueTitle => 'Uzdevuma termiņš';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return 'Termiņš pēc $duration';
+  }
+
+  @override
+  String get taskReminderExactAlarms => 'Precīzi modinātāji';
+
+  @override
+  String get taskReminderExactAlarmsOff =>
+      'Izslēgts: atgādinājumi var kavēties dažas minūtes. Pieskarieties, lai atļautu.';
+
+  @override
+  String get taskReminderNotificationsOff =>
+      'Omi paziņojumi ir izslēgti, tāpēc atgādinājumus nevar parādīt. Atļaujiet tos sistēmas iestatījumos.';
+
+  @override
+  String get todayAgendaTitle => 'Šodienas dienaskārtība';
+
+  @override
+  String get todayAgendaEmpty => 'Šodien nekas nav ieplānots';
+
+  @override
+  String get todayAgendaEmptyMessage => 'Šodien nav notikumu vai uzdevumu.';
+
+  @override
+  String get todayEvents => 'Notikumi';
+
+  @override
+  String get todayTasksDue => 'Šodienas uzdevumi';
+
+  @override
+  String get todayAllDay => 'Visu dienu';
+
+  @override
+  String get todayFamilyUnreachable => 'Ģimenes kalendārs pašlaik nav pieejams.';
+
+  @override
+  String get todaySummaryTitle => 'Tava diena';
+
+  @override
+  String get todayNewsTitle => 'Ziņas';
+
+  @override
+  String get todayNewsEmpty => 'Nav ziņu plūsmu';
+
+  @override
+  String get todayNewsEmptyMessage => 'Pievienojiet RSS vai Atom plūsmas, lai šeit redzētu to virsrakstus.';
+
+  @override
+  String get todayNewsAddFeeds => 'Pievienot plūsmas';
+
+  @override
+  String get todayNewsError => 'Neizdevās ielādēt plūsmas.';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return 'Plūsmas, kuras neizdevās nolasīt: $count';
+  }
+
+  @override
+  String get todayNothingYet => 'Vēl nav ko rādīt';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => 'Nav iestatīts';
+
+  @override
+  String get todayCompanionSetUpMessage => 'Pievienojiet adresi un pilnvaru Omi Today iestatījumos.';
+
+  @override
+  String get todaySetUp => 'Iestatīt';
+
+  @override
+  String get todayCompanionUnauthorized => 'Pilnvara tika noraidīta. Pārbaudiet to Omi Today iestatījumos.';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return 'Neizdevās sasniegt $name.';
+  }
+
+  @override
+  String get todayNetWorth => 'Neto vērtība';
+
+  @override
+  String get todayBills30d => 'Rēķini nākamajās 30 dienās';
+
+  @override
+  String get todaySavingsFree => 'Brīvie uzkrājumi';
+
+  @override
+  String get todaySpentThisMonth => 'Iztērēts šomēnes';
+
+  @override
+  String todayNextBill(String name) {
+    return 'Nākamais rēķins: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'Brīdinājumi: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => 'Šodien vēl nav apskata';
+
+  @override
+  String get todayCards => 'Kartītes';
+
+  @override
+  String todayReorderCard(String name) {
+    return 'Pārvietot $name';
+  }
+
+  @override
+  String get todayNewsFeeds => 'Ziņu plūsmas';
+
+  @override
+  String get todayAddFeed => 'Pievienot plūsmu';
+
+  @override
+  String get todayFeedUrl => 'Plūsmas adrese';
+
+  @override
+  String get todayAddressInvalid => 'Ievadiet adresi, kas sākas ar http:// vai https://';
+
+  @override
+  String get todayFeedRemoved => 'Plūsma noņemta';
+
+  @override
+  String get todayRemoveFeed => 'Noņemt plūsmu';
+
+  @override
+  String get todayCompanionAddress => 'Adrese';
+
+  @override
+  String get todayCompanionToken => 'Pilnvara';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'Omi Today pārtrauks lasīt $name, līdz atkal pievienosiet pilnvaru.';
+  }
+
+  @override
+  String get todayCoinpileHint =>
+      'Lasa no Coinpile ar pilnvaru, kurai ir summary tvērums (Coinpile: Iestatījumi, Home Assistant un API).';
+
+  @override
+  String get todayPonderingHint => 'Rāda Orb rīta apskatu. Izmantojiet kādu no tā API pilnvarām (ORB_API_TOKENS).';
 }

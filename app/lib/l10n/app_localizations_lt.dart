@@ -17134,4 +17134,194 @@ class AppLocalizationsLt extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => 'Jūsų diena viename puslapyje';
+
+  @override
+  String get omiTodayCustomize => 'Tinkinti Omi Today';
+
+  @override
+  String get setPhoneAlarm => 'Nustatyti žadintuvą';
+
+  @override
+  String get phoneAlarmUnavailable => 'Nepavyko atidaryti laikrodžio programos';
+
+  @override
+  String get taskReminders => 'Užduočių priminimai';
+
+  @override
+  String get taskRemindersSubtitle => 'Priminti šiame telefone, kai baigiasi užduoties terminas';
+
+  @override
+  String get taskReminderLead => 'Priminti anksčiau';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return 'Prieš $duration';
+  }
+
+  @override
+  String get taskReminderAtDueTime => 'Tik termino metu';
+
+  @override
+  String get taskReminderDueTitle => 'Užduoties terminas';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return 'Terminas po $duration';
+  }
+
+  @override
+  String get taskReminderExactAlarms => 'Tikslūs žadintuvai';
+
+  @override
+  String get taskReminderExactAlarmsOff =>
+      'Išjungta: priminimai gali vėluoti kelias minutes. Palieskite, kad leistumėte.';
+
+  @override
+  String get taskReminderNotificationsOff =>
+      'Omi pranešimai išjungti, todėl užduočių priminimai negali būti rodomi. Leiskite juos sistemos nustatymuose.';
+
+  @override
+  String get todayAgendaTitle => 'Šiandienos darbotvarkė';
+
+  @override
+  String get todayAgendaEmpty => 'Šiandien nieko nesuplanuota';
+
+  @override
+  String get todayAgendaEmptyMessage => 'Šiandien nėra įvykių ar užduočių.';
+
+  @override
+  String get todayEvents => 'Įvykiai';
+
+  @override
+  String get todayTasksDue => 'Šiandienos užduotys';
+
+  @override
+  String get todayAllDay => 'Visą dieną';
+
+  @override
+  String get todayFamilyUnreachable => 'Šeimos kalendorius šiuo metu nepasiekiamas.';
+
+  @override
+  String get todaySummaryTitle => 'Jūsų diena';
+
+  @override
+  String get todayNewsTitle => 'Naujienos';
+
+  @override
+  String get todayNewsEmpty => 'Nėra naujienų kanalų';
+
+  @override
+  String get todayNewsEmptyMessage => 'Pridėkite RSS ar Atom kanalų, kad čia matytumėte jų antraštes.';
+
+  @override
+  String get todayNewsAddFeeds => 'Pridėti kanalų';
+
+  @override
+  String get todayNewsError => 'Nepavyko įkelti kanalų.';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return 'Neperskaitytų kanalų: $count';
+  }
+
+  @override
+  String get todayNothingYet => 'Kol kas nėra ką rodyti';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => 'Nenustatyta';
+
+  @override
+  String get todayCompanionSetUpMessage => 'Pridėkite adresą ir prieigos raktą Omi Today nustatymuose.';
+
+  @override
+  String get todaySetUp => 'Nustatyti';
+
+  @override
+  String get todayCompanionUnauthorized => 'Prieigos raktas atmestas. Patikrinkite jį Omi Today nustatymuose.';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return 'Nepavyko pasiekti $name.';
+  }
+
+  @override
+  String get todayNetWorth => 'Grynasis turtas';
+
+  @override
+  String get todayBills30d => 'Sąskaitos per artimiausias 30 dienų';
+
+  @override
+  String get todaySavingsFree => 'Laisvos santaupos';
+
+  @override
+  String get todaySpentThisMonth => 'Išleista šį mėnesį';
+
+  @override
+  String todayNextBill(String name) {
+    return 'Kita sąskaita: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'Įspėjimai: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => 'Šiandien apžvalgos dar nėra';
+
+  @override
+  String get todayCards => 'Kortelės';
+
+  @override
+  String todayReorderCard(String name) {
+    return 'Perkelti $name';
+  }
+
+  @override
+  String get todayNewsFeeds => 'Naujienų kanalai';
+
+  @override
+  String get todayAddFeed => 'Pridėti kanalą';
+
+  @override
+  String get todayFeedUrl => 'Kanalo adresas';
+
+  @override
+  String get todayAddressInvalid => 'Įveskite adresą, prasidedantį http:// arba https://';
+
+  @override
+  String get todayFeedRemoved => 'Kanalas pašalintas';
+
+  @override
+  String get todayRemoveFeed => 'Pašalinti kanalą';
+
+  @override
+  String get todayCompanionAddress => 'Adresas';
+
+  @override
+  String get todayCompanionToken => 'Prieigos raktas';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'Omi Today nustos skaityti $name, kol vėl pridėsite prieigos raktą.';
+  }
+
+  @override
+  String get todayCoinpileHint =>
+      'Skaito iš Coinpile su prieigos raktu, turinčiu summary sritį (Coinpile: Nustatymai, Home Assistant ir API).';
+
+  @override
+  String get todayPonderingHint => 'Rodo Orb rytinę apžvalgą. Naudokite vieną iš jo API raktų (ORB_API_TOKENS).';
 }

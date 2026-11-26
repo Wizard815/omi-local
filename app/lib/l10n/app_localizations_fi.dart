@@ -17111,4 +17111,194 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => 'Päiväsi yhdellä sivulla';
+
+  @override
+  String get omiTodayCustomize => 'Muokkaa Omi Todayta';
+
+  @override
+  String get setPhoneAlarm => 'Aseta herätys';
+
+  @override
+  String get phoneAlarmUnavailable => 'Kello-sovellusta ei voitu avata';
+
+  @override
+  String get taskReminders => 'Tehtävämuistutukset';
+
+  @override
+  String get taskRemindersSubtitle => 'Muistuta tällä puhelimella, kun tehtävä erääntyy';
+
+  @override
+  String get taskReminderLead => 'Muistuta aiemmin';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return '$duration ennen';
+  }
+
+  @override
+  String get taskReminderAtDueTime => 'Vain eräpäivänä';
+
+  @override
+  String get taskReminderDueTitle => 'Tehtävä erääntyy';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return 'Erääntyy $duration kuluttua';
+  }
+
+  @override
+  String get taskReminderExactAlarms => 'Tarkat hälytykset';
+
+  @override
+  String get taskReminderExactAlarmsOff =>
+      'Pois: muistutukset voivat tulla muutaman minuutin myöhässä. Napauta salliaksesi.';
+
+  @override
+  String get taskReminderNotificationsOff =>
+      'Omin ilmoitukset ovat pois päältä, joten tehtävämuistutuksia ei voi näyttää. Salli ne järjestelmäasetuksista.';
+
+  @override
+  String get todayAgendaTitle => 'Tämän päivän ohjelma';
+
+  @override
+  String get todayAgendaEmpty => 'Tälle päivälle ei ole mitään';
+
+  @override
+  String get todayAgendaEmptyMessage => 'Ei tapahtumia eikä erääntyviä tehtäviä tänään.';
+
+  @override
+  String get todayEvents => 'Tapahtumat';
+
+  @override
+  String get todayTasksDue => 'Erääntyvät tehtävät';
+
+  @override
+  String get todayAllDay => 'Koko päivä';
+
+  @override
+  String get todayFamilyUnreachable => 'Perheen kalenteriin ei saada juuri nyt yhteyttä.';
+
+  @override
+  String get todaySummaryTitle => 'Päiväsi';
+
+  @override
+  String get todayNewsTitle => 'Uutiset';
+
+  @override
+  String get todayNewsEmpty => 'Ei uutissyötteitä';
+
+  @override
+  String get todayNewsEmptyMessage => 'Lisää RSS- tai Atom-syötteitä nähdäksesi niiden otsikot tässä.';
+
+  @override
+  String get todayNewsAddFeeds => 'Lisää syötteitä';
+
+  @override
+  String get todayNewsError => 'Syötteitä ei voitu ladata.';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return 'Syötteet, joita ei voitu lukea: $count';
+  }
+
+  @override
+  String get todayNothingYet => 'Ei vielä näytettävää';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => 'Ei määritetty';
+
+  @override
+  String get todayCompanionSetUpMessage => 'Lisää osoite ja tunnus Omi Todayn asetuksissa.';
+
+  @override
+  String get todaySetUp => 'Määritä';
+
+  @override
+  String get todayCompanionUnauthorized => 'Tunnus hylättiin. Tarkista se Omi Todayn asetuksista.';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return 'Palveluun $name ei saatu yhteyttä.';
+  }
+
+  @override
+  String get todayNetWorth => 'Nettovarallisuus';
+
+  @override
+  String get todayBills30d => 'Laskut seuraavan 30 päivän aikana';
+
+  @override
+  String get todaySavingsFree => 'Vapaat säästöt';
+
+  @override
+  String get todaySpentThisMonth => 'Kulutettu tässä kuussa';
+
+  @override
+  String todayNextBill(String name) {
+    return 'Seuraava lasku: $name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'Hälytykset: $count';
+  }
+
+  @override
+  String get todayNoBriefYet => 'Ei vielä katsausta tänään';
+
+  @override
+  String get todayCards => 'Kortit';
+
+  @override
+  String todayReorderCard(String name) {
+    return 'Siirrä $name';
+  }
+
+  @override
+  String get todayNewsFeeds => 'Uutissyötteet';
+
+  @override
+  String get todayAddFeed => 'Lisää syöte';
+
+  @override
+  String get todayFeedUrl => 'Syötteen osoite';
+
+  @override
+  String get todayAddressInvalid => 'Anna osoite, joka alkaa http:// tai https://';
+
+  @override
+  String get todayFeedRemoved => 'Syöte poistettu';
+
+  @override
+  String get todayRemoveFeed => 'Poista syöte';
+
+  @override
+  String get todayCompanionAddress => 'Osoite';
+
+  @override
+  String get todayCompanionToken => 'Tunnus';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'Omi Today lakkaa lukemasta palvelua $name, kunnes lisäät tunnuksen uudelleen.';
+  }
+
+  @override
+  String get todayCoinpileHint =>
+      'Lukee Coinpilesta tunnuksella, jolla on summary-oikeus (Coinpile: Asetukset, Home Assistant & API).';
+
+  @override
+  String get todayPonderingHint => 'Näyttää Orbin aamukatsauksen. Käytä jotakin sen API-tunnuksista (ORB_API_TOKENS).';
 }

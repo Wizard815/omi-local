@@ -16871,4 +16871,191 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get widgetMemoryEmpty => 'No memories yet';
+
+  @override
+  String get omiTodayTitle => 'Omi Today';
+
+  @override
+  String get omiTodaySubtitle => '1日を1ページに';
+
+  @override
+  String get omiTodayCustomize => 'Omi Today をカスタマイズ';
+
+  @override
+  String get setPhoneAlarm => 'アラームを設定';
+
+  @override
+  String get phoneAlarmUnavailable => '時計アプリを開けませんでした';
+
+  @override
+  String get taskReminders => 'タスクのリマインダー';
+
+  @override
+  String get taskRemindersSubtitle => 'タスクの期限になったらこのスマートフォンで知らせる';
+
+  @override
+  String get taskReminderLead => '早めに知らせる';
+
+  @override
+  String taskReminderLeadBefore(String duration) {
+    return '$duration前';
+  }
+
+  @override
+  String get taskReminderAtDueTime => '期限時刻のみ';
+
+  @override
+  String get taskReminderDueTitle => 'タスクの期限';
+
+  @override
+  String taskReminderDueIn(String duration) {
+    return 'あと$durationで期限';
+  }
+
+  @override
+  String get taskReminderExactAlarms => '正確なアラーム';
+
+  @override
+  String get taskReminderExactAlarmsOff => 'オフ：リマインダーが数分遅れることがあります。タップして許可します。';
+
+  @override
+  String get taskReminderNotificationsOff => 'Omi の通知がオフのため、タスクのリマインダーを表示できません。システム設定で許可してください。';
+
+  @override
+  String get todayAgendaTitle => '今日の予定';
+
+  @override
+  String get todayAgendaEmpty => '今日の予定はありません';
+
+  @override
+  String get todayAgendaEmptyMessage => '今日の予定や期限のタスクはありません。';
+
+  @override
+  String get todayEvents => '予定';
+
+  @override
+  String get todayTasksDue => '今日のタスク';
+
+  @override
+  String get todayAllDay => '終日';
+
+  @override
+  String get todayFamilyUnreachable => '家族カレンダーに今は接続できません。';
+
+  @override
+  String get todaySummaryTitle => '今日の様子';
+
+  @override
+  String get todayNewsTitle => 'ニュース';
+
+  @override
+  String get todayNewsEmpty => 'ニュースフィードがありません';
+
+  @override
+  String get todayNewsEmptyMessage => 'RSS または Atom フィードを追加すると、見出しがここに表示されます。';
+
+  @override
+  String get todayNewsAddFeeds => 'フィードを追加';
+
+  @override
+  String get todayNewsError => 'フィードを読み込めませんでした。';
+
+  @override
+  String todayNewsSomeFailed(int count) {
+    return '読み込めなかったフィード：$count';
+  }
+
+  @override
+  String get todayNothingYet => 'まだ表示するものはありません';
+
+  @override
+  String get todayCoinpileTitle => 'Coinpile';
+
+  @override
+  String get todayPonderingTitle => 'Pondering Orb';
+
+  @override
+  String get todayCompanionNotSetUp => '未設定';
+
+  @override
+  String get todayCompanionSetUpMessage => 'Omi Today の設定でアドレスとトークンを追加してください。';
+
+  @override
+  String get todaySetUp => '設定する';
+
+  @override
+  String get todayCompanionUnauthorized => 'トークンが拒否されました。Omi Today の設定で確認してください。';
+
+  @override
+  String todayCompanionUnreachable(String name) {
+    return '$name に接続できませんでした。';
+  }
+
+  @override
+  String get todayNetWorth => '純資産';
+
+  @override
+  String get todayBills30d => '今後30日の請求';
+
+  @override
+  String get todaySavingsFree => '自由に使える貯蓄';
+
+  @override
+  String get todaySpentThisMonth => '今月の支出';
+
+  @override
+  String todayNextBill(String name) {
+    return '次の請求：$name';
+  }
+
+  @override
+  String todayAlerts(int count) {
+    return 'アラート：$count';
+  }
+
+  @override
+  String get todayNoBriefYet => '今日のブリーフはまだありません';
+
+  @override
+  String get todayCards => 'カード';
+
+  @override
+  String todayReorderCard(String name) {
+    return '$name を並べ替え';
+  }
+
+  @override
+  String get todayNewsFeeds => 'ニュースフィード';
+
+  @override
+  String get todayAddFeed => 'フィードを追加';
+
+  @override
+  String get todayFeedUrl => 'フィードのアドレス';
+
+  @override
+  String get todayAddressInvalid => 'http:// または https:// で始まるアドレスを入力してください';
+
+  @override
+  String get todayFeedRemoved => 'フィードを削除しました';
+
+  @override
+  String get todayRemoveFeed => 'フィードを削除';
+
+  @override
+  String get todayCompanionAddress => 'アドレス';
+
+  @override
+  String get todayCompanionToken => 'トークン';
+
+  @override
+  String todayClearTokenMessage(String name) {
+    return 'トークンを再度追加するまで、Omi Today は $name を読み込みません。';
+  }
+
+  @override
+  String get todayCoinpileHint => 'summary スコープのトークンで Coinpile から読み込みます（Coinpile：設定、Home Assistant と API）。';
+
+  @override
+  String get todayPonderingHint => 'Orb の朝のブリーフを表示します。Orb の API トークン（ORB_API_TOKENS）を使ってください。';
 }
