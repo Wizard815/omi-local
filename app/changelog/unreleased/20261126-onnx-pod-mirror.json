@@ -1,0 +1,4 @@
+{
+  "kind": "none",
+  "reason": "Build-only: installs the same onnxruntime-c/objc 1.23.0 pods from checksum-pinned local podspecs because download.onnxruntime.ai no longer serves them. No app behavior change."
+}

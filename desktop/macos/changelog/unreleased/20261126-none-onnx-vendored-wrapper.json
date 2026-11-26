@@ -1,0 +1,4 @@
+{
+  "kind": "none",
+  "reason": "Build-only: vendors the removed onnxruntime SwiftPM wrapper at the same 1.24.2 revision and fetches its checksum-pinned binaries from a mirror. Same ONNX Runtime version and bytes; no app behavior change."
+}
