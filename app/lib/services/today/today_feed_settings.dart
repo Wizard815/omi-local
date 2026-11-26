@@ -1,3 +1,6 @@
+// Owns Omi Today's on-phone settings: card order and visibility, feed URLs and companion
+// addresses. Tokens live only in secure storage, never in SharedPreferences.
+
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';

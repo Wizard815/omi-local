@@ -1,3 +1,6 @@
+// Pure models behind Omi Today and the Today overview widget: today's agenda, the day in
+// conversations and the people worth a glance. No I/O, so both surfaces agree.
+
 import 'package:omi/backend/schema/action_item.dart';
 import 'package:omi/backend/schema/conversation.dart';
 import 'package:omi/backend/schema/family_calendar.dart';

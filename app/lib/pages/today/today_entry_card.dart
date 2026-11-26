@@ -1,3 +1,6 @@
+// The Home row that opens Omi Today. It only navigates; the page owns all loading and the
+// deep link `omi://app/today` opens the same page.
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';

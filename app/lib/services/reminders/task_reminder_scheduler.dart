@@ -1,3 +1,6 @@
+// Owns the phone's scheduled task reminders: a ledger of what was scheduled, reconciled against
+// TaskReminderPlan, so a reminder is never left behind for a completed or deleted task.
+
 import 'dart:convert';
 import 'dart:io';
 

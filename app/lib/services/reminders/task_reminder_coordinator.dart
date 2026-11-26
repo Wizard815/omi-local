@@ -1,3 +1,6 @@
+// Owns when task reminders are reconciled: on task-list and setting changes, on resume, and when
+// a chat reply carries a task edit receipt. Scheduling itself stays in TaskReminderScheduler.
+
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';

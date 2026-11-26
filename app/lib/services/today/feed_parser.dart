@@ -1,3 +1,6 @@
+// Parses RSS 2.0, RSS 1.0 (RDF) and Atom into headlines only (title, link, date). Pure and
+// network-free; a document that is not a feed throws FeedFormatException.
+
 import 'package:intl/intl.dart';
 import 'package:xml/xml.dart';
 

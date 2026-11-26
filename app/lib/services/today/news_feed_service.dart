@@ -1,3 +1,6 @@
+// Fetches the user's own news feeds straight from the phone and caches the merged digest, so
+// Omi Today and the Today overview widget never wait on the network to show headlines.
+
 import 'dart:async';
 import 'dart:convert';
 

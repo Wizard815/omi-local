@@ -1,3 +1,6 @@
+// The shared card of Omi Today: a header plus exactly one of loading, empty, error or content,
+// drawn with the shared page-state primitives so every card behaves the same way.
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
