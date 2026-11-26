@@ -71,3 +71,29 @@ class FamilyCalendarEventResponse(BaseModel):
     ok: bool
     event: Optional[FamilyCalendarEvent] = None
     error: str = ''
+
+
+class FamilyDayBlock(BaseModel):
+    title: str
+    start: Optional[datetime] = Field(default=None, description='UTC; None for an all-day block')
+    time_label: str = Field(default='', description='"14:30" in the user\'s time zone, or "All day"')
+    duration_minutes: Optional[int] = None
+    all_day: bool = False
+    owner_id: Optional[str] = None
+
+
+class FamilyDayResponse(BaseModel):
+    """Today on the family calendar, small enough for a home-screen widget."""
+
+    configured: bool = Field(description='A family calendar (the ALLGlance gateway) is set up for this user')
+    reachable: bool = Field(default=False, description='The gateway answered; False keeps the widget\'s last data')
+    date: str = Field(default='', description='Today in the user\'s time zone, YYYY-MM-DD')
+    owner_name: str = Field(default='', description='The member it is for; empty = the whole family')
+    next: List[FamilyDayBlock] = Field(
+        default_factory=list, description='What is still ahead today, soonest first (all-day blocks first)'
+    )
+    remaining: int = Field(default=0, description='Blocks still ahead today, including those not in next')
+    tasks_due: int = Field(default=0, description='Open tasks due today, from every source')
+    chores_overdue: int = 0
+    chores: List[str] = Field(default_factory=list, description='The overdue chores\' names, at most three')
+    error: str = Field(default='', description='What went wrong, in words the app can show')

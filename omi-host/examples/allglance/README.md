@@ -40,6 +40,13 @@ milestones. Omi connects to it three ways, and each one is a setting on one side
   (`backend/routers/dashboard.py`) probes the gateway's `/health` and the CalDAV URL as
   components and shows an ALLGlance & Calendar card with each member's binding, waiting events
   and last CalDAV sync.
+- `GET /v1/family-calendar/today` (`family_calendar.today`): today on the family calendar,
+  sized for a home-screen widget: up to three blocks still ahead (all-day first, then
+  soonest; one already over is left out), how many are ahead in all, open tasks due today
+  and overdue chores, read from the gateway's `/api/allglance/days/{date}` and `/chores` as
+  the bound member (or the whole family). A gateway that is down or refuses the token answers
+  `reachable: false` with an `error` to show, never a 5xx, so a widget keeps its last data.
+  The phone widget that shows it is not built yet.
 - `backend/utils/mcp_server/handlers/other.py`: the `get_day_review` MCP tool (also
   `GET /v1/mcp/day-reviews/{date}`), what the gateway's `omi_get_day_review` and
   `allglance_get_day` read.

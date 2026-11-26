@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query
 from models.family_calendar import (
     ApproveFamilyCalendarEventRequest,
     DeclineFamilyCalendarEventRequest,
+    FamilyDayResponse,
     FamilyCalendarEventResponse,
     FamilyCalendarMember,
     FamilyCalendarResponse,
@@ -55,6 +56,15 @@ async def get_family_calendar(
     """Whether a family calendar is set, the household and the member Omi acts as, the events waiting
     for review, and the ones reviewed lately. With ``conversation_id``, the events of that conversation."""
     return await _present(uid, conversation_id)
+
+
+@router.get('/v1/family-calendar/today', tags=['family-calendar'], response_model=FamilyDayResponse)
+async def get_family_calendar_today(uid: str = Depends(auth.get_current_user_uid)):
+    """Today on the family calendar, sized for a home-screen widget: the next blocks still ahead,
+    open tasks due today and overdue chores, for the member Omi acts as (or the whole family).
+    A gateway that does not answer gives ``reachable: false`` and an ``error`` to show, not a 5xx,
+    so a widget can keep what it showed last."""
+    return await family_calendar.today(uid)
 
 
 @router.put('/v1/family-calendar/owner', tags=['family-calendar'], response_model=FamilyCalendarResponse)

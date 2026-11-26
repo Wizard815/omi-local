@@ -20107,6 +20107,137 @@
         "title": "FamilyCalendarResponse",
         "type": "object"
       },
+      "FamilyDayBlock": {
+        "properties": {
+          "all_day": {
+            "default": false,
+            "title": "All Day",
+            "type": "boolean"
+          },
+          "duration_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Minutes"
+          },
+          "owner_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "UTC; None for an all-day block",
+            "title": "Start"
+          },
+          "time_label": {
+            "default": "",
+            "description": "\"14:30\" in the user's time zone, or \"All day\"",
+            "title": "Time Label",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "FamilyDayBlock",
+        "type": "object"
+      },
+      "FamilyDayResponse": {
+        "description": "Today on the family calendar, small enough for a home-screen widget.",
+        "properties": {
+          "chores": {
+            "description": "The overdue chores' names, at most three",
+            "items": {
+              "type": "string"
+            },
+            "title": "Chores",
+            "type": "array"
+          },
+          "chores_overdue": {
+            "default": 0,
+            "title": "Chores Overdue",
+            "type": "integer"
+          },
+          "configured": {
+            "description": "A family calendar (the ALLGlance gateway) is set up for this user",
+            "title": "Configured",
+            "type": "boolean"
+          },
+          "date": {
+            "default": "",
+            "description": "Today in the user's time zone, YYYY-MM-DD",
+            "title": "Date",
+            "type": "string"
+          },
+          "error": {
+            "default": "",
+            "description": "What went wrong, in words the app can show",
+            "title": "Error",
+            "type": "string"
+          },
+          "next": {
+            "description": "What is still ahead today, soonest first (all-day blocks first)",
+            "items": {
+              "$ref": "#/components/schemas/FamilyDayBlock"
+            },
+            "title": "Next",
+            "type": "array"
+          },
+          "owner_name": {
+            "default": "",
+            "description": "The member it is for; empty = the whole family",
+            "title": "Owner Name",
+            "type": "string"
+          },
+          "reachable": {
+            "default": false,
+            "description": "The gateway answered; False keeps the widget's last data",
+            "title": "Reachable",
+            "type": "boolean"
+          },
+          "remaining": {
+            "default": 0,
+            "description": "Blocks still ahead today, including those not in next",
+            "title": "Remaining",
+            "type": "integer"
+          },
+          "tasks_due": {
+            "default": 0,
+            "description": "Open tasks due today, from every source",
+            "title": "Tasks Due",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "configured"
+        ],
+        "title": "FamilyDayResponse",
+        "type": "object"
+      },
       "FavoriteDayReviewSectionRequest": {
         "properties": {
           "favorited": {
@@ -67145,6 +67276,84 @@
           }
         ],
         "summary": "Set Family Calendar Owner",
+        "tags": [
+          "family-calendar"
+        ]
+      }
+    },
+    "/v1/family-calendar/today": {
+      "get": {
+        "description": "Today on the family calendar, sized for a home-screen widget: the next blocks still ahead,\nopen tasks due today and overdue chores, for the member Omi acts as (or the whole family).\nA gateway that does not answer gives ``reachable: false`` and an ``error`` to show, not a 5xx,\nso a widget can keep what it showed last.",
+        "operationId": "get_family_calendar_today_v1_family_calendar_today_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Platform",
+            "required": false,
+            "schema": {
+              "title": "X-App-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Device-Id-Hash",
+            "required": false,
+            "schema": {
+              "title": "X-Device-Id-Hash",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-App-Version",
+            "required": false,
+            "schema": {
+              "title": "X-App-Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FamilyDayResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "summary": "Get Family Calendar Today",
         "tags": [
           "family-calendar"
         ]

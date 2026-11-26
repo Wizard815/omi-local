@@ -223,3 +223,77 @@ def test_members_come_from_the_gateway_roster_and_an_unreachable_gateway_means_n
     assert asyncio.run(fc.members(target, client=ok)) == [{'id': 'u-sam', 'name': 'Sam'}, {'id': '7', 'name': '7'}]
     down = httpx.AsyncClient(transport=httpx.MockTransport(lambda r: (_ for _ in ()).throw(httpx.ConnectError('down'))))
     assert asyncio.run(fc.members(target, client=down)) == []
+
+
+# ---- today(): the Family day widget ----
+
+
+def _gateway(day_body, chores_body=None, seen=None, roster=None):
+    def handler(request: httpx.Request):
+        if seen is not None:
+            seen.append((request.url.path, dict(request.url.params), request.headers.get('authorization')))
+        if request.url.path.startswith('/api/allglance/days/'):
+            return httpx.Response(200, json=day_body)
+        if request.url.path == '/api/allglance/chores':
+            return httpx.Response(200, json=chores_body or {'chores': []})
+        if request.url.path == '/api/allglance/users':
+            return httpx.Response(200, json={'users': roster or []})
+        return httpx.Response(404)
+
+    return httpx.AsyncClient(transport=httpx.MockTransport(handler))
+
+
+def test_today_shows_what_is_still_ahead_tasks_due_and_overdue_chores(world):
+    # NOW is 10:00 in New York on 2026-11-07
+    seen = []
+    day = {
+        'date': '2026-11-07',
+        'blocks': [
+            {'title': 'Soccer', 'start_time': '15:00', 'duration_minutes': 90, 'owner_id': 'u-sam'},
+            {'title': 'Breakfast', 'start_time': '08:00', 'duration_minutes': 30},  # over
+            {'title': 'Standup', 'start_time': '09:45', 'duration_minutes': 30},  # still on
+            {'title': 'Garbage day', 'all_day': True},
+            {'title': 'Done thing', 'start_time': '18:00', 'completed': True},
+            {'title': 'Dinner', 'start_time': '18:30', 'duration_minutes': 60},
+        ],
+        'tasks': {
+            'vikunja': [{'title': 'Pay rent'}, {'title': 'Paid', 'completed': True}],
+            'dayglance': [{'title': 'x'}],
+        },
+    }
+    chores = {
+        'chores': [
+            {'title': 'Vacuum', 'overdue': True},
+            {'title': 'Dishes', 'overdue': False},
+            {'title': 'Never', 'overdue': None},
+        ]
+    }
+    out = asyncio.run(fc.today('u1', now=NOW, client=_gateway(day, chores, seen)))
+    assert out.configured and out.reachable and out.date == '2026-11-07' and out.error == ''
+    assert [b.title for b in out.next] == ['Garbage day', 'Standup', 'Soccer'], 'all-day first, then soonest'
+    assert out.remaining == 4
+    standup = out.next[1]
+    assert standup.time_label == '09:45' and standup.start == datetime(2026, 11, 7, 14, 45, tzinfo=timezone.utc)
+    assert out.next[0].all_day and out.next[0].time_label == 'All day' and out.next[0].start is None
+    assert out.tasks_due == 2 and out.chores_overdue == 1 and out.chores == ['Vacuum']
+    assert seen[0] == ('/api/allglance/days/2026-11-07', {}, 'Bearer gw-token'), 'no owner: the whole family'
+
+
+def test_today_reads_as_the_bound_member_and_names_them(world):
+    fc.set_owner('u1', 'u-sam')
+    seen = []
+    client = _gateway({'blocks': [], 'tasks': {}}, seen=seen, roster=[{'id': 'u-sam', 'name': 'Sam'}])
+    out = asyncio.run(fc.today('u1', now=NOW, client=client))
+    assert out.owner_name == 'Sam' and out.next == [] and out.remaining == 0
+    assert seen[0][1] == {'owner': 'u-sam'} and seen[1][1] == {'owner': 'u-sam'}
+
+
+def test_today_without_a_gateway_or_with_it_down_says_so_instead_of_failing(world, monkeypatch):
+    down = httpx.AsyncClient(transport=httpx.MockTransport(lambda r: (_ for _ in ()).throw(httpx.ConnectError('down'))))
+    out = asyncio.run(fc.today('u1', now=NOW, client=down))
+    assert out.configured and not out.reachable and "isn't answering" in out.error
+    refused = httpx.AsyncClient(transport=httpx.MockTransport(lambda r: httpx.Response(401)))
+    assert 'refused' in asyncio.run(fc.today('u1', now=NOW, client=refused)).error
+    monkeypatch.setattr(fc.users_db, 'get_task_integration', lambda uid, key: None)
+    out = asyncio.run(fc.today('u1', now=NOW))
+    assert not out.configured and not out.reachable
