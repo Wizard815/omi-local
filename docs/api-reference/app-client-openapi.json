@@ -24147,7 +24147,43 @@
         "title": "LlmUsageResponse",
         "type": "object"
       },
-      "LocalUsageDay": {
+      "LocalLoginRequest": {
+        "description": "Self-hosted username/password login — see utils/local_auth.py for the\nfull design rationale. This is the one endpoint on this backend meant to\nbe reachable directly from the open internet with no prior\nauthentication, so responses stay generic by design: never reveal\nwhether a username exists, never surface internal error detail.",
+        "properties": {
+          "password": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          },
+          "username": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "LocalLoginRequest",
+        "type": "object"
+      },
+      "LocalLoginResponse": {
+        "properties": {
+          "session_token": {
+            "title": "Session Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_token"
+        ],
+        "title": "LocalLoginResponse",
+        "type": "object"
+      },
+      "LocalUsageDayResponse": {
         "properties": {
           "counts": {
             "additionalProperties": {
@@ -24169,20 +24205,32 @@
         "required": [
           "day"
         ],
-        "title": "LocalUsageDay",
+        "title": "LocalUsageDayResponse",
         "type": "object"
       },
-      "LocalUsageEvent": {
+      "LocalUsageRecentEventResponse": {
         "properties": {
           "at": {
-            "default": "",
-            "title": "At",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
           },
           "event": {
-            "default": "",
-            "title": "Event",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event"
           },
           "properties": {
             "additionalProperties": true,
@@ -24190,15 +24238,14 @@
             "type": "object"
           }
         },
-        "title": "LocalUsageEvent",
+        "title": "LocalUsageRecentEventResponse",
         "type": "object"
       },
       "LocalUsageResponse": {
-        "description": "Your own usage on this server (omi-local): counts per event and day, and recent events.",
         "properties": {
           "days": {
             "items": {
-              "$ref": "#/components/schemas/LocalUsageDay"
+              "$ref": "#/components/schemas/LocalUsageDayResponse"
             },
             "title": "Days",
             "type": "array"
@@ -24209,7 +24256,7 @@
           },
           "recent": {
             "items": {
-              "$ref": "#/components/schemas/LocalUsageEvent"
+              "$ref": "#/components/schemas/LocalUsageRecentEventResponse"
             },
             "title": "Recent",
             "type": "array"
@@ -54050,6 +54097,48 @@
         "summary": "Retry",
         "tags": [
           "processing"
+        ]
+      }
+    },
+    "/v1/auth/local-login": {
+      "post": {
+        "operationId": "local_login_v1_auth_local_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocalLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocalLoginResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [],
+        "summary": "Local Login",
+        "tags": [
+          "authentication"
         ]
       }
     },

@@ -47,6 +47,10 @@ the LAN, or your tunnel URL) and the username/password you seeded with
 signs its own session token (see **Login** below). No Omi cloud, no Omi account,
 no Google, no Firebase project is touched.
 
+**Away from home:** [`omi-host/REMOTE-ACCESS.md`](omi-host/REMOTE-ACCESS.md) puts the stack
+behind NGINX and a Cloudflare Tunnel (or Tailscale): `OMI_REMOTE_ACCESS=tunnel` plus a tunnel
+token in `.env`, then **Server URL** `https://omi.example.com/` in the app.
+
 ## What's local vs what's cloud (by design of this repo)
 
 The Omi app is architecturally a **Firebase-Auth + backend-API** client. To run it

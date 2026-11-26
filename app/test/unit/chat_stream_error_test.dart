@@ -30,6 +30,21 @@ void main() {
     expect(finalMessage.typedContentBlocks, isEmpty);
   });
 
+  test('keep-alives before the first model event stay status, never reply text', () {
+    // The server sends this every 20 s from the start of a slow turn (remote access through
+    // a tunnel cuts a silent response at ~100 s): omi-host/REMOTE-ACCESS.md.
+    const frames = ['think: Preparing response…', 'think: Still working…', 'think: Still working…', 'data: Friday.'];
+    var reply = '';
+    final status = <String>[];
+    for (final line in frames) {
+      final chunk = parseMessageChunk(line, 'message-id')!;
+      if (chunk.type == MessageChunkType.data) reply += chunk.text;
+      if (chunk.type == MessageChunkType.think) status.add(chunk.text);
+    }
+    expect(reply, 'Friday.');
+    expect(status, ['Preparing response…', 'Still working…', 'Still working…']);
+  });
+
   test('memory receipt event is decoded without changing reply text', () {
     final saved = parseMessageChunk('memory: saved', 'message-id');
     final updated = parseMessageChunk('memory: updated', 'message-id');

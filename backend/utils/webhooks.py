@@ -29,6 +29,7 @@ from utils.conversations.render import populate_speaker_names, populate_folder_n
 from utils.conversations.render import conversation_to_dict, redact_conversation_for_integration
 from utils.executors import db_executor, run_blocking
 from utils import integrations_out
+from utils.home_assistant import events as home_assistant_events
 from utils.http_client import (
     UnsafeWebhookURLError,
     get_pinned_delivery_client,
@@ -317,6 +318,9 @@ def _build_conversation_webhook_payload_sync(uid: str, memory: Conversation) -> 
 async def conversation_created_webhook(uid, memory: Conversation):
     if memory.is_locked:
         return
+    # omi-local: Home Assistant's omi_conversation_finished / omi_task_created, when the user turned them
+    # on. Never raises; bounded by a short LAN timeout and the HA circuit breaker.
+    await home_assistant_events.conversation_finished(uid, memory)
 
     toggled = await run_blocking(db_executor, user_webhook_status_db, uid, WebhookType.memory_created)
 

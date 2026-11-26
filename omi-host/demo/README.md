@@ -181,6 +181,31 @@ OMI_ALLGLANCE_REPO=<ALLGlance checkout> OMI_FAITH_SERVER=<F.A.I.T.H/server copy,
 OMI_RADICALE_BIN=/tmp/radicale/bin/radicale omi-host/demo/peers_demo.sh
 ```
 
+# Home Assistant demo: events out, house context in, actions with the user's OK
+
+`ha_demo.sh` starts its own stack: redis, the Firestore and Auth emulators, the real backend,
+and `fake_home_assistant.py`. The fake is a small stand-in that answers Home Assistant's REST
+shapes; it is not a real HA. It listens on this machine's LAN address, because Omi refuses
+loopback, and that address is allowed through `OMI_WEBHOOK_ALLOWED_PRIVATE_NETWORKS` for the
+run. No Radicale is needed. Setup and safety rules: `../HOME-ASSISTANT.md`.
+
+```
+omi-host/demo/ha_demo.sh          # FIREBASE_BIN=<repo>/node_modules/.bin/firebase if this checkout has none
+```
+
+The demo checks these rows:
+
+- Settings come from the stack, and Test connection reaches HA with the token.
+- A seeded conversation goes through the pipeline's post-processing hook and fires
+  `omi_conversation_finished` and `omi_task_created`. The events carry the title, a short
+  overview and the person, and never the transcript.
+- An MCP agent reads only the allowed entities with `ha_get_states` (by domain and area),
+  `ha_whos_home` and `ha_area_summary`.
+- `ha_call_service light.turn_off` waits for the user's OK. Nothing reaches HA, and
+  `omi_waiting_for_approval` fires. When the user approves, HA runs it and the light is off.
+- `lock.unlock` is refused and never reaches HA.
+- The token appears in none of Omi's answers.
+
 ## Backup demo: back up, lose the disk, restore, same counts
 
 `backup_demo.sh` runs the CalDAV demo above on a throwaway stack, backs it up while it runs
@@ -197,3 +222,20 @@ OMI_RADICALE_BIN=/tmp/radicale/bin/radicale omi-host/demo/backup_demo.sh --keep 
 ```
 
 See [BACKUP.md](../BACKUP.md) and [HEALTH.md](../HEALTH.md).
+
+## Proxy demo: the stack behind NGINX, as through a tunnel
+
+`proxy_demo.sh` runs the CalDAV demo's stack behind two real nginx running
+`omi-host/proxy/nginx/omi.conf`: one as shipped, one with a 30 s idle limit standing in for
+Cloudflare's ~100 s cut. The model is `slow_llm_stub.py`, silent for 75 s before it answers.
+`proxy_demo.py` checks login, unbuffered chat streaming, the slow answer surviving the idle limit
+on keep-alives (and the same silent model being cut without them), the `/v4/listen` upgrade,
+CalDAV methods at `/caldav/` and on a `caldav.` hostname, and a 150 MB upload. Needs nginx
+(`apt-get install nginx-light`; 1.27.3+ also checks the shipped files with `nginx -t`).
+
+```
+OMI_RADICALE_BIN=/tmp/radicale/bin/radicale omi-host/demo/proxy_demo.sh
+OMI_DEMO_IDLE_SECONDS=100 OMI_DEMO_LLM_DELAY=130 OMI_RADICALE_BIN=... omi-host/demo/proxy_demo.sh   # Cloudflare's numbers
+```
+
+See [REMOTE-ACCESS.md](../REMOTE-ACCESS.md); `omi-host/proxy/check_remote.sh` checks the real hostname.

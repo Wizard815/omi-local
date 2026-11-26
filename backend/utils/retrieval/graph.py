@@ -43,6 +43,7 @@ from utils.retrieval.agentic import (
     execute_agentic_chat_stream,
     get_mobile_city,
     next_stream_chunk,
+    stream_wait,
 )
 from utils.observability.langsmith import get_chat_tracer_callbacks
 import logging
@@ -74,22 +75,18 @@ async def _drain_chat_callback(
     received_first_event = False
     try:
         while True:
-            remaining_seconds = AGENT_STREAM_MAX_DURATION_SECONDS - (asyncio.get_running_loop().time() - started_at)
+            elapsed = asyncio.get_running_loop().time() - started_at
+            remaining_seconds = AGENT_STREAM_MAX_DURATION_SECONDS - elapsed
             if remaining_seconds <= 0:
                 raise asyncio.TimeoutError
+            if not received_first_event:
+                remaining_seconds = min(remaining_seconds, AGENT_STREAM_FIRST_EVENT_TIMEOUT_SECONDS - elapsed)
 
-            wait_timeout = min(
-                (
-                    AGENT_STREAM_FIRST_EVENT_TIMEOUT_SECONDS
-                    if not received_first_event
-                    else AGENT_STREAM_PROGRESS_HEARTBEAT_SECONDS
-                ),
-                remaining_seconds,
-            )
+            wait_timeout, heartbeat_due = stream_wait(AGENT_STREAM_PROGRESS_HEARTBEAT_SECONDS, remaining_seconds)
             try:
                 chunk = await next_stream_chunk(callback, task, wait_timeout)
             except asyncio.TimeoutError:
-                if received_first_event and remaining_seconds > wait_timeout:
+                if heartbeat_due:
                     yield f'think: {AGENT_STREAM_PROGRESS_HEARTBEAT}'
                     continue
                 raise

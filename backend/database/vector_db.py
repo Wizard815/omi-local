@@ -1277,8 +1277,10 @@ def search_action_items_by_vector(uid: str, query: str, limit: int = 10, min_sco
         filter_data: Dict[str, Any] = {'uid': uid}
 
         # Pinecone-shaped matches (``id``/``score``/``metadata``) from Pinecone or the local Chroma store.
+        # Each Pinecone query names its own function as the metered caller (pinecone_query_metrics.CALLERS).
+        matches: List[Any]
         if _use_chroma:
-            matches: List[Any] = _chroma().chroma_query_action_items(vector, uid, limit)
+            matches = _chroma().chroma_query_action_items(vector, uid, limit)
         else:
             matches = (
                 owner_index(index, uid, index_name=_pinecone_index_name)
@@ -1332,9 +1334,9 @@ def find_similar_action_items(uid: str, query: str, threshold: float = 0.6, limi
 
     try:
         vector = embeddings.embed_query(prepared_query)
-        # Pinecone-shaped matches (``id``/``score``/``metadata``) from Pinecone or the local Chroma store.
+        matches: List[Any]
         if _use_chroma:
-            matches: List[Any] = _chroma().chroma_query_action_items(vector, uid, limit)
+            matches = _chroma().chroma_query_action_items(vector, uid, limit)
         else:
             matches = (
                 owner_index(index, uid, index_name=_pinecone_index_name)

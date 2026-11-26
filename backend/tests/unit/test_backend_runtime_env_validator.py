@@ -3686,9 +3686,7 @@ def read_lever_sources():
 
 
 def test_generated_read_lever_manifest_is_current_and_records_unresolved_sources():
-    # Pinned like the other manifest tests: the 7-day lever expiry window is checked against
-    # the date the policy was approved, so this test does not start failing on a calendar date.
-    generated = read_lever_manifest.build_manifest(today=date(2026, 11, 11))
+    generated = read_lever_manifest.build_manifest()
     assert json.loads(read_lever_manifest.OUTPUT.read_text()) == generated
     notes = '\n'.join(generated['notes'])
     assert 'RESOLVED: prod chart-vs-CR batch_timeliness_leader is 100' in notes
@@ -3833,12 +3831,14 @@ def test_read_lever_partial_code_default_cannot_hide_behind_chart_inheritance(mo
 @pytest.mark.parametrize(
     ('prefix', 'has_partials'),
     [
-        ('base/', True),
-        ('overlay/prod/', True),
-        ('runtime/dev/', True),
-        ('runtime/prod/', True),
-        ('chart/dev/', True),
-        ('chart/prod/', True),
+        # omi-local 2026-11-25: the last partial cohort (lifecycle_record_pending_head:5)
+        # was resolved to 0 when its approval lapsed, so no source surface is partial.
+        ('base/', False),
+        ('overlay/prod/', False),
+        ('runtime/dev/', False),
+        ('runtime/prod/', False),
+        ('chart/dev/', False),
+        ('chart/prod/', False),
     ],
 )
 def test_read_lever_expiry_covers_every_partial_source_surface(read_lever_sources, prefix, has_partials):

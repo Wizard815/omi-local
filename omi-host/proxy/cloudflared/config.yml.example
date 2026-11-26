@@ -1,0 +1,23 @@
+# A locally-managed tunnel (created with `cloudflared tunnel create omi`), for when you
+# keep the routes in a file instead of the Zero Trust dashboard. The dashboard way
+# (a token in .env, routes in the dashboard) needs no file; REMOTE-ACCESS.md has both.
+#
+# Use it: copy to config.yml next to the tunnel's credentials JSON, put both in a
+# directory, mount it at /etc/cloudflared in the cloudflared service and change its
+# command to `tunnel --no-autoupdate --config /etc/cloudflared/config.yml run`.
+tunnel: 00000000-0000-0000-0000-000000000000
+credentials-file: /etc/cloudflared/00000000-0000-0000-0000-000000000000.json
+
+# Everything goes to omi-nginx, which routes by hostname and path (proxy/nginx/omi.conf).
+ingress:
+  - hostname: omi.example.com          # the server address the phone and desktop apps use
+    service: http://omi-nginx:8080
+    originRequest:
+      connectTimeout: 30s
+      # Keep idle connections to nginx open across a slow chat turn.
+      keepAliveTimeout: 2m
+  - hostname: caldav.example.com       # optional: CalDAV on its own name (or use omi.example.com/caldav/)
+    service: http://omi-nginx:8080
+  # - hostname: studio.example.com     # optional: Hermes Studio (proxy/nginx/extra/studio.conf.example)
+  #   service: http://omi-nginx:8080
+  - service: http_status:404

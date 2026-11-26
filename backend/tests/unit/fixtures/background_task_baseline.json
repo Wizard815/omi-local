@@ -288,6 +288,13 @@
       "why": "reviewed safe: best-effort playback cache warming"
     },
     {
+      "path": "utils/product_telemetry.py",
+      "function": "LocalUsageSink.capture",
+      "kind": "submit_with_context",
+      "count": 1,
+      "why": "omi-local 2026-11-25 (#23 local usage store): fire-and-forget write of one accepted product-usage event to this server's own usage store, off the caller's thread so telemetry never adds latency to the request it describes. It holds no user data or processing authority: the event is a derived counter for the self-hosted usage view, and the caller's own work is already committed. Losing it at SIGKILL drops at most the events still queued on db_executor, which only undercounts that usage view."
+    },
+    {
       "path": "utils/retrieval/agentic.py",
       "function": "_run_routed_chat_stream",
       "kind": "start_background_task",
@@ -405,13 +412,6 @@
       "kind": "submit_with_context",
       "count": 1,
       "why": "pre-existing; unreviewed"
-    },
-    {
-      "path": "utils/product_telemetry.py",
-      "function": "LocalUsageSink.capture",
-      "kind": "submit_with_context",
-      "count": 1,
-      "why": "Self-hosted usage counter (omi-local). One best-effort telemetry row per event, written off the caller's thread so a request never waits on it. Losing the rows in flight at SIGKILL only undercounts usage; nothing the user sees or relies on depends on them."
     }
   ]
 }

@@ -73,6 +73,7 @@ from utils.retrieval.tools import (
 from utils.retrieval.tools.app_tools import load_app_tools, get_tool_status_message
 from utils.device_tools import DEVICE_TOOL_NAMES, build_device_tools, device_tool_timeout_for_stream_budget
 from utils.retrieval.tools.device_calendar_tools import device_calendar_tools_for
+from utils.retrieval.tools.home_assistant_tools import HOME_ASSISTANT_TOOL_NAMES, home_assistant_tools_for
 from utils.retrieval.tool_result_boundaries import preserve_chat_memory_tool_result_boundary
 from utils.retrieval.turn_refs import initialize_turn_refs
 from utils.retrieval.safety import (
@@ -319,7 +320,7 @@ CORE_TOOLS = [
 # Standard tool names (used to detect app tools by exclusion). Device tools are
 # included because they are named like core tools (propose_message), and
 # _extract_app_id would otherwise read "propose" as an app id.
-STANDARD_TOOL_NAMES = {t.name for t in CORE_TOOLS} | set(DEVICE_TOOL_NAMES)
+STANDARD_TOOL_NAMES = {t.name for t in CORE_TOOLS} | set(DEVICE_TOOL_NAMES) | HOME_ASSISTANT_TOOL_NAMES
 
 
 def get_tool_display_name(tool_name: str, tool_obj: Optional[Any] = None) -> str:
@@ -1485,6 +1486,20 @@ async def next_stream_chunk(callback: AsyncStreamingCallback, task: asyncio.Task
                 pass
 
 
+def stream_wait(heartbeat_seconds: float, hard_deadline_seconds: float) -> tuple[float, bool]:
+    """How long to wait for the next chunk, and whether that wait ending means "send a heartbeat".
+
+    The heartbeat runs from the start of the stream, before the first model event too: a slow
+    self-hosted model can think for minutes first, and a proxy in front (a Cloudflare Tunnel
+    drops an HTTP response that stays idle about 100 s) would cut a silent stream.
+    ``hard_deadline_seconds`` is what is left of the first-event or whole-turn deadline.
+    """
+    hard_deadline_seconds = max(0.0, hard_deadline_seconds)
+    if heartbeat_seconds < hard_deadline_seconds:
+        return heartbeat_seconds, True
+    return hard_deadline_seconds, False
+
+
 async def cancel_stream_task(task: asyncio.Task) -> None:
     """Request cancellation without letting a non-cooperative dependency hold the SSE open."""
     if task.done():
@@ -1603,6 +1618,7 @@ async def execute_agentic_chat_stream(
 
             # Self-hosting: Android device-calendar tool (local-LLM mode, calendar synced).
             core_tools.extend(await device_calendar_tools_for(uid))
+            core_tools.extend(await home_assistant_tools_for(uid))  # omi-local: Home Assistant, when connected
 
             # Dynamic app tools — exposed directly on the OpenAI/Luna chat-agent lane
             app_tools = []
@@ -1873,21 +1889,15 @@ user chose not to send; acknowledge that rather than retrying.
             if remaining_seconds <= 0:
                 raise asyncio.TimeoutError
 
-            wait_timeout = min(
-                (
-                    max(0, first_event_deadline - asyncio.get_running_loop().time())
-                    if not received_first_event
-                    else AGENT_STREAM_PROGRESS_HEARTBEAT_SECONDS
-                ),
-                remaining_seconds,
-            )
+            if not received_first_event:
+                remaining_seconds = min(remaining_seconds, first_event_deadline - asyncio.get_running_loop().time())
+            wait_timeout, heartbeat_due = stream_wait(AGENT_STREAM_PROGRESS_HEARTBEAT_SECONDS, remaining_seconds)
             try:
                 chunk = await next_stream_chunk(callback, task, wait_timeout)
             except asyncio.TimeoutError:
-                # A successful first status/token means the agent can be in a
-                # deliberately long tool call (some app tools allow 120s).
-                # Keep the proxy/client stream alive until the hard task cap.
-                if received_first_event and remaining_seconds > wait_timeout:
+                # A slow model's first token or a long tool call (some app tools
+                # allow 120s): keep the proxy/client stream alive until a deadline.
+                if heartbeat_due:
                     yield f'think: {AGENT_STREAM_PROGRESS_HEARTBEAT}'
                     continue
                 raise

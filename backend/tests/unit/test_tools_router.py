@@ -102,6 +102,7 @@ _SYS_MODULE_NAMES = [
     "database.vector_db",
     "database.action_items",
     "database.notifications",
+    "database.day_reviews",
     "utils",
     "utils.notifications",
     "utils.conversations",
@@ -200,6 +201,11 @@ action_items_db.update_action_item = MagicMock(return_value=True)
 notifications_db = _stub_module("database.notifications")
 notifications_db.get_user_time_zone = MagicMock(return_value="UTC")
 importlib.import_module("database").notifications = notifications_db
+
+# Stub database.day_reviews: no approved day, so the real day_rollup (loaded
+# below) keeps every discarded conversation hidden, as before day roll-up.
+day_reviews_db = _stub_module("database.day_reviews")
+day_reviews_db.get_day_review = MagicMock(return_value=None)
 
 # Stub notifications
 notif_mod = _stub_module("utils.notifications")
@@ -306,12 +312,6 @@ render_mod.conversations_to_string = MagicMock(
 factory_mod = _stub_module("utils.conversations.factory")
 factory_mod.deserialize_conversation = MagicMock(
     side_effect=lambda d: d if not isinstance(d, dict) else type('FakeConv', (), d)()
-)
-# No approved days here: every discarded conversation stays hidden from chat.
-day_rollup_mod = _stub_module("utils.conversations.day_rollup")
-day_rollup_mod.rolled_up_ids = MagicMock(return_value=set())
-day_rollup_mod.hidden_from_chat = (
-    lambda row, rolled_up: bool(row.get('discarded')) and str(row.get('id')) not in rolled_up
 )
 search_mod = _stub_module("utils.conversations.search")
 search_mod.keyword_search_conversation_ids = MagicMock(return_value=[])
@@ -459,6 +459,10 @@ _load_module_from_file("utils.user_clock", BACKEND_DIR / "utils" / "user_clock.p
 retrieval_safety = _load_module_from_file(
     "utils.retrieval.safety",
     BACKEND_DIR / "utils" / "retrieval" / "safety.py",
+)
+_load_module_from_file(
+    "utils.conversations.day_rollup",
+    BACKEND_DIR / "utils" / "conversations" / "day_rollup.py",
 )
 conversations_svc = _load_module_from_file(
     "utils.retrieval.tool_services.conversations",

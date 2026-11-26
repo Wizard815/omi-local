@@ -39,6 +39,7 @@ from routers import (
     approvals,
     integrations_outbound,
     agent_jobs,
+    home_assistant,
     caldav,
     day_reviews,
     family_calendar,
@@ -290,6 +291,7 @@ ROUTER_MOUNTS: tuple[Mount, ...] = (
     Mount(family_calendar),  # omi-local
     Mount(approvals),  # omi-local: tasks waiting for the user's OK, auto-approve
     Mount(agent_jobs),  # omi-local: Send to agent (Odysseus, Hermes, Studio) and Studio's signed webhook
+    Mount(home_assistant),  # omi-local: Home Assistant settings and the actions waiting for the user's OK
     Mount(search),
     Mount(knowledge_graph),
     Mount(goals),

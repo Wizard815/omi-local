@@ -10,6 +10,7 @@ from google.api_core.exceptions import DeadlineExceeded
 from google.cloud.firestore_v1 import And, Or
 
 from database.firestore_retry import FIRESTORE_NO_RETRY
+from utils.memory import canonical_memory_adapter as adapter
 from utils.other.list_budget import ListReadBudget, ListReadBudgetExhausted, budgeted_stream_list
 
 NOW = datetime(2026, 10, 17, tzinfo=timezone.utc)
@@ -131,7 +132,6 @@ def test_budgeted_stream_keeps_downloaded_prefix_and_disables_sdk_retries():
 
 
 def test_canonical_scan_preserves_verified_prefix_after_provider_deadline(monkeypatch):
-    from utils.memory import canonical_memory_adapter as adapter
 
     real_stream = Query.stream
 

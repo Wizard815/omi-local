@@ -65,17 +65,15 @@ stores the report or the error on the settings document.
 
 from __future__ import annotations
 
-import contextvars
 import hashlib
 import logging
 import os
 import re
 import time
 import uuid
-from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 import database.action_items as action_items_db
 import database.caldav_settings as settings_db
@@ -178,38 +176,11 @@ def effective_settings(uid: str) -> Optional[Dict[str, Any]]:
 
 # ---- change-triggered sync ------------------------------------------------------------------
 
-DIRTY_KEY = 'caldav:dirty'
-
-
-# Inside ``one_mark``: the users marked dirty, held until the batch ends (one mark, not one per item).
-_HELD_MARKS: contextvars.ContextVar[Optional[Set[str]]] = contextvars.ContextVar('caldav_held_marks', default=None)
-
-
-def mark_dirty(uid: str) -> None:
-    """A task or day summary changed: sync this user at the next short pass (seconds, not the
-    hour). Called from the action-item store and the day bundle; never raises."""
-    held = _HELD_MARKS.get()
-    if held is not None:
-        held.add(uid)
-        return
-    try:
-        redis_db.r.sadd(DIRTY_KEY, uid)
-    except Exception:  # noqa: BLE001 — the hourly full sync still covers it
-        pass
-
-
-@contextmanager
-def one_mark() -> Iterator[None]:
-    """A batch of changes (Approve all) marks each user dirty once, when it ends, instead of once
-    per item. Work offloaded with run_blocking carries the context, so its marks are held too."""
-    held: Set[str] = set()
-    token = _HELD_MARKS.set(held)
-    try:
-        yield
-    finally:
-        _HELD_MARKS.reset(token)
-        for uid in sorted(held):
-            mark_dirty(uid)
+from utils.caldav.dirty import (
+    DIRTY_KEY as DIRTY_KEY,
+    mark_dirty as mark_dirty,
+    one_mark as one_mark,
+)  # noqa: E402 — re-exported
 
 
 def take_dirty() -> List[str]:

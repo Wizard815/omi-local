@@ -80,6 +80,10 @@ EXPECTED_TOOL_ORDER = [
     "get_calendar_events",
     "create_calendar_event",
     "process_recent_conversations",
+    "ha_get_states",
+    "ha_whos_home",
+    "ha_area_summary",
+    "ha_call_service",
 ]
 
 # Representative handler results exercising every success output schema.
@@ -129,6 +133,10 @@ FAKE_SUCCESS = {
     },
     "get_calendar_events": {"events": [], "waiting_for_approval": 0},
     "create_calendar_event": {"success": True, "event": {"conversation_id": "c1", "event_idx": 0}},
+    "ha_get_states": {"entities": [{"entity_id": "light.kitchen", "state": "on"}], "count": 1},
+    "ha_whos_home": {"home": ["Alex"], "away": [], "people": [{"name": "Alex", "state": "home"}]},
+    "ha_area_summary": {"areas": [{"area": "Kitchen", "entities": 1}]},
+    "ha_call_service": {"status": "waiting_for_approval", "action_id": "a1", "message": "Waiting"},
 }
 
 
@@ -823,6 +831,9 @@ class TestUnknownsAndScope:
             "get_daily_summaries",
             "get_day_review",
             "get_calendar_events",
+            "ha_get_states",
+            "ha_whos_home",
+            "ha_area_summary",
         }
 
 

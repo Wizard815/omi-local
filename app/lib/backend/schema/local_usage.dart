@@ -1,11 +1,9 @@
-/// The signed-in person's own usage on their self-hosted server (`GET /v1/users/me/local-usage`).
-///
-/// The server keeps these counts itself; the app only reads them. Counts that are not positive
-/// numbers and events without a name or time are left out.
-library;
-
 import 'package:omi/backend/schema/gen/self_hosted_wire.g.dart' as wire;
 
+/// The signed-in person's own usage on their self-hosted server (`GET /v1/users/me/local-usage`).
+///
+/// The server keeps these counts itself; the app only reads them. Unknown or malformed fields
+/// read as empty rather than failing the whole page.
 class LocalUsageReport {
   const LocalUsageReport({
     required this.enabled,
@@ -28,22 +26,38 @@ class LocalUsageReport {
 
   int get total => totals.fold(0, (sum, row) => sum + row.count);
 
-  factory LocalUsageReport.fromGenerated(wire.GeneratedLocalUsageResponse g) {
+  /// From the generated wire DTO the REST call decodes (`LocalUsageResponse`), through the same
+  /// lenient reader below so an odd stored row is skipped rather than failing the page.
+  factory LocalUsageReport.fromGenerated(wire.GeneratedLocalUsageResponse value) =>
+      LocalUsageReport.fromJson(value.toJson());
+
+  factory LocalUsageReport.fromJson(Map<String, dynamic> json) {
     final totals = <LocalUsageCount>[];
-    for (final entry in (g.totals ?? const <String, dynamic>{}).entries) {
-      final count = entry.value;
-      if (count is num && count > 0) totals.add(LocalUsageCount(event: entry.key, count: count.toInt()));
+    final rawTotals = json['totals'];
+    if (rawTotals is Map) {
+      for (final entry in rawTotals.entries) {
+        final count = entry.value;
+        if (entry.key is String && count is num && count > 0) {
+          totals.add(LocalUsageCount(event: entry.key as String, count: count.toInt()));
+        }
+      }
     }
     totals.sort((a, b) => b.count != a.count ? b.count.compareTo(a.count) : a.event.compareTo(b.event));
     final recent = <LocalUsageEvent>[];
-    for (final item in g.recent ?? const <wire.GeneratedLocalUsageEvent>[]) {
-      final at = DateTime.tryParse(item.at);
-      if (item.event.isNotEmpty && at != null) recent.add(LocalUsageEvent(event: item.event, at: at));
+    final rawRecent = json['recent'];
+    if (rawRecent is List) {
+      for (final item in rawRecent) {
+        if (item is! Map) continue;
+        final event = item['event'];
+        final at = DateTime.tryParse('${item['at'] ?? ''}');
+        if (event is String && event.isNotEmpty && at != null) recent.add(LocalUsageEvent(event: event, at: at));
+      }
     }
     recent.sort((a, b) => b.at.compareTo(a.at));
+    final window = json['window_days'];
     return LocalUsageReport(
-      enabled: g.enabled,
-      windowDays: g.windowDays > 0 ? g.windowDays : 30,
+      enabled: json['enabled'] != false,
+      windowDays: window is num && window > 0 ? window.toInt() : 30,
       totals: totals,
       recent: recent,
     );

@@ -184,6 +184,15 @@ services:
       ORB_URL: ${ORB_URL:-}
       # An approved day summary waits this long before it leaves (Approve all's Undo is 10 minutes).
       OMI_OUTBOUND_DAY_DELAY_SECONDS: ${OMI_OUTBOUND_DAY_DELAY_SECONDS:-600}
+      # Home Assistant (HOME-ASSISTANT.md): events out, read context and actions that wait for
+      # the user's OK. Its LAN address must also be in OMI_WEBHOOK_ALLOWED_PRIVATE_NETWORKS.
+      OMI_HA_URL: ${OMI_HA_URL:-}
+      OMI_HA_TOKEN: ${OMI_HA_TOKEN:-}
+      OMI_HA_READ_ALLOW: ${OMI_HA_READ_ALLOW:-}
+      OMI_HA_ACTION_DOMAINS: ${OMI_HA_ACTION_DOMAINS:-}
+      OMI_HA_AUTO_APPROVE: ${OMI_HA_AUTO_APPROVE:-}
+      OMI_HA_EVENTS: ${OMI_HA_EVENTS:-}
+      OMI_HA_TIMEOUT_SECONDS: ${OMI_HA_TIMEOUT_SECONDS:-}
       # Hourly daily-recap job, run in-process (no Cloud Scheduler here). The
       # recap is generated at each user's chosen local hour (default 22:00) —
       # set 0 to disable.
@@ -578,6 +587,70 @@ services:
       driver: json-file
       options: { max-size: "10m", max-file: "3" }
 
+  # ── Remote access (REMOTE-ACCESS.md) ── all opt-in. omi-nginx fronts the API, the
+  # dashboard and CalDAV with streaming-safe settings (proxy/nginx/omi.conf); cloudflared
+  # (profile tunnel) or tailscale (profile tailscale) carries it out with HTTPS.
+  #   docker compose --profile tunnel up -d       # nginx + Cloudflare Tunnel
+  #   docker compose --profile tailscale up -d    # nginx + Tailscale (tailnet only, or Funnel)
+  # Only these containers reach nginx; its host port is loopback-only, for checking it.
+  omi-nginx:
+    image: nginx:1.30.2-alpine
+    container_name: omi-nginx
+    profiles: [proxy, tunnel, tailscale]
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${OMI_NGINX_PORT:-8088}:8080"
+    volumes:
+      - ./proxy/nginx/omi.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./proxy/nginx/upstreams.conf:/etc/nginx/omi/upstreams.conf:ro
+      - ./proxy/nginx/extra:/etc/nginx/omi/extra:ro
+    depends_on:
+      - omi-local
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  # Cloudflare Tunnel, a dashboard-managed named tunnel: CLOUDFLARE_TUNNEL_TOKEN in .env
+  # (Zero Trust > Networks > Tunnels > your tunnel; never commit it). Each public hostname
+  # in the dashboard points at http://omi-nginx:8080. Outbound only: no port is opened.
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.1
+    container_name: omi-cloudflared
+    profiles: [tunnel]
+    restart: unless-stopped
+    command: ["tunnel", "--no-autoupdate", "run"]
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    depends_on:
+      - omi-nginx
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  # Tailscale instead (or as well): the server joins your tailnet as TS_HOSTNAME and
+  # serves https://<TS_HOSTNAME>.<tailnet>.ts.net/ through omi-nginx (proxy/tailscale/serve.json).
+  # Userspace networking, so no /dev/net/tun or extra privileges. TS_AUTHKEY in .env, once.
+  tailscale:
+    image: tailscale/tailscale:v1.104.2
+    container_name: omi-tailscale
+    profiles: [tailscale]
+    restart: unless-stopped
+    hostname: ${TS_HOSTNAME:-omi}
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY:-}
+      TS_HOSTNAME: ${TS_HOSTNAME:-omi}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: "true"
+      TS_SERVE_CONFIG: /config/serve.json
+    volumes:
+      - tailscale-state:/var/lib/tailscale
+      - ./proxy/tailscale:/config:ro
+    depends_on:
+      - omi-nginx
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
 networks:
   ai_net:
     external: true
@@ -586,3 +659,4 @@ volumes:
   omi-data:
   radicale-data:
   searxng-data:
+  tailscale-state:
