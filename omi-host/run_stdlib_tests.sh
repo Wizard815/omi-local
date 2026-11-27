@@ -13,6 +13,7 @@ for test in \
   test_caldav_demo_legacy_ref.py \
   test_compose_storage.py \
   test_egress_guard.py \
+  test_encryption_env.py \
   test_health_watchdog.py \
   test_maintenance.py \
   test_merge_proxy_stream.py \

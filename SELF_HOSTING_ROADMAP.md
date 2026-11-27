@@ -96,11 +96,15 @@ Each item is its own commit with a regression test; see `git log` on the branch.
 
 ## Open items, priority order
 
-### 0. `ENCRYPTION_SECRET` defaults to a published value
-`omi-host/entrypoint.sh` falls back to `omi_local_dev_harness_32_byte_test_secret_not_prod`
-when `.env` sets nothing, and `utils/encryption.py` derives the data-encryption key from it.
-Set your own in `.env` before you store anything you care about. Changing it later makes data
-encrypted under the old value unreadable, so it needs a migration, not just a new default.
+### 0. Installs made before the per-install `ENCRYPTION_SECRET` still use the published one
+New installs make their own key on first start and keep it in `/data/secrets/encryption_secret`
+(`omi-host/encryption-env.sh`); `ENCRYPTION_SECRET` in `.env` still wins. A data volume that was
+used before that change, with nothing set in `.env`, keeps the old published value
+(`omi_local_dev_harness_32_byte_test_secret_not_prod`) and warns on every start, because its data
+was encrypted under it and a new key would make that data unreadable. What is still missing is a
+migration that re-encrypts existing data under a new key. The secret also signs ids and cursors
+(sync content ids, capture manifests, page cursors), so those need a plan too. Until then, an old
+install is protected by who can reach the data volume and its backups, not by this key.
 
 ### 1. Day review: rolled-up conversations and chat retrieval
 Rolled-up conversations are discarded (hidden, restorable via *Reopen day*). The day summary itself
