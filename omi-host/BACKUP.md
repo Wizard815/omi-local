@@ -16,7 +16,7 @@ The stack already keeps a few tarballs **on the same disk** (`/data/backups`,
 | `storage/` | Recordings and other audio, speech profiles, chat files. |
 | `chroma/` | The vector store (search, task de-duplication). SQLite files are copied with SQLite's own backup method, so a write in progress cannot corrupt the copy. |
 | `radicale/collections/` | Calendars and task lists, read while holding Radicale's own lock. |
-| `secrets/` | The key that signs logins, the CalDAV password, the key for recording links, the key for memory-list cursors. Restoring them keeps phones signed in and DAVx5 syncing. |
+| `secrets/` | The key that signs logins, the CalDAV password, the key for recording links, the key for memory-list cursors, and on installs made since November 2026 the key stored data is encrypted with (`encryption_secret`). Restoring them keeps phones signed in and DAVx5 syncing, and without `encryption_secret` the restored data cannot be read. |
 | `.env` | **Not by default**: it holds your API keys. See [Encryption](#encryption-optional). |
 
 Left out because they download again or are rebuilt: speech and LLM models (`hf-cache`,

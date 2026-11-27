@@ -37,6 +37,12 @@ export SCREEN_ACTIVITY_VECTORS_DISABLED_UIDS="${SCREEN_ACTIVITY_VECTORS_DISABLED
 echo "=== Omi local host container ==="
 echo "provider mode: ${PROVIDER_MODE:-offline}"
 
+# ---- ENCRYPTION_SECRET ----
+# A private key per install, kept on the data volume; a volume already written
+# under the old published default keeps it (encryption-env.sh). Sourced before
+# Redis and Firestore start, while a new volume is still empty.
+. /app/omi-host/encryption-env.sh
+
 # ---- Redis ----
 # AOF persistence, pointed at the already-mounted /data volume: the
 # dashboard's model picker (and other runtime settings) live only in Redis,
@@ -177,7 +183,6 @@ export FIREBASE_API_KEY="${FIREBASE_API_KEY:-local-firebase-auth-emulator-api-ke
 export MEMORY_ENABLED="${MEMORY_ENABLED:-on}"
 export REDIS_DB_HOST=127.0.0.1 REDIS_DB_PORT=6380 REDIS_DB_PASSWORD=
 export ENVIRONMENT=local-dev-harness
-export ENCRYPTION_SECRET="${ENCRYPTION_SECRET:-omi_local_dev_harness_32_byte_test_secret_not_prod}"
 # The backend treats "Bearer <ADMIN_KEY><uid>" as that user. A fixed default
 # (this used to be "local-dev-admin-key-", published in this repo) is a skeleton
 # key for anyone who can reach the backend, e.g. through a Cloudflare tunnel.

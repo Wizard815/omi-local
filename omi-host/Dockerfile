@@ -48,6 +48,7 @@ COPY omi-host/entrypoint.sh /entrypoint.sh
 COPY omi-host/local_llm_adapter.py /app/omi-host/local_llm_adapter.py
 COPY omi-host/audio-env.sh /app/omi-host/audio-env.sh
 COPY omi-host/auth-env.sh /app/omi-host/auth-env.sh
+COPY omi-host/encryption-env.sh /app/omi-host/encryption-env.sh
 COPY omi-host/caldav-env.sh /app/omi-host/caldav-env.sh
 COPY omi-host/maintenance.sh /app/omi-host/maintenance.sh
 # Backups and the health watchdog (BACKUP.md, HEALTH.md): the omi-backup and
